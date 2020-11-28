@@ -32,3 +32,7 @@ pip install src/
 **NOTE: This framework is still under heavy development and mainly used in research projects. It's most likely not free of bugs and interfaces can still change.**
 
 For usage see this [example](https://github.com/le1nux/mlgym/tree/master/example).
+
+## Copyright
+
+Copyright (c) 2020 Max Lübbering
