@@ -1,0 +1,53 @@
+# Python CircleCI 2.0 configuration file
+version: 2.0
+orbs:
+  codecov: codecov/codecov@1.0.2jobs
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/python:3.7.7
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "src/setup.py" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install pytest-cov            
+            pip install -e src/
+            pip install codecov
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "src/setup.py" }}
+
+      # run pytests!
+      # this example uses Django's built-in test-runner
+      # https://pytest.org
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            mkdir test-reports
+            pytest --junitxml=test-reports/results.xml --cov-report xml:./test-reports/coverage.xml --cov=./src/ pytest/
+            cat test-reports/coverage.xml
+            codecov -f test-reports/coverage.xml
+      
+      - store_test_results:
+          path: test-reports
+            
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
