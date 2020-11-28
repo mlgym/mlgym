@@ -9,6 +9,7 @@ setup(
     author='Max Luebbering',
     description="MLgym, a python framework for distributed machine learning model training in research.",
     long_description=long_description,
+    long_description_content_type='text/markdown',
     packages=find_packages(),
     install_requires=[
         "pytest",
