@@ -18,7 +18,7 @@ Futhermore, MLgym provides the following key features:
 there are two options to install MLgym, the easiest way is to install it from  the pip repository:
 
 ```bash
-pip install ml-gym
+pip install mlgym
 ``` 
 
 For the latest version, one can directly install it from source by `cd` into the root folder and then running  
