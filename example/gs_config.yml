@@ -5,28 +5,28 @@ global_config:
   model_prediction_key: &model_prediction_key_anchor model_prediction_key
   postprocessing_argmax_key: &postprocessing_argmax_key_anchor postprocessing_argmax_key
 
-dataset_repository: &dataset_repository_anchor
+dataset_repository:
   component_type_key: DATASET_REPOSITORY
   variant_key: DEFAULT
   config:
     storage_connector_path: *storage_path_anchor
 
-dataset_iterators: &dataset_iterators_anchor
+dataset_iterators:
   component_type_key: DATASET_ITERATORS
   variant_key: DEFAULT
   requirements:
     - name: repository
-      component: *dataset_repository_anchor
+      component_name: dataset_repository
   config:
     dataset_identifier: mnist
     splits: ["train", "test"]
 
-splitted_dataset_iterators: &splitted_dataset_iterators_anchor
+splitted_dataset_iterators:
   component_type_key: SPLITTED_DATASET_ITERATORS
   variant_key: RANDOM
   requirements:
     - name: iterators
-      component: *dataset_iterators_anchor
+      component_name: dataset_iterators
       subscription:
         - train
         - test
@@ -36,7 +36,7 @@ splitted_dataset_iterators: &splitted_dataset_iterators_anchor
         train: 0.7
         val: 0.3
 
-data_collator: &data_collator_anchor
+data_collator:
   component_type_key: DATA_COLLATOR
   variant_key: DEFAULT
   config:
@@ -46,32 +46,29 @@ data_collator: &data_collator_anchor
     collator_params:
       target_publication_key: *target_key_anchor
 
-data_loaders: &data_loader_anchor
+data_loaders:
   component_type_key: DATA_LOADER
   variant_key: DEFAULT
   requirements:
     - name: iterators
-      component: *splitted_dataset_iterators_anchor
-      subscription:
-        - train
-        - val
-        - test
+      component_name: splitted_dataset_iterators
+      subscription: [train, val, test]
     - name: data_collator
-      component: *data_collator_anchor
+      component_name: data_collator
   config:
     batch_size: 50
     weigthed_sampling_split_name: null
 
-model_registry: &model_registry_anchor
+model_registry:
   component_type_key: MODEL_REGISTRY
   variant_key: DEFAULT
 
-model: &model_anchor
+model:
   component_type_key: MODEL
   variant_key: DEFAULT
   requirements:
     - name: model_registry
-      component: *model_registry_anchor
+      component_name: model_registry
       subscription: conv_net
   config:
     model_definition:
@@ -108,32 +105,29 @@ optimizer:
     params:
       lr:
         sweep: absolute
-        values:
-          - 0.01
-          - 0.001
-          - 0.0001
+        values: [0.01, 0.001, 0.0001]
       # weight_decay: 0.0001
 
-loss_function_registry: &loss_function_registry_anchor
+loss_function_registry:
   component_type_key: LOSS_FUNCTION_REGISTRY
   variant_key: DEFAULT
 
-metric_registry: &metric_registry_anchor
+metric_registry:
   component_type_key: METRIC_REGISTRY
   variant_key: DEFAULT
 
-prediction_postprocessing_registry: &prediction_postprocessing_registry_anchor
+prediction_postprocessing_registry:
   component_type_key: PREDICTION_POSTPROCESSING_REGISTRY
   variant_key: DEFAULT
 
-train_component: &train_component_anchor
+train_component:
   component_type_key: TRAIN_COMPONENT
   variant_key: DEFAULT
   requirements:
     - name: loss_function_registry
-      component: *loss_function_registry_anchor
+      component_name: loss_function_registry
     - name: prediction_postprocessing_registry
-      component: *prediction_postprocessing_registry_anchor
+      component_name: prediction_postprocessing_registry
   config:
     loss_fun_config:
       prediction_subscription_key: *model_prediction_key_anchor
@@ -146,30 +140,30 @@ trainer:
   variant_key: DEFAULT
   requirements:
     - name: train_component
-      component: *train_component_anchor
+      component_name: train_component
     - name: model
-      component: *model_anchor
+      component_name: model
       subscription: null
     - name: data_loaders
-      component: *data_loader_anchor
+      component_name: data_loaders
       subscription: train
 
-eval_component: &eval_component_anchor
+eval_component:
   component_type_key: EVAL_COMPONENT
   variant_key: DEFAULT
   requirements:
     - name: model
-      component: *model_anchor
+      component_name: model
       subscription: null
     - name: data_loaders
-      component: *data_loader_anchor
+      component_name: data_loaders
       subscription: [train, val, test]
     - name: loss_function_registry
-      component: *loss_function_registry_anchor
+      component_name: loss_function_registry
     - name: metric_registry
-      component: *metric_registry_anchor
+      component_name: metric_registry
     - name: prediction_postprocessing_registry
-      component: *prediction_postprocessing_registry_anchor
+      component_name: prediction_postprocessing_registry
   config:
     post_processors_config:
       - key: "ARG_MAX"
@@ -206,4 +200,4 @@ evaluator:
   variant_key: DEFAULT
   requirements:
     - name: eval_component
-      component: *eval_component_anchor
+      component_name: eval_component
