@@ -55,7 +55,6 @@ class ConvNetBluePrint(BluePrint):
         injector = Injector(injection_mapping)
         component_factory = ComponentFactory(injector)
         component_factory.register_component_type("MODEL_REGISTRY", "DEFAULT", MyModelRegistryConstructable)
-        components = component_factory.build_components_from_config(self.config)
-        components = {key: component for key, component in components.items() if key in component_names}
+        components = component_factory.build_components_from_config(self.config, component_names)
         gym_job = GymJob(self.run_mode, experiment_info=experiment_info, epochs=self.epochs, **components)
         return gym_job
