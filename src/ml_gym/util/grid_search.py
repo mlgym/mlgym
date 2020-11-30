@@ -4,6 +4,7 @@ import json
 import glob
 import os
 import copy
+from ml_gym.io.config_parser import YAMLConfigLoader
 
 
 class GridSearch:
@@ -102,16 +103,17 @@ class GridSearch:
 
     @staticmethod
     def create_gs_configs_from_path(config_path: str) -> List[Dict]:
-        with open(config_path, "r") as f:
-            gs_config = json.load(f)
-        configs = list(GridSearch._split_config(gs_config))
+        gs_config = YAMLConfigLoader.load(config_path)
+        configs = GridSearch.create_gs(gs_config)
         return configs
 
     @staticmethod
     def create_gs(gs: Dict):
-        return GridSearch._split_config(gs)
+        configs = GridSearch._split_config(gs)
+        return configs
 
     # CONFIG PART OF GS
+
     @staticmethod
     def is_config_in_gs(d: Dict, gs: Dict, negligible_paths: Dict = None) -> bool:
         if negligible_paths is None:

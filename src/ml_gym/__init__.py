@@ -30,9 +30,7 @@ def create_blueprints(blue_print_class: Type[BluePrint],
                       num_epochs: int) -> List[BluePrint]:
 
     run_mode = AbstractGymJob.Mode[run_mode]
-    gs_configs = YAMLConfigLoader.load(gs_config_path)
-    run_id_to_config_dict = {str(run_id): config for run_id, config in enumerate(GridSearch.create_gs(gs_configs))}
-
+    run_id_to_config_dict = {str(run_id): config for run_id, config in enumerate(GridSearch.create_gs_configs_from_path(gs_config_path))}
     config_tuples = list(run_id_to_config_dict.items())
     epochs = list(range(num_epochs))
     grid_search_id = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
