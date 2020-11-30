@@ -2,7 +2,6 @@ import copy
 from typing import Dict, Any, List, Type
 from collections import namedtuple
 from dataclasses import dataclass, field
-import hashlib
 from ml_gym.error_handling.exception import ComponentConstructionError
 from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIteratorConstructable, \
     DatasetIteratorSplitsConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
@@ -29,19 +28,13 @@ class Injector:
 
 @dataclass
 class ComponentRepresentation:
-    """ Direct class represenation of components in the config dictionary
+    """ Direct class representation of components in the config dictionary
     """
+    name: str
     component_type_key: str
     variant_key: str
     config: Dict = field(default_factory=dict)
-    name: str = None  # not part of the hash
-    requirements: List["RequirementRepresentation"] = field(default_factory=dict)
-
-    @property
-    def hash(self) -> str:
-        content_string = "" + self.component_type_key + \
-            self.variant_key + str(self.config)
-        return hashlib.sha256(content_string.encode('utf-8')).hexdigest()
+    requirements: Dict[str, "RequirementRepresentation"] = field(default_factory=dict)
 
     def __str__(self):
         return f"ComponentRepresentation(name='{self.name}'," \
@@ -59,12 +52,9 @@ class ComponentRepresentation:
 class RequirementRepresentation:
     """ Class representation of a requirement of a component defined in the config.
     """
-    component: ComponentRepresentation
+    name: str
+    component_name: str
     subscription: List[int]
-
-    @property
-    def hash(self) -> str:
-        return self.component.hash
 
 
 class ComponentFactory:
@@ -134,16 +124,24 @@ class ComponentFactory:
     def _calc_dependency_graph(self, component_config: Dict) -> Dict[str, ComponentRepresentation]:
         """Returns a dict that maps component hash values to components.
         Each component can have requirements which in return are components again.
-        Thereby, defining the dependency relationship of components, e.g., trainer depends on model."""
+        Thereby, defining the dependency relationship of components, e.g., trainer depends on model."
 
+        Args:
+            component_config (Dict): Raw config describing the components and their dependencies
+
+        Returns:
+            Dict[str, ComponentRepresentation]: [description]
+        """
         def create_component_representation(component_config: Dict, component_name: str = None) -> ComponentRepresentation:
             requirements = {}
             if "requirements" in component_config:
                 requirements = {}
                 for requirement in component_config.pop("requirements"):
-                    component_representation = create_component_representation(requirement["component"])
-                    req_rep = RequirementRepresentation(component_representation, requirement.get("subscription"))
-                    requirements[requirement["name"]] = req_rep
+                    requirement_component_name = requirement["component_name"]
+                    name = requirement["name"]
+                    subscription = requirement.get("subscription")
+                    req_rep = RequirementRepresentation(name=name, component_name=requirement_component_name, subscription=subscription)
+                    requirements[name] = req_rep
             # inject components
             if self.injector and "config" in component_config:
                 component_config["config"] = self.injector.inject_pass(component_config["config"])
@@ -158,35 +156,39 @@ class ComponentFactory:
         component_representations = {}
         for component_name, component_dict in component_config.items():
             component_representation = create_component_representation(component_config=component_dict, component_name=component_name)
-            component_representations[component_representation.hash] = component_representation
+            component_representations[component_representation.name] = component_representation
         return component_representations
 
-    def get_hash_to_component_name_map(self, component_representations: Dict[str, ComponentRepresentation]) -> Dict[str, str]:
-        return {hash_key: rep.name for hash_key, rep in component_representations.items()}
+    def build_components_from_config(self, component_config: Dict, names_of_components_to_construct: List[str]) -> Dict:
+        """Builds the components and returns a mapping from component name to component.
+        Note, that dependencies are always rebuilt and not reused!
 
-    def build_components_from_config(self, component_config: Dict) -> Dict:
-        def build_component(component_hash: str, component_representation_graph: Dict[str, ComponentRepresentation], components: Dict[str, Any]):
-            component_representation = component_representation_graph[component_hash]
-            # build the requirements if not built yet
-            for requirement_name, requirement in component_representation.requirements.items():
-                if requirement.hash not in components:
-                    components = build_component(component_hash, component_representation_graph, components)
+        Args:
+            component_config (Dict): Raw config describing the components and their dependencies
+
+        Returns:
+            Dict: Component dictionary (component name -> Component)
+        """
+        def build_component(component_name: str, component_representation_graph: Dict[str, ComponentRepresentation], components: Dict[str, Any]):
+            component_representation = component_representation_graph[component_name]
+            # build the requirements
+            requirement_components = {name: build_component(requirement.component_name, component_representation_graph, {})
+                                      for name, requirement in component_representation.requirements.items()}
+
             # collect the requirements
-            requirements = {name: Requirement(components[requirement.hash], requirement.subscription)
+            requirements = {name: Requirement(requirement_components[name], requirement.subscription)
                             for name, requirement in component_representation.requirements.items()}
             # build the requested component
             component_variants_registry = self.component_factory_registry[component_representation.component_type_key]
             component = component_variants_registry.construct(
                 component_representation.variant_key, component_representation.name, component_representation.config, requirements)
-            components[component_hash] = component
-            return components
+            return component
 
         # calculate the dependency graph of components
         component_representation_graph = self._calc_dependency_graph(component_config)
         # build each component
         components: Dict[str, Any] = {}  # maps
-        for component_hash, component_representation in component_representation_graph.items():
-            if component_hash not in components:
-                components = build_component(component_hash, component_representation_graph, components)
-        hast_to_name_map = self.get_hash_to_component_name_map(component_representation_graph)
-        return {hast_to_name_map[hash_value]: component for hash_value, component in components.items()}
+        components = {component_name: build_component(component_name, component_representation_graph, {})
+                      for component_name, component_representation in component_representation_graph.items()
+                      if component_name in names_of_components_to_construct}
+        return components

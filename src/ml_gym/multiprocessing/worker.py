@@ -54,7 +54,7 @@ class WorkerProcessWrapper:
         if self.num_jobs_to_perform == self.jobs_done_count:
             self.logger.log(LogLevel.DEBUG, f"Recreating process {self.process_id}.")
             self.process = WorkerProcess(self.process_id, self.num_jobs_to_perform,
-                                         self.job_q, self.done_q, self.device)
+                                         self.job_q, self.done_q, self.device, self.logger)
             self.process.start()
             self.logger.log(LogLevel.DEBUG, f"Recreated process {self.process_id}.")
             self.jobs_done_count = 0
