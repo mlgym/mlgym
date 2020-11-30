@@ -98,11 +98,12 @@ class DatasetIteratorConstructable(ComponentConstructable):
 @dataclass
 class DatasetIteratorSplitsConstructable(ComponentConstructable):
     split_configs: Dict = None
+    seed: int = 1
 
     def _construct_impl(self) -> Dict[str, InformedDatasetIteratorIF]:
         dataset_iterators_dict = self.get_requirement("iterators")
         splitted_iterators_dict = ModelGymInformedIteratorFactory.get_splitted_iterators(
-            self.component_identifier, dataset_iterators_dict, self.split_configs)
+            self.component_identifier, dataset_iterators_dict, self.seed, self.split_configs)
         return {**dataset_iterators_dict, **splitted_iterators_dict}
 
 

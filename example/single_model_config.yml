@@ -35,6 +35,7 @@ splitted_dataset_iterators:
       train:
         train: 0.7
         val: 0.3
+    seed: 2
 
 data_collator:
   component_type_key: DATA_COLLATOR
