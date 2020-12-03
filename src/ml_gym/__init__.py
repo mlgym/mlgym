@@ -1,5 +1,4 @@
 from datetime import datetime
-from ml_gym.io.config_parser import YAMLConfigLoader
 from ml_gym.gym.jobs import AbstractGymJob
 from ml_gym.gym.gym import Gym
 from ml_gym.blueprints.blue_prints import BluePrint
