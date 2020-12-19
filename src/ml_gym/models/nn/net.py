@@ -5,9 +5,9 @@ from abc import abstractmethod
 
 class NNModel(nn.Module):
     def __init__(self, seed: int = None):
-        super(NNModel, self).__init__()
         if seed is not None:
             torch.manual_seed(seed)
+        super(NNModel, self).__init__()
 
     @abstractmethod
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
