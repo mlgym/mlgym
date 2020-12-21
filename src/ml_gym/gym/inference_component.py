@@ -1,5 +1,5 @@
 from ml_gym.models.nn.net import NNModel
-from ml_gym.batch import InferenceResultBatch, DatasetBatch
+from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch
 from typing import List
 import torch
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent

@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from abc import ABC, abstractmethod
-from ml_gym.batch import InferenceResultBatch
+from ml_gym.batching.batch import InferenceResultBatch
 
 
 class PredictPostProcessingIF(ABC):

@@ -1,6 +1,6 @@
 import pytest
 import torch
-from ml_gym.batch import InferenceResultBatch
+from ml_gym.batching.batch import InferenceResultBatch
 from ml_gym.loss_functions.loss_functions import LPLoss, LPLossScaled, CrossEntropyLoss, NLLLoss, BCEWithLogitsLoss
 import torch.nn as nn
 

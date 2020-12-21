@@ -3,7 +3,7 @@ from ml_gym.loss_functions.loss_functions import Loss, LossWarmupMixin
 from ml_gym.models.nn.net import NNModel
 from ml_gym.data_handling.dataset_loader import DatasetLoader
 import torch
-from ml_gym.batch import InferenceResultBatch, DatasetBatch, Batch
+from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch, Batch
 from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.gym.stateful_components import StatefulComponent
 from torch.optim.optimizer import Optimizer

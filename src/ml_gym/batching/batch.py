@@ -22,7 +22,11 @@ class Batch(ABC):
     def _combine_tensor_dicts(tensor_dicts: List[Dict[Any, torch.Tensor]]) -> Dict[Any, torch.Tensor]:
         combined_tensor_dict = {}
         for key in tensor_dicts[0].keys():
-            combined_tensor_dict[key] = torch.cat([d[key] for d in tensor_dicts])
+            if isinstance(tensor_dicts[0][key], dict):
+                sub_tensor_dicts = [d[key] for d in tensor_dicts]
+                combined_tensor_dict[key] = Batch._combine_tensor_dicts(sub_tensor_dicts)
+            else:
+                combined_tensor_dict[key] = torch.cat([d[key] for d in tensor_dicts])
         return combined_tensor_dict
 
     @staticmethod

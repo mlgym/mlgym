@@ -1,7 +1,7 @@
 from typing import List
 from ml_gym.loss_functions.loss_functions import Loss, LossWarmupMixin
 from ml_gym.loss_functions.loss_scaler import Scaler
-from ml_gym.batch import InferenceResultBatch
+from ml_gym.batching.batch import InferenceResultBatch
 import torch
 
 

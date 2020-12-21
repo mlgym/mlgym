@@ -1,6 +1,6 @@
 from typing import List
 from ml_gym.gym.post_processing import PredictPostProcessingIF
-from ml_gym.batch import InferenceResultBatch
+from ml_gym.batching.batch import InferenceResultBatch
 
 
 class PredictPostprocessingComponent:

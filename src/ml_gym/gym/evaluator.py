@@ -2,7 +2,7 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Any, Callable, Dict, List
 import torch
-from ml_gym.batch import DatasetBatch, EvaluationBatchResult, InferenceResultBatch
+from ml_gym.batching.batch import DatasetBatch, EvaluationBatchResult, InferenceResultBatch
 from ml_gym.data_handling.dataset_loader import DatasetLoader
 from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.gym.stateful_components import StatefulComponent
@@ -120,5 +120,5 @@ class EvalComponent(EvalComponentIF):
             # TODO have to check if we actually need to do this since most loss funtions already average ...
             loss = [loss.detach().sum().item() / loss.shape[0]]
         else:
-            loss = loss.detach().tolist()
+            loss = [loss.detach().tolist()]
         return loss
