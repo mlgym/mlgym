@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import torch
 import torch.nn as nn
 from ml_gym.loss_functions.loss_scaler import MeanScaler
-from ml_gym.batch import InferenceResultBatch
+from ml_gym.batching.batch import InferenceResultBatch
 from typing import List, Callable
 from ml_gym.gym.stateful_components import StatefulComponent
 import torch.nn.functional as F
@@ -121,10 +121,11 @@ class NLLLoss(Loss):
 
 
 class BCEWithLogitsLoss(Loss):
-    def __init__(self, target_subscription_key: str, prediction_subscription_key: str, tag: str = ""):
+    def __init__(self, target_subscription_key: str, prediction_subscription_key: str, tag: str = "", average_batch_loss: bool = False):
         super().__init__(tag)
         self.target_subscription_key: str = target_subscription_key
         self.prediction_subscription_key: str = prediction_subscription_key
+        self.average_batch_loss = average_batch_loss
 
     def __call__(self, inference_result_batch: InferenceResultBatch) -> torch.Tensor:
         t = inference_result_batch.get_targets(
@@ -132,4 +133,6 @@ class BCEWithLogitsLoss(Loss):
         p = inference_result_batch.get_predictions(
             self.prediction_subscription_key).flatten()
         loss_values = nn.BCEWithLogitsLoss(reduction="none")(p, t)
+        if self.average_batch_loss:
+            loss_values = torch.sum(loss_values)/len(loss_values)
         return loss_values

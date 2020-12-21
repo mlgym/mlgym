@@ -14,7 +14,8 @@ from ml_gym.registries.class_registry import ClassRegistry
 from ml_gym.gym.trainer import Trainer, TrainComponent, InferenceComponent
 from ml_gym.loss_functions.loss_functions import Loss
 from sklearn.metrics import f1_score, recall_score, precision_score
-from ml_gym.metrics.metrics import MetricFactory, Metric, binary_aupr_score, binary_auroc_score
+from ml_gym.metrics.metrics import Metric, binary_aupr_score, binary_auroc_score
+from ml_gym.metrics.metric_factory import MetricFactory
 from ml_gym.gym.evaluator import Evaluator, EvalComponent
 from ml_gym.data_handling.postprocessors.factory import ModelGymInformedIteratorFactory
 from ml_gym.data_handling.postprocessors.collator import CollatorIF
@@ -262,16 +263,21 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
     def _construct_impl(self):
         metric_fun_registry = ClassRegistry()
         default_mapping: [str, Metric] = {
-            self.MetricKeys.F1_SCORE: MetricFactory.get_partial_metric(metric_key=self.MetricKeys.F1_SCORE,
-                                                                       metric_fun=f1_score),
-            self.MetricKeys.RECALL: MetricFactory.get_partial_metric(metric_key=self.MetricKeys.RECALL,
-                                                                     metric_fun=recall_score),
-            self.MetricKeys.PRECISION: MetricFactory.get_partial_metric(metric_key=self.MetricKeys.PRECISION,
-                                                                        metric_fun=precision_score),
-            self.MetricKeys.AUROC: MetricFactory.get_partial_metric(metric_key=self.MetricKeys.AUROC,
-                                                                    metric_fun=binary_auroc_score),
-            self.MetricKeys.AUPR: MetricFactory.get_partial_metric(metric_key=self.MetricKeys.AUPR,
-                                                                   metric_fun=binary_aupr_score)
+            MetricFunctionRegistryConstructable.MetricKeys.F1_SCORE:
+                MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.F1_SCORE,
+                                                 metric_fun=f1_score),
+            MetricFunctionRegistryConstructable.MetricKeys.RECALL:
+                MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.RECALL,
+                                                 metric_fun=recall_score),
+            MetricFunctionRegistryConstructable.MetricKeys.PRECISION:
+            MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.PRECISION,
+                                             metric_fun=precision_score),
+            MetricFunctionRegistryConstructable.MetricKeys.AUROC:
+                MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.AUROC,
+                                                 metric_fun=binary_auroc_score),
+            MetricFunctionRegistryConstructable.MetricKeys.AUPR:
+                MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.AUPR,
+                                                 metric_fun=binary_aupr_score)
         }
         for key, metric_type in default_mapping.items():
             metric_fun_registry.add_class(key, metric_type)
@@ -346,6 +352,7 @@ class EvalComponentConstructable(ComponentConstructable):
     metrics_config: List = field(default_factory=list)
     loss_funs_config: List = field(default_factory=list)
     post_processors_config: List[Dict] = field(default_factory=list)
+    average_batch_loss: bool = True
 
     def _construct_impl(self) -> Evaluator:
         dataset_loaders: Dict[str, DatasetLoader] = self.get_requirement("data_loaders")
@@ -358,7 +365,8 @@ class EvalComponentConstructable(ComponentConstructable):
         postprocessors = [PredictPostProcessing(prediction_post_processing_registry.get_instance(**config))
                           for config in self.post_processors_config]
         inference_component = InferenceComponent(postprocessors, no_grad=True)
-        eval_component = EvalComponent(inference_component, metric_funs, loss_funs, dataset_loaders, self.train_split_name)
+        eval_component = EvalComponent(inference_component, metric_funs, loss_funs,
+                                       dataset_loaders, self.train_split_name, self.average_batch_loss)
         return eval_component
 
 
