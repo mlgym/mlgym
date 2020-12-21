@@ -1,7 +1,7 @@
 import pytest
 import torch
-from ml_gym.batch import InferenceResultBatch
-from ml_gym.metrics.metrics import binary_aupr_score, binary_auroc_score, Metric
+from ml_gym.batching.batch import InferenceResultBatch
+from ml_gym.metrics.metrics import binary_aupr_score, binary_auroc_score, PredictionMetric
 
 
 class TestMetrics:
@@ -25,23 +25,23 @@ class TestMetrics:
                                     tags=None)
 
     def test_binary_aupr_score(self, probability_inference_batch_result_good, probability_inference_batch_result_bad):
-        metric_fun = Metric(target_subscription_key=TestMetrics.target_key,
-                            prediction_subscription_key=TestMetrics.prediction_key,
-                            tag="aupr",
-                            identifier="aupr",
-                            metric_fun=binary_aupr_score,
-                            params={"average": "macro"})
+        metric_fun = PredictionMetric(target_subscription_key=TestMetrics.target_key,
+                                      prediction_subscription_key=TestMetrics.prediction_key,
+                                      tag="aupr",
+                                      identifier="aupr",
+                                      metric_fun=binary_aupr_score,
+                                      params={"average": "macro"})
         aupr_good = metric_fun(probability_inference_batch_result_good)
         aupr_bad = metric_fun(probability_inference_batch_result_bad)
         assert aupr_good > aupr_bad
 
     def test_binary_auroc_score(self, probability_inference_batch_result_good, probability_inference_batch_result_bad):
-        metric_fun = Metric(target_subscription_key=TestMetrics.target_key,
-                            prediction_subscription_key=TestMetrics.prediction_key,
-                            tag="auroc",
-                            identifier="auroc",
-                            metric_fun=binary_auroc_score,
-                            params={"average": "macro"})
+        metric_fun = PredictionMetric(target_subscription_key=TestMetrics.target_key,
+                                      prediction_subscription_key=TestMetrics.prediction_key,
+                                      tag="auroc",
+                                      identifier="auroc",
+                                      metric_fun=binary_auroc_score,
+                                      params={"average": "macro"})
         auroc_good = metric_fun(probability_inference_batch_result_good)
         auroc_bad = metric_fun(probability_inference_batch_result_bad)
         assert auroc_good > auroc_bad
