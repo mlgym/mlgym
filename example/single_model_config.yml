@@ -128,6 +128,7 @@ train_component:
     - name: prediction_postprocessing_registry
       component_name: prediction_postprocessing_registry
   config:
+    show_progress: true
     loss_fun_config:
       prediction_subscription_key: *model_prediction_key_anchor
       target_subscription_key: *target_key_anchor
@@ -193,6 +194,7 @@ eval_component:
         target_subscription_key: *target_key_anchor
         key: CrossEntropyLoss
         tag: cross_entropy_loss
+    show_progress: true
 
 evaluator:
   component_type_key: EVALUATOR

@@ -7,12 +7,14 @@ from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch, Batch
 from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.gym.stateful_components import StatefulComponent
 from torch.optim.optimizer import Optimizer
+import tqdm
 
 
 class TrainComponent(StatefulComponent):
-    def __init__(self, inference_component: InferenceComponent, loss_fun: Loss):
+    def __init__(self, inference_component: InferenceComponent, loss_fun: Loss, show_progress: bool = False):
         self.loss_fun = loss_fun
         self.inference_component = inference_component
+        self.show_progress = show_progress
 
     def train_batch(self, batch: DatasetBatch, model: NNModel, optimizer: Optimizer, device: torch.device):
         model.zero_grad()
@@ -27,7 +29,8 @@ class TrainComponent(StatefulComponent):
                          loader=data_loader,
                          fun_params={"device": device,
                                      "model": model,
-                                     "optimizer": optimizer})
+                                     "optimizer": optimizer},
+                         show_progress=self.show_progress)
         return model
 
     def warm_up(self, model: NNModel, data_loader: DatasetLoader, device: torch.device):
@@ -38,7 +41,8 @@ class TrainComponent(StatefulComponent):
         with torch.no_grad():
             prediction_batches = self.map_batches(fun=self.forward_batch,
                                                   fun_params={"device": device, "model": model},
-                                                  loader=data_loader)
+                                                  loader=data_loader,
+                                                  show_progress=self.show_progress)
         prediction_batch = InferenceResultBatch.combine(prediction_batches)
         init_loss(self.loss_fun, prediction_batch)
 
@@ -55,7 +59,7 @@ class TrainComponent(StatefulComponent):
 
     @staticmethod
     def map_batches(fun: Callable[[DatasetBatch, NNModel], Any], loader: DatasetLoader,
-                    fun_params: Dict[str, Any] = None) -> List[Batch]:
+                    fun_params: Dict[str, Any] = None, show_progress: bool = False) -> List[Batch]:
         """
         Applies a function to each batch within a DatasetLoader
         """
@@ -63,7 +67,10 @@ class TrainComponent(StatefulComponent):
         # We should make this a generator instead to prevent memory overflows.
         # Also code duplication with evaluator
         fun_params = fun_params if fun_params is not None else dict()
-        return [fun(batch, **fun_params) for batch in loader]
+        if show_progress:
+            return [fun(batch, **fun_params) for batch in tqdm.tqdm(loader)]
+        else:
+            return [fun(batch, **fun_params) for batch in loader]
 
 
 class Trainer(StatefulComponent):

@@ -324,6 +324,7 @@ class ModelConstructable(ComponentConstructable):
 class TrainComponentConstructable(ComponentConstructable):
     loss_fun_config: Dict = field(default_factory=dict)
     post_processors_config: List[Dict] = field(default_factory=list)
+    show_progress: bool = False
 
     def _construct_impl(self) -> TrainComponent:
         prediction_post_processing_registry: ClassRegistry = self.get_requirement("prediction_postprocessing_registry")
@@ -332,7 +333,7 @@ class TrainComponentConstructable(ComponentConstructable):
         postprocessors = [PredictPostProcessing(prediction_post_processing_registry.get_instance(**config))
                           for config in self.post_processors_config]
         inference_component = InferenceComponent(postprocessors, no_grad=False)
-        train_component = TrainComponent(inference_component, train_loss_fun)
+        train_component = TrainComponent(inference_component, train_loss_fun, self.show_progress)
         return train_component
 
 
@@ -353,6 +354,7 @@ class EvalComponentConstructable(ComponentConstructable):
     loss_funs_config: List = field(default_factory=list)
     post_processors_config: List[Dict] = field(default_factory=list)
     average_batch_loss: bool = True
+    show_progress: bool = False
 
     def _construct_impl(self) -> Evaluator:
         dataset_loaders: Dict[str, DatasetLoader] = self.get_requirement("data_loaders")
@@ -366,7 +368,8 @@ class EvalComponentConstructable(ComponentConstructable):
                           for config in self.post_processors_config]
         inference_component = InferenceComponent(postprocessors, no_grad=True)
         eval_component = EvalComponent(inference_component, metric_funs, loss_funs,
-                                       dataset_loaders, self.train_split_name, self.average_batch_loss)
+                                       dataset_loaders, self.train_split_name, self.average_batch_loss,
+                                       self.show_progress)
         return eval_component
 
 

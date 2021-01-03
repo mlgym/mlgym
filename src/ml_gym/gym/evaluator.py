@@ -9,6 +9,7 @@ from ml_gym.gym.stateful_components import StatefulComponent
 from ml_gym.metrics.metrics import Metric
 from ml_gym.models.nn.net import NNModel
 from ml_gym.loss_functions.loss_functions import Loss, LossWarmupMixin
+import tqdm
 
 
 class AbstractEvaluator(StatefulComponent):
@@ -47,13 +48,14 @@ class EvalComponent(EvalComponentIF):
 
     def __init__(self, inference_component: InferenceComponent, metrics: List[Metric],
                  loss_funs: Dict[str, Loss], dataset_loaders: Dict[str, DatasetLoader], train_split_name: str,
-                 average_batch_loss: bool = True):
+                 average_batch_loss: bool = True, show_progress: bool = False):
         self.loss_funs = loss_funs
         self.inference_component = inference_component
         self.metrics = metrics
         self.dataset_loaders = dataset_loaders
         self.average_batch_loss = average_batch_loss
         self.train_split_name = train_split_name
+        self.show_progress = show_progress
 
     def warm_up(self, model: NNModel, device: torch.device):
         def init_loss_funs(batch: InferenceResultBatch):
@@ -65,7 +67,8 @@ class EvalComponent(EvalComponentIF):
         if any([isinstance(loss_fun, LossWarmupMixin) for _, loss_fun in self.loss_funs.items()]):
             prediction_batches = self.map_batches(fun=self.forward_batch,
                                                   fun_params={"device": device, "model": model},
-                                                  loader=self.dataset_loaders[self.train_split_name])
+                                                  loader=self.dataset_loaders[self.train_split_name],
+                                                  show_progress=self.show_progress)
             prediction_batch = InferenceResultBatch.combine(prediction_batches)
             init_loss_funs(prediction_batch)
 
@@ -75,7 +78,8 @@ class EvalComponent(EvalComponentIF):
     def evaluate_dataset_split(self, model: NNModel, device: torch.device, split_name: str, dataset_loader: DatasetLoader) -> EvaluationBatchResult:
         prediction_batches = self.map_batches(fun=self.forward_batch,
                                               loader=dataset_loader,
-                                              fun_params={"device": device, "model": model})
+                                              fun_params={"device": device, "model": model},
+                                              show_progress=self.show_progress)
         prediction_batch = InferenceResultBatch.combine(prediction_batches)
         loss_scores = self.calculate_loss_scores(prediction_batch)
         metric_scores = self.calculate_metric_scores(prediction_batch)
@@ -87,13 +91,17 @@ class EvalComponent(EvalComponentIF):
 
     @staticmethod
     def map_batches(fun: Callable[[DatasetBatch, Any], Any], loader: DatasetLoader,
-                    fun_params: Dict[str, Any] = None) -> List[InferenceResultBatch]:
+                    fun_params: Dict[str, Any] = None, show_progress: bool = False) -> List[InferenceResultBatch]:
         """
         Applies a function to each batch within a DatasetLoader
         """
         fun_params = fun_params if fun_params is not None else dict()
         # TODO: This loads the entire dataset into memory.
         # We should make this a generator instead to prevent memory overflows.
+        if show_progress:
+            return [fun(batch, **fun_params) for batch in tqdm.tqdm(loader)]
+        else:
+            return [fun(batch, **fun_params) for batch in loader]
         return [fun(batch, **fun_params) for batch in loader]
 
     def _get_metric_fun(self, identifier: str, target_subscription: Enum, prediction_subscription: Enum,
