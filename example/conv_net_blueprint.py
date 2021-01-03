@@ -4,7 +4,7 @@ from conv_net import ConvNet
 from ml_gym.blueprints.constructables import ModelRegistryConstructable
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.jobs import AbstractGymJob, GymJob
-from ml_gym.batch import DatasetBatch
+from ml_gym.batching.batch import DatasetBatch
 from dataclasses import dataclass
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector
 from ml_gym.data_handling.postprocessors.collator import CollatorIF
