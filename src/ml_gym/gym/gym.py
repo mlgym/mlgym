@@ -12,8 +12,9 @@ torch.multiprocessing.set_start_method('spawn', force=True)
 
 
 class Gym:
-    def __init__(self, process_count: int = 1, device_ids: List[int] = None):
+    def __init__(self, process_count: int = 1, device_ids: List[int] = None, log_std_to_file: bool = True):
         self.devices = get_devices(device_ids)
+        self.log_std_to_file = log_std_to_file
         self.pool = Pool(num_processes=process_count, devices=self.devices)
         self.jobs: List[Job] = []
 
@@ -31,7 +32,7 @@ class Gym:
             self.work(self.devices[0])
 
     def add_blue_print(self, blue_print: BluePrint):
-        job = Job(job_id=len(self.jobs), fun=Gym._run_job, param_dict={"blue_print": blue_print})
+        job = Job(job_id=len(self.jobs), fun=Gym._run_job, param_dict={"blue_print": blue_print, "log_std_to_file": self.log_std_to_file})
         self.jobs.append(job)
 
     def add_blue_prints(self, blue_prints: List[BluePrint]):
@@ -39,9 +40,9 @@ class Gym:
             self.add_blue_print(blue_print)
 
     @staticmethod
-    def _run_job(blue_print: BluePrint, device: torch.device) -> AbstractGymJob:
+    def _run_job(blue_print: BluePrint, device: torch.device, log_std_to_file: bool) -> AbstractGymJob:
         gym_job = AbstractGymJob.from_blue_print(blue_print)
-        decorated_runner = ExperimentTracking(gym_job.experiment_info, log_to_file=True)(partial(gym_job.execute, device=device))
+        decorated_runner = ExperimentTracking(gym_job.experiment_info, log_to_file=log_std_to_file)(partial(gym_job.execute, device=device))
         decorated_runner(device=device)
         return gym_job
 

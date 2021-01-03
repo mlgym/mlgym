@@ -8,8 +8,8 @@ from ml_gym.util.logger import QueuedLogging
 from multiprocessing import Queue
 
 
-def create_gym(process_count: int, device_ids) -> Gym:
-    gym = Gym(process_count, device_ids=device_ids)
+def create_gym(process_count: int, device_ids, log_std_to_file: bool) -> Gym:
+    gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
     return gym
 
 

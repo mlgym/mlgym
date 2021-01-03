@@ -12,6 +12,7 @@ def parse_args():
     parser.add_argument('--text_logging_path', type=str, required=True, help='Path to python textual logging directory')
     parser.add_argument('--gs_config_path', type=str, required=True, help='Path to the grid search config')
     parser.add_argument('--gpus', type=int, nargs='+', help='Indices of GPUs to distribute the GS over', default=None)
+    parser.add_argument('--log_std_to_file', default=False, action="store_true", help='Flag for forwarding std output to file')
 
     args = parser.parse_args()
     num_epochs = args.num_epochs
@@ -21,13 +22,14 @@ def parse_args():
     process_count = args.process_count
     gpus = args.gpus
     text_logging_path = args.text_logging_path
-    return num_epochs, run_mode, dashify_logging_path, text_logging_path, gs_config_path, process_count, gpus
+    log_std_to_file = args.log_std_to_file
+    return num_epochs, run_mode, dashify_logging_path, text_logging_path, gs_config_path, process_count, gpus, log_std_to_file
 
 
 if __name__ == '__main__':
-    num_epochs, run_mode, dashify_logging_path, text_logging_path, gs_config_path, process_count, gpus = parse_args()
+    num_epochs, run_mode, dashify_logging_path, text_logging_path, gs_config_path, process_count, gpus, log_std_to_file = parse_args()
     setup_logging_environment(text_logging_path)
-    gym = create_gym(process_count=process_count, device_ids=gpus)
+    gym = create_gym(process_count=process_count, device_ids=gpus, log_std_to_file=log_std_to_file)
     blueprints = create_blueprints(blue_print_class=ConvNetBluePrint,
                                    run_mode=run_mode,
                                    gs_config_path=gs_config_path,
