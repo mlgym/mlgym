@@ -8,6 +8,7 @@ from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.gym.stateful_components import StatefulComponent
 from torch.optim.optimizer import Optimizer
 import tqdm
+from ml_gym.util.logger import LogLevel, ConsoleLogger
 
 
 class TrainComponent(StatefulComponent):
@@ -15,6 +16,7 @@ class TrainComponent(StatefulComponent):
         self.loss_fun = loss_fun
         self.inference_component = inference_component
         self.show_progress = show_progress
+        self.logger = ConsoleLogger("logger_train_component")
 
     def train_batch(self, batch: DatasetBatch, model: NNModel, optimizer: Optimizer, device: torch.device):
         model.zero_grad()
@@ -38,13 +40,21 @@ class TrainComponent(StatefulComponent):
             if isinstance(loss_fun, LossWarmupMixin):
                 loss_fun.warm_up(batch)
                 loss_fun.finish_warmup()
-        with torch.no_grad():
-            prediction_batches = self.map_batches(fun=self.forward_batch,
-                                                  fun_params={"device": device, "model": model},
-                                                  loader=data_loader,
-                                                  show_progress=self.show_progress)
-        prediction_batch = InferenceResultBatch.combine(prediction_batches)
-        init_loss(self.loss_fun, prediction_batch)
+
+        def check_if_initiable_component(loss_fun: Loss):
+            return isinstance(loss_fun, LossWarmupMixin)
+
+        if check_if_initiable_component(self.loss_fun):
+            self.logger.log(LogLevel.INFO, "Running warmup...")
+            with torch.no_grad():
+                prediction_batches = self.map_batches(fun=self.forward_batch,
+                                                      fun_params={"device": device, "model": model},
+                                                      loader=data_loader,
+                                                      show_progress=self.show_progress)
+            prediction_batch = InferenceResultBatch.combine(prediction_batches)
+            init_loss(self.loss_fun, prediction_batch)
+        else:
+            self.logger.log(LogLevel.INFO, "Skipping training warmup. No special loss functions to be initialized.")
 
     def forward_batch(self, batch: DatasetBatch, model: NNModel, device: torch.device) -> InferenceResultBatch:
         model.to(device)

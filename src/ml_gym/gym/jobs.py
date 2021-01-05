@@ -50,8 +50,7 @@ class AbstractGymJob(StatefulComponent):
 class GymJob(AbstractGymJob):
 
     def __init__(self, mode: AbstractGymJob.Mode.TRAIN, model: NNModel, optimizer, trainer: Trainer,
-                 evaluator: Evaluator,
-                 experiment_info: ExperimentInfo, epochs: List[int]):
+                 evaluator: Evaluator, experiment_info: ExperimentInfo, epochs: List[int]):
         super().__init__(experiment_info)
         self.mode = mode
         self.model = model

@@ -10,6 +10,7 @@ from ml_gym.metrics.metrics import Metric
 from ml_gym.models.nn.net import NNModel
 from ml_gym.loss_functions.loss_functions import Loss, LossWarmupMixin
 import tqdm
+from ml_gym.util.logger import LogLevel, ConsoleLogger
 
 
 class AbstractEvaluator(StatefulComponent):
@@ -56,6 +57,7 @@ class EvalComponent(EvalComponentIF):
         self.average_batch_loss = average_batch_loss
         self.train_split_name = train_split_name
         self.show_progress = show_progress
+        self.logger = ConsoleLogger("logger_eval_component")
 
     def warm_up(self, model: NNModel, device: torch.device):
         def init_loss_funs(batch: InferenceResultBatch):
@@ -65,12 +67,15 @@ class EvalComponent(EvalComponentIF):
                     loss_fun.finish_warmup()
 
         if any([isinstance(loss_fun, LossWarmupMixin) for _, loss_fun in self.loss_funs.items()]):
+            self.logger.log(LogLevel.INFO, "Running warmup...")
             prediction_batches = self.map_batches(fun=self.forward_batch,
                                                   fun_params={"device": device, "model": model},
                                                   loader=self.dataset_loaders[self.train_split_name],
                                                   show_progress=self.show_progress)
             prediction_batch = InferenceResultBatch.combine(prediction_batches)
             init_loss_funs(prediction_batch)
+        else:
+            self.logger.log(LogLevel.INFO, "Skipping evaluation warmup. No special loss functions to be initialized.")
 
     def evaluate(self, model: NNModel, device: torch.device) -> List[EvaluationBatchResult]:
         return [self.evaluate_dataset_split(model, device, split_name, loader) for split_name, loader in self.dataset_loaders.items()]
