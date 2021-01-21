@@ -32,7 +32,7 @@ class IteratorFixtures:
         constructable = DatasetIteratorConstructable(component_identifier="iterator_component",
                                                      requirements=repository_requirement,
                                                      dataset_identifier="mnist",
-                                                     splits=["train", "test"])
+                                                     split_configs=[{"split": "train"}, {"split": "test"}])
         iterators = constructable.construct()
         return iterators
 

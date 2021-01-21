@@ -30,7 +30,7 @@ class TestDatasetIteratorConstructable:
         constructable = DatasetIteratorConstructable(component_identifier="iterator_component",
                                                      requirements=requirements,
                                                      dataset_identifier="mnist",
-                                                     splits=["train"])
+                                                     split_configs=[{"split": "train"}])
         iterators = constructable.construct()
         sample, target = iterators["train"][0]
         assert list(sample.shape) == [28, 28]

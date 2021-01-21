@@ -4,7 +4,7 @@ from data_stack.dataset.factory import BaseDatasetFactory
 import torch
 import random
 from data_stack.dataset.meta import IteratorMeta
-from typing import Tuple
+from typing import Tuple, Dict, Any
 
 
 class MockedMNISTIterator(SequenceDatasetIterator):
@@ -20,5 +20,5 @@ class MockedMNISTFactory(BaseDatasetFactory):
     def __init__(self):
         super().__init__(storage_connector=None)
 
-    def get_dataset_iterator(self, split: str = None) -> Tuple[DatasetIteratorIF, IteratorMeta]:
+    def get_dataset_iterator(self, config: Dict[str, Any] = None) -> Tuple[DatasetIteratorIF, IteratorMeta]:
         return MockedMNISTIterator(), IteratorMeta(sample_pos=0, target_pos=1, tag_pos=2)
