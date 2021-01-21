@@ -19,7 +19,7 @@ setup(
         "tqdm",
         "pyyaml",
         "datastack",
-        "scipy", 
+        "scipy",
         "dashifyML",
         "scikit-learn"
     ],

@@ -104,7 +104,7 @@ class EvalComponent(EvalComponentIF):
         # TODO: This loads the entire dataset into memory.
         # We should make this a generator instead to prevent memory overflows.
         if show_progress:
-            return [fun(batch, **fun_params) for batch in tqdm.tqdm(loader)]
+            return [fun(batch, **fun_params) for batch in tqdm.tqdm(loader, desc="Batches processed:")]
         else:
             return [fun(batch, **fun_params) for batch in loader]
         return [fun(batch, **fun_params) for batch in loader]

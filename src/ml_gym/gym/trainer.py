@@ -78,7 +78,7 @@ class TrainComponent(StatefulComponent):
         # Also code duplication with evaluator
         fun_params = fun_params if fun_params is not None else dict()
         if show_progress:
-            return [fun(batch, **fun_params) for batch in tqdm.tqdm(loader)]
+            return [fun(batch, **fun_params) for batch in tqdm.tqdm(loader, desc="Batches processed:")]
         else:
             return [fun(batch, **fun_params) for batch in loader]
 
