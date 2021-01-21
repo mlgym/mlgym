@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Callable
 from data_stack.dataset.iterator import DatasetIteratorIF, CombinedDatasetIterator
-from ml_gym.data_handling.postprocessors.postprocessor import LabelMapperPostProcessor, FeatureEncoderPostProcessor
+from ml_gym.data_handling.postprocessors.postprocessor import LabelMapperPostProcessor, FeatureEncoderPostProcessor, OneHotEncodedTargetPostProcessor
 from ml_gym.data_handling.iterators import PostProcessedDatasetIterator
 from data_stack.dataset.meta import MetaFactory
 from data_stack.dataset.factory import InformedDatasetFactory
@@ -12,7 +12,9 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
 
     @staticmethod
     def get_mapped_labels_iterator(identifier: str, iterator: DatasetIteratorIF, mappings: Dict) -> InformedDatasetIteratorIF:
-        label_mapper_post_processor = LabelMapperPostProcessor(mappings=mappings, target_position=iterator.dataset_meta.target_pos)
+        label_mapper_post_processor = LabelMapperPostProcessor(mappings=mappings,
+                                                               target_position=iterator.dataset_meta.target_pos,
+                                                               tag_position=iterator.dataset_meta.tag_pos)
         meta = MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier)
         return InformedDatasetFactory.get_dataset_iterator(PostProcessedDatasetIterator(iterator, label_mapper_post_processor), meta)
 
@@ -36,6 +38,13 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
             sample_position=sample_position, feature_encoding_configs=feature_encoding_configs)
         feature_encoder_post_processor.fit(iterators)
         return {name: InformedDatasetFactory.get_dataset_iterator(PostProcessedDatasetIterator(iterator, feature_encoder_post_processor), MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier))
+                for name, iterator in iterators.items()}
+
+    @staticmethod
+    def get_one_hot_encoded_target_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF], target_vector_size: int) -> Dict[str, DatasetIteratorIF]:
+        target_position = list(iterators.items())[0][1].dataset_meta.target_pos
+        postprocessor = OneHotEncodedTargetPostProcessor(target_vector_size=target_vector_size, target_position=target_position)
+        return {name: InformedDatasetFactory.get_dataset_iterator(PostProcessedDatasetIterator(iterator, postprocessor), MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier))
                 for name, iterator in iterators.items()}
 
     @staticmethod

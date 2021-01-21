@@ -31,8 +31,9 @@ class LabelMapperPostProcessor(PostProcessorIf):
         def __contains__(self, label: Any):
             return label in self.previous_labels
 
-    def __init__(self, mappings: List[Dict], target_position: int = 1):
+    def __init__(self, mappings: List[Dict], target_position: int = 1, tag_position: int = 2):
         self.target_position = target_position
+        self.tag_position = tag_position
         self.mappings: List[LabelMapperPostProcessor.Mapping] = [LabelMapperPostProcessor.Mapping(**mapping) for mapping in mappings]
 
     def postprocess(self, sample: Tuple[Any]) -> Tuple[Any]:
@@ -41,8 +42,11 @@ class LabelMapperPostProcessor(PostProcessorIf):
                 # have to convert to list as tuples are immutable
                 sample = list(sample)
                 sample[self.target_position] = mapping.new_label
-                return tuple(sample)
-        return sample
+            if sample[self.tag_position] in mapping:
+                # have to convert to list as tuples are immutable
+                sample = list(sample)
+                sample[self.tag_position] = mapping.new_label
+        return tuple(sample)
 
 
 class FeatureEncoderPostProcessor(FittablePostProcessorIf):
@@ -108,3 +112,17 @@ class FeatureEncoderPostProcessor(FittablePostProcessorIf):
             upper = lower + encoder.get_output_size()
             rep += f"{index} ({type(encoder)}): {lower}, {upper} \n"
         return rep
+
+
+class OneHotEncodedTargetPostProcessor(PostProcessorIf):
+
+    def __init__(self, target_vector_size: int, target_position: int = 1):
+        self.target_vector_size = target_vector_size
+        self.target_position = target_position
+
+    def postprocess(self, sample: Tuple[Any]) -> Tuple[Any]:
+        target_vector = torch.zeros(self.target_vector_size)
+        target_vector[sample[self.target_position]] = 1
+        sample_list = list(sample)
+        sample_list[self.target_position] = target_vector
+        return tuple(sample_list)

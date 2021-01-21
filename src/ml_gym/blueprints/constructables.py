@@ -81,18 +81,19 @@ class DatasetRepositoryConstructable(ComponentConstructable):
 @dataclass
 class DatasetIteratorConstructable(ComponentConstructable):
     dataset_identifier: str = ""
-    splits: List[str] = field(default_factory=list)
+    split_configs: Dict[str, Any] = field(default_factory=dict)
 
     def _construct_impl(self) -> Dict[str, InformedDatasetIteratorIF]:
         dataset_repository = self.get_requirement("repository")
         dataset_dict = {}
-        for split in self.splits:
-            iterator, iterator_meta = dataset_repository.get(self.dataset_identifier, split)
+        for split_config in self.split_configs:
+            split_name = split_config["split"]
+            iterator, iterator_meta = dataset_repository.get(self.dataset_identifier, split_config)
             dataset_meta = MetaFactory.get_dataset_meta(identifier=self.component_identifier,
                                                         dataset_name=self.dataset_identifier,
-                                                        dataset_tag=split,
+                                                        dataset_tag=split_name,
                                                         iterator_meta=iterator_meta)
-            dataset_dict[split] = ModelGymInformedIteratorFactory.get_dataset_iterator(iterator, dataset_meta)
+            dataset_dict[split_name] = ModelGymInformedIteratorFactory.get_dataset_iterator(iterator, dataset_meta)
         return dataset_dict
 
 
@@ -169,6 +170,18 @@ class FeatureEncodedIteratorConstructable(ComponentConstructable):
         feature_encoded_iterators = ModelGymInformedIteratorFactory.get_feature_encoded_iterators(
             self.component_identifier, dataset_iterators_dict, self.feature_encoding_configs)
         return {name: iterator for name, iterator in feature_encoded_iterators.items() if name in self.applicable_splits}
+
+
+@dataclass
+class OneHotEncodedTargetsIteratorConstructable(ComponentConstructable):
+    applicable_splits: List[str] = field(default_factory=list)
+    target_vector_size: int = 0
+
+    def _construct_impl(self) -> Dict[str, DatasetIteratorIF]:
+        dataset_iterators_dict = self.get_requirement("iterators")
+        one_hot_encoded_target_iterators = ModelGymInformedIteratorFactory.get_one_hot_encoded_target_iterators(
+            self.component_identifier, dataset_iterators_dict, self.target_vector_size)
+        return {name: iterator for name, iterator in one_hot_encoded_target_iterators.items() if name in self.applicable_splits}
 
 
 @dataclass
