@@ -19,7 +19,9 @@ dataset_iterators:
       component_name: dataset_repository
   config:
     dataset_identifier: mnist
-    splits: ["train", "test"]
+    split_configs:
+        - split: train 
+        - split: test
 
 splitted_dataset_iterators:
   component_type_key: SPLITTED_DATASET_ITERATORS
