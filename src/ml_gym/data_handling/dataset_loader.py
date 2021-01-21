@@ -22,12 +22,22 @@ class DatasetLoaderFactory:
 class SamplerFactory:
     @staticmethod
     def get_weighted_sampler(dataset: InformedDatasetIteratorIF):
+        """Returns a WeightedRandomSampler by counting the tags (sic!) over all samples.
+        Note, we don't count over targets as they might e.g., be one hot encoded.
+
+        Args:
+            dataset (InformedDatasetIteratorIF): Iterator to calculate the sampler from
+
+        Returns:
+            [WeightedRandomSampler]: Instance of WeightedRandomSampler.
+        """
         # get the class weights
-        target_pos = dataset.dataset_meta.target_pos
-        target_counts = Counter([int(sample[target_pos]) for sample in dataset])  # uses generator expression
+
+        tag_pos = dataset.dataset_meta.tag_pos
+        target_counts = Counter([int(sample[tag_pos]) for sample in dataset])  # uses generator expression
         target_tuples = [(k, v) for k, v in sorted(target_counts.items(), key=lambda item: item[0])]
         class_weights = {target_key: 1./target_count for target_key, target_count in target_tuples}
-        sample_weights = [class_weights[sample[target_pos]] for sample in dataset]
+        sample_weights = [class_weights[sample[tag_pos]] for sample in dataset]
         sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(dataset))
         return sampler
 
