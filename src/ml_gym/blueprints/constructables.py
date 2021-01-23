@@ -63,6 +63,10 @@ class ComponentConstructable(ABC):
     def get_requirement(self, name: str) -> List[Any]:
         return self.requirements[name].get_subscription()
 
+    def get_requirements(self) -> Dict[str, Any]:
+        requirement_keys = list(self.requirements.keys())
+        return {req_key: self.get_requirement(req_key) for req_key in requirement_keys}
+
     def has_requirement(self, name: str) -> bool:
         return name in self.requirements
 
@@ -114,10 +118,11 @@ class CombinedDatasetIteratorConstructable(ComponentConstructable):
     combine_configs: Dict = None
 
     def _construct_impl(self) -> Dict[str, InformedDatasetIteratorIF]:
-        dataset_iterators_dict = self.get_requirement("iterators")
-        combined_iterators_dict = ModelGymInformedIteratorFactory.get_combined_iterators(
-            self.component_identifier, dataset_iterators_dict, self.combine_configs)
-        return {**dataset_iterators_dict, **combined_iterators_dict}
+        dataset_iterators = self.get_requirements()
+        combined_iterators_dict = ModelGymInformedIteratorFactory.get_combined_iterators(self.component_identifier,
+                                                                                         dataset_iterators,
+                                                                                         self.combine_configs)
+        return combined_iterators_dict
 
 
 @dataclass
@@ -126,7 +131,7 @@ class FilteredLabelsIteratorConstructable(ComponentConstructable):
     applicable_splits: List[str] = field(default_factory=list)
 
     def _construct_impl(self) -> Dict[str, DatasetIteratorIF]:
-        dataset_iterators_dict = self.get_requirement("iterators")
+        dataset_iterators_dict = self.get_requirement("iterators_1")
         return {name: ModelGymInformedIteratorFactory.get_filtered_labels_iterator(self.component_identifier, iterator, self.filtered_labels)
                 if name in self.applicable_splits else iterator
                 for name, iterator in dataset_iterators_dict.items()}
