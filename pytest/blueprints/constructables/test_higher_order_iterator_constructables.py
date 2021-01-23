@@ -47,7 +47,7 @@ class TestDatasetIteratorSplitsConstructable(IteratorFixtures):
                                                            split_configs=split_configs)
         splitted_iterators = constructable.construct()
         iterator_1, iterator_2 = splitted_iterators["train_1"], splitted_iterators["train_2"]
-        sample, target = iterator_1[0]
+        sample, target, tag = iterator_1[0]
         assert list(sample.shape) == [28, 28]
         assert isinstance(target, int)
         assert isinstance(iterator_1, InformedDatasetIteratorIF)
@@ -61,13 +61,15 @@ class TestCombinedDatasetIteratorConstructable(IteratorFixtures):
 
     def test_constructable(self, informed_iterators):
         requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"])}
-        combine_configs = {"full": ["train", "test"]}
+        combine_configs = [{"new_split": "full", "old_splits": [{"iterators_name": "iterators", "splits": ["train", "test"]}]},
+                           {"new_split": "train", "old_splits": [{"iterators_name": "iterators", "splits": ["train"]}]},
+                           {"new_split": "test", "old_splits": [{"iterators_name": "iterators", "splits": ["test"]}]}]
         constructable = CombinedDatasetIteratorConstructable(component_identifier="combined_component",
                                                              requirements=requirements,
                                                              combine_configs=combine_configs)
         iterators = constructable.construct()
         iterator_full, iterator_train, iterator_test = iterators["full"], iterators["train"], iterators["test"]
-        sample, target = iterator_full[0]
+        sample, target, tag = iterator_full[0]
         assert list(sample.shape) == [28, 28]
         assert isinstance(target, int)
 
@@ -91,16 +93,16 @@ class TestFilteredLabelsIteratorConstructable(IteratorFixtures):
                                                             applicable_splits=["train"])
         iterators = constructable.construct()
         iterator_train_filtered, iterator_test_not_filtered = iterators["train"], iterators["test"]
-        sample, target = iterator_train_filtered[0]
+        sample, target, tag = iterator_train_filtered[0]
         assert list(sample.shape) == [28, 28]
         assert isinstance(target, int)
 
         assert isinstance(iterator_train_filtered, InformedDatasetIteratorIF)
         assert isinstance(iterator_test_not_filtered, InformedDatasetIteratorIF)
-        assert all([t in filtered_labels for _, t in iterator_train_filtered])
-        assert any([t not in filtered_labels for _, t in iterator_test_not_filtered])
-        assert any([t not in filtered_labels for _, t in informed_iterators["train"]])
-        assert any([t not in filtered_labels for _, t in informed_iterators["test"]])
+        assert all([t in filtered_labels for _, _, t in iterator_train_filtered])
+        assert any([t not in filtered_labels for _, _, t in iterator_test_not_filtered])
+        assert any([t not in filtered_labels for _, _, t in informed_iterators["train"]])
+        assert any([t not in filtered_labels for _, _, t in informed_iterators["test"]])
         # print(DatasetIteratorReportGenerator.generate_report(iterator_train_filtered))
 
 
@@ -116,16 +118,16 @@ class TestMappedLabelsIteratorConstructable(IteratorFixtures):
                                                           applicable_splits=["train"])
         iterators = constructable.construct()
         iterator_train_mapped, iterator_test_not_mapped = iterators["train"], iterators["test"]
-        sample, target = iterator_train_mapped[0]
+        sample, target, tag = iterator_train_mapped[0]
         assert list(sample.shape) == [28, 28]
         assert isinstance(target, int)
 
         assert isinstance(iterator_train_mapped, InformedDatasetIteratorIF)
         assert isinstance(iterator_test_not_mapped, InformedDatasetIteratorIF)
-        assert all([t not in mappings[0]["previous_labels"] for _, t in iterator_train_mapped])
-        assert any([t in mappings[0]["previous_labels"] for _, t in iterator_test_not_mapped])
-        assert any([t in mappings[0]["previous_labels"] for _, t in informed_iterators["train"]])
-        assert any([t in mappings[0]["previous_labels"] for _, t in informed_iterators["test"]])
+        assert all([t not in mappings[0]["previous_labels"] for _, _, t in iterator_train_mapped])
+        assert any([t in mappings[0]["previous_labels"] for _, _, t in iterator_test_not_mapped])
+        assert any([t in mappings[0]["previous_labels"] for _, _, t in informed_iterators["train"]])
+        assert any([t in mappings[0]["previous_labels"] for _, _, t in informed_iterators["test"]])
         # print(DatasetIteratorReportGenerator.generate_report(iterator_train_mapped))
 
 
@@ -142,7 +144,7 @@ class TestFeatureEncodedIteratorConstructable(IteratorFixtures):
                                                             applicable_splits=["train"])
         iterators = constructable.construct()
         iterator_train_encoded = iterators["train"]
-        sample, target = iterator_train_encoded[0]
+        sample, target, tag = iterator_train_encoded[0]
         assert list(sample.shape) == [28, 28]
         assert isinstance(target, int)
 

@@ -131,7 +131,7 @@ class FilteredLabelsIteratorConstructable(ComponentConstructable):
     applicable_splits: List[str] = field(default_factory=list)
 
     def _construct_impl(self) -> Dict[str, DatasetIteratorIF]:
-        dataset_iterators_dict = self.get_requirement("iterators_1")
+        dataset_iterators_dict = self.get_requirement("iterators")
         return {name: ModelGymInformedIteratorFactory.get_filtered_labels_iterator(self.component_identifier, iterator, self.filtered_labels)
                 if name in self.applicable_splits else iterator
                 for name, iterator in dataset_iterators_dict.items()}

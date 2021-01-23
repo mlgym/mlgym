@@ -32,7 +32,7 @@ class TestDatasetIteratorConstructable:
                                                      dataset_identifier="mnist",
                                                      split_configs=[{"split": "train"}])
         iterators = constructable.construct()
-        sample, target = iterators["train"][0]
+        sample, target, tag = iterators["train"][0]
         assert list(sample.shape) == [28, 28]
         assert isinstance(target, int)
         assert isinstance(iterators["train"], InformedDatasetIteratorIF)

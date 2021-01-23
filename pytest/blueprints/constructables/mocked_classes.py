@@ -12,7 +12,7 @@ class MockedMNISTIterator(SequenceDatasetIterator):
     def __init__(self, num_samples: int = 500):
         targets = [random.randint(0, 9) for _ in range(num_samples)]
         samples = torch.rand(num_samples, 28, 28)
-        dataset_sequences = [samples, targets]
+        dataset_sequences = [samples, targets, targets]
         super().__init__(dataset_sequences=dataset_sequences)
 
 
