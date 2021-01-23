@@ -48,16 +48,27 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
                 for name, iterator in iterators.items()}
 
     @staticmethod
-    def get_combined_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF], combine_configs: Dict) -> Dict[str, InformedDatasetIteratorIF]:
-        def get_filtered_iterators(iterators: Dict[str, DatasetIteratorIF], split_names: List[str]) -> List[DatasetIteratorIF]:
-            return [iterator for iterator_name, iterator in iterators.items() if iterator_name in split_names]
+    def get_combined_iterators(identifier: str, iterators: Dict[str, Dict[str, InformedDatasetIteratorIF]], combine_configs: Dict) -> Dict[str, InformedDatasetIteratorIF]:
+        """Combines iterators.
 
-        def combined_iterator(identifier, combined_name, iterators) -> InformedDatasetIteratorIF:
-            meta = MetaFactory.get_dataset_meta_from_existing(iterators[0].dataset_meta, dataset_tag=combined_name, identifier=identifier)
-            return InformedDatasetFactory.get_dataset_iterator(CombinedDatasetIterator(iterators), meta)
+        Args:
+            identifier (str):
+            iterators (Dict[str, Dict[str, InformedDatasetIteratorIF]]): Dictionary mapping from iterator_name -> split_name -> iterator
+            combine_configs (Dict):
 
-        combined_iterators = {combined_name: combined_iterator(identifier, combined_name, get_filtered_iterators(iterators, split_names))
-                              for combined_name, split_names in combine_configs.items()}
+        Returns:
+            Dict[str, InformedDatasetIteratorIF]:
+        """
+
+        def get_iterators_to_be_combined(iterators: Dict[str, Dict[str, InformedDatasetIteratorIF]], split_config: List):
+            return [iterators[element["iterators_name"]][split_name] for element in split_config for split_name in element["splits"]]
+
+        combined_iterators = {}
+        for split_config in combine_configs:
+            iterator_list = get_iterators_to_be_combined(iterators, split_config["old_splits"])
+            meta = MetaFactory.get_dataset_meta_from_existing(dataset_meta=iterator_list[0].dataset_meta, identifier=identifier,
+                                                              dataset_name="combined_dataset", dataset_tag=None)
+            combined_iterators[split_config["new_split"]] = InformedDatasetFactory.get_dataset_iterator(CombinedDatasetIterator(iterator_list), meta)
         return combined_iterators
 
     @staticmethod
