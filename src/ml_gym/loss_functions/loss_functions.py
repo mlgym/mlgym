@@ -40,13 +40,15 @@ class Loss(ABC):
 
 class LPLoss(Loss):
     def __init__(self, target_subscription_key: str, prediction_subscription_key: str, root: int = 1, exponent: int = 2,
-                 sample_selection_fun: Callable[[InferenceResultBatch], List[bool]] = None, tag: str = ""):
+                 sample_selection_fun: Callable[[InferenceResultBatch], List[bool]] = None,
+                 tag: str = "", average_batch_loss: bool = False):
         super().__init__(tag)
         self.root = root
         self.exponent = exponent
         self.target_subscription_key = target_subscription_key
         self.prediction_subscription_key = prediction_subscription_key
         self.sample_selection_fun = sample_selection_fun
+        self.average_batch_loss = average_batch_loss
 
     def __call__(self, forward_batch: InferenceResultBatch) -> torch.Tensor:
         # here: predictions are reconstructions and targets are the input vectors
@@ -56,8 +58,10 @@ class LPLoss(Loss):
             sample_selection_mask = self.sample_selection_fun(forward_batch)
             t = t[sample_selection_mask]
             p = p[sample_selection_mask]
-        loss = (torch.sum((p - t).abs() ** self.exponent, dim=1) ** (1 / self.root)) / t.shape[0]
-        return loss
+        loss_values = (torch.sum((p - t).abs() ** self.exponent, dim=1) ** (1 / self.root)) / t.shape[0]
+        if self.average_batch_loss:
+            loss_values = torch.sum(loss_values)/len(loss_values)
+        return loss_values
 
 
 class LPLossScaled(LPLoss, LossWarmupMixin):

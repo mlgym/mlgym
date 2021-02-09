@@ -313,17 +313,17 @@ class PredictionPostProcessingRegistryConstructable(ComponentConstructable):
         DUMMY = "DUMMY"
 
     def _construct_impl(self):
-        self.postprocessing_fun_registry = ClassRegistry()
+        postprocessing_fun_registry = ClassRegistry()
         default_mapping: [str, PredictPostProcessingIF] = {
-            self.FunctionKeys.SOFT_MAX: SoftmaxPostProcessorImpl,
-            self.FunctionKeys.ARG_MAX: ArgmaxPostProcessorImpl,
-            self.FunctionKeys.SIGMOIDAL: SigmoidalPostProcessorImpl,
-            self.FunctionKeys.BINARIZATION: BinarizationPostProcessorImpl,
-            self.FunctionKeys.DUMMY: DummyPostProcessorImpl
+            PredictionPostProcessingRegistryConstructable.FunctionKeys.SOFT_MAX: SoftmaxPostProcessorImpl,
+            PredictionPostProcessingRegistryConstructable.FunctionKeys.ARG_MAX: ArgmaxPostProcessorImpl,
+            PredictionPostProcessingRegistryConstructable.FunctionKeys.SIGMOIDAL: SigmoidalPostProcessorImpl,
+            PredictionPostProcessingRegistryConstructable.FunctionKeys.BINARIZATION: BinarizationPostProcessorImpl,
+            PredictionPostProcessingRegistryConstructable.FunctionKeys.DUMMY: DummyPostProcessorImpl
         }
         for key, postprocessing_type in default_mapping.items():
-            self.postprocessing_fun_registry.add_class(key, postprocessing_type)
-        return self.postprocessing_fun_registry
+            postprocessing_fun_registry.add_class(key, postprocessing_type)
+        return postprocessing_fun_registry
 
 
 @dataclass
