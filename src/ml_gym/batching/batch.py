@@ -98,10 +98,10 @@ class InferenceResultBatch(Batch):
     """ Stores targets and predictions of an entire batch.
     """
 
-    def __init__(self, targets: Dict[str, torch.Tensor], predictions: Dict[str, torch.Tensor], tags: torch.Tensor):
-        self._targets = targets
+    def __init__(self, targets: Dict[str, torch.Tensor] = None, predictions: Dict[str, torch.Tensor] = None, tags: torch.Tensor = None):
+        self._targets = targets if targets is not None else {}
         self._tags = tags
-        self._predictions = predictions
+        self._predictions = predictions if predictions is not None else {}
 
     def detach(self):
         self._targets = {k: v.detach() for k, v in self._targets.items()}
