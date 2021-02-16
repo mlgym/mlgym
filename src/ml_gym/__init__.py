@@ -6,7 +6,8 @@ from typing import List, Type
 from ml_gym.util.grid_search import GridSearch
 from ml_gym.util.logger import QueuedLogging
 from multiprocessing import Queue
-
+from shutil import copyfile
+import os
 
 def create_gym(process_count: int, device_ids, log_std_to_file: bool) -> Gym:
     gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
@@ -33,6 +34,9 @@ def create_blueprints(blue_print_class: Type[BluePrint],
     config_tuples = list(run_id_to_config_dict.items())
     epochs = list(range(num_epochs))
     grid_search_id = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    gs_logging_path = os.path.join(dashify_logging_path, grid_search_id)
+    os.makedirs(gs_logging_path, exist_ok=True)
+    copyfile(gs_config_path, os.path.join(gs_logging_path, os.path.basename(gs_config_path)))
     blueprints = []
     for run_id, config in config_tuples:
         blue_print = blue_print_class(grid_search_id=grid_search_id,
