@@ -7,10 +7,10 @@ class LossFactory:
 
     @staticmethod
     def get_lp_loss(target_subscription_key: str, prediction_subscription_key: str, root: int = 1, exponent: int = 2,
-                    class_selection_fun_params: Dict = None, tag: str = "") -> Loss:
+                    class_selection_fun_params: Dict = None, average_batch_loss: bool = False, tag: str = "") -> Loss:
         sample_selection_fun = BatchFilter.get_sample_selection_fun(
             **class_selection_fun_params) if class_selection_fun_params is not None else None
-        return LPLoss(target_subscription_key, prediction_subscription_key, root, exponent, sample_selection_fun, tag)
+        return LPLoss(target_subscription_key, prediction_subscription_key, root, exponent, sample_selection_fun, tag, average_batch_loss)
 
     @staticmethod
     def get_scaled_lp_loss(target_subscription_key: str, prediction_subscription_key: str, root: int = 1, exponent: int = 2,

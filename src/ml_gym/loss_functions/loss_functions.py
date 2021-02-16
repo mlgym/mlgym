@@ -58,7 +58,7 @@ class LPLoss(Loss):
             sample_selection_mask = self.sample_selection_fun(forward_batch)
             t = t[sample_selection_mask]
             p = p[sample_selection_mask]
-        loss_values = (torch.sum((p - t).abs() ** self.exponent, dim=1) ** (1 / self.root)) / t.shape[0]
+        loss_values = (torch.sum((p - t).abs() ** self.exponent, dim=1) ** (1 / self.root))
         if self.average_batch_loss:
             loss_values = torch.sum(loss_values)/len(loss_values)
         return loss_values
