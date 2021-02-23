@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from abc import abstractmethod
+from typing import Dict
 
 
 class NNModel(nn.Module):
@@ -16,3 +17,6 @@ class NNModel(nn.Module):
     @abstractmethod
     def forward_impl(self, inputs: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError
+
+    def get_parameters(self) -> Dict[str, torch.Tensor]:
+        return {name: param for name, param in self.named_parameters()}
