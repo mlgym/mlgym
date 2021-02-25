@@ -9,7 +9,7 @@ from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIter
     MetricFunctionRegistryConstructable, TrainerConstructable, EvaluatorConstructable, MappedLabelsIteratorConstructable, \
     FilteredLabelsIteratorConstructable, FeatureEncodedIteratorConstructable, CombinedDatasetIteratorConstructable, \
     DataCollatorConstructable, PredictionPostProcessingRegistryConstructable, TrainComponentConstructable, EvalComponentConstructable, \
-    IteratorViewConstructable, OneHotEncodedTargetsIteratorConstructable
+    IteratorViewConstructable, OneHotEncodedTargetsIteratorConstructable, InMemoryDatasetIteratorConstructable
 
 
 class Injector:
@@ -94,6 +94,7 @@ class ComponentFactory:
             ComponentVariant("DATASET_ITERATORS", "DEFAULT", DatasetIteratorConstructable),
             ComponentVariant("SPLITTED_DATASET_ITERATORS", "RANDOM", DatasetIteratorSplitsConstructable),
             ComponentVariant("COMBINED_DATASET_ITERATORS", "DEFAULT", CombinedDatasetIteratorConstructable),
+            ComponentVariant("IN_MEMORY_DATASET_ITERATORS", "DEFAULT", InMemoryDatasetIteratorConstructable),
             ComponentVariant("FILTERED_LABELS_ITERATOR", "DEFAULT", FilteredLabelsIteratorConstructable),
             ComponentVariant("ONE_HOT_ENCODED_TARGETS_ITERATOR", "DEFAULT", OneHotEncodedTargetsIteratorConstructable),
             ComponentVariant("ITERATOR_VIEW", "DEFAULT", IteratorViewConstructable),

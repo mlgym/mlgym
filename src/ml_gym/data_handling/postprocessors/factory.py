@@ -68,7 +68,8 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
             iterator_list = get_iterators_to_be_combined(iterators, split_config["old_splits"])
             meta = MetaFactory.get_dataset_meta_from_existing(dataset_meta=iterator_list[0].dataset_meta, identifier=identifier,
                                                               dataset_name="combined_dataset", dataset_tag=None)
-            combined_iterators[split_config["new_split"]] = InformedDatasetFactory.get_dataset_iterator(CombinedDatasetIterator(iterator_list), meta)
+            combined_iterators[split_config["new_split"]] = InformedDatasetFactory.get_dataset_iterator(
+                CombinedDatasetIterator(iterator_list), meta)
         return combined_iterators
 
     @staticmethod
@@ -93,3 +94,8 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
         for d in split_list:
             splitted_iterator_dict = {**splitted_iterator_dict, **d}
         return splitted_iterator_dict
+
+    @staticmethod
+    def get_in_memory_iterator(identifier: str, iterator: InformedDatasetIteratorIF) -> InformedDatasetIteratorIF:
+        meta = MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier)
+        return InformedDatasetFactory.get_in_memory_dataset_iterator(iterator, meta)

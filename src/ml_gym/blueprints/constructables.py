@@ -126,6 +126,15 @@ class CombinedDatasetIteratorConstructable(ComponentConstructable):
 
 
 @dataclass
+class InMemoryDatasetIteratorConstructable(ComponentConstructable):
+
+    def _construct_impl(self) -> Dict[str, InformedDatasetIteratorIF]:
+        dataset_iterators_dict = self.get_requirement("iterators")
+        return {name: ModelGymInformedIteratorFactory.get_in_memory_iterator(self.component_identifier, iterator)
+                for name, iterator in dataset_iterators_dict.items()}
+
+
+@dataclass
 class FilteredLabelsIteratorConstructable(ComponentConstructable):
     filtered_labels: List[Any] = field(default_factory=list)
     applicable_splits: List[str] = field(default_factory=list)
