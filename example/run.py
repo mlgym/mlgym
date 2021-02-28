@@ -1,6 +1,7 @@
 import argparse
-from conv_net_blueprint import ConvNetBluePrint
-from ml_gym import create_blueprints, create_gym, setup_logging_environment, stop_logging_environment
+from .conv_net_blueprint import ConvNetBluePrint
+from ml_gym.starter import MLGymStarter
+from ml_gym.gym.jobs import AbstractGymJob
 
 
 def parse_args():
@@ -28,13 +29,11 @@ def parse_args():
 
 if __name__ == '__main__':
     num_epochs, run_mode, dashify_logging_path, text_logging_path, gs_config_path, process_count, gpus, log_std_to_file = parse_args()
-    setup_logging_environment(text_logging_path)
-    gym = create_gym(process_count=process_count, device_ids=gpus, log_std_to_file=log_std_to_file)
-    blueprints = create_blueprints(blue_print_class=ConvNetBluePrint,
-                                   run_mode=run_mode,
-                                   gs_config_path=gs_config_path,
-                                   dashify_logging_path=dashify_logging_path,
-                                   num_epochs=num_epochs)
-    gym.add_blue_prints(blueprints)
-    gym.run(parallel=True)
-    stop_logging_environment()
+    starter = MLGymStarter(blue_print_class=ConvNetBluePrint,
+                           run_mode=AbstractGymJob.Mode[run_mode],
+                           dashify_logging_path=dashify_logging_path,
+                           text_logging_path=text_logging_path,
+                           process_count=process_count,
+                           gpus=gpus,
+                           log_std_to_file=log_std_to_file)
+    starter.start()
