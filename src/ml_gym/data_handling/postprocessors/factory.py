@@ -19,29 +19,35 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
         return InformedDatasetFactory.get_dataset_iterator(PostProcessedDatasetIterator(iterator, label_mapper_post_processor), meta)
 
     @staticmethod
-    def get_filtered_labels_iterator(identifier: str, iterator: InformedDatasetIteratorIF, filtered_labels: List[Any]) -> InformedDatasetIteratorIF:
+    def get_filtered_labels_iterator(identifier: str, iterator: InformedDatasetIteratorIF,
+                                     filtered_labels: List[Any]) -> InformedDatasetIteratorIF:
         valid_indices = [i for i in range(len(iterator)) if iterator[i][iterator.dataset_meta.target_pos] in filtered_labels]
         meta = MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier)
         return InformedDatasetFactory.get_dataset_iterator_view(iterator, meta, valid_indices)
 
     @staticmethod
-    def get_iterator_view(identifier: str, iterator: InformedDatasetIteratorIF, selection_fun: Callable[[DatasetIteratorIF], List[int]]) -> InformedDatasetIteratorIF:
+    def get_iterator_view(identifier: str, iterator: InformedDatasetIteratorIF, selection_fun: Callable[[DatasetIteratorIF], List[int]],
+                          view_tags: Dict[str, Any]) -> InformedDatasetIteratorIF:
         valid_indices = selection_fun(iterator)
         # valid_indices = list(np.argwhere(valid_mask).flatten())
         meta = MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier)
-        return InformedDatasetFactory.get_dataset_iterator_view(iterator, meta, valid_indices)
+        return InformedDatasetFactory.get_dataset_iterator_view(iterator, meta, valid_indices, view_tags)
 
     @staticmethod
-    def get_feature_encoded_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF], feature_encoding_configs: Dict[str, List[Any]]) -> Dict[str, DatasetIteratorIF]:
+    def get_feature_encoded_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF],
+                                      feature_encoding_configs: Dict[str, List[Any]]) -> Dict[str, DatasetIteratorIF]:
         sample_position = list(iterators.items())[0][1].dataset_meta.sample_pos
         feature_encoder_post_processor = FeatureEncoderPostProcessor(
             sample_position=sample_position, feature_encoding_configs=feature_encoding_configs)
         feature_encoder_post_processor.fit(iterators)
-        return {name: InformedDatasetFactory.get_dataset_iterator(PostProcessedDatasetIterator(iterator, feature_encoder_post_processor), MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier))
+        return {name: InformedDatasetFactory.get_dataset_iterator(PostProcessedDatasetIterator(iterator, feature_encoder_post_processor),
+                                                                  MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta,
+                                                                                                             identifier=identifier))
                 for name, iterator in iterators.items()}
 
     @staticmethod
-    def get_one_hot_encoded_target_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF], target_vector_size: int) -> Dict[str, DatasetIteratorIF]:
+    def get_one_hot_encoded_target_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF],
+                                             target_vector_size: int) -> Dict[str, DatasetIteratorIF]:
         target_position = list(iterators.items())[0][1].dataset_meta.target_pos
         postprocessor = OneHotEncodedTargetPostProcessor(target_vector_size=target_vector_size, target_position=target_position)
         return {name: InformedDatasetFactory.get_dataset_iterator(PostProcessedDatasetIterator(iterator, postprocessor), MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier))
@@ -73,7 +79,8 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
         return combined_iterators
 
     @staticmethod
-    def get_splitted_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF], seed: int, split_config: Dict) -> Dict[str, InformedDatasetIteratorIF]:
+    def get_splitted_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF], seed: int,
+                               split_config: Dict) -> Dict[str, InformedDatasetIteratorIF]:
         def _split(iterator: InformedDatasetIteratorIF, seed: int, split_config: Dict) -> Dict[str, InformedDatasetIteratorIF]:
             names = list(split_config.keys())
             ratios = list(split_config.values())
