@@ -4,7 +4,7 @@ from ml_gym.util.logger import QueuedLogging, QLogger, LogLevel
 from multiprocessing import Queue
 import os
 import time
-from ml_gym import setup_logging_environment
+from ml_gym.starter import MLGymStarter
 
 
 class TestLogger:
@@ -38,7 +38,7 @@ class TestLogger:
         test_message = "my test_message"
         logger_id = "my_logger"
         QueuedLogging._instance = None
-        setup_logging_environment(tmp_folder_path)
+        MLGymStarter._setup_logging_environment(tmp_folder_path)
         q_logger = QueuedLogging.get_qlogger(logger_id)
         q_logger.log(LogLevel.DEBUG, test_message)
         log_file_path = os.path.join(tmp_folder_path, f"{logger_id}.log")
