@@ -46,3 +46,8 @@ class SingletonAlreadyInstantiatedError(Exception):
 class InjectMappingNotFoundError(Exception):
     """Exception raised when Injector cannot inject given placehold when it was not defined in the mapping."""
     pass
+
+
+class ValidationModeNotValidError(Exception):
+    """Exception when an invalid validation mode was selected."""
+    pass
