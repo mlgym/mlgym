@@ -13,7 +13,6 @@ from collections.abc import Mapping
 from ml_gym.registries.class_registry import ClassRegistry
 from ml_gym.gym.trainer import Trainer, TrainComponent, InferenceComponent
 from ml_gym.loss_functions.loss_functions import Loss
-from numpy.lib.shape_base import split
 from sklearn.metrics import f1_score, recall_score, precision_score
 from ml_gym.metrics.metrics import Metric, binary_aupr_score, binary_auroc_score
 from ml_gym.metrics.metric_factory import MetricFactory
@@ -151,22 +150,20 @@ class FilteredLabelsIteratorConstructable(ComponentConstructable):
 class IteratorViewConstructable(ComponentConstructable):
     split_indices: Dict[str, List[int]] = field(default_factory=dict)
     view_tags: Dict[str, Any] = field(default_factory=dict)
-    applicable_splits: List[str] = field(default_factory=list)
+    applicable_split: str = ""
 
-    def sample_selection_fun(iterator: DatasetIteratorIF, split_indices: Dict[str, List[int]], split_name: str) -> List[int]:
-        return split_indices[split_name]
+    @staticmethod
+    def sample_selection_fun(iterator: DatasetIteratorIF, split_indices: Dict[str, List[int]]) -> List[int]:
+        return split_indices
 
     def _construct_impl(self) -> Dict[str, DatasetIteratorIF]:
-        dataset_iterators_dict = self.get_requirement("iterators")
+        dataset_iterator = self.get_requirement("iterators")[self.applicable_split]
         iterator_views = {}
-        for name, iterator in dataset_iterators_dict.items():
-            if name in self.applicable_splits:
-                partial_selection_fun = partial(IteratorViewConstructable.sample_selection_fun,
-                                                split_indices=self.split_indices,
-                                                split_name=name)
-                ModelGymInformedIteratorFactory.get_iterator_view(self.component_identifier, iterator, partial_selection_fun)
-            else:
-                iterator_views[name] = iterator
+        for name, indices in self.split_indices.items():
+            partial_selection_fun = partial(IteratorViewConstructable.sample_selection_fun, split_indices=indices)
+            iterator_view = ModelGymInformedIteratorFactory.get_iterator_view(self.component_identifier, dataset_iterator,
+                                                                              partial_selection_fun, self.view_tags)
+            iterator_views[name] = iterator_view
         return iterator_views
 
 

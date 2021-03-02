@@ -18,8 +18,8 @@ class Injector:
     def __init__(self, mapping: Dict[str, Any]):
         self.mapping = mapping
 
-    def inject_pass(self, component_parameters: Dict, raise_mapping_not_found: bool = True) -> Any:
-        def inject(tree: Union[Dict, List]):
+    def inject_pass(self, component_parameters: Dict, raise_mapping_not_found: bool = True) -> Dict[str, Any]:
+        def inject(tree: Union[Dict, List]) -> Dict[str, Any]:
             if isinstance(tree, dict):
                 for key, sub_tree in tree.items():
                     if key == "injectable":
@@ -37,7 +37,8 @@ class Injector:
                 return [inject(sub_tree) for sub_tree in tree]
             else:
                 return tree
-        return {key: inject(parameter) for key, parameter in component_parameters.items()}
+        injected = {key: inject(parameter) for key, parameter in component_parameters.items()}
+        return injected
 
 
 @dataclass
