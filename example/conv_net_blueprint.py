@@ -1,6 +1,6 @@
 from typing import Dict, List, Any
 import torch
-from .conv_net import ConvNet
+from conv_net import ConvNet
 from ml_gym.blueprints.constructables import ModelRegistryConstructable
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.jobs import AbstractGymJob, GymJob
@@ -58,10 +58,9 @@ class ConvNetBluePrint(BluePrint):
         return components
 
     def construct(self) -> 'AbstractGymJob':
-        experiment_info = self.get_experiment_info(self.dashify_logging_dir, self.grid_search_id,
-                                                   self.model_name, self.dataset_name, self.run_id)
+        experiment_info = self.get_experiment_info()
         component_names = ["model", "trainer", "optimizer", "evaluator"]
-        components = ConvNetBluePrint.construct_components(self.config, component_names)
+        components = ConvNetBluePrint.construct_components(self.config, component_names, self.external_injection)
 
         gym_job = GymJob(self.run_mode, experiment_info=experiment_info, epochs=self.epochs, **components)
         return gym_job

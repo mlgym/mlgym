@@ -4,6 +4,7 @@ global_config:
 
 NestedCV:
   iterator_key: combined_dataset_iterators
+  split_key: full
   config:
     num_outer_loop_folds: 5
     num_inner_loop_folds: 2

@@ -23,18 +23,37 @@ dataset_iterators:
         - split: train 
         - split: test
 
+splitted_dataset_iterators:
+  component_type_key: SPLITTED_DATASET_ITERATORS
+  variant_key: RANDOM
+  requirements:
+    - name: iterators
+      component_name: dataset_iterators
+      subscription:
+        - train
+        - test
+  config:
+    split_configs:
+      train:
+        train: 0.01
+        train_: 0.99
+      test: 
+        test: 0.01
+        test_: 0.99
+    seed: *seed_value
+
 combined_dataset_iterators: 
   component_type_key: COMBINED_DATASET_ITERATORS
   variant_key: DEFAULT
   requirements:
-    - name: iterators
-      component_name: dataset_iterators
-      subscription: [full]
+    - name: splitted_dataset_iterators
+      component_name: splitted_dataset_iterators
+      subscription: [train, test]
   config:
     combine_configs:
       - new_split: full
         old_splits: 
-          - iterators_name: dataset_iterators
+          - iterators_name: splitted_dataset_iterators
             splits: [train, test]
 
 iterator_folds:
@@ -43,15 +62,15 @@ iterator_folds:
   requirements:
     - name: iterators
       component_name: combined_dataset_iterators
-      subscription: [train, test]
+      subscription: [full]
   config:
-    applicable_splits: [train, test]
+    applicable_split: full
     split_indices:
       injectable:
           id: id_split_indices
     view_tags:
       injectable:
-        id: id_fold_tags
+        id: id_fold_tags 
 
 data_collator:
   component_type_key: DATA_COLLATOR
