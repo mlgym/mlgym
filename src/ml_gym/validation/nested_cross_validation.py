@@ -50,14 +50,14 @@ class NestedCV(ValidatorIF):
                     "train": train_fold_indices,
                     "test": test_fold_indices
                 },
-                "id_fold_tags": {"outer_test_fold_id": f"{outer_fold_id}",
-                                 "inner_test_fold_id": f"{-1}"}
+                "id_fold_tags": {"outer_test_fold_id": outer_fold_id,
+                                 "inner_test_fold_id": -1}
             }
             injector = Injector(mapping=external_injection)
-            gs_config = injector.inject_pass(component_parameters=gs_config, raise_mapping_not_found=False)
+            gs_config_injected = injector.inject_pass(component_parameters=gs_config, raise_mapping_not_found=False)
             bp = create_blueprints(blue_print_class=blue_print_type,
                                    run_mode=AbstractGymJob.Mode.TRAIN,
-                                   gs_config=gs_config,
+                                   gs_config=gs_config_injected,
                                    dashify_logging_path=dashify_logging_path,
                                    num_epochs=num_epochs,
                                    # external_injection=external_injection,
@@ -80,15 +80,14 @@ class NestedCV(ValidatorIF):
                         "train": train_fold_indices,
                         "test": test_fold_indices
                     },
-                    "id_fold_tags": {"outer_test_fold_id": f"{outer_fold_id}",
-                                     "inner_test_fold_id": f"{inner_fold_id}"}
-
+                    "id_fold_tags": {"outer_test_fold_id": outer_fold_id,
+                                     "inner_test_fold_id": inner_fold_id}
                 }
                 injector = Injector(mapping=external_injection)
-                gs_config = injector.inject_pass(component_parameters=gs_config, raise_mapping_not_found=False)
+                gs_config_injected = injector.inject_pass(component_parameters=gs_config, raise_mapping_not_found=False)
                 bp = create_blueprints(blue_print_class=blue_print_type,
                                        run_mode=AbstractGymJob.Mode.TRAIN,
-                                       gs_config=gs_config,
+                                       gs_config=gs_config_injected,
                                        dashify_logging_path=dashify_logging_path,
                                        num_epochs=num_epochs,
                                        # external_injection=external_injection,

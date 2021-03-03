@@ -37,7 +37,8 @@ class Injector:
                 return [inject(sub_tree) for sub_tree in tree]
             else:
                 return tree
-        injected = {key: inject(parameter) for key, parameter in component_parameters.items()}
+        copied_dict = copy.deepcopy(component_parameters)
+        injected = {key: inject(parameter) for key, parameter in copied_dict.items()}
         return injected
 
 
