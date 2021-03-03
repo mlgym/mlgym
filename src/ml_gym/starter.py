@@ -75,7 +75,10 @@ class MLGymStarter:
         self._stop_logging_environment()
 
     def run_nested_cv(self, gym: Gym, cv_config: Dict[str, Any], gs_config: Dict[str, Any], grid_search_id: str):
-        nested_cv = ValidatorFactory.get_nested_cv(gs_config=gs_config, cv_config=cv_config, grid_search_id=grid_search_id)
+        nested_cv = ValidatorFactory.get_nested_cv(gs_config=gs_config,
+                                                   cv_config=cv_config,
+                                                   grid_search_id=grid_search_id,
+                                                   blue_print_type=self.blue_print_class)
         nested_cv.run(blue_print_type=self.blue_print_class,
                       gym=gym,
                       gs_config=gs_config,
