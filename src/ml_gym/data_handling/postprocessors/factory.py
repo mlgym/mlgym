@@ -73,11 +73,15 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
         return combined_iterators
 
     @staticmethod
-    def get_splitted_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF], seed: int, split_config: Dict) -> Dict[str, InformedDatasetIteratorIF]:
+    def get_splitted_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF], seed: int,
+                               stratified: bool, split_config: Dict) -> Dict[str, InformedDatasetIteratorIF]:
         def _split(iterator: InformedDatasetIteratorIF, seed: int, split_config: Dict) -> Dict[str, InformedDatasetIteratorIF]:
             names = list(split_config.keys())
             ratios = list(split_config.values())
-            splitter = SplitterFactory.get_random_splitter(ratios=ratios, seed=seed)
+            if stratified:
+                splitter = SplitterFactory.get_stratified_splitter(split_config=split_config)
+            else:
+                splitter = SplitterFactory.get_random_splitter(ratios=ratios, seed=seed)
             splitted_iterators = splitter.split(iterator)
             dataset_metas = [MetaFactory.get_dataset_meta_from_existing(
                 iterator.dataset_meta, identifier=identifier, dataset_tag=name) for name in names]
