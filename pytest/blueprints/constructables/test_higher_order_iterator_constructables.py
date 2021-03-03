@@ -156,20 +156,21 @@ class TestIteratorViewConstructable(IteratorFixtures):
 
     def test_constructable(self, informed_iterators):
         requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"])}
-        num_indices = 15
+        num_indices_train = 15
+        num_indices_test = 10
         constructable = IteratorViewConstructable(component_identifier="mapped_component",
                                                   requirements=requirements,
-                                                  num_indices=num_indices,
-                                                  applicable_splits=["train"])
+                                                  split_indices={"train": list(range(num_indices_train)),
+                                                                 "test": list(range(num_indices_test))},
+                                                  applicable_split="train")
         iterator_views = constructable.construct()
         iterator_view_train, iterator_view_test = iterator_views["train"], iterator_views["test"]
-        iterator_view_train[num_indices - 1]
         assert isinstance(iterator_view_train, InformedDatasetIteratorIF)
         assert isinstance(iterator_view_test, InformedDatasetIteratorIF)
-        assert len(iterator_view_train) == num_indices
-        assert len(iterator_view_test) > num_indices
+        assert len(iterator_view_train) == num_indices_train
+        assert len(iterator_view_test) == num_indices_test
         try:
-            iterator_view_train[num_indices]
+            iterator_view_train[num_indices_train]
             assert False
         except:
             assert True

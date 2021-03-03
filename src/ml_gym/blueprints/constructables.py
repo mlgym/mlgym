@@ -148,18 +148,23 @@ class FilteredLabelsIteratorConstructable(ComponentConstructable):
 
 @dataclass
 class IteratorViewConstructable(ComponentConstructable):
-    num_indices: int = 0
-    applicable_splits: List[str] = field(default_factory=list)
+    split_indices: Dict[str, List[int]] = field(default_factory=dict)
+    view_tags: Dict[str, Any] = field(default_factory=dict)
+    applicable_split: str = ""
 
-    def sample_selection_fun(iterator: DatasetIteratorIF, num_indices: int) -> List[int]:
-        return list(range(num_indices))
+    @staticmethod
+    def sample_selection_fun(iterator: DatasetIteratorIF, split_indices: Dict[str, List[int]]) -> List[int]:
+        return split_indices
 
     def _construct_impl(self) -> Dict[str, DatasetIteratorIF]:
-        dataset_iterators_dict = self.get_requirement("iterators")
-        partial_selection_fun = partial(IteratorViewConstructable.sample_selection_fun, num_indices=self.num_indices)
-        return {name: ModelGymInformedIteratorFactory.get_iterator_view(self.component_identifier, iterator, partial_selection_fun)
-                if name in self.applicable_splits else iterator
-                for name, iterator in dataset_iterators_dict.items()}
+        dataset_iterator = self.get_requirement("iterators")[self.applicable_split]
+        iterator_views = {}
+        for name, indices in self.split_indices.items():
+            partial_selection_fun = partial(IteratorViewConstructable.sample_selection_fun, split_indices=indices)
+            iterator_view = ModelGymInformedIteratorFactory.get_iterator_view(self.component_identifier, dataset_iterator,
+                                                                              partial_selection_fun, self.view_tags)
+            iterator_views[name] = iterator_view
+        return iterator_views
 
 
 @dataclass

@@ -8,7 +8,8 @@ class BluePrint(ABC):
     """ Abstract class that provides a blueprint for creating `AbstractGymJob`
     """
 
-    def __init__(self, model_name: str, dataset_name: str,  epochs: List[int], config: Dict[str, Any], dashify_logging_dir: str, grid_search_id: str, run_id: str):
+    def __init__(self, model_name: str, dataset_name: str,  epochs: List[int], config: Dict[str, Any], dashify_logging_dir: str,
+                 grid_search_id: str, run_id: str, external_injection: Dict[str, Any] = None):
 
         self.config = config
         self.dashify_logging_dir = dashify_logging_dir
@@ -17,12 +18,13 @@ class BluePrint(ABC):
         self.epochs = epochs
         self.model_name = model_name
         self.dataset_name = dataset_name
+        self.external_injection = external_injection if external_injection is not None else {}
 
     @abstractmethod
     def construct(self) -> GymJob:
         raise NotImplementedError
 
-    def get_experiment_info(self, log_dir: str, grid_search_id: str, model_name: str, dataset_name: str, run_id: str) -> ExperimentInfo:
+    def get_experiment_info(self) -> ExperimentInfo:
         experiment_info = DashifyLogger.create_new_experiment(log_dir=self.dashify_logging_dir,
                                                               subfolder_id=self.grid_search_id,
                                                               model_name=self.model_name,
@@ -33,5 +35,5 @@ class BluePrint(ABC):
 
     @staticmethod
     @abstractmethod
-    def construct_components(config: Dict) -> List[Any]:
+    def construct_components(config: Dict, external_injection: Dict[str, Any]) -> List[Any]:
         return NotImplementedError
