@@ -49,9 +49,15 @@ class ConvNetBluePrint(BluePrint):
         self.run_mode = run_mode
 
     @staticmethod
-    def construct_components(config: Dict, component_names: List[str], external_injection: Dict[str, Any]) -> Dict[str, Any]:
-        injection_mapping = {"id_conv_mnist_standard_collator": MNISTCollator, **external_injection}
-        injector = Injector(injection_mapping)
+    def construct_components(config: Dict, component_names: List[str], external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
+        if external_injection is not None:
+            injection_mapping = {"id_conv_mnist_standard_collator": MNISTCollator, **external_injection}
+            injector = Injector(injection_mapping, raise_mapping_not_found=True)
+
+        else:
+            injection_mapping = {"id_conv_mnist_standard_collator": MNISTCollator}
+            injector = Injector(injection_mapping, raise_mapping_not_found=False)
+
         component_factory = ComponentFactory(injector)
         component_factory.register_component_type("MODEL_REGISTRY", "DEFAULT", MyModelRegistryConstructable)
         components = component_factory.build_components_from_config(config, component_names)

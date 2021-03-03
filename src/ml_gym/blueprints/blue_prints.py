@@ -35,5 +35,5 @@ class BluePrint(ABC):
 
     @staticmethod
     @abstractmethod
-    def construct_components(config: Dict, external_injection: Dict[str, Any]) -> List[Any]:
+    def construct_components(config: Dict, component_names: List[str], external_injection: Dict[str, Any] = None) -> List[Any]:
         return NotImplementedError

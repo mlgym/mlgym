@@ -11,20 +11,22 @@ from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIter
     DataCollatorConstructable, PredictionPostProcessingRegistryConstructable, TrainComponentConstructable, EvalComponentConstructable, \
     IteratorViewConstructable, OneHotEncodedTargetsIteratorConstructable, InMemoryDatasetIteratorConstructable
 from ml_gym.error_handling.exception import InjectMappingNotFoundError
+# from ml_gym.util.logger import LogLevel, ConsoleLogger
 
 
 class Injector:
 
-    def __init__(self, mapping: Dict[str, Any]):
+    def __init__(self, mapping: Dict[str, Any], raise_mapping_not_found: bool = False):
         self.mapping = mapping
+        self.raise_mapping_not_found = raise_mapping_not_found
 
-    def inject_pass(self, component_parameters: Dict, raise_mapping_not_found: bool = True) -> Dict[str, Any]:
+    def inject_pass(self, component_parameters: Dict) -> Dict[str, Any]:
         def inject(tree: Union[Dict, List]) -> Dict[str, Any]:
             if isinstance(tree, dict):
                 for key, sub_tree in tree.items():
                     if key == "injectable":
                         if tree["injectable"]["id"] not in self.mapping:
-                            if raise_mapping_not_found:
+                            if self.raise_mapping_not_found:
                                 raise InjectMappingNotFoundError
                             else:
                                 tree[key] = sub_tree
