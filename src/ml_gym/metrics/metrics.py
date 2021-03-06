@@ -76,8 +76,8 @@ class ClassSpecificExpectedCalibrationErrorMetric(Metric):
         return float(ece_score)
 
     def __call__(self, result_batch: InferenceResultBatch) -> Union[float, List[float]]:
-        y_true = result_batch.get_targets(self.target_subscription_key).cpu()
-        y_pred = result_batch.get_predictions(self.prediction_subscription_key).cpu()  # confidence for single class
+        y_true = result_batch.get_targets(self.target_subscription_key).cpu().flatten()
+        y_pred = result_batch.get_predictions(self.prediction_subscription_key).cpu().flatten()  # confidence for single class
 
         # bin samples based on prediction confidence
         bin_indices = np.digitize(y_pred.detach().numpy(), bins=self.bins)
@@ -111,7 +111,7 @@ class BrierScoreMetric(Metric):
         self.prediction_subscription_key = prediction_subscription_key
         self.mse = nn.MSELoss(reduction="mean")
 
-    def __call__(self, inference_result_batch: InferenceResultBatch) -> torch.Tensor:
+    def __call__(self, inference_result_batch: InferenceResultBatch) -> float:
         y_true = inference_result_batch.get_targets(self.target_subscription_key).cpu()
         y_pred = inference_result_batch.get_predictions(self.prediction_subscription_key).cpu()
-        return self.mse(y_pred, y_true)
+        return self.mse(y_pred.flatten(), y_true.flatten()).item()
