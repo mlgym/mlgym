@@ -270,7 +270,7 @@ class LossFunctionRegistryConstructable(ComponentConstructable):
 
     def _construct_impl(self):
         loss_fun_registry = ClassRegistry()
-        default_mapping: [str, Loss] = {
+        default_mapping: Dict[str, Loss] = {
             LossFunctionRegistryConstructable.LossKeys.LPLoss: LossFactory.get_lp_loss,
             LossFunctionRegistryConstructable.LossKeys.LPLossScaled: LossFactory.get_scaled_lp_loss,
             LossFunctionRegistryConstructable.LossKeys.BCEWithLogitsLoss: LossFactory.get_bce_with_logits_loss,
@@ -313,11 +313,9 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
                 MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.AUPR,
                                                  metric_fun=binary_aupr_score),
             MetricFunctionRegistryConstructable.MetricKeys.BRIER_SCORE:
-                MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.BRIER_SCORE,
-                                                 metric_fun=MetricFactory.get_brier_score_metric_fun),
+                MetricFactory.get_brier_score_metric_fun,
             MetricFunctionRegistryConstructable.MetricKeys.EXPECTED_CALIBRATION_ERROR:
-                MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.EXPECTED_CALIBRATION_ERROR,
-                                                 metric_fun=MetricFactory.get_expected_calibration_error_metric_fun)
+                MetricFactory.get_expected_calibration_error_metric_fun
         }
         for key, metric_type in default_mapping.items():
             metric_fun_registry.add_class(key, metric_type)
@@ -336,7 +334,7 @@ class PredictionPostProcessingRegistryConstructable(ComponentConstructable):
 
     def _construct_impl(self):
         postprocessing_fun_registry = ClassRegistry()
-        default_mapping: [str, PredictPostProcessingIF] = {
+        default_mapping: Dict[str, PredictPostProcessingIF] = {
             PredictionPostProcessingRegistryConstructable.FunctionKeys.SOFT_MAX: SoftmaxPostProcessorImpl,
             PredictionPostProcessingRegistryConstructable.FunctionKeys.ARG_MAX: ArgmaxPostProcessorImpl,
             PredictionPostProcessingRegistryConstructable.FunctionKeys.SIGMOIDAL: SigmoidalPostProcessorImpl,
