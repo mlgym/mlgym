@@ -6,6 +6,7 @@ from ml_gym.batching.batch import InferenceResultBatch
 from typing import List, Callable
 from ml_gym.gym.stateful_components import StatefulComponent
 import torch.nn.functional as F
+from ml_gym.error_handling.exception import InvalidTensorFormatError
 
 
 class LossWarmupMixin(StatefulComponent):
@@ -54,6 +55,9 @@ class LPLoss(Loss):
         # here: predictions are reconstructions and targets are the input vectors
         t = forward_batch.get_targets(self.target_subscription_key)
         p = forward_batch.get_predictions(self.prediction_subscription_key)
+        if t.shape != p.shape:
+            raise InvalidTensorFormatError
+
         if self.sample_selection_fun is not None:
             sample_selection_mask = self.sample_selection_fun(forward_batch)
             t = t[sample_selection_mask]

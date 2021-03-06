@@ -51,3 +51,7 @@ class InjectMappingNotFoundError(Exception):
 class ValidationModeNotValidError(Exception):
     """Exception when an invalid validation mode was selected."""
     pass
+
+
+class InvalidTensorFormatError(Exception):
+    """Raised when a torch tensor has the wrong format for subsequent computation"""
