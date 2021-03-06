@@ -1,7 +1,9 @@
 import pytest
 import torch
 from ml_gym.batching.batch import InferenceResultBatch
-from ml_gym.metrics.metrics import binary_aupr_score, binary_auroc_score, PredictionMetric, ClassSpecificExpectedCalibrationErrorMetric
+from ml_gym.metrics.metrics import binary_aupr_score, binary_auroc_score, PredictionMetric, ClassSpecificExpectedCalibrationErrorMetric, \
+    BrierScoreMetric
+from ml_gym.metrics.metric_factory import MetricFactory
 import numpy as np
 
 
@@ -118,3 +120,29 @@ class TestExpectedCalibrationError:
         ce_scores_reference = [np.abs(0/3-np.mean([0, 0.01, 0.05])), 0, 0, 0, 0, 0, 0, 0, 0, np.abs(3/4 - np.mean([0.91, 0.92, 1, 0.96]))]
         ce_scores = ece_metric(probability_inference_batch_result)
         assert np.sum(np.abs(np.array(ce_scores_reference) - np.array(ce_scores))) < 0.00001
+
+
+class TestBrierScoreMetric:
+
+    @pytest.fixture
+    def brier_fun(self):
+        return MetricFactory.get_brier_score_metric_fun(tag="sample_tag",
+                                                        prediction_subscription_key="predictions",
+                                                        target_subscription_key="targets")
+
+    @pytest.mark.parametrize(
+        "targets", [[0, 1, 0, 1], [0, 0, 0, 1]])
+    @pytest.mark.parametrize(
+        "predictions", [[0.5, 0, 0, 0.5], [0.5, 0.24, 0.56, 0.56]]
+    )
+    def test_brier_score(self, targets, predictions, brier_fun):
+        target_tensor = torch.tensor(targets)
+        prediction_tensor = torch.tensor(predictions)
+        targets = {"targets": target_tensor}
+        predictions = {"predictions": prediction_tensor}
+        inference_result_batch = InferenceResultBatch(targets=targets, predictions=predictions,
+                                                      tags="simple_tag")
+
+        result = brier_fun(inference_result_batch=inference_result_batch)
+        reference_result = torch.sum((target_tensor-prediction_tensor)**2) / len(target_tensor)
+        assert reference_result == result

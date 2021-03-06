@@ -291,10 +291,12 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
         PRECISION = "PRECISION"
         AUROC = "AUROC"
         AUPR = "AUPR"
+        BRIER_SCORE = "BRIER_SCORE"
+        EXPECTED_CALIBRATION_ERROR = "EXPECTED_CALIBRATION_ERROR"
 
     def _construct_impl(self):
         metric_fun_registry = ClassRegistry()
-        default_mapping: [str, Metric] = {
+        default_mapping: Dict[str, Metric] = {
             MetricFunctionRegistryConstructable.MetricKeys.F1_SCORE:
                 MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.F1_SCORE,
                                                  metric_fun=f1_score),
@@ -309,7 +311,13 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
                                                  metric_fun=binary_auroc_score),
             MetricFunctionRegistryConstructable.MetricKeys.AUPR:
                 MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.AUPR,
-                                                 metric_fun=binary_aupr_score)
+                                                 metric_fun=binary_aupr_score),
+            MetricFunctionRegistryConstructable.MetricKeys.BRIER_SCORE:
+                MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.BRIER_SCORE,
+                                                 metric_fun=MetricFactory.get_brier_score_metric_fun),
+            MetricFunctionRegistryConstructable.MetricKeys.EXPECTED_CALIBRATION_ERROR:
+                MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.EXPECTED_CALIBRATION_ERROR,
+                                                 metric_fun=MetricFactory.get_expected_calibration_error_metric_fun)
         }
         for key, metric_type in default_mapping.items():
             metric_fun_registry.add_class(key, metric_type)

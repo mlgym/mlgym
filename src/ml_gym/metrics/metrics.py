@@ -4,6 +4,7 @@ from sklearn.metrics import roc_auc_score, average_precision_score
 from ml_gym.batching.batch import InferenceResultBatch
 from abc import ABC, abstractmethod
 import numpy as np
+from torch import nn
 
 
 def binary_auroc_score(y_true: torch.Tensor, y_pred: torch.Tensor, **params: Dict[str, Any]) -> float:
@@ -99,3 +100,18 @@ class ClassSpecificExpectedCalibrationErrorMetric(Metric):
             return ece_score
         else:
             return ce_scores
+
+
+class BrierScoreMetric(Metric):
+    def __init__(self, tag: str, identifier: str,
+                 prediction_subscription_key: str,
+                 target_subscription_key: str):
+        super().__init__(tag=tag, identifier=identifier)
+        self.target_subscription_key = target_subscription_key
+        self.prediction_subscription_key = prediction_subscription_key
+        self.mse = nn.MSELoss(reduction="mean")
+
+    def __call__(self, inference_result_batch: InferenceResultBatch) -> torch.Tensor:
+        y_true = inference_result_batch.get_targets(self.target_subscription_key).cpu()
+        y_pred = inference_result_batch.get_predictions(self.prediction_subscription_key).cpu()
+        return self.mse(y_pred, y_true)
