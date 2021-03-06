@@ -106,17 +106,17 @@ class GymJob(AbstractGymJob):
         step_epochs = self.epochs[1:]
         if len(self.epochs) > 0 and self.epochs[0] == 0:
             # perform warmup for trainer and evaluator components
-            self.logger.log(LogLevel.DEBUG, "Executing warmup step")
+            # self.logger.log(LogLevel.DEBUG, "Executing warmup step")
             self._warmup(device, measurement_id=0)
             # get initial results
-            self.logger.log(LogLevel.DEBUG, "Executing initial evaluation step")
+            # self.logger.log(LogLevel.DEBUG, "Executing initial evaluation step")
             self._evaluation_step(device, measurement_id=0)
             # train and evaluate
 
         for epoch in step_epochs:
-            self.logger.log(LogLevel.DEBUG, "Executing training step")
+            # self.logger.log(LogLevel.DEBUG, "Executing training step")
             self._train_step(device, measurement_id=epoch)
-            self.logger.log(LogLevel.DEBUG, "Executing evaluation step")
+            # self.logger.log(LogLevel.DEBUG, "Executing evaluation step")
             self._evaluation_step(device, epoch)
 
     def _execute_eval(self, device: torch.device):
