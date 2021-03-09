@@ -40,7 +40,6 @@ class BluePrint(ABC):
         return NotImplementedError
 
 
-@staticmethod
 def create_blueprint(blue_print_class: Type[BluePrint],
                      run_mode: AbstractGymJob.Mode,
                      experiment_config: Dict[str, Any],

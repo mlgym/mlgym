@@ -48,7 +48,7 @@ class NestedCV(ValidatorIF):
                     train_fold_indices = train_fold_indices + fold
 
             split = {
-                "outer_test_fold_id": outer_fold_id,
+                "id_outer_test_fold_id": outer_fold_id,
                 "id_inner_test_fold_id": -1,
                 "id_split_indices": {
                     "train": train_fold_indices,
@@ -71,7 +71,7 @@ class NestedCV(ValidatorIF):
                     if i != inner_fold_id:
                         train_fold_indices = train_fold_indices + fold
                 split = {
-                    "outer_test_fold_id": outer_fold_id,
+                    "id_outer_test_fold_id": outer_fold_id,
                     "id_inner_test_fold_id": inner_fold_id,
                     "id_split_indices": {
                         "train": train_fold_indices,
@@ -96,9 +96,9 @@ class NestedCV(ValidatorIF):
         experiment_id = 0
         for split in splits:
             for config_id, experiment_config in run_id_to_config_dict.items():
-                external_injection = {"experiment_id": experiment_id,
-                                      "hyper_paramater_combination_id": config_id
-                                      ** split}
+                external_injection = {"id_experiment_id": experiment_id,
+                                      "id_hyper_paramater_combination_id": config_id,
+                                      **split}
                 injector = Injector(mapping=external_injection)
                 experiment_config_injected = injector.inject_pass(component_parameters=experiment_config)
                 bp = create_blueprint(blue_print_class=blue_print_type,
@@ -108,7 +108,8 @@ class NestedCV(ValidatorIF):
                                       num_epochs=num_epochs,
                                       grid_search_id=self.grid_search_id,
                                       experiment_id=experiment_id)
-                blueprints = blueprints + bp
+                blueprints.append(bp)
+                experiment_id = experiment_id + 1
         return blueprints
 
     def run(self, blue_print_type: Type[BluePrint], gym: Gym, gs_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str):
