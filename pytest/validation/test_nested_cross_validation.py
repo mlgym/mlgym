@@ -100,6 +100,6 @@ class TestNestedCV:
             assert len(inner_split["id_split_indices"]["train"]) == len(set(inner_split["id_split_indices"]["train"]))
             assert len(inner_split["id_split_indices"]["test"]) == len(set(inner_split["id_split_indices"]["test"]))
             assert set(inner_split["id_split_indices"]["test"]).isdisjoint(set(inner_split["id_split_indices"]["train"]))
-            outer_split = outer_splits[inner_split["outer_test_fold_id"]]
+            outer_split = outer_splits[inner_split["id_outer_test_fold_id"]]
             outer_split_indices = outer_split["id_split_indices"]["train"]
             assert len(outer_split_indices) == len(inner_split["id_split_indices"]["train"]) + len(inner_split["id_split_indices"]["test"])
