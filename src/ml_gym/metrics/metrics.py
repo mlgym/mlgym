@@ -105,13 +105,19 @@ class ClassSpecificExpectedCalibrationErrorMetric(Metric):
 class BrierScoreMetric(Metric):
     def __init__(self, tag: str, identifier: str,
                  prediction_subscription_key: str,
-                 target_subscription_key: str):
+                 target_subscription_key: str,
+                 class_label: int = None):
         super().__init__(tag=tag, identifier=identifier)
         self.target_subscription_key = target_subscription_key
         self.prediction_subscription_key = prediction_subscription_key
         self.mse = nn.MSELoss(reduction="mean")
+        self.class_label = class_label
 
     def __call__(self, inference_result_batch: InferenceResultBatch) -> float:
-        y_true = inference_result_batch.get_targets(self.target_subscription_key).cpu()
-        y_pred = inference_result_batch.get_predictions(self.prediction_subscription_key).cpu()
-        return self.mse(y_pred.flatten(), y_true.flatten()).item()
+        y_true = inference_result_batch.get_targets(self.target_subscription_key).cpu().flatten()
+        y_pred = inference_result_batch.get_predictions(self.prediction_subscription_key).cpu().flatten()
+        if self.class_label is not None:
+            mask = y_pred == self.class_label
+            y_true = y_true[mask]
+            y_pred = y_pred[mask]
+        return self.mse(y_pred, y_true).item()
