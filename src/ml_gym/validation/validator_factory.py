@@ -7,7 +7,8 @@ from ml_gym.blueprints.blue_prints import BluePrint
 class ValidatorFactory:
 
     @staticmethod
-    def get_nested_cv(gs_config: Dict[str, Any], cv_config: Dict[str, Any], grid_search_id: str, blue_print_type: Type[BluePrint]):
+    def get_nested_cv(gs_config: Dict[str, Any], cv_config: Dict[str, Any], grid_search_id: str,
+                      blue_print_type: Type[BluePrint]) -> NestedCV:
         iterator_key = cv_config["NestedCV"]["iterator_key"]
         split_key = cv_config["NestedCV"]["split_key"]
         component_names = [iterator_key]
@@ -16,5 +17,5 @@ class ValidatorFactory:
         return NestedCV(dataset_iterator=iterator, grid_search_id=grid_search_id, **cv_config["NestedCV"]["config"])
 
     @staticmethod
-    def get_gs_validator(grid_search_id: str):
+    def get_gs_validator(grid_search_id: str) -> GridSearchValidator:
         return GridSearchValidator(grid_search_id=grid_search_id)
