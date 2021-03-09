@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 import torch
 from conv_net import ConvNet
 from ml_gym.blueprints.constructables import ModelRegistryConstructable
@@ -41,20 +41,32 @@ class MyModelRegistryConstructable(ModelRegistryConstructable):
 
 
 class ConvNetBluePrint(BluePrint):
-    def __init__(self, run_mode: AbstractGymJob.Mode, config: Dict, epochs: List[int], dashify_logging_dir: str, grid_search_id: str, run_id: str):
+    def __init__(self, run_mode: AbstractGymJob.Mode, config: Dict, epochs: List[int], dashify_logging_dir: str, grid_search_id: str,
+                 run_id: str, external_injection: Dict[str, Any] = None):
         model_name = "conv_net"
         dataset_name = ""
-        super().__init__(model_name, dataset_name, epochs, config, dashify_logging_dir, grid_search_id, run_id)
+        super().__init__(model_name, dataset_name, epochs, config, dashify_logging_dir, grid_search_id, run_id, external_injection)
         self.run_mode = run_mode
 
-    def construct(self) -> 'AbstractGymJob':
-        experiment_info = self.get_experiment_info(self.dashify_logging_dir, self.grid_search_id, self.model_name, self.dataset_name, self.run_id)
-        component_names = ["model", "trainer", "optimizer", "evaluator"]
+    @staticmethod
+    def construct_components(config: Dict, component_names: List[str], external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
+        if external_injection is not None:
+            injection_mapping = {"id_conv_mnist_standard_collator": MNISTCollator, **external_injection}
+            injector = Injector(injection_mapping, raise_mapping_not_found=True)
 
-        injection_mapping = {"id_conv_mnist_standard_collator": MNISTCollator}
-        injector = Injector(injection_mapping)
+        else:
+            injection_mapping = {"id_conv_mnist_standard_collator": MNISTCollator}
+            injector = Injector(injection_mapping, raise_mapping_not_found=False)
+
         component_factory = ComponentFactory(injector)
         component_factory.register_component_type("MODEL_REGISTRY", "DEFAULT", MyModelRegistryConstructable)
-        components = component_factory.build_components_from_config(self.config, component_names)
+        components = component_factory.build_components_from_config(config, component_names)
+        return components
+
+    def construct(self) -> 'AbstractGymJob':
+        experiment_info = self.get_experiment_info()
+        component_names = ["model", "trainer", "optimizer", "evaluator"]
+        components = ConvNetBluePrint.construct_components(self.config, component_names, self.external_injection)
+
         gym_job = GymJob(self.run_mode, experiment_info=experiment_info, epochs=self.epochs, **components)
         return gym_job

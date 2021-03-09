@@ -104,12 +104,12 @@ class GridSearch:
     @staticmethod
     def create_gs_configs_from_path(config_path: str) -> List[Dict]:
         gs_config = YAMLConfigLoader.load(config_path)
-        configs = GridSearch.create_gs(gs_config)
+        configs = GridSearch.create_gs_from_config_dict(gs_config)
         return configs
 
     @staticmethod
-    def create_gs(gs: Dict):
-        configs = GridSearch._split_config(gs)
+    def create_gs_from_config_dict(gs_config: Dict):
+        configs = GridSearch._split_config(gs_config)
         return configs
 
     # CONFIG PART OF GS
@@ -197,7 +197,7 @@ class GridSearch:
 
     @staticmethod
     def get_rerun_configs(old_configs: List[Dict], gs: Dict, negligible_paths: Dict) -> List[Dict[str, Any]]:
-        gs_configs = GridSearch.create_gs(gs)
+        gs_configs = GridSearch.create_gs_from_config_dict(gs)
         return [GridSearch.update_config_from_grid_search(old_config, gs_configs, negligible_paths) for old_config in
                 old_configs]
 

@@ -1,5 +1,5 @@
 import copy
-from typing import Dict, Any, List, Type
+from typing import Dict, Any, List, Optional, Type, Union
 from collections import namedtuple
 from dataclasses import dataclass, field
 from ml_gym.error_handling.exception import ComponentConstructionError
@@ -10,20 +10,38 @@ from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIter
     FilteredLabelsIteratorConstructable, FeatureEncodedIteratorConstructable, CombinedDatasetIteratorConstructable, \
     DataCollatorConstructable, PredictionPostProcessingRegistryConstructable, TrainComponentConstructable, EvalComponentConstructable, \
     IteratorViewConstructable, OneHotEncodedTargetsIteratorConstructable, InMemoryDatasetIteratorConstructable
+from ml_gym.error_handling.exception import InjectMappingNotFoundError
+# from ml_gym.util.logger import LogLevel, ConsoleLogger
 
 
 class Injector:
 
-    def __init__(self, mapping: Dict[str, Any]):
+    def __init__(self, mapping: Dict[str, Any], raise_mapping_not_found: bool = False):
         self.mapping = mapping
+        self.raise_mapping_not_found = raise_mapping_not_found
 
-    def inject_pass(self, component_parameters: Dict) -> Any:
-        def inject(parameter: Dict):
-            if isinstance(parameter, dict) and "injectable" in parameter:
-                return self.mapping[parameter["injectable"]["id"]]
+    def inject_pass(self, component_parameters: Dict) -> Dict[str, Any]:
+        def inject(tree: Union[Dict, List]) -> Dict[str, Any]:
+            if isinstance(tree, dict):
+                for key, sub_tree in tree.items():
+                    if key == "injectable":
+                        if tree["injectable"]["id"] not in self.mapping:
+                            if self.raise_mapping_not_found:
+                                raise InjectMappingNotFoundError
+                            else:
+                                tree[key] = sub_tree
+                        else:
+                            tree = self.mapping[sub_tree["id"]]
+                    else:
+                        tree[key] = inject(sub_tree)
+                return tree
+            elif isinstance(tree, list):
+                return [inject(sub_tree) for sub_tree in tree]
             else:
-                return parameter
-        return {key: inject(parameter) for key, parameter in component_parameters.items()}
+                return tree
+        copied_dict = copy.deepcopy(component_parameters)
+        injected = {key: inject(parameter) for key, parameter in copied_dict.items()}
+        return injected
 
 
 @dataclass

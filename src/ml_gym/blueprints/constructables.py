@@ -149,18 +149,23 @@ class FilteredLabelsIteratorConstructable(ComponentConstructable):
 
 @dataclass
 class IteratorViewConstructable(ComponentConstructable):
-    num_indices: int = 0
-    applicable_splits: List[str] = field(default_factory=list)
+    split_indices: Dict[str, List[int]] = field(default_factory=dict)
+    view_tags: Dict[str, Any] = field(default_factory=dict)
+    applicable_split: str = ""
 
-    def sample_selection_fun(iterator: DatasetIteratorIF, num_indices: int) -> List[int]:
-        return list(range(num_indices))
+    @staticmethod
+    def sample_selection_fun(iterator: DatasetIteratorIF, split_indices: Dict[str, List[int]]) -> List[int]:
+        return split_indices
 
     def _construct_impl(self) -> Dict[str, DatasetIteratorIF]:
-        dataset_iterators_dict = self.get_requirement("iterators")
-        partial_selection_fun = partial(IteratorViewConstructable.sample_selection_fun, num_indices=self.num_indices)
-        return {name: ModelGymInformedIteratorFactory.get_iterator_view(self.component_identifier, iterator, partial_selection_fun)
-                if name in self.applicable_splits else iterator
-                for name, iterator in dataset_iterators_dict.items()}
+        dataset_iterator = self.get_requirement("iterators")[self.applicable_split]
+        iterator_views = {}
+        for name, indices in self.split_indices.items():
+            partial_selection_fun = partial(IteratorViewConstructable.sample_selection_fun, split_indices=indices)
+            iterator_view = ModelGymInformedIteratorFactory.get_iterator_view(self.component_identifier, dataset_iterator,
+                                                                              partial_selection_fun, self.view_tags)
+            iterator_views[name] = iterator_view
+        return iterator_views
 
 
 @dataclass
@@ -266,7 +271,7 @@ class LossFunctionRegistryConstructable(ComponentConstructable):
 
     def _construct_impl(self):
         loss_fun_registry = ClassRegistry()
-        default_mapping: [str, Loss] = {
+        default_mapping: Dict[str, Loss] = {
             LossFunctionRegistryConstructable.LossKeys.LPLoss: LossFactory.get_lp_loss,
             LossFunctionRegistryConstructable.LossKeys.LPLossScaled: LossFactory.get_scaled_lp_loss,
             LossFunctionRegistryConstructable.LossKeys.BCEWithLogitsLoss: LossFactory.get_bce_with_logits_loss,
@@ -287,10 +292,12 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
         PRECISION = "PRECISION"
         AUROC = "AUROC"
         AUPR = "AUPR"
+        BRIER_SCORE = "BRIER_SCORE"
+        EXPECTED_CALIBRATION_ERROR = "EXPECTED_CALIBRATION_ERROR"
 
     def _construct_impl(self):
         metric_fun_registry = ClassRegistry()
-        default_mapping: [str, Metric] = {
+        default_mapping: Dict[str, Metric] = {
             MetricFunctionRegistryConstructable.MetricKeys.F1_SCORE:
                 MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.F1_SCORE,
                                                  metric_fun=f1_score),
@@ -305,7 +312,11 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
                                                  metric_fun=binary_auroc_score),
             MetricFunctionRegistryConstructable.MetricKeys.AUPR:
                 MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.AUPR,
-                                                 metric_fun=binary_aupr_score)
+                                                 metric_fun=binary_aupr_score),
+            MetricFunctionRegistryConstructable.MetricKeys.BRIER_SCORE:
+                MetricFactory.get_brier_score_metric_fun,
+            MetricFunctionRegistryConstructable.MetricKeys.EXPECTED_CALIBRATION_ERROR:
+                MetricFactory.get_expected_calibration_error_metric_fun
         }
         for key, metric_type in default_mapping.items():
             metric_fun_registry.add_class(key, metric_type)
@@ -324,7 +335,7 @@ class PredictionPostProcessingRegistryConstructable(ComponentConstructable):
 
     def _construct_impl(self):
         postprocessing_fun_registry = ClassRegistry()
-        default_mapping: [str, PredictPostProcessingIF] = {
+        default_mapping: Dict[str, PredictPostProcessingIF] = {
             PredictionPostProcessingRegistryConstructable.FunctionKeys.SOFT_MAX: SoftmaxPostProcessorImpl,
             PredictionPostProcessingRegistryConstructable.FunctionKeys.ARG_MAX: ArgmaxPostProcessorImpl,
             PredictionPostProcessingRegistryConstructable.FunctionKeys.SIGMOIDAL: SigmoidalPostProcessorImpl,
