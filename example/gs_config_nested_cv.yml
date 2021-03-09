@@ -8,9 +8,6 @@ global_config:
 nested_cv_experiment_information:
   component_type_key: DATASET_ITERATORS
   variant_key: DEFAULT
-  requirements:
-    - name: repository
-      component_name: dataset_repository
   config:
     experiment_id:
       injectable:
