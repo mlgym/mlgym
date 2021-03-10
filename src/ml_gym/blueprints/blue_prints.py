@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
 from ml_gym.gym.jobs import GymJob
 from dashify.logging.dashify_logging import DashifyLogger, ExperimentInfo
+from ml_gym.gym.jobs import AbstractGymJob
+from typing import List, Type, Dict, Any
 
 
 class BluePrint(ABC):
@@ -37,3 +38,24 @@ class BluePrint(ABC):
     @abstractmethod
     def construct_components(config: Dict, component_names: List[str], external_injection: Dict[str, Any] = None) -> List[Any]:
         return NotImplementedError
+
+
+def create_blueprint(blue_print_class: Type[BluePrint],
+                     run_mode: AbstractGymJob.Mode,
+                     experiment_config: Dict[str, Any],
+                     experiment_id: int,
+                     dashify_logging_path: str,
+                     num_epochs: int,
+                     grid_search_id: str,
+                     external_injection: Dict[str, Any] = None) -> List[BluePrint]:
+
+    epochs = list(range(num_epochs))
+
+    blue_print = blue_print_class(grid_search_id=grid_search_id,
+                                  run_id=str(experiment_id),
+                                  epochs=epochs,
+                                  run_mode=run_mode,
+                                  config=experiment_config,
+                                  dashify_logging_dir=dashify_logging_path,
+                                  external_injection=external_injection)
+    return blue_print

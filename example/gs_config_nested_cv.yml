@@ -5,6 +5,26 @@ global_config:
   model_prediction_key: &model_prediction_key_anchor model_prediction_key
   postprocessing_argmax_key: &postprocessing_argmax_key_anchor postprocessing_argmax_key
 
+nested_cv_experiment_information:
+  component_type_key: DATASET_ITERATORS
+  variant_key: DEFAULT
+  requirements:
+    - name: repository
+      component_name: dataset_repository
+  config:
+    experiment_id:
+      injectable:
+        id: id_experiment_id
+    hyper_paramater_combination_id:
+      injectable:
+        id: id_hyper_paramater_combination_id 
+    outer_test_fold_id:
+      injectable:
+        id: id_outer_test_fold_id
+    inner_test_fold_id:
+      injectable:
+        id: id_inner_test_fold_id
+
 dataset_repository:
   component_type_key: DATASET_REPOSITORY
   variant_key: DEFAULT
@@ -68,9 +88,6 @@ iterator_folds:
     split_indices:
       injectable:
           id: id_split_indices
-    view_tags:
-      injectable:
-        id: id_fold_tags 
 
 data_collator:
   component_type_key: DATA_COLLATOR
