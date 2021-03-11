@@ -102,20 +102,26 @@ class ClassSpecificExpectedCalibrationErrorMetric(Metric):
             return ce_scores
 
 
-class ClasswiseExpectedCalibrationErrorMetric(Metric):
+class BinaryClasswiseExpectedCalibrationErrorMetric(Metric):
 
     def __init__(self, tag: str, identifier: str, target_subscription_key: str,
-                 prediction_subscription_key: str, class_labels: List[int], num_bins: int = 10):
+                 prediction_subscription_key_0: str, prediction_subscription_key_1: str, class_labels: List[int], num_bins: int = 10):
         super().__init__(tag=tag, identifier=identifier)
         self.class_labels = class_labels
         self.class_specific_ece_funs = [ClassSpecificExpectedCalibrationErrorMetric(tag="",
                                                                                     identifier="",
                                                                                     target_subscription_key=target_subscription_key,
-                                                                                    prediction_subscription_key=prediction_subscription_key,
+                                                                                    prediction_subscription_key=prediction_subscription_key_0,
                                                                                     num_bins=num_bins,
-                                                                                    class_label=class_label,
-                                                                                    sum_up_bins=True)
-                                        for class_label in class_labels]
+                                                                                    class_label=0,
+                                                                                    sum_up_bins=True),
+                                        ClassSpecificExpectedCalibrationErrorMetric(tag="",
+                                                                                    identifier="",
+                                                                                    target_subscription_key=target_subscription_key,
+                                                                                    prediction_subscription_key=prediction_subscription_key_1,
+                                                                                    num_bins=num_bins,
+                                                                                    class_label=1,
+                                                                                    sum_up_bins=True), ]
 
     def __call__(self, result_batch: InferenceResultBatch) -> float:
         return np.mean([fun(result_batch) for fun in self.class_specific_ece_funs])
