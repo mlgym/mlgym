@@ -293,6 +293,7 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
         AUPR = "AUPR"
         BRIER_SCORE = "BRIER_SCORE"
         EXPECTED_CALIBRATION_ERROR = "EXPECTED_CALIBRATION_ERROR"
+        CLASSWISE_EXPECTED_CALIBRATION_ERROR = "CLASSWISE_EXPECTED_CALIBRATION_ERROR"
 
     def _construct_impl(self):
         metric_fun_registry = ClassRegistry()
@@ -315,7 +316,9 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
             MetricFunctionRegistryConstructable.MetricKeys.BRIER_SCORE:
                 MetricFactory.get_brier_score_metric_fun,
             MetricFunctionRegistryConstructable.MetricKeys.EXPECTED_CALIBRATION_ERROR:
-                MetricFactory.get_expected_calibration_error_metric_fun
+                MetricFactory.get_expected_calibration_error_metric_fun,
+            MetricFunctionRegistryConstructable.MetricKeys.CLASSWISE_EXPECTED_CALIBRATION_ERROR:
+                MetricFactory.get_classwise_expected_calibration_error_metric_fun
         }
         for key, metric_type in default_mapping.items():
             metric_fun_registry.add_class(key, metric_type)

@@ -2,7 +2,7 @@ import pytest
 import torch
 from ml_gym.batching.batch import InferenceResultBatch
 from ml_gym.metrics.metrics import binary_aupr_score, binary_auroc_score, PredictionMetric, ClassSpecificExpectedCalibrationErrorMetric, \
-    BrierScoreMetric
+    BrierScoreMetric, ClasswiseExpectedCalibrationErrorMetric
 from ml_gym.metrics.metric_factory import MetricFactory
 import numpy as np
 
@@ -120,6 +120,48 @@ class TestExpectedCalibrationError:
         ce_scores_reference = [np.abs(0/3-np.mean([0, 0.01, 0.05])), 0, 0, 0, 0, 0, 0, 0, 0, np.abs(3/4 - np.mean([0.91, 0.92, 1, 0.96]))]
         ce_scores = ece_metric(probability_inference_batch_result)
         assert np.sum(np.abs(np.array(ce_scores_reference) - np.array(ce_scores))) < 0.00001
+
+
+class TestClasswiseExpectedCalibrationError:
+    target_key = "target_key"
+    prediction_probability_key = "prediction_probability_key"
+    prediction_class_key = "prediction_class_key"
+
+    @pytest.fixture
+    def probability_inference_batch_result(self) -> InferenceResultBatch:
+        targets = torch.IntTensor([0, 0, 0, 1, 0, 1, 1])  # [batch_size]
+        prediction_probabilities = torch.FloatTensor([0, 0.01, 0.05, 0.91, 0.92, 1, 0.96])
+        return InferenceResultBatch(targets={TestExpectedCalibrationError.target_key: targets},
+                                    predictions={TestExpectedCalibrationError.prediction_probability_key: prediction_probabilities},
+                                    tags=None)
+
+    def test_calc_metric(self, probability_inference_batch_result: InferenceResultBatch):
+        ece_metric = ClasswiseExpectedCalibrationErrorMetric(tag="tag",
+                                                                 identifier="identifier",
+                                                                 target_subscription_key=self.target_key,
+                                                                 prediction_subscription_key=self.prediction_probability_key,
+                                                                 num_bins=10,
+                                                                 class_labels=[0, 1])
+
+        ece_metric_0 = ClassSpecificExpectedCalibrationErrorMetric(tag="tag",
+                                                                   identifier="identifier",
+                                                                   target_subscription_key=self.target_key,
+                                                                   prediction_subscription_key=self.prediction_probability_key,
+                                                                   num_bins=10,
+                                                                   class_label=0)
+
+        ece_metric_1 = ClassSpecificExpectedCalibrationErrorMetric(tag="tag",
+                                                                   identifier="identifier",
+                                                                   target_subscription_key=self.target_key,
+                                                                   prediction_subscription_key=self.prediction_probability_key,
+                                                                   num_bins=10,
+                                                                   class_label=1)
+
+        ece_score_0 = ece_metric_0(probability_inference_batch_result)
+        ece_score_1 = ece_metric_1(probability_inference_batch_result)
+
+        ece_score = ece_metric(probability_inference_batch_result)
+        assert ece_score == (ece_score_0 + ece_score_1) / 2
 
 
 class TestBrierScoreMetric:
