@@ -125,6 +125,9 @@ class InferenceResultBatch(Batch):
             raise BatchStateError(f"Key {key} not present in targets!")
         return self._targets[key]
 
+    def add_targets(self, key: str, targets: torch.Tensor):
+        self._targets[key] = targets
+
     @property
     def targets(self) -> Dict[str, torch.Tensor]:
         return self._targets
