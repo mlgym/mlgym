@@ -85,7 +85,7 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
             names = list(split_config.keys())
             ratios = list(split_config.values())
             if stratified:
-                splitter = SplitterFactory.get_stratified_splitter(ratios=ratios)
+                splitter = SplitterFactory.get_stratified_splitter(ratios=ratios, seed=seed)
             else:
                 splitter = SplitterFactory.get_random_splitter(ratios=ratios, seed=seed)
             splitted_iterators = splitter.split(iterator)
