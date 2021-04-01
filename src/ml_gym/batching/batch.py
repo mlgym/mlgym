@@ -5,6 +5,25 @@ from ml_gym.error_handling.exception import BatchStateError
 import copy
 
 
+class TorchDeviceMixin(ABC):
+
+    @abstractmethod
+    def get_device(self) -> torch.device:
+        raise NotImplementedError
+
+    @abstractmethod
+    def to_device(self, device: torch.device):
+        raise NotImplementedError
+
+    @abstractmethod
+    def detach(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def to_cpu(self):
+        raise NotImplementedError
+
+
 class Batch(ABC):
     """Abstract class that defines the necessary methods any `Batch` implementation needs to implement.
     """
@@ -40,7 +59,7 @@ class Batch(ABC):
         raise NotImplementedError
 
 
-class DatasetBatch(Batch):
+class DatasetBatch(Batch, TorchDeviceMixin):
     """A batch of samples and its targets and tags. Used to batch train a model."""
 
     def __init__(self, samples: torch.Tensor, targets: Dict[str, torch.Tensor], tags: torch.Tensor = None):
@@ -60,13 +79,21 @@ class DatasetBatch(Batch):
     def tags(self) -> torch.Tensor:
         return self._tags
 
+    def detach(self):
+        self._targets = {k: v.detach() for k, v in self._targets.items()}
+        self._tags = self._tags.detach()
+        self._samples = self._samples.detach()
+
     def to_device(self, device: torch.device):
         self._samples = self._samples.to(device)
         self._targets = {k: v.to(device) for k, v in self._targets.items()}
-        # self._tags = self._tags.to(device)
+        self._tags = self._tags.to(device)
 
     def to_cpu(self):
-        raise NotImplementedError
+        self.to_device(device=torch.device("cpu"))
+
+    def get_device(self) -> torch.device:
+        return self._samples.device
 
     @staticmethod
     def combine_impl(batches: List['DatasetBatch']) -> 'DatasetBatch':
@@ -94,7 +121,7 @@ class DatasetBatch(Batch):
         return DatasetBatch(targets=targets, samples=samples, tags=tags)
 
 
-class InferenceResultBatch(Batch):
+class InferenceResultBatch(Batch, TorchDeviceMixin):
     """ Stores targets and predictions of an entire batch.
     """
 
@@ -102,6 +129,17 @@ class InferenceResultBatch(Batch):
         self._targets = targets if targets is not None else {}
         self._tags = tags
         self._predictions = predictions if predictions is not None else {}
+
+    def to_cpu(self):
+        self.to_device(device=torch.device("cpu"))
+
+    def get_device(self) -> torch.device:
+        return self._tags.device
+
+    def to_device(self, device: torch.device):
+        self._predictions = {k: v.to(device) for k, v in self._predictions.items()}
+        self._targets = {k: v.to(device) for k, v in self._targets.items()}
+        self._tags = self._tags.to(device)
 
     def detach(self):
         self._targets = {k: v.detach() for k, v in self._targets.items()}
@@ -155,7 +193,6 @@ class InferenceResultBatch(Batch):
 
     @staticmethod
     def combine_impl(batches: List['InferenceResultBatch']) -> 'InferenceResultBatch':
-        # tags = torch.cat([batch.tags for batch in batches])
         tags = [tag for batch in batches for tag in batch.tags]
         predictions = Batch._combine_tensor_dicts([batch.predictions for batch in batches])
         targets = Batch._combine_tensor_dicts([batch.targets for batch in batches])
