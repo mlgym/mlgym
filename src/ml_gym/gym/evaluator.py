@@ -69,8 +69,8 @@ class EvalComponent(EvalComponentIF):
         if any([isinstance(loss_fun, LossWarmupMixin) for _, loss_fun in self.loss_funs.items()]):
             self.logger.log(LogLevel.INFO, "Running warmup...")
             prediction_batches = self.map_batches(fun=self.forward_batch,
-                                                  fun_params={"device": device, "model": model},
-                                                  loader=self.dataset_loaders[self.train_split_name],
+                                                  fun_params={"calculation_device": device, "model": model,
+                                                              "result_device": torch.device("cpu")},                                                  loader=self.dataset_loaders[self.train_split_name],
                                                   show_progress=self.show_progress)
             prediction_batch = InferenceResultBatch.combine(prediction_batches)
             init_loss_funs(prediction_batch)
@@ -83,8 +83,8 @@ class EvalComponent(EvalComponentIF):
     def evaluate_dataset_split(self, model: NNModel, device: torch.device, split_name: str, dataset_loader: DatasetLoader) -> EvaluationBatchResult:
         prediction_batches = self.map_batches(fun=self.forward_batch,
                                               loader=dataset_loader,
-                                              fun_params={"device": device, "model": model},
-                                              show_progress=self.show_progress)
+                                              fun_params={"calculation_device": device, "model": model,
+                                                          "result_device": torch.device("cpu")},                                               show_progress=self.show_progress)
         prediction_batch = InferenceResultBatch.combine(prediction_batches)
         loss_scores = self.calculate_loss_scores(prediction_batch)
         metric_scores = self.calculate_metric_scores(prediction_batch)
@@ -113,12 +113,13 @@ class EvalComponent(EvalComponentIF):
                         metric_fun: Callable, params: Dict[str, Any]) -> Metric:
         return Metric(identifier, target_subscription, prediction_subscription, metric_fun, params)
 
-    def forward_batch(self, batch: DatasetBatch, model: NNModel, device: torch.device) -> InferenceResultBatch:
-        batch.to_device(device)
-        model.to(device)
-        with torch.no_grad():
-            predict_result = self.inference_component.predict(model, batch)
-        return predict_result
+    def forward_batch(self, dataset_batch: DatasetBatch, model: NNModel, calculation_device: torch.device,
+                      result_device: torch.device) -> InferenceResultBatch:
+        model = model.to(calculation_device)
+        dataset_batch.to_device(calculation_device)
+        inference_result_batch = self.inference_component.predict(model, dataset_batch)
+        inference_result_batch.to_device(result_device)
+        return inference_result_batch
 
     def calculate_metric_scores(self, inference_batch: InferenceResultBatch) -> Dict[str, List[float]]:
         return {metric.tag: [metric(inference_batch)] for metric in self.metrics}
