@@ -48,7 +48,8 @@ class TrainComponent(StatefulComponent):
             self.logger.log(LogLevel.INFO, "Running warmup...")
             with torch.no_grad():
                 prediction_batches = self.map_batches(fun=self.forward_batch,
-                                                      fun_params={"device": device, "model": model},
+                                                      fun_params={"calculation_device": device, "model": model,
+                                                                  "result_device": torch.device("cpu")},
                                                       loader=data_loader,
                                                       show_progress=self.show_progress)
             prediction_batch = InferenceResultBatch.combine(prediction_batches)
@@ -56,11 +57,13 @@ class TrainComponent(StatefulComponent):
         else:
             self.logger.log(LogLevel.INFO, "Skipping training warmup. No special loss functions to be initialized.")
 
-    def forward_batch(self, batch: DatasetBatch, model: NNModel, device: torch.device) -> InferenceResultBatch:
-        model.to(device)
-        batch.to_device(device)
-        forward_result_batch = self.inference_component.predict(model, batch)
-        return forward_result_batch
+    def forward_batch(self, dataset_batch: DatasetBatch, model: NNModel, calculation_device: torch.device,
+                      result_device: torch.device) -> InferenceResultBatch:
+        model = model.to(calculation_device)
+        dataset_batch.to_device(calculation_device)
+        inference_result_batch = self.inference_component.predict(model, dataset_batch)
+        inference_result_batch.to_device(result_device)
+        return inference_result_batch
 
     def calc_loss(self, model: NNModel, batch: DatasetBatch) -> torch.Tensor:
         forward_batch = self.inference_component.predict(model, batch)
@@ -69,18 +72,18 @@ class TrainComponent(StatefulComponent):
 
     @staticmethod
     def map_batches(fun: Callable[[DatasetBatch, NNModel], Any], loader: DatasetLoader,
-                    fun_params: Dict[str, Any] = None, show_progress: bool = False) -> List[Batch]:
+                    fun_params: Dict[str, Any] = None, show_progress: bool = False) -> List[InferenceResultBatch]:
         """
-        Applies a function to each batch within a DatasetLoader
+        Applies a function to each dataset_batch within a DatasetLoader
         """
         # TODO: This loads the entire dataset into memory.
         # We should make this a generator instead to prevent memory overflows.
         # Also code duplication with evaluator
         fun_params = fun_params if fun_params is not None else dict()
         if show_progress:
-            return [fun(batch, **fun_params) for batch in tqdm.tqdm(loader, desc="Batches processed:")]
+            return [fun(dataset_batch, **fun_params) for dataset_batch in tqdm.tqdm(loader, desc="Batches processed:")]
         else:
-            return [fun(batch, **fun_params) for batch in loader]
+            return [fun(dataset_batch, **fun_params) for dataset_batch in loader]
 
 
 class Trainer(StatefulComponent):
