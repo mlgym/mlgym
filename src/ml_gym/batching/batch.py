@@ -9,11 +9,11 @@ class TorchDeviceMixin(ABC):
 
     @staticmethod
     def _dict_tensor_to_device(d: Dict[str, Any], device: torch.device) -> Dict[str, Any]:
-        return {k: TorchDeviceMixin._dict_tensor_to_device(v, device) if isinstance(v, dict) else v.to(device) for k, v in d.items()}
+        return {k: TorchDeviceMixin._dict_tensor_to_device(v, device) if not isinstance(v, torch.Tensor) else v.to(device) for k, v in d.items()}
 
     @staticmethod
     def _detach_dict_tensor(d: Dict[str, Any]) -> Dict[str, Any]:
-        return {k: TorchDeviceMixin._detach_dict_tensor(v) if isinstance(v, dict) else v.detach() for k, v in d.items()}
+        return {k: TorchDeviceMixin._detach_dict_tensor(v) if not isinstance(v, torch.Tensor) else v.detach() for k, v in d.items()}
 
     @abstractmethod
     def get_device(self) -> torch.device:
@@ -145,20 +145,20 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
         return self._tags.device
 
     def to_device(self, device: torch.device):
-        if isinstance(self._predictions, dict):
-            self._predictions = TorchDeviceMixin._dict_tensor_to_device(self._predictions, device)
+        if isinstance(self._predictions, torch.Tensor):
+            self._predictions = self._predictions.to(device)
         else:
-            self._predictions.to(device)
+            self._predictions = TorchDeviceMixin._dict_tensor_to_device(self._predictions, device)
         self._targets = {k: v.to(device) for k, v in self._targets.items()}
         self._tags = self._tags.to(device)
 
     def detach(self):
         self._targets = {k: v.detach() for k, v in self._targets.items()}
         self._tags = self._tags.detach()
-        if isinstance(self._predictions, dict):
-            self._predictions = TorchDeviceMixin._detach_dict_tensor(self._predictions)
+        if isinstance(self._predictions, torch.Tensor):
+            self._predictions = self._predictions.detach()
         else:
-            self._predictions.detach()
+            self._predictions = TorchDeviceMixin._detach_dict_tensor(self._predictions)
 
     @property
     def predictions(self) -> Dict[str, torch.Tensor]:
