@@ -11,9 +11,12 @@ class TestInferenceResultBatch:
     def inference_batch_result(self) -> InferenceResultBatch:
         targets = torch.IntTensor([0, 0, 0, 1, 1, 1])
         tags = torch.IntTensor([0, 0, 0, 1, 1, 1])
-        predictions = torch.FloatTensor([0, 0.1, 0.01, 0.9, 0.7, 1])
+        predictions = {"a": torch.FloatTensor([0, 0.1, 0.01, 0.9, 0.7, 1]),
+                       "b": {"b_1":  torch.FloatTensor([0, 0.1, 0.01, 0.9, 0.7, 1]),
+                             "b_2":  torch.FloatTensor([0, 0.1, 0.01, 0.9, 0.7, 1])}
+                       }
         return InferenceResultBatch(targets={TestInferenceResultBatch.target_key: targets},
-                                    predictions={TestInferenceResultBatch.prediction_key: predictions},
+                                    predictions=predictions,
                                     tags=tags)
 
     # test device operations
