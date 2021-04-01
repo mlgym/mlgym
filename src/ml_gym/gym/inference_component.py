@@ -6,6 +6,7 @@ from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingCom
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 import tqdm
 from ml_gym.data_handling.dataset_loader import DatasetLoader
+from copy import deepcopy
 
 
 class ExportedModel:
@@ -22,7 +23,7 @@ class ExportedModel:
     def predict_dataset_batch(self, batch: DatasetBatch) -> InferenceResultBatch:
         with torch.no_grad():
             forward_result = self.model.forward(batch.samples)
-        result_batch = InferenceResultBatch(targets=batch.targets, tags=batch.tags, predictions=forward_result)
+        result_batch = InferenceResultBatch(targets=deepcopy(batch.targets), tags=deepcopy(batch.tags), predictions=forward_result)
         return PredictPostprocessingComponent.post_process(result_batch, post_processors=self.post_processors)
 
     def predict_data_loader(self, dataset_loader: DatasetLoader) -> InferenceResultBatch:
