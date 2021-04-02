@@ -2,7 +2,7 @@ import pytest
 import torch
 from ml_gym.batching.batch import InferenceResultBatch
 from ml_gym.metrics.metrics import binary_aupr_score, binary_auroc_score, PredictionMetric, ClassSpecificExpectedCalibrationErrorMetric, \
-    BrierScoreMetric, ClasswiseExpectedCalibrationErrorMetric
+    BrierScoreMetric, BinaryClasswiseExpectedCalibrationErrorMetric
 from ml_gym.metrics.metric_factory import MetricFactory
 import numpy as np
 
@@ -136,12 +136,12 @@ class TestClasswiseExpectedCalibrationError:
                                     tags=None)
 
     def test_calc_metric(self, probability_inference_batch_result: InferenceResultBatch):
-        ece_metric = ClasswiseExpectedCalibrationErrorMetric(tag="tag",
-                                                                 identifier="identifier",
-                                                                 target_subscription_key=self.target_key,
-                                                                 prediction_subscription_key=self.prediction_probability_key,
-                                                                 num_bins=10,
-                                                                 class_labels=[0, 1])
+        ece_metric = BinaryClasswiseExpectedCalibrationErrorMetric(tag="tag",
+                                                                   identifier="identifier",
+                                                                   target_subscription_key=self.target_key,
+                                                                   prediction_subscription_key_1=self.prediction_probability_key,
+                                                                   num_bins=10,
+                                                                   class_labels=[0, 1])
 
         ece_metric_0 = ClassSpecificExpectedCalibrationErrorMetric(tag="tag",
                                                                    identifier="identifier",
