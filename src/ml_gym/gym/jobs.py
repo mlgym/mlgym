@@ -90,8 +90,8 @@ class GymJob(AbstractGymJob):
         DashifyWriter.log_measurement_result(evaluation_result, self._experiment_info, measurement_id=measurement_id)
 
     def _warmup(self, device: torch.device, measurement_id: int):
-        self.evaluator.warm_up(self.model, device)
-        self.trainer.warm_up(self.model, device)
+        # self.evaluator.warm_up(self.model, device)
+        # self.trainer.warm_up(self.model, device)
         self.save_state_of_stateful_components(measurement_id=measurement_id)
 
     def execute(self, device: torch.device):
