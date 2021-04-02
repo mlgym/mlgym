@@ -395,8 +395,9 @@ class EvalComponentConstructable(ComponentConstructable):
     metrics_config: List = field(default_factory=list)
     loss_funs_config: List = field(default_factory=list)
     post_processors_config: List[Dict] = field(default_factory=list)
-    average_batch_loss: bool = True
     show_progress: bool = False
+    cpu_target_subscription_keys: List[str] = field(default_factory=list)
+    cpu_prediction_subscription_keys: List[str] = field(default_factory=list)
 
     def _construct_impl(self) -> Evaluator:
         dataset_loaders: Dict[str, DatasetLoader] = self.get_requirement("data_loaders")
@@ -409,9 +410,8 @@ class EvalComponentConstructable(ComponentConstructable):
         postprocessors = [PredictPostProcessing(prediction_post_processing_registry.get_instance(**config))
                           for config in self.post_processors_config]
         inference_component = InferenceComponent(postprocessors, no_grad=True)
-        eval_component = EvalComponent(inference_component, metric_funs, loss_funs,
-                                       dataset_loaders, self.train_split_name, self.average_batch_loss,
-                                       self.show_progress)
+        eval_component = EvalComponent(inference_component, metric_funs, loss_funs, dataset_loaders, self.train_split_name,
+                                       self.show_progress, self.cpu_target_subscription_keys, self.cpu_prediction_subscription_keys)
         return eval_component
 
 
