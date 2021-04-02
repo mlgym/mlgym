@@ -215,6 +215,11 @@ eval_component:
     - name: prediction_postprocessing_registry
       component_name: prediction_postprocessing_registry
   config:
+    cpu_target_subscription_keys:
+      - *target_key_anchor
+    cpu_prediction_subscription_keys: 
+      - *postprocessing_argmax_key_anchor
+      - *model_prediction_key_anchor
     post_processors_config:
       - key: "ARG_MAX"
         prediction_subscription_key: *model_prediction_key_anchor
