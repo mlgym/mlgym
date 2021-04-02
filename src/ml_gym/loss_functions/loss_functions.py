@@ -42,7 +42,7 @@ class Loss(ABC):
 class LPLoss(Loss):
     def __init__(self, target_subscription_key: str, prediction_subscription_key: str, root: int = 1, exponent: int = 2,
                  sample_selection_fun: Callable[[InferenceResultBatch], List[bool]] = None,
-                 tag: str = "", average_batch_loss: bool = False):
+                 tag: str = "", average_batch_loss: bool = True):
         super().__init__(tag)
         self.root = root
         self.exponent = exponent
@@ -68,29 +68,28 @@ class LPLoss(Loss):
         return loss_values
 
 
-class LPLossScaled(LPLoss, LossWarmupMixin):
+class LPLossScaled(LPLoss):
     def __init__(self, target_subscription_key: str, prediction_subscription_key: str, root: int = 1, exponent: int = 2,
                  sample_selection_fun: Callable[[InferenceResultBatch], List[bool]] = None, tag: str = ""):
         LPLoss.__init__(self, target_subscription_key,
                         prediction_subscription_key, root, exponent, sample_selection_fun, tag)
-        LossWarmupMixin.__init__(self)
         self.warmup_losses = []
-        self.scaler = MeanScaler()
+        # self.scaler = MeanScaler()
 
     def __call__(self, forward_batch: InferenceResultBatch) -> torch.Tensor:
         loss_tensor = LPLoss.__call__(self, forward_batch)
-        loss_tensor_scaled = self.scaler.scale(loss_tensor)
-        return loss_tensor_scaled
-
-    def warm_up(self, forward_batch: InferenceResultBatch) -> torch.Tensor:
-        # calculate losses
-        loss_tensor = self(forward_batch)
-        self.warmup_losses.append(loss_tensor)
+        # loss_tensor_scaled = self.scaler.scale(loss_tensor)
         return loss_tensor
 
-    def finish_warmup(self):
-        loss_tensor = torch.cat(self.warmup_losses)
-        self.scaler.train(loss_tensor)
+    # def warm_up(self, forward_batch: InferenceResultBatch) -> torch.Tensor:
+    #     # calculate losses
+    #     loss_tensor = self(forward_batch)
+    #     self.warmup_losses.append(loss_tensor)
+    #     return loss_tensor
+
+    # def finish_warmup(self):
+    #     loss_tensor = torch.cat(self.warmup_losses)
+    #     self.scaler.train(loss_tensor)
 
 
 class CrossEntropyLoss(Loss):
@@ -129,7 +128,7 @@ class NLLLoss(Loss):
 
 
 class BCEWithLogitsLoss(Loss):
-    def __init__(self, target_subscription_key: str, prediction_subscription_key: str, tag: str = "", average_batch_loss: bool = False):
+    def __init__(self, target_subscription_key: str, prediction_subscription_key: str, tag: str = "", average_batch_loss: bool = True):
         super().__init__(tag)
         self.target_subscription_key: str = target_subscription_key
         self.prediction_subscription_key: str = prediction_subscription_key

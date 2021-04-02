@@ -172,6 +172,14 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
             raise BatchStateError(f"Key {key} not present in predictions!")
         return self._predictions[key]
 
+    def drop_predictions(self, keys: List[str]):
+        for key in keys:
+            del self._predictions[key]
+
+    def drop_targets(self, keys: List[str]):
+        for key in keys:
+            del self._targets[key]
+
     def get_targets(self, key: str) -> torch.Tensor:
         if key not in self._targets:
             raise BatchStateError(f"Key {key} not present in targets!")
@@ -196,6 +204,12 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
         targets_ = self._copy_tensor_dict(self.targets)
         tags_ = self.tags.clone()
         return InferenceResultBatch(predictions=predictions_, targets=targets_, tags=tags_)
+
+    def split_results(self, target_keys: List[str], predictions_keys: List[str], device: torch.device):
+        targets = {key: self._targets[key].to(device) for key in target_keys}
+        predictions = {key: self._predictions[key].to(device) for key in predictions_keys}
+        tags = self.tags.to(device)
+        return InferenceResultBatch(targets=targets, predictions=predictions, tags=tags)
 
     @staticmethod
     def combine_pair(b_1: 'InferenceResultBatch', b_2: 'InferenceResultBatch') -> 'InferenceResultBatch':
@@ -251,7 +265,7 @@ class EvaluationBatchResult(Batch):
         raise NotImplementedError
 
     @staticmethod
-    def combine_impl(batches: List['Batch']) -> 'Batch':
+    def combine_impl(batches: List['EvaluationBatchResult']) -> 'EvaluationBatchResult':
         raise NotImplementedError
 
     def __str__(self) -> str:
