@@ -13,7 +13,7 @@ from ml_gym.util.grid_search import GridSearch
 class NestedCV(ValidatorIF):
     def __init__(self, dataset_iterator: DatasetIteratorIF, num_outer_loop_folds: int,
                  num_inner_loop_folds: int, inner_stratification: bool, outer_stratification: bool,
-                 target_pos: int, shuffle: bool, grid_search_id: str, seed: int):
+                 target_pos: int, shuffle: bool, grid_search_id: str, seed: int, re_eval: bool = False):
         self.num_outer_loop_folds = num_outer_loop_folds
         self.num_inner_loop_folds = num_inner_loop_folds
         self.inner_stratification = inner_stratification
@@ -23,6 +23,7 @@ class NestedCV(ValidatorIF):
         self.grid_search_id = grid_search_id
         self.target_pos = target_pos
         self.shuffle = shuffle
+        self.re_eval = re_eval
 
     def _get_fold_indices(self) -> Tuple[List[int]]:
         splitter = SplitterFactory.get_nested_cv_splitter(num_inner_loop_folds=self.num_inner_loop_folds,
@@ -102,7 +103,7 @@ class NestedCV(ValidatorIF):
                 injector = Injector(mapping=external_injection)
                 experiment_config_injected = injector.inject_pass(component_parameters=experiment_config)
                 bp = create_blueprint(blue_print_class=blue_print_type,
-                                      run_mode=AbstractGymJob.Mode.TRAIN,
+                                      run_mode=AbstractGymJob.Mode.TRAIN if not self.re_eval else AbstractGymJob.Mode.EVAL,
                                       experiment_config=experiment_config_injected,
                                       dashify_logging_path=dashify_logging_path,
                                       num_epochs=num_epochs,
