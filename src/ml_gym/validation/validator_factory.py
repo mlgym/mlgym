@@ -8,13 +8,13 @@ class ValidatorFactory:
 
     @staticmethod
     def get_nested_cv(gs_config: Dict[str, Any], cv_config: Dict[str, Any], grid_search_id: str,
-                      blue_print_type: Type[BluePrint]) -> NestedCV:
+                      blue_print_type: Type[BluePrint], re_eval: bool = False) -> NestedCV:
         iterator_key = cv_config["NestedCV"]["iterator_key"]
         split_key = cv_config["NestedCV"]["split_key"]
         component_names = [iterator_key]
         components = blue_print_type.construct_components(config=gs_config, component_names=component_names)
         iterator = components[iterator_key][split_key]
-        return NestedCV(dataset_iterator=iterator, grid_search_id=grid_search_id, **cv_config["NestedCV"]["config"])
+        return NestedCV(dataset_iterator=iterator, grid_search_id=grid_search_id, **cv_config["NestedCV"]["config"], re_eval=re_eval)
 
     @staticmethod
     def get_gs_validator(grid_search_id: str) -> GridSearchValidator:
