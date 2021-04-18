@@ -8,8 +8,9 @@ from ml_gym.util.grid_search import GridSearch
 
 
 class GridSearchValidator(ValidatorIF):
-    def __init__(self, grid_search_id: str):
+    def __init__(self, grid_search_id: str, re_eval: bool = False):
         self.grid_search_id = grid_search_id
+        self.re_eval = re_eval
 
     def run(self, blue_print_type: Type[BluePrint], gym: Gym, gs_config: Dict[str, Any],
             num_epochs: int, dashify_logging_path: str):
@@ -17,7 +18,7 @@ class GridSearchValidator(ValidatorIF):
         blueprints = []
         for config_id, experiment_config in run_id_to_config_dict.items():
             blueprint = create_blueprint(blue_print_class=blue_print_type,
-                                         run_mode=AbstractGymJob.Mode.TRAIN,
+                                         run_mode=AbstractGymJob.Mode.TRAIN if not self.re_eval else AbstractGymJob.Mode.EVAL,
                                          experiment_config=experiment_config,
                                          dashify_logging_path=dashify_logging_path,
                                          num_epochs=num_epochs,

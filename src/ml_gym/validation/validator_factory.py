@@ -17,5 +17,5 @@ class ValidatorFactory:
         return NestedCV(dataset_iterator=iterator, grid_search_id=grid_search_id, **cv_config["NestedCV"]["config"], re_eval=re_eval)
 
     @staticmethod
-    def get_gs_validator(grid_search_id: str) -> GridSearchValidator:
-        return GridSearchValidator(grid_search_id=grid_search_id)
+    def get_gs_validator(grid_search_id: str, re_eval: bool = False) -> GridSearchValidator:
+        return GridSearchValidator(grid_search_id=grid_search_id, re_eval=re_eval)

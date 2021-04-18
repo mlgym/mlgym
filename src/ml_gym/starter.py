@@ -76,7 +76,7 @@ class MLGymStarter:
             evaluation_config = YAMLConfigLoader.load(self.evaluation_config_path)
             self.run_nested_cv(gym=gym, gs_config=gs_config, cv_config=evaluation_config, grid_search_id=grid_search_id, re_eval=re_eval)
         elif self.validation_mode == MLGymStarter.ValidationMode.GRID_SEARCH:
-            self.run_grid_search(gym=gym, gs_config=gs_config, grid_search_id=grid_search_id)
+            self.run_grid_search(gym=gym, gs_config=gs_config, grid_search_id=grid_search_id, re_eval=re_eval)
         else:
             raise ValidationModeNotValidError
         self._stop_logging_environment()
@@ -94,8 +94,8 @@ class MLGymStarter:
                       num_epochs=self.num_epochs,
                       dashify_logging_path=self.dashify_logging_path)
 
-    def run_grid_search(self, gym: Gym, gs_config: Dict[str, Any], grid_search_id: str):
-        gs_validator = ValidatorFactory.get_gs_validator(grid_search_id=grid_search_id)
+    def run_grid_search(self, gym: Gym, gs_config: Dict[str, Any], grid_search_id: str, re_eval: bool = False):
+        gs_validator = ValidatorFactory.get_gs_validator(grid_search_id=grid_search_id, re_eval=re_eval)
         gs_validator.run(blue_print_type=self.blue_print_class,
                          gym=gym,
                          gs_config=gs_config,
