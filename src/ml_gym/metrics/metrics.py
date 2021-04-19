@@ -38,12 +38,12 @@ class Metric(MetricIF):
 class PredictionMetric(Metric):
 
     def __init__(self, tag: str, identifier: str, target_subscription_key: str,
-                 prediction_subscription_key: str, metric_fun: Callable, params: Dict[str, Any]):
+                 prediction_subscription_key: str, metric_fun: Callable, params: Dict[str, Any] = None):
         super().__init__(tag=tag, identifier=identifier)
         self.target_subscription_key = target_subscription_key
         self.prediction_subscription_key = prediction_subscription_key
         self.metric_fun = metric_fun
-        self.params = params
+        self.params = params if params is not None else {}
 
     def __call__(self, result_batch: InferenceResultBatch) -> float:
         y_true = result_batch.get_targets(self.target_subscription_key).cpu()
