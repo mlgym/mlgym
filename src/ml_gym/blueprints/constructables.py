@@ -292,6 +292,7 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
         PRECISION = "PRECISION"
         AUROC = "AUROC"
         AUPR = "AUPR"
+        RECALL_AT_K = "RECALL_AT_K"
         BRIER_SCORE = "BRIER_SCORE"
         EXPECTED_CALIBRATION_ERROR = "EXPECTED_CALIBRATION_ERROR"
         BINARY_CLASSWISE_EXPECTED_CALIBRATION_ERROR = "BINARY_CLASSWISE_EXPECTED_CALIBRATION_ERROR"
@@ -314,6 +315,8 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
             MetricFunctionRegistryConstructable.MetricKeys.AUPR:
                 MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.AUPR,
                                                  metric_fun=binary_aupr_score),
+            MetricFunctionRegistryConstructable.MetricKeys.RECALL_AT_K:
+                MetricFactory.get_recall_at_k_metric_fun,
             MetricFunctionRegistryConstructable.MetricKeys.BRIER_SCORE:
                 MetricFactory.get_brier_score_metric_fun,
             MetricFunctionRegistryConstructable.MetricKeys.EXPECTED_CALIBRATION_ERROR:

@@ -25,12 +25,12 @@ class MetricFactory:
         return brier_score_fun
 
     @staticmethod
-    def get_recall_at_k_metric(tag: str,
-                               prediction_subscription_key: str,
-                               target_subscription_key: str,
-                               class_label: int,
-                               k_vals: List[int],
-                               sort_descending: bool):
+    def get_recall_at_k_metric_fun(tag: str,
+                                   prediction_subscription_key: str,
+                                   target_subscription_key: str,
+                                   class_label: int,
+                                   k_vals: List[int],
+                                   sort_descending: bool):
         recall_at_k_metric_fun = RecallAtKMetric(tag=tag,
                                                  identifier="RecallAtK",
                                                  prediction_subscription_key=prediction_subscription_key,

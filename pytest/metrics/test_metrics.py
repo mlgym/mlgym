@@ -194,7 +194,7 @@ class TestRecallAtKMetric:
 
     @pytest.fixture
     def recall_at_k_metric_fun(self):
-        return MetricFactory.get_recall_at_k_metric(tag="sample_tag",
+        return MetricFactory.get_recall_at_k_metric_fun(tag="sample_tag",
                                                         prediction_subscription_key=TestMetrics.prediction_key,
                                                         target_subscription_key=TestMetrics.target_key,
                                                         class_label=1,
