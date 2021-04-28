@@ -146,3 +146,33 @@ class BrierScoreMetric(Metric):
             y_true = y_true[mask]
             y_pred = y_pred[mask]
         return self.mse(y_pred, y_true).item()
+
+
+class RecallAtKMetric(Metric):
+    def __init__(self, tag: str, identifier: str,
+                 prediction_subscription_key: str,
+                 target_subscription_key: str,
+                 class_label: int,
+                 k_vals: List[int],
+                 sort_descending: bool = True):
+        super().__init__(tag=tag, identifier=identifier)
+        self.target_subscription_key = target_subscription_key
+        self.prediction_subscription_key = prediction_subscription_key
+        self.class_label = class_label
+        self.k_vals = k_vals
+        self.sort_descending = sort_descending
+
+    def _get_recalled_at_k_count(self, k: int, y_pred_arg_sorted: torch.Tensor, y_true: torch.Tensor) -> float:
+        top_k_class_labels = y_true[y_pred_arg_sorted[:k]]
+        return len(top_k_class_labels[top_k_class_labels == self.class_label])
+
+    def __call__(self, inference_result_batch: InferenceResultBatch) -> List[float]:
+        y_true = inference_result_batch.get_targets(self.target_subscription_key).cpu().flatten()
+        y_pred = inference_result_batch.get_predictions(self.prediction_subscription_key).cpu().flatten()
+
+        num_samples_of_interest = len(y_true[y_true == self.class_label])
+        y_pred_arg_sorted = torch.argsort(y_pred, descending=self.sort_descending)
+        recall_at_k_scores = [self._get_recalled_at_k_count(k=k,
+                                                            y_pred_arg_sorted=y_pred_arg_sorted,
+                                                            y_true=y_true) / num_samples_of_interest for k in self.k_vals]
+        return recall_at_k_scores

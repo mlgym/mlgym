@@ -188,3 +188,27 @@ class TestBrierScoreMetric:
         result = brier_fun(inference_result_batch=inference_result_batch)
         reference_result = torch.sum((target_tensor-prediction_tensor)**2) / len(target_tensor)
         assert reference_result == result
+
+
+class TestRecallAtKMetric:
+
+    @pytest.fixture
+    def recall_at_k_metric_fun(self):
+        return MetricFactory.get_recall_at_k_metric(tag="sample_tag",
+                                                        prediction_subscription_key=TestMetrics.prediction_key,
+                                                        target_subscription_key=TestMetrics.target_key,
+                                                        class_label=1,
+                                                        k_vals=[2, 3],
+                                                        sort_descending=True)
+
+    @pytest.fixture
+    def inference_result_batch(self) -> InferenceResultBatch:
+        targets = torch.IntTensor([1, 1, 0, 0, 0, 1, 1])
+        predictions = torch.FloatTensor([0, 0.2, 0.1, 0.01, 0.9, 0.7, 1])
+        return InferenceResultBatch(targets={TestMetrics.target_key: targets},
+                                    predictions={TestMetrics.prediction_key: predictions},
+                                    tags=None)
+
+    def test_metric_fun(self, recall_at_k_metric_fun, inference_result_batch: InferenceResultBatch):
+        result = recall_at_k_metric_fun(inference_result_batch=inference_result_batch)
+        assert [1/4, 2/4] == result
