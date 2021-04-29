@@ -41,13 +41,13 @@ class MetricFactory:
         return recall_at_k_metric_fun
 
     @staticmethod
-    def get_are_under_recall_at_k_metric_fun(tag: str,
-                                             prediction_subscription_key: str,
-                                             target_subscription_key: str,
-                                             class_label: int,
-                                             k_vals: List[int],
-                                             sort_descending: bool,
-                                             normalize: bool):
+    def get_area_under_recall_at_k_metric_fun(tag: str,
+                                              prediction_subscription_key: str,
+                                              target_subscription_key: str,
+                                              class_label: int,
+                                              k_vals: List[int],
+                                              sort_descending: bool,
+                                              normalize: bool):
         area_under_recall_at_k_metric_fun = AreaUnderRecallAtKMetric(tag=tag,
                                                                      identifier="RecallAtK",
                                                                      prediction_subscription_key=prediction_subscription_key,

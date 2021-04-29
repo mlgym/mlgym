@@ -319,7 +319,7 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
             MetricFunctionRegistryConstructable.MetricKeys.RECALL_AT_K:
                 MetricFactory.get_recall_at_k_metric_fun,
             MetricFunctionRegistryConstructable.MetricKeys.AREA_UNDER_RECALL_AT_K:
-                MetricFactory.get_are_under_recall_at_k_metric_fun,
+                MetricFactory.get_area_under_recall_at_k_metric_fun,
             MetricFunctionRegistryConstructable.MetricKeys.BRIER_SCORE:
                 MetricFactory.get_brier_score_metric_fun,
             MetricFunctionRegistryConstructable.MetricKeys.EXPECTED_CALIBRATION_ERROR:
