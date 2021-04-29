@@ -46,14 +46,16 @@ class MetricFactory:
                                              target_subscription_key: str,
                                              class_label: int,
                                              k_vals: List[int],
-                                             sort_descending: bool):
+                                             sort_descending: bool,
+                                             normalize: bool):
         area_under_recall_at_k_metric_fun = AreaUnderRecallAtKMetric(tag=tag,
                                                                      identifier="RecallAtK",
                                                                      prediction_subscription_key=prediction_subscription_key,
                                                                      target_subscription_key=target_subscription_key,
                                                                      class_label=class_label,
                                                                      k_vals=k_vals,
-                                                                     sort_descending=sort_descending)
+                                                                     sort_descending=sort_descending,
+                                                                     normalize=normalize)
         return area_under_recall_at_k_metric_fun
 
     @staticmethod
