@@ -184,7 +184,8 @@ class AreaUnderRecallAtKMetric(Metric):
                  target_subscription_key: str,
                  class_label: int,
                  k_vals: List[int],
-                 sort_descending: bool = True):
+                 sort_descending: bool = True,
+                 normalize=False):
         super().__init__(tag=tag, identifier=identifier)
         self.recall_at_k_metric_fun = RecallAtKMetric(tag="",
                                                       identifier="",
@@ -194,8 +195,11 @@ class AreaUnderRecallAtKMetric(Metric):
                                                       k_vals=k_vals,
                                                       sort_descending=sort_descending)
         self.k_vals = k_vals
+        self.normalize = normalize
 
     def __call__(self, inference_result_batch: InferenceResultBatch) -> List[float]:
         recall_at_k_scores = self.recall_at_k_metric_fun(inference_result_batch)
         au_recall_at_k = auc(x=self.k_vals, y=recall_at_k_scores)
+        if self.normalize:
+            au_recall_at_k = au_recall_at_k / max(self.k_vals)
         return au_recall_at_k
