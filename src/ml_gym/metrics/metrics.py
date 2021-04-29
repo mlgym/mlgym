@@ -1,6 +1,6 @@
 from typing import Callable, Dict, Any, Union, List
 import torch
-from sklearn.metrics import roc_auc_score, average_precision_score
+from sklearn.metrics import roc_auc_score, average_precision_score, auc
 from ml_gym.batching.batch import InferenceResultBatch
 from abc import ABC, abstractmethod
 import numpy as np
@@ -176,3 +176,26 @@ class RecallAtKMetric(Metric):
                                                             y_pred_arg_sorted=y_pred_arg_sorted,
                                                             y_true=y_true) / num_samples_of_interest for k in self.k_vals]
         return recall_at_k_scores
+
+
+class AreaUnderRecallAtKMetric(Metric):
+    def __init__(self, tag: str, identifier: str,
+                 prediction_subscription_key: str,
+                 target_subscription_key: str,
+                 class_label: int,
+                 k_vals: List[int],
+                 sort_descending: bool = True):
+        super().__init__(tag=tag, identifier=identifier)
+        self.recall_at_k_metric_fun = RecallAtKMetric(tag="",
+                                                      identifier="",
+                                                      prediction_subscription_key=prediction_subscription_key,
+                                                      target_subscription_key=target_subscription_key,
+                                                      class_label=class_label,
+                                                      k_vals=k_vals,
+                                                      sort_descending=sort_descending)
+        self.k_vals = k_vals
+
+    def __call__(self, inference_result_batch: InferenceResultBatch) -> List[float]:
+        recall_at_k_scores = self.recall_at_k_metric_fun(inference_result_batch)
+        au_recall_at_k = auc(x=self.k_vals, y=recall_at_k_scores)
+        return au_recall_at_k

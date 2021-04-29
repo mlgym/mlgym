@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Any, List
 from functools import partial
 from ml_gym.metrics.metrics import BinaryClasswiseExpectedCalibrationErrorMetric, PredictionMetric, BrierScoreMetric, \
-    ClassSpecificExpectedCalibrationErrorMetric, RecallAtKMetric
+    ClassSpecificExpectedCalibrationErrorMetric, RecallAtKMetric, AreaUnderRecallAtKMetric
 
 from ml_gym.batching.batch import InferenceResultBatch
 
@@ -39,6 +39,22 @@ class MetricFactory:
                                                  k_vals=k_vals,
                                                  sort_descending=sort_descending)
         return recall_at_k_metric_fun
+
+    @staticmethod
+    def get_are_under_recall_at_k_metric_fun(tag: str,
+                                             prediction_subscription_key: str,
+                                             target_subscription_key: str,
+                                             class_label: int,
+                                             k_vals: List[int],
+                                             sort_descending: bool):
+        area_under_recall_at_k_metric_fun = AreaUnderRecallAtKMetric(tag=tag,
+                                                                     identifier="RecallAtK",
+                                                                     prediction_subscription_key=prediction_subscription_key,
+                                                                     target_subscription_key=target_subscription_key,
+                                                                     class_label=class_label,
+                                                                     k_vals=k_vals,
+                                                                     sort_descending=sort_descending)
+        return area_under_recall_at_k_metric_fun
 
     @staticmethod
     def get_expected_calibration_error_metric_fun(tag: str,
