@@ -113,3 +113,5 @@ logs/
 file_storage/
 dashify_logs/
 general_logs/
+*/dashify_logging*
+*/general_logging*
