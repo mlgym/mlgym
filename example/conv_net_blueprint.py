@@ -3,7 +3,7 @@ import torch
 from conv_net import ConvNet
 from ml_gym.blueprints.constructables import ModelRegistryConstructable
 from ml_gym.blueprints.blue_prints import BluePrint
-from ml_gym.gym.jobs import AbstractGymJob, GymJob
+from ml_gym.gym.jobs import AbstractGymJob, GymJobFactory
 from ml_gym.batching.batch import DatasetBatch
 from dataclasses import dataclass
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector
@@ -41,12 +41,13 @@ class MyModelRegistryConstructable(ModelRegistryConstructable):
 
 
 class ConvNetBluePrint(BluePrint):
-    def __init__(self, run_mode: AbstractGymJob.Mode, config: Dict, epochs: List[int], dashify_logging_dir: str, grid_search_id: str,
+    def __init__(self, run_mode: AbstractGymJob.Mode, job_type: AbstractGymJob.Type, config: Dict, epochs: List[int],
+                 dashify_logging_dir: str, grid_search_id: str,
                  run_id: str, external_injection: Dict[str, Any] = None):
         model_name = "conv_net"
         dataset_name = ""
-        super().__init__(model_name, dataset_name, epochs, config, dashify_logging_dir, grid_search_id, run_id, external_injection)
-        self.run_mode = run_mode
+        super().__init__(run_mode, job_type, model_name, dataset_name, epochs, config, dashify_logging_dir, grid_search_id,
+                         run_id, external_injection)
 
     @staticmethod
     def construct_components(config: Dict, component_names: List[str], external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -68,5 +69,6 @@ class ConvNetBluePrint(BluePrint):
         component_names = ["model", "trainer", "optimizer", "evaluator"]
         components = ConvNetBluePrint.construct_components(self.config, component_names, self.external_injection)
 
-        gym_job = GymJob(self.run_mode, experiment_info=experiment_info, epochs=self.epochs, **components)
+        gym_job = GymJobFactory.get_gym_job(self.run_mode, job_type=self.job_type,
+                                            experiment_info=experiment_info, epochs=self.epochs, **components)
         return gym_job

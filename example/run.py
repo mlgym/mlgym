@@ -14,6 +14,8 @@ def parse_args():
     parser.add_argument('--evaluation_config_path', type=str, required=False, help='Path to the evaluation config')
     parser.add_argument('--gpus', type=int, nargs='+', help='Indices of GPUs to distribute the GS over', default=None)
     parser.add_argument('--log_std_to_file', default=False, action="store_true", help='Flag for forwarding std output to file')
+    parser.add_argument('--keep_interim_results', default=False, action="store_true",
+                        help='Flag if intermediate results i.e., models, optimizer etc. states are to be stored')
 
     args = parser.parse_args()
     num_epochs = args.num_epochs
@@ -25,11 +27,12 @@ def parse_args():
     text_logging_path = args.text_logging_path
     log_std_to_file = args.log_std_to_file
     evaluation_config_path = args.evaluation_config_path
-    return num_epochs, validation_mode, dashify_logging_path, text_logging_path, gs_config_path, evaluation_config_path, process_count, gpus, log_std_to_file
+    keep_interim_results = args.keep_interim_results
+    return num_epochs, validation_mode, dashify_logging_path, text_logging_path, gs_config_path, evaluation_config_path, process_count, gpus, log_std_to_file, keep_interim_results
 
 
 if __name__ == '__main__':
-    num_epochs, validation_mode, dashify_logging_path, text_logging_path, gs_config_path, evaluation_config_path, process_count, gpus, log_std_to_file = parse_args()
+    num_epochs, validation_mode, dashify_logging_path, text_logging_path, gs_config_path, evaluation_config_path, process_count, gpus, log_std_to_file, keep_interim_results = parse_args()
     starter = MLGymStarter(blue_print_class=ConvNetBluePrint,
                            validation_mode=MLGymStarter.ValidationMode[validation_mode],
                            dashify_logging_path=dashify_logging_path,
@@ -39,5 +42,6 @@ if __name__ == '__main__':
                            log_std_to_file=log_std_to_file,
                            gs_config_path=gs_config_path,
                            evaluation_config_path=evaluation_config_path,
-                           num_epochs=num_epochs)
+                           num_epochs=num_epochs,
+                           keep_interim_results=keep_interim_results)
     starter.start()

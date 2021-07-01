@@ -13,7 +13,8 @@ from ml_gym.util.grid_search import GridSearch
 class NestedCV(ValidatorIF):
     def __init__(self, dataset_iterator: DatasetIteratorIF, num_outer_loop_folds: int,
                  num_inner_loop_folds: int, inner_stratification: bool, outer_stratification: bool,
-                 target_pos: int, shuffle: bool, grid_search_id: str, seed: int, re_eval: bool = False):
+                 target_pos: int, shuffle: bool, grid_search_id: str, seed: int, re_eval: bool = False,
+                 keep_interim_results: bool = True):
         self.num_outer_loop_folds = num_outer_loop_folds
         self.num_inner_loop_folds = num_inner_loop_folds
         self.inner_stratification = inner_stratification
@@ -24,6 +25,7 @@ class NestedCV(ValidatorIF):
         self.target_pos = target_pos
         self.shuffle = shuffle
         self.re_eval = re_eval
+        self.keep_interim_results = keep_interim_results
 
     def _get_fold_indices(self) -> Tuple[List[int]]:
         splitter = SplitterFactory.get_nested_cv_splitter(num_inner_loop_folds=self.num_inner_loop_folds,
@@ -114,9 +116,11 @@ class NestedCV(ValidatorIF):
         return blueprints
 
     def run(self, blue_print_type: Type[BluePrint], gym: Gym, gs_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str):
+        job_type = AbstractGymJob.Type.LITE if self.keep_interim_results else AbstractGymJob.Type.STANDARD
         blueprints = self.create_blue_prints(blue_print_type=blue_print_type,
                                              gs_config=gs_config,
                                              dashify_logging_path=dashify_logging_path,
-                                             num_epochs=num_epochs)
+                                             num_epochs=num_epochs,
+                                             job_type=job_type)
         gym.add_blue_prints(blueprints)
         gym.run(parallel=True)
