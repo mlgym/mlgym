@@ -8,7 +8,7 @@ from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.gym.stateful_components import StatefulComponent
 from torch.optim.optimizer import Optimizer
 import tqdm
-from ml_gym.util.logger import LogLevel, ConsoleLogger
+from ml_gym.util.logger import ConsoleLogger
 
 
 class TrainComponent(StatefulComponent):

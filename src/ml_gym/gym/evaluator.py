@@ -10,7 +10,7 @@ from ml_gym.metrics.metrics import Metric
 from ml_gym.models.nn.net import NNModel
 from ml_gym.loss_functions.loss_functions import Loss, LossWarmupMixin
 import tqdm
-from ml_gym.util.logger import LogLevel, ConsoleLogger
+from ml_gym.util.logger import ConsoleLogger
 import numpy as np
 
 

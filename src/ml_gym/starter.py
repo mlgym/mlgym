@@ -20,7 +20,7 @@ class MLGymStarter:
 
     def __init__(self, blue_print_class: Type[BluePrint], validation_mode: ValidationMode, num_epochs: int, dashify_logging_path: str,
                  gs_config_path: str, evaluation_config_path: str, text_logging_path: str, process_count: int,
-                 gpus: List[int], log_std_to_file: bool, grid_search_id: str = None) -> None:
+                 gpus: List[int], log_std_to_file: bool, grid_search_id: str = None, keep_interim_results: bool = True) -> None:
         self.blue_print_class = blue_print_class
         self.num_epochs = num_epochs
         self.validation_mode = validation_mode
@@ -32,6 +32,7 @@ class MLGymStarter:
         self.gpus = gpus
         self.gs_config_path = gs_config_path
         self.grid_search_id = grid_search_id  # only set if we want to reevaluate a grid search
+        self.keep_interim_results = keep_interim_results
 
     @staticmethod
     def _create_gym(process_count: int, device_ids, log_std_to_file: bool) -> Gym:
@@ -86,7 +87,8 @@ class MLGymStarter:
                                                    cv_config=cv_config,
                                                    grid_search_id=grid_search_id,
                                                    blue_print_type=self.blue_print_class,
-                                                   re_eval=re_eval)
+                                                   re_eval=re_eval,
+                                                   keep_interim_results=self.keep_interim_results)
 
         nested_cv.run(blue_print_type=self.blue_print_class,
                       gym=gym,
@@ -95,7 +97,8 @@ class MLGymStarter:
                       dashify_logging_path=self.dashify_logging_path)
 
     def run_grid_search(self, gym: Gym, gs_config: Dict[str, Any], grid_search_id: str, re_eval: bool = False):
-        gs_validator = ValidatorFactory.get_gs_validator(grid_search_id=grid_search_id, re_eval=re_eval)
+        gs_validator = ValidatorFactory.get_gs_validator(grid_search_id=grid_search_id, re_eval=re_eval,
+                                                         keep_interim_results=self.keep_interim_results)
         gs_validator.run(blue_print_type=self.blue_print_class,
                          gym=gym,
                          gs_config=gs_config,
