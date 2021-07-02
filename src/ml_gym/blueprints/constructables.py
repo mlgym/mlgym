@@ -264,7 +264,7 @@ class ModelRegistryConstructable(ComponentConstructable):
 class LossFunctionRegistryConstructable(ComponentConstructable):
     class LossKeys:
         LPLoss = "LPLoss"
-        LPLossScaled = "LPLossScaled"
+        # LPLossScaled = "LPLossScaled"
         CrossEntropyLoss = "CrossEntropyLoss"
         BCEWithLogitsLoss = "BCEWithLogitsLoss"
         NLLLoss = "NLLLoss"
@@ -273,7 +273,7 @@ class LossFunctionRegistryConstructable(ComponentConstructable):
         loss_fun_registry = ClassRegistry()
         default_mapping: Dict[str, Loss] = {
             LossFunctionRegistryConstructable.LossKeys.LPLoss: LossFactory.get_lp_loss,
-            LossFunctionRegistryConstructable.LossKeys.LPLossScaled: LossFactory.get_scaled_lp_loss,
+            # LossFunctionRegistryConstructable.LossKeys.LPLossScaled: LossFactory.get_scaled_lp_loss,
             LossFunctionRegistryConstructable.LossKeys.BCEWithLogitsLoss: LossFactory.get_bce_with_logits_loss,
             LossFunctionRegistryConstructable.LossKeys.CrossEntropyLoss: LossFactory.get_cross_entropy_loss,
             LossFunctionRegistryConstructable.LossKeys.NLLLoss: LossFactory.get_nll_loss
