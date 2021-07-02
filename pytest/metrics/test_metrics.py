@@ -125,35 +125,41 @@ class TestExpectedCalibrationError:
 class TestClasswiseExpectedCalibrationError:
     target_key = "target_key"
     prediction_probability_key = "prediction_probability_key"
+    prediction_probability_key_0 = "prediction_probability_key_1"
+    prediction_probability_key_1 = "prediction_probability_key_2"
+
     prediction_class_key = "prediction_class_key"
 
     @pytest.fixture
     def probability_inference_batch_result(self) -> InferenceResultBatch:
         targets = torch.IntTensor([0, 0, 0, 1, 0, 1, 1])  # [batch_size]
-        prediction_probabilities = torch.FloatTensor([0, 0.01, 0.05, 0.91, 0.92, 1, 0.96])
-        return InferenceResultBatch(targets={TestExpectedCalibrationError.target_key: targets},
-                                    predictions={TestExpectedCalibrationError.prediction_probability_key: prediction_probabilities},
-                                    tags=None)
+        prediction_probabilities_0 = torch.FloatTensor([0, 0.01, 0.05, 0.91, 0.92, 1, 0.96])
+        prediction_probabilities_1 = torch.FloatTensor([0, 0.1, 0.5, 0.9, 0.2, 1, 0.6])
+        return InferenceResultBatch(targets={TestClasswiseExpectedCalibrationError.target_key: targets},
+                                    predictions={TestClasswiseExpectedCalibrationError.prediction_probability_key_0: prediction_probabilities_0,
+                                                 TestClasswiseExpectedCalibrationError.prediction_probability_key_1: prediction_probabilities_1},
+                                                 tags=None)
 
     def test_calc_metric(self, probability_inference_batch_result: InferenceResultBatch):
         ece_metric = BinaryClasswiseExpectedCalibrationErrorMetric(tag="tag",
                                                                    identifier="identifier",
                                                                    target_subscription_key=self.target_key,
-                                                                   prediction_subscription_key_1=self.prediction_probability_key,
+                                                                   prediction_subscription_key_0=self.prediction_probability_key_0,
+                                                                   prediction_subscription_key_1=self.prediction_probability_key_1,
                                                                    num_bins=10,
                                                                    class_labels=[0, 1])
 
         ece_metric_0 = ClassSpecificExpectedCalibrationErrorMetric(tag="tag",
                                                                    identifier="identifier",
                                                                    target_subscription_key=self.target_key,
-                                                                   prediction_subscription_key=self.prediction_probability_key,
+                                                                   prediction_subscription_key=self.prediction_probability_key_0,
                                                                    num_bins=10,
                                                                    class_label=0)
 
         ece_metric_1 = ClassSpecificExpectedCalibrationErrorMetric(tag="tag",
                                                                    identifier="identifier",
                                                                    target_subscription_key=self.target_key,
-                                                                   prediction_subscription_key=self.prediction_probability_key,
+                                                                   prediction_subscription_key=self.prediction_probability_key_1,
                                                                    num_bins=10,
                                                                    class_label=1)
 

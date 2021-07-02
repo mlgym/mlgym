@@ -68,18 +68,18 @@ class LPLoss(Loss):
         return loss_values
 
 
-class LPLossScaled(LPLoss):
-    def __init__(self, target_subscription_key: str, prediction_subscription_key: str, root: int = 1, exponent: int = 2,
-                 sample_selection_fun: Callable[[InferenceResultBatch], List[bool]] = None, tag: str = ""):
-        LPLoss.__init__(self, target_subscription_key,
-                        prediction_subscription_key, root, exponent, sample_selection_fun, tag)
-        self.warmup_losses = []
-        # self.scaler = MeanScaler()
+# class LPLossScaled(LPLoss):
+#     def __init__(self, target_subscription_key: str, prediction_subscription_key: str, root: int = 1, exponent: int = 2,
+#                  sample_selection_fun: Callable[[InferenceResultBatch], List[bool]] = None, tag: str = ""):
+#         LPLoss.__init__(self, target_subscription_key,
+#                         prediction_subscription_key, root, exponent, sample_selection_fun, tag, average_batch_loss=False)
+#         self.warmup_losses = []
+#         # self.scaler = MeanScaler()
 
-    def __call__(self, forward_batch: InferenceResultBatch) -> torch.Tensor:
-        loss_tensor = LPLoss.__call__(self, forward_batch)
-        # loss_tensor_scaled = self.scaler.scale(loss_tensor)
-        return loss_tensor
+#     def __call__(self, forward_batch: InferenceResultBatch) -> torch.Tensor:
+#         loss_tensor = LPLoss.__call__(self, forward_batch)
+#         # loss_tensor_scaled = self.scaler.scale(loss_tensor)
+#         return loss_tensor
 
     # def warm_up(self, forward_batch: InferenceResultBatch) -> torch.Tensor:
     #     # calculate losses

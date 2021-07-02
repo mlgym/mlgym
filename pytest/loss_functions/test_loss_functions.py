@@ -1,7 +1,7 @@
 import pytest
 import torch
 from ml_gym.batching.batch import InferenceResultBatch
-from ml_gym.loss_functions.loss_functions import LPLoss, LPLossScaled, CrossEntropyLoss, NLLLoss, BCEWithLogitsLoss
+from ml_gym.loss_functions.loss_functions import LPLoss, CrossEntropyLoss, NLLLoss, BCEWithLogitsLoss  # , LPLossScaled
 import torch.nn as nn
 
 
@@ -35,7 +35,8 @@ class TestLPLossFunctions:
         calc_loss = LPLoss(target_subscription_key=TestLPLossFunctions.target_key,
                            prediction_subscription_key=TestLPLossFunctions.prediction_key,
                            root=root,
-                           exponent=exponent)(inference_batch_result_train).sum()
+                           exponent=exponent,
+                           average_batch_loss=False)(inference_batch_result_train).sum()
         torch_loss = torch_loss_fun(predictions, targets)
         assert total_loss == calc_loss
         assert calc_loss == torch_loss
@@ -47,38 +48,39 @@ class TestLPLossFunctions:
                           prediction_subscription_key=TestLPLossFunctions.prediction_key,
                           root=2,
                           exponent=2,
+                          average_batch_loss=False,
                           sample_selection_fun=lambda inference_batch_result:  mask)
         assert len(loss_fun(inference_batch_result_train)) == sum(mask)
 
-    @pytest.mark.parametrize("exponent, root", [
-        (2, 1),  # squared L2 norm
-        (1, 1)  # L1 loss
-    ])
-    def test_scaled_lp_loss(self, exponent, root, inference_batch_result_train, inference_batch_result_test):
-        targets_train = inference_batch_result_train.targets[TestLPLossFunctions.target_key]
-        predictions_train = inference_batch_result_train.predictions[TestLPLossFunctions.prediction_key]
-        targets_test = inference_batch_result_test.targets[TestLPLossFunctions.target_key]
-        predictions_test = inference_batch_result_test.predictions[TestLPLossFunctions.prediction_key]
+    # @pytest.mark.parametrize("exponent, root", [
+    #     (2, 1),  # squared L2 norm
+    #     (1, 1)  # L1 loss
+    # ])
+    # def test_scaled_lp_loss(self, exponent, root, inference_batch_result_train, inference_batch_result_test):
+    #     targets_train = inference_batch_result_train.targets[TestLPLossFunctions.target_key]
+    #     predictions_train = inference_batch_result_train.predictions[TestLPLossFunctions.prediction_key]
+    #     targets_test = inference_batch_result_test.targets[TestLPLossFunctions.target_key]
+    #     predictions_test = inference_batch_result_test.predictions[TestLPLossFunctions.prediction_key]
 
-        reference_loss_train = (torch.sum((targets_train[0, :] - predictions_train[0, :]).abs()
-                                          ** exponent)**1/root).sum()*TestLPLossFunctions.batch_size
+    #     reference_loss_train = (torch.sum((targets_train[0, :] - predictions_train[0, :]).abs()
+    #                                       ** exponent)**1/root).sum()*TestLPLossFunctions.batch_size
 
-        reference_loss_test = (torch.sum((targets_test[0, :] - predictions_test[0, :]).abs()
-                                         ** exponent)**1/root).sum()*TestLPLossFunctions.batch_size
+    #     reference_loss_test = (torch.sum((targets_test[0, :] - predictions_test[0, :]).abs()
+    #                                      ** exponent)**1/root).sum()*TestLPLossFunctions.batch_size
 
-        loss_fun = LPLossScaled(target_subscription_key=TestLPLossFunctions.target_key,
-                                prediction_subscription_key=TestLPLossFunctions.prediction_key,
-                                root=root,
-                                exponent=exponent)
-        loss_fun.warm_up(inference_batch_result_train)
-        loss_fun.finish_warmup()
+    #     loss_fun = LPLossScaled(target_subscription_key=TestLPLossFunctions.target_key,
+    #                             prediction_subscription_key=TestLPLossFunctions.prediction_key,
+    #                             root=root,
+    #                             exponent=exponent)
+    #     loss_fun.warm_up(inference_batch_result_train)
+    #     loss_fun.finish_warmup()
 
-        mean = loss_fun.scaler._mean
-        loss_train = loss_fun(inference_batch_result_train).sum()
-        loss_test = loss_fun(inference_batch_result_test).sum()
+    #     mean = loss_fun.scaler._mean
+    #     loss_train = loss_fun(inference_batch_result_train).sum()
+    #     loss_test = loss_fun(inference_batch_result_test).sum()
 
-        assert loss_train*mean == reference_loss_train
-        assert loss_test*mean == reference_loss_test
+    #     assert loss_train*mean == reference_loss_train
+    #     assert loss_test*mean == reference_loss_test
 
 
 class TestClassificationLossFunctions:
@@ -103,14 +105,16 @@ class TestClassificationLossFunctions:
 
     def test_cross_entropy_loss(self, cross_entropy_inference_batch_result):
         ce_loss_fun = CrossEntropyLoss(target_subscription_key=TestLPLossFunctions.target_key,
-                                       prediction_subscription_key=TestLPLossFunctions.prediction_key)
+                                       prediction_subscription_key=TestLPLossFunctions.prediction_key,
+                                       average_batch_loss=False)
         loss = ce_loss_fun(cross_entropy_inference_batch_result)
         assert loss[0] > loss[1]
 
     def test_nllloss_loss(self, cross_entropy_inference_batch_result):
         # NOTE: Here we use the same inference batch as in the cross entropy loss, since in OUR implementation they are equal.
         ce_loss_fun = CrossEntropyLoss(target_subscription_key=TestLPLossFunctions.target_key,
-                                       prediction_subscription_key=TestLPLossFunctions.prediction_key)
+                                       prediction_subscription_key=TestLPLossFunctions.prediction_key,
+                                       average_batch_loss=False)
         nll_loss_fun = NLLLoss(target_subscription_key=TestLPLossFunctions.target_key,
                                prediction_subscription_key=TestLPLossFunctions.prediction_key)
         ce_loss = ce_loss_fun(cross_entropy_inference_batch_result)
