@@ -70,8 +70,10 @@ class Batch(ABC):
 class DatasetBatch(Batch, TorchDeviceMixin):
     """A batch of samples and its targets and tags. Used to batch train a model."""
 
-    def __init__(self, samples: torch.Tensor, targets: Dict[str, torch.Tensor], tags: torch.Tensor = None):
+    def __init__(self, samples: torch.Tensor, targets: Dict[str, torch.Tensor], tags: torch.Tensor = None,
+                 samples_require_grad: bool = False):
         self._samples = samples
+        self._samples.requires_grad_ = samples_require_grad
         self._targets = targets
         self._tags = tags if tags is not None else torch.Tensor()
 
@@ -86,6 +88,14 @@ class DatasetBatch(Batch, TorchDeviceMixin):
     @property
     def tags(self) -> torch.Tensor:
         return self._tags
+
+    @property
+    def samples_require_grad(self) -> bool:
+        return self._samples.requires_grad_
+
+    @samples_require_grad.setter
+    def samples_require_grad(self, value: bool):
+        self._samples.requires_grad_ = value
 
     def detach(self):
         self._targets = {k: v.detach() for k, v in self._targets.items()}
