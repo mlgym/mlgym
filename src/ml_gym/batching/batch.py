@@ -91,7 +91,7 @@ class DatasetBatch(Batch, TorchDeviceMixin):
 
     @property
     def samples_require_grad(self) -> bool:
-        return self._samples.requires_grad_
+        return self._samples.requires_grad
 
     @samples_require_grad.setter
     def samples_require_grad(self, value: bool):
