@@ -173,9 +173,14 @@ class GymJobLite(AbstractGymJob):
 
         for epoch in step_epochs:
             # self.logger.log(LogLevel.DEBUG, "Executing training step")
-            self._train_step(device, measurement_id=epoch)
+            model = self._train_step(device, measurement_id=epoch)
             # self.logger.log(LogLevel.DEBUG, "Executing evaluation step")
             self._evaluation_step(device, epoch)
+
+        # log the final model / training state
+        DashifyWriter.save_model_state(model.state_dict(), self._experiment_info, step_epochs[-1])
+        DashifyWriter.save_optimizer_state(self.optimizer.state_dict(), self._experiment_info, step_epochs[-1])
+        self.save_state_of_stateful_components(measurement_id=step_epochs[-1])
 
     def _execute_eval(self, device: torch.device):
         for epoch in self.epochs:
