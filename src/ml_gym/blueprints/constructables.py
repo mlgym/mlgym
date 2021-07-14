@@ -248,7 +248,7 @@ class OptimizerConstructable(ComponentConstructable):
     params: Dict[str, Any] = field(default_factory=dict)
 
     def _construct_impl(self):
-        return OptimizerFactory.get_partial_optimizer(self.optimizer_key, self.params)
+        return OptimizerFactory.get_optimizer(self.optimizer_key, self.params)
 
 
 @dataclass
