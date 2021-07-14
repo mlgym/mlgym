@@ -3,13 +3,13 @@ from ml_gym.models.nn.net import NNModel
 from dashify.logging.dashify_logging import ExperimentInfo
 from ml_gym.gym.evaluator import Evaluator
 from ml_gym.gym.trainer import Trainer
+from ml_gym.optimizers.optimizer import OptimizerAdapter
 import torch
 from ml_gym.gym.stateful_components import StatefulComponent
 from ml_gym.persistency.io import DashifyReader
 from ml_gym.persistency.io import DashifyWriter
 from enum import Enum
 from typing import List, Dict, Any
-from torch.optim.optimizer import Optimizer
 from ml_gym.util.logger import ConsoleLogger
 
 
@@ -53,19 +53,20 @@ class AbstractGymJob(StatefulComponent):
 
 class GymJob(AbstractGymJob):
 
-    def __init__(self, run_mode: AbstractGymJob.Mode.TRAIN, model: NNModel, optimizer, trainer: Trainer,
+    def __init__(self, run_mode: AbstractGymJob.Mode.TRAIN, model: NNModel, optimizer: OptimizerAdapter, trainer: Trainer,
                  evaluator: Evaluator, experiment_info: ExperimentInfo, epochs: List[int]):
         super().__init__(experiment_info)
         self.run_mode = run_mode
         self.model = model
-        self.optimizer_partial = optimizer  # TODO this is a little bit ugly.
+        self.optimizer = optimizer
         self.epochs = epochs
         self.evaluator = evaluator
         self.trainer = trainer
         if self.run_mode == AbstractGymJob.Mode.TRAIN and epochs[0] == 0:
-            DashifyWriter.save_model_state(model.state_dict(), self._experiment_info, 0)
-            optimizer: Optimizer = self.optimizer_partial(params=self.model.parameters())
-            DashifyWriter.save_optimizer_state(optimizer.state_dict(), self._experiment_info, 0)
+            # save model state
+            DashifyWriter.save_binary_state("model", model.state_dict(), self._experiment_info, 0)
+            self.optimizer.register_model_params(params=self.model.parameters())
+            DashifyWriter.save_binary_state("optimizer", optimizer.state_dict(), self._experiment_info, 0)
         self._execution_method = self._execute_train if run_mode == GymJob.Mode.TRAIN else self._execute_eval
 
     def _train_step(self, device: torch.device, measurement_id: int) -> NNModel:
@@ -74,14 +75,14 @@ class GymJob(AbstractGymJob):
         model_state = DashifyReader.load_model_state(self._experiment_info, measurement_id - 1)
         self.model.load_state_dict(model_state)
         self.model.to(device)
-        optimizer: Optimizer = self.optimizer_partial(params=self.model.parameters())
+        self.optimizer.register_model_params(params=self.model.parameters())
         optimizer_state = DashifyReader.load_optimizer_state(self._experiment_info, measurement_id - 1)
-        optimizer.load_state_dict(optimizer_state)
+        self.optimizer.load_state_dict(optimizer_state)
         # train
-        model = self.trainer.train_epoch(self.model, optimizer, device)
+        model = self.trainer.train_epoch(self.model, self.optimizer, device)
         # save model and optimizer
-        DashifyWriter.save_model_state(model.state_dict(), self._experiment_info, measurement_id)
-        DashifyWriter.save_optimizer_state(optimizer.state_dict(), self._experiment_info, measurement_id)
+        DashifyWriter.save_binary_state("model", model.state_dict(), self._experiment_info, measurement_id)
+        DashifyWriter.save_binary_state("optimizer", self.optimizer.state_dict(), self._experiment_info, measurement_id)
         self.save_state_of_stateful_components(measurement_id=measurement_id)
         return model
 
@@ -130,15 +131,16 @@ class GymJob(AbstractGymJob):
 
 class GymJobLite(AbstractGymJob):
 
-    def __init__(self, run_mode: AbstractGymJob.Mode, model: NNModel, optimizer, trainer: Trainer,
+    def __init__(self, run_mode: AbstractGymJob.Mode, model: NNModel, optimizer: OptimizerAdapter, trainer: Trainer,
                  evaluator: Evaluator, experiment_info: ExperimentInfo, epochs: List[int]):
         super().__init__(experiment_info)
         self.run_mode = run_mode
         self.model = model
-        self.optimizer = optimizer(params=self.model.parameters())  # TODO this is a little bit ugly.
+        self.optimizer = optimizer
         self.epochs = epochs
         self.evaluator = evaluator
         self.trainer = trainer
+        self.optimizer.register_model_params(params=self.model.parameters())  # TODO this is a little bit ugly.
         self._execution_method = self._execute_train if run_mode == GymJob.Mode.TRAIN else self._execute_eval
 
     def _train_step(self, device: torch.device, measurement_id: int) -> NNModel:
@@ -178,8 +180,8 @@ class GymJobLite(AbstractGymJob):
             self._evaluation_step(device, epoch)
 
         # log the final model / training state
-        DashifyWriter.save_model_state(model.state_dict(), self._experiment_info, step_epochs[-1])
-        DashifyWriter.save_optimizer_state(self.optimizer.state_dict(), self._experiment_info, step_epochs[-1])
+        DashifyWriter.save_binary_state("model", model.state_dict(), self._experiment_info, step_epochs[-1])
+        DashifyWriter.save_binary_state("optimizer", self.optimizer.state_dict(), self._experiment_info, step_epochs[-1])
         self.save_state_of_stateful_components(measurement_id=step_epochs[-1])
 
     def _execute_eval(self, device: torch.device):

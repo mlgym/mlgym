@@ -1,12 +1,12 @@
 from typing import Dict, List, Callable, Any
-from ml_gym.loss_functions.loss_functions import Loss, LossWarmupMixin
+from ml_gym.loss_functions.loss_functions import Loss
 from ml_gym.models.nn.net import NNModel
 from ml_gym.data_handling.dataset_loader import DatasetLoader
 import torch
-from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch, Batch
+from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch
 from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.gym.stateful_components import StatefulComponent
-from torch.optim.optimizer import Optimizer
+from ml_gym.optimizers.optimizer import OptimizerAdapter
 import tqdm
 from ml_gym.util.logger import ConsoleLogger
 
@@ -18,14 +18,14 @@ class TrainComponent(StatefulComponent):
         self.show_progress = show_progress
         self.logger = ConsoleLogger("logger_train_component")
 
-    def train_batch(self, batch: DatasetBatch, model: NNModel, optimizer: Optimizer, device: torch.device):
+    def train_batch(self, batch: DatasetBatch, model: NNModel, optimizer: OptimizerAdapter, device: torch.device):
         model.zero_grad()
         batch.to_device(device)
         loss = self.calc_loss(model, batch)
         loss.sum().backward()
         optimizer.step()
 
-    def train_epoch(self, model: NNModel, optimizer: Optimizer, data_loader: DatasetLoader,
+    def train_epoch(self, model: NNModel, optimizer: OptimizerAdapter, data_loader: DatasetLoader,
                     device: torch.device) -> NNModel:
         self.map_batches(fun=self.train_batch,
                          loader=data_loader,
@@ -91,6 +91,6 @@ class Trainer(StatefulComponent):
     # def warm_up(self, model: NNModel, device: torch.device):
     #     self.train_component.warm_up(model, self.train_loader, device)
 
-    def train_epoch(self, model: NNModel, optimizer: Optimizer, device: torch.device) -> NNModel:
+    def train_epoch(self, model: NNModel, optimizer: OptimizerAdapter, device: torch.device) -> NNModel:
         model = self.train_component.train_epoch(model, optimizer, self.train_loader, device)
         return model
