@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from ml_gym.gym.evaluator import EvaluationBatchResult
-from typing import List, Dict, Any
+from typing import List, Dict, Any, BinaryIO
 from dashify.logging.dashify_logging import ExperimentInfo, DashifyLogger
 
 
@@ -41,12 +41,16 @@ class DashifyWriter(AbstractWriter):
         DashifyLogger.log_metrics(experiment_info=experiment_info, metrics=results_dict, measurement_id=measurement_id)
 
     @staticmethod
-    def save_model_state(model_state: Dict, experiment_info: ExperimentInfo, measurement_id: int):
-        DashifyLogger.save_checkpoint_state_dict(model_state, "model", experiment_info, measurement_id)
+    def save_binary_state(key: str, state: BinaryIO, experiment_info: ExperimentInfo, measurement_id: int):
+        DashifyLogger.save_checkpoint_state_dict(state, key, experiment_info, measurement_id)
 
-    @staticmethod
-    def save_optimizer_state(optimizer_state: Dict, experiment_info: ExperimentInfo, measurement_id: int):
-        DashifyLogger.save_checkpoint_state_dict(optimizer_state, "optimizer", experiment_info, measurement_id)
+    # @staticmethod
+    # def save_model_state(model_state: Dict, experiment_info: ExperimentInfo, measurement_id: int):
+    #     DashifyLogger.save_checkpoint_state_dict(model_state, "model", experiment_info, measurement_id)
+
+    # @staticmethod
+    # def save_optimizer_state(optimizer_state: Dict, experiment_info: ExperimentInfo, measurement_id: int):
+    #     DashifyLogger.save_checkpoint_state_dict(optimizer_state, "optimizer", experiment_info, measurement_id)
 
     @staticmethod
     def _get_results_dict(result: EvaluationBatchResult) -> Dict[str, List[float]]:
