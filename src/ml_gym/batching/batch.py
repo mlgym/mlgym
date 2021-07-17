@@ -1,19 +1,32 @@
 import torch
 from abc import abstractmethod, ABC
-from typing import Dict, List, Any, Callable
+from typing import Dict, List, Any, Callable, Union
 from ml_gym.error_handling.exception import BatchStateError
 import copy
+from functools import partial
 
 
 class TorchDeviceMixin(ABC):
 
     @staticmethod
     def _dict_tensor_to_device(d: Dict[str, Any], device: torch.device) -> Dict[str, Any]:
-        return {k: TorchDeviceMixin._dict_tensor_to_device(v, device) if not isinstance(v, torch.Tensor) else v.to(device) for k, v in d.items()}
+        partial_fun = partial(torch.Tensor.to, device=device)
+        return TorchDeviceMixin.traverse_apply(ds=d, apply_fun=partial_fun)
+        # return {k: TorchDeviceMixin._dict_tensor_to_device(v, device) if not isinstance(v, torch.Tensor) else v.to(device) for k, v in d.items()}
 
     @staticmethod
     def _detach_dict_tensor(d: Dict[str, Any]) -> Dict[str, Any]:
-        return {k: TorchDeviceMixin._detach_dict_tensor(v) if not isinstance(v, torch.Tensor) else v.detach() for k, v in d.items()}
+        partial_fun = partial(torch.Tensor.detach)
+        return TorchDeviceMixin.traverse_apply(ds=d, apply_fun=partial_fun)
+        # return {k: TorchDeviceMixin._detach_dict_tensor(v) if not isinstance(v, torch.Tensor) else v.detach() for k, v in d.items()}
+
+    @staticmethod
+    def traverse_apply(ds: Union[Dict, List, torch.Tensor], apply_fun: Callable[[torch.Tensor], torch.Tensor]) -> Union[Dict, List, torch.Tensor]:
+        if isinstance(ds, dict):
+            return {k: TorchDeviceMixin.traverse_apply(d, apply_fun) for k, d in ds.items()}
+        elif isinstance(ds, list):
+            return [TorchDeviceMixin.traverse_apply(d, apply_fun) for d in ds]
+        return apply_fun(ds)
 
     @abstractmethod
     def get_device(self) -> torch.device:
@@ -70,7 +83,7 @@ class Batch(ABC):
 class DatasetBatch(Batch, TorchDeviceMixin):
     """A batch of samples and its targets and tags. Used to batch train a model."""
 
-    def __init__(self, samples: torch.Tensor, targets: Dict[str, torch.Tensor], tags: torch.Tensor = None,
+    def __init__(self, samples: Union[torch.Tensor, Dict], targets: Dict[str, torch.Tensor], tags: torch.Tensor = None,
                  samples_require_grad: bool = False):
         self._samples = samples
         self._samples.requires_grad_ = samples_require_grad
@@ -78,7 +91,7 @@ class DatasetBatch(Batch, TorchDeviceMixin):
         self._tags = tags if tags is not None else torch.Tensor()
 
     @property
-    def samples(self) -> torch.Tensor:
+    def samples(self) -> Union[torch.Tensor, Dict]:
         return self._samples
 
     @property
@@ -155,20 +168,14 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
         return self._tags.device
 
     def to_device(self, device: torch.device):
-        if isinstance(self._predictions, torch.Tensor):
-            self._predictions = self._predictions.to(device)
-        else:
-            self._predictions = TorchDeviceMixin._dict_tensor_to_device(self._predictions, device)
+        self._predictions = TorchDeviceMixin._dict_tensor_to_device(self._predictions, device)
         self._targets = {k: v.to(device) for k, v in self._targets.items()}
         self._tags = self._tags.to(device)
 
     def detach(self):
         self._targets = {k: v.detach() for k, v in self._targets.items()}
         self._tags = self._tags.detach()
-        if isinstance(self._predictions, torch.Tensor):
-            self._predictions = self._predictions.detach()
-        else:
-            self._predictions = TorchDeviceMixin._detach_dict_tensor(self._predictions)
+        self._predictions = TorchDeviceMixin._detach_dict_tensor(self._predictions)
 
     @property
     def predictions(self) -> Dict[str, torch.Tensor]:
@@ -217,7 +224,7 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
 
     def split_results(self, target_keys: List[str], predictions_keys: List[str], device: torch.device):
         targets = {key: self._targets[key].to(device) for key in target_keys}
-        predictions = {key: self._predictions[key].to(device) for key in predictions_keys}
+        predictions = TorchDeviceMixin._dict_tensor_to_device(self._predictions, device)
         tags = self.tags.to(device)
         return InferenceResultBatch(targets=targets, predictions=predictions, tags=tags)
 
