@@ -32,7 +32,7 @@ class TestSamplerFactory:
         return InformedDatasetFactory.get_dataset_iterator(iterator, meta)
 
     def test_weighted_random_sampler(self, iterator_train: InformedDatasetIteratorIF):
-        sampler = SamplerFactory.get_weighted_sampler(iterator_train)
+        sampler = SamplerFactory.get_weighted_sampler(iterator_train, label_pos=0)
         sample_weights = sampler.weights
         assert all(sample_weights[0: 100] == sample_weights[0])
         assert all(sample_weights[100: 300] == sample_weights[100])
@@ -45,7 +45,7 @@ class TestSamplerFactory:
         torch.manual_seed(0)
         iterator_dict = {"train": iterator_train, "test": iterator_test}
         splitted_data_loaders = DatasetLoaderFactory.get_splitted_data_loaders(
-            iterator_dict, batch_size=1, collate_fn=None, weigthed_sampling_split_name="train")
+            iterator_dict, batch_size=1, collate_fn=None, weigthed_sampling_split_name="train", label_pos=0)
         train_samples = [int(i[0]) for i in splitted_data_loaders["train"]]
         test_samples = [int(i[0]) for i in splitted_data_loaders["test"]]
         assert len(train_samples) == len(iterator_train)

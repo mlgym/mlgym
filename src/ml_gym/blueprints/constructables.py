@@ -217,6 +217,7 @@ class DataCollatorConstructable(ComponentConstructable):
 class DataLoadersConstructable(ComponentConstructable):
     batch_size: int = 1
     weigthed_sampling_split_name: str = None
+    label_pos: int = 2
 
     def _construct_impl(self) -> DatasetLoader:
         dataset_iterators_dict = self.get_requirement("iterators")
@@ -224,7 +225,8 @@ class DataLoadersConstructable(ComponentConstructable):
         return DatasetLoaderFactory.get_splitted_data_loaders(dataset_splits=dataset_iterators_dict,
                                                               batch_size=self.batch_size,
                                                               collate_fn=collator,
-                                                              weigthed_sampling_split_name=self.weigthed_sampling_split_name)
+                                                              weigthed_sampling_split_name=self.weigthed_sampling_split_name,
+                                                              label_pos=self.label_pos)
 
 
 @dataclass
