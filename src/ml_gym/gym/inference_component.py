@@ -10,21 +10,20 @@ from copy import deepcopy
 
 
 class ExportedModel:
-    def __init__(self, model: NNModel, post_processors: List[PredictPostProcessingIF]):
-        self.post_processors = post_processors
+    def __init__(self, model: NNModel):
         self.model = model
 
     def predict_tensor(self, sample_tensor: torch.Tensor):
         with torch.no_grad():
             forward_result = self.model.forward(sample_tensor)
         result_batch = InferenceResultBatch(targets=None, tags=None, predictions=forward_result)
-        return PredictPostprocessingComponent.post_process(result_batch, post_processors=self.post_processors)
+        return result_batch  # PredictPostprocessingComponent.post_process(result_batch, post_processors=self.post_processors)
 
     def predict_dataset_batch(self, batch: DatasetBatch) -> InferenceResultBatch:
         with torch.no_grad():
             forward_result = self.model.forward(batch.samples)
         result_batch = InferenceResultBatch(targets=deepcopy(batch.targets), tags=deepcopy(batch.tags), predictions=forward_result)
-        return PredictPostprocessingComponent.post_process(result_batch, post_processors=self.post_processors)
+        return result_batch  # PredictPostprocessingComponent.post_process(result_batch, post_processors=self.post_processors)
 
     def predict_data_loader(self, dataset_loader: DatasetLoader) -> InferenceResultBatch:
         result_batches = [self.predict_dataset_batch(batch) for batch in tqdm.tqdm(dataset_loader, desc="Batches processed:")]
@@ -32,18 +31,18 @@ class ExportedModel:
 
 
 class InferenceComponent:
-    def __init__(self, post_processors: List[PredictPostProcessingIF], no_grad=True):
-        self.post_processors = post_processors
+    def __init__(self, no_grad=True):
         self.no_grad = no_grad
 
-    def predict(self, model: NNModel, batch: DatasetBatch) -> InferenceResultBatch:
+    def predict(self, model: NNModel, batch: DatasetBatch, post_processors: List[PredictPostProcessingIF] = None) -> InferenceResultBatch:
+        post_processors = post_processors if post_processors is not None else []
         if self.no_grad:
             with torch.no_grad():
                 forward_result = model.forward(batch.samples)
         else:
             forward_result = model.forward(batch.samples)
         result_batch = InferenceResultBatch(targets=batch.targets, tags=batch.tags, predictions=forward_result)
-        return PredictPostprocessingComponent.post_process(result_batch, post_processors=self.post_processors)
+        return PredictPostprocessingComponent.post_process(result_batch, post_processors=post_processors)
 
     def predict_data_loader(self, model: NNModel, dataset_loader: DatasetLoader) -> InferenceResultBatch:
         result_batches = [self.predict(model, batch) for batch in tqdm.tqdm(dataset_loader, desc="Batches processed:")]
@@ -51,4 +50,4 @@ class InferenceComponent:
 
     # TODO, this is really just a temporary hack and should be done at a different place!
     def export_model(self, model: NNModel) -> ExportedModel:
-        return ExportedModel(model, self.post_processors)
+        return ExportedModel(model)

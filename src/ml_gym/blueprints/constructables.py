@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Union, Type
 from dashify.logging.dashify_logging import DashifyLogger
@@ -13,7 +14,7 @@ from collections.abc import Mapping
 from ml_gym.registries.class_registry import ClassRegistry
 from ml_gym.gym.trainer import Trainer, TrainComponent, InferenceComponent
 from ml_gym.loss_functions.loss_functions import Loss
-from sklearn.metrics import f1_score, recall_score, precision_score
+from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score
 from ml_gym.metrics.metrics import Metric, binary_aupr_score, binary_auroc_score
 from ml_gym.metrics.metric_factory import MetricFactory
 from ml_gym.gym.evaluator import Evaluator, EvalComponent
@@ -217,6 +218,7 @@ class DataCollatorConstructable(ComponentConstructable):
 class DataLoadersConstructable(ComponentConstructable):
     batch_size: int = 1
     weigthed_sampling_split_name: str = None
+    label_pos: int = 2
 
     def _construct_impl(self) -> DatasetLoader:
         dataset_iterators_dict = self.get_requirement("iterators")
@@ -224,7 +226,8 @@ class DataLoadersConstructable(ComponentConstructable):
         return DatasetLoaderFactory.get_splitted_data_loaders(dataset_splits=dataset_iterators_dict,
                                                               batch_size=self.batch_size,
                                                               collate_fn=collator,
-                                                              weigthed_sampling_split_name=self.weigthed_sampling_split_name)
+                                                              weigthed_sampling_split_name=self.weigthed_sampling_split_name,
+                                                              label_pos=self.label_pos)
 
 
 @dataclass
@@ -288,6 +291,7 @@ class LossFunctionRegistryConstructable(ComponentConstructable):
 class MetricFunctionRegistryConstructable(ComponentConstructable):
     class MetricKeys:
         F1_SCORE = "F1_SCORE"
+        ACCURACY = "ACCURACY"
         RECALL = "RECALL"
         PRECISION = "PRECISION"
         AUROC = "AUROC"
@@ -304,6 +308,9 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
             MetricFunctionRegistryConstructable.MetricKeys.F1_SCORE:
                 MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.F1_SCORE,
                                                  metric_fun=f1_score),
+            MetricFunctionRegistryConstructable.MetricKeys.ACCURACY:
+                MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.ACCURACY,
+                                                 metric_fun=accuracy_score),
             MetricFunctionRegistryConstructable.MetricKeys.RECALL:
                 MetricFactory.get_sklearn_metric(metric_key=MetricFunctionRegistryConstructable.MetricKeys.RECALL,
                                                  metric_fun=recall_score),
@@ -378,10 +385,11 @@ class TrainComponentConstructable(ComponentConstructable):
         prediction_post_processing_registry: ClassRegistry = self.get_requirement("prediction_postprocessing_registry")
         loss_function_registry: ClassRegistry = self.get_requirement("loss_function_registry")
         train_loss_fun = loss_function_registry.get_instance(**self.loss_fun_config)
-        postprocessors = [PredictPostProcessing(prediction_post_processing_registry.get_instance(**config))
+        postprocessors = [PredictPostProcessing(prediction_post_processing_registry.get_instance(config["key"], **config["params"]))
                           for config in self.post_processors_config]
-        inference_component = InferenceComponent(postprocessors, no_grad=False)
-        train_component = TrainComponent(inference_component, train_loss_fun, self.show_progress)
+
+        inference_component = InferenceComponent(no_grad=False)
+        train_component = TrainComponent(inference_component, postprocessors, train_loss_fun, self.show_progress)
         return train_component
 
 
@@ -404,6 +412,8 @@ class EvalComponentConstructable(ComponentConstructable):
     show_progress: bool = False
     cpu_target_subscription_keys: List[str] = field(default_factory=list)
     cpu_prediction_subscription_keys: List[str] = field(default_factory=list)
+    metrics_computation_config: List[Dict] = None
+    loss_computation_config: List[Dict] = None
 
     def _construct_impl(self) -> Evaluator:
         dataset_loaders: Dict[str, DatasetLoader] = self.get_requirement("data_loaders")
@@ -413,11 +423,16 @@ class EvalComponentConstructable(ComponentConstructable):
 
         loss_funs = {conf["tag"]: loss_function_registry.get_instance(**conf) for conf in self.loss_funs_config}
         metric_funs = [metric_registry.get_instance(**conf) for conf in self.metrics_config]
-        postprocessors = [PredictPostProcessing(prediction_post_processing_registry.get_instance(**config))
-                          for config in self.post_processors_config]
-        inference_component = InferenceComponent(postprocessors, no_grad=True)
-        eval_component = EvalComponent(inference_component, metric_funs, loss_funs, dataset_loaders, self.train_split_name,
-                                       self.show_progress, self.cpu_target_subscription_keys, self.cpu_prediction_subscription_keys)
+
+        postprocessors_dict = defaultdict(list)
+        for config in self.post_processors_config:
+            for split in config["applicable_splits"]:
+                postprocessors_dict[split].append(PredictPostProcessing(prediction_post_processing_registry.get_instance(config["key"], **config["params"])))
+
+        inference_component = InferenceComponent(no_grad=True)
+        eval_component = EvalComponent(inference_component, postprocessors_dict, metric_funs, loss_funs, dataset_loaders, self.train_split_name,
+                                       self.show_progress, self.cpu_target_subscription_keys, self.cpu_prediction_subscription_keys, 
+                                       self.metrics_computation_config, self.loss_computation_config)
         return eval_component
 
 
