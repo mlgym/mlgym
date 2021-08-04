@@ -9,12 +9,15 @@ from ml_gym.gym.stateful_components import StatefulComponent
 from ml_gym.optimizers.optimizer import OptimizerAdapter
 import tqdm
 from ml_gym.util.logger import ConsoleLogger
+from ml_gym.gym.post_processing import PredictPostProcessingIF
 
 
 class TrainComponent(StatefulComponent):
-    def __init__(self, inference_component: InferenceComponent, loss_fun: Loss, show_progress: bool = False):
+    def __init__(self, inference_component: InferenceComponent, post_processors: List[PredictPostProcessingIF],
+                 loss_fun: Loss, show_progress: bool = False):
         self.loss_fun = loss_fun
         self.inference_component = inference_component
+        self.post_processors = post_processors
         self.show_progress = show_progress
         self.logger = ConsoleLogger("logger_train_component")
 
@@ -61,7 +64,7 @@ class TrainComponent(StatefulComponent):
     def forward_batch(self, dataset_batch: DatasetBatch, model: NNModel, device: torch.device,) -> InferenceResultBatch:
         model = model.to(device)
         dataset_batch.to_device(device)
-        inference_result_batch = self.inference_component.predict(model, dataset_batch)
+        inference_result_batch = self.inference_component.predict(model, dataset_batch, self.post_processors)
         return inference_result_batch
 
     def calc_loss(self, model: NNModel, batch: DatasetBatch) -> torch.Tensor:

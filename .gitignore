@@ -115,3 +115,6 @@ dashify_logs/
 general_logs/
 */dashify_logging*
 */general_logging*
+*/dashify_logs*
+dashify_logging
+general_logging

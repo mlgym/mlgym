@@ -223,7 +223,7 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
         return InferenceResultBatch(predictions=predictions_, targets=targets_, tags=tags_)
 
     def split_results(self, target_keys: List[str], predictions_keys: List[str], device: torch.device):
-        targets = {key: self._targets[key].to(device) for key in target_keys}
+        targets = {key: self._targets[key].to(device) for key in target_keys if key in self._targets}
         predictions = TorchDeviceMixin._dict_tensor_to_device(self._predictions, device)
         tags = self.tags.to(device)
         return InferenceResultBatch(targets=targets, predictions=predictions, tags=tags)
