@@ -1,0 +1,13 @@
+global_config:
+  seed: &seed_value 2
+
+
+CV:
+  iterator_key: splitted_dataset_iterators
+  split_key: train
+  config:
+    num_folds: 5
+    stratification: false
+    target_pos: 1
+    shuffle: false
+    seed: *seed_value

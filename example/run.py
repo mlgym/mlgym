@@ -6,7 +6,7 @@ from ml_gym.starter import MLGymStarter
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a grid search on CPUs or distributed over multiple GPUs')
     parser.add_argument('--num_epochs', type=int, help='Number of epoch', default=None)
-    parser.add_argument('--validation_mode', choices=['NESTED_CV', 'GRID_SEARCH'], required=True)
+    parser.add_argument('--validation_mode', choices=['NESTED_CV', 'GRID_SEARCH', 'CROSS_VALIDATION'], required=True)
     parser.add_argument('--process_count', type=int, required=True, help='Max. number of processes running at a time.')
     parser.add_argument('--dashify_logging_path', type=str, required=True, help='Path to the dashify root logging directory')
     parser.add_argument('--text_logging_path', type=str, required=True, help='Path to python textual logging directory')

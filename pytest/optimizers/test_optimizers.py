@@ -34,9 +34,9 @@ class TestOptimizerAdapter:
         return x, y
 
     def test_register_model_params(self, optimizer: OptimizerAdapter, model):
-        assert optimizer.optimizer is None
+        assert optimizer._optimizer is None
         optimizer.register_model_params(params=model.parameters())
-        assert len(optimizer.optimizer.param_groups) > 0
+        assert len(optimizer._optimizer.param_groups) > 0
 
     def test_optimizer_state_change(self, data_batch, model, optimizer: OptimizerAdapter):
         optimizer.register_model_params(params=model.parameters())
