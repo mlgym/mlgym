@@ -1,4 +1,4 @@
-from ml_gym.loss_functions.loss_functions import LPLoss, CrossEntropyLoss, BCEWithLogitsLoss, NLLLoss, Loss  # , LPLossScaled
+from ml_gym.loss_functions.loss_functions import LPLoss, CrossEntropyLoss, BCEWithLogitsLoss, BCELoss, NLLLoss, Loss  # , LPLossScaled
 from typing import Dict
 from ml_gym.batching.batch_filters import BatchFilter
 
@@ -37,3 +37,11 @@ class LossFactory:
                                  prediction_subscription_key=prediction_subscription_key,
                                  average_batch_loss=average_batch_loss,
                                  tag=tag)
+
+    @staticmethod
+    def get_bce_loss(target_subscription_key: str, prediction_subscription_key: str, tag: str = "",
+                     average_batch_loss: bool = True) -> Loss:
+        return BCELoss(target_subscription_key=target_subscription_key,
+                       prediction_subscription_key=prediction_subscription_key,
+                       average_batch_loss=average_batch_loss,
+                       tag=tag)
