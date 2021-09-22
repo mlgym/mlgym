@@ -97,7 +97,7 @@ class EvalComponent(EvalComponentIF):
     def evaluate_dataset_split(self, model: NNModel, device: torch.device, split_name: str, dataset_loader: DatasetLoader) -> EvaluationBatchResult:
         if self.show_progress:
             dataset_loader = tqdm.tqdm(dataset_loader, desc="Batches processed:")
-        post_processors = self.post_processors[split_name]
+        post_processors = self.post_processors[split_name] + self.post_processors["default"]
         batch_losses = []
         inference_result_batches_cpu = []
         for batch in dataset_loader:

@@ -86,7 +86,7 @@ class DatasetBatch(Batch, TorchDeviceMixin):
     def __init__(self, samples: Union[torch.Tensor, Dict], targets: Dict[str, torch.Tensor], tags: torch.Tensor = None,
                  samples_require_grad: bool = False):
         self._samples = samples
-        self._samples.requires_grad_ = samples_require_grad
+        self._samples.requires_grad = samples_require_grad
         self._targets = targets
         self._tags = tags if tags is not None else torch.Tensor()
 
@@ -108,7 +108,7 @@ class DatasetBatch(Batch, TorchDeviceMixin):
 
     @samples_require_grad.setter
     def samples_require_grad(self, value: bool):
-        self._samples.requires_grad_ = value
+        self._samples.requires_grad = value
 
     def detach(self):
         self._targets = {k: v.detach() for k, v in self._targets.items()}

@@ -22,22 +22,29 @@ class ExportedModel:
         self.model = model
         self.post_processors = post_processors
 
-    def predict_tensor(self, sample_tensor: torch.Tensor):
-        with torch.no_grad():
+    def predict_tensor(self, sample_tensor: torch.Tensor, targets: torch.Tensor = None, tags: torch.Tensor = None, no_grad: bool = True):
+        if no_grad:
+            with torch.no_grad():
+                forward_result = self.model.forward(sample_tensor)
+        else:
             forward_result = self.model.forward(sample_tensor)
-        result_batch = InferenceResultBatch(targets=None, tags=None, predictions=forward_result)
+        result_batch = InferenceResultBatch(targets=targets, tags=tags, predictions=forward_result)
         result_batch = PredictPostprocessingComponent.post_process(result_batch, post_processors=self.post_processors)
         return result_batch
 
-    def predict_dataset_batch(self, batch: DatasetBatch) -> InferenceResultBatch:
-        with torch.no_grad():
+    def predict_dataset_batch(self, batch: DatasetBatch, no_grad: bool = True) -> InferenceResultBatch:
+        if no_grad:
+            with torch.no_grad():
+                forward_result = self.model.forward(batch.samples)
+        else:
             forward_result = self.model.forward(batch.samples)
+
         result_batch = InferenceResultBatch(targets=deepcopy(batch.targets), tags=deepcopy(batch.tags), predictions=forward_result)
         result_batch = PredictPostprocessingComponent.post_process(result_batch, post_processors=self.post_processors)
         return result_batch
 
-    def predict_data_loader(self, dataset_loader: DatasetLoader) -> InferenceResultBatch:
-        result_batches = [self.predict_dataset_batch(batch) for batch in tqdm.tqdm(dataset_loader, desc="Batches processed:")]
+    def predict_data_loader(self, dataset_loader: DatasetLoader, no_grad: bool = True) -> InferenceResultBatch:
+        result_batches = [self.predict_dataset_batch(batch, no_grad) for batch in tqdm.tqdm(dataset_loader, desc="Batches processed:")]
         return InferenceResultBatch.combine(result_batches)
 
     @staticmethod
