@@ -219,6 +219,7 @@ class DataLoadersConstructable(ComponentConstructable):
     batch_size: int = 1
     weigthed_sampling_split_name: str = None
     label_pos: int = 2
+    seeds: List[int] = field(default_factory=List)
 
     def _construct_impl(self) -> DatasetLoader:
         dataset_iterators_dict = self.get_requirement("iterators")
@@ -227,7 +228,8 @@ class DataLoadersConstructable(ComponentConstructable):
                                                               batch_size=self.batch_size,
                                                               collate_fn=collator,
                                                               weigthed_sampling_split_name=self.weigthed_sampling_split_name,
-                                                              label_pos=self.label_pos)
+                                                              label_pos=self.label_pos,
+                                                              seeds=self.seeds)
 
 
 @dataclass

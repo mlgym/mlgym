@@ -1,6 +1,6 @@
 from torch.utils.data import DataLoader
-from torch.utils.data.sampler import WeightedRandomSampler
-from typing import Callable, Dict
+from torch.utils.data.sampler import RandomSampler, WeightedRandomSampler
+from typing import Callable, Dict, List
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 from torch.utils.data.sampler import Sampler
 from collections import Counter
@@ -11,20 +11,26 @@ from ml_gym.data_handling.postprocessors.collator import Collator
 class DatasetLoaderFactory:
     @staticmethod
     def get_splitted_data_loaders(dataset_splits: Dict[str, InformedDatasetIteratorIF], batch_size: int, collate_fn: Callable = None,
-                                  weigthed_sampling_split_name: str = None, label_pos: int = 2) -> Dict[str, "DatasetLoader"]:
+                                  weigthed_sampling_split_name: str = None, label_pos: int = 2, seeds: List[int] = None) -> Dict[str, "DatasetLoader"]:
         # NOTE: Weighting is only applied to the split specified by `weigthed_sampling_split_name`.
-        data_loaders = {split_name: DatasetLoader(dataset_iterator=dataset_split,
-                                                  batch_size=batch_size,
-                                                  sampler=SamplerFactory.get_weighted_sampler(
-                                                      dataset_split, label_pos) if split_name == weigthed_sampling_split_name else None,
-                                                  collate_fn=collate_fn) for split_name, dataset_split in dataset_splits.items()}
+        data_loaders = {}
+        for split_id, (split_name, dataset_split) in enumerate(dataset_splits.items()):
+            if split_name == weigthed_sampling_split_name:
+                sampler = SamplerFactory.get_weighted_sampler(dataset_split, label_pos, seeds[split_id])
+            else:
+                sampler = SamplerFactory.get_random_sampler(dataset_split, seeds[split_id])
+
+            data_loaders[split_name] = DatasetLoader(dataset_iterator=dataset_split,
+                                                     batch_size=batch_size,
+                                                     sampler=sampler,
+                                                     collate_fn=collate_fn)
         return data_loaders
 
 
 class SamplerFactory:
 
     @staticmethod
-    def get_weighted_sampler(dataset: InformedDatasetIteratorIF, label_pos: int = 2):
+    def get_weighted_sampler(dataset: InformedDatasetIteratorIF, label_pos: int = 2, seed: int = 0) -> Sampler:
         """Returns a WeightedRandomSampler by counting the tags (sic!) over all samples.
         Note, we don't count over targets as they might e.g., be one hot encoded.
 
@@ -34,13 +40,19 @@ class SamplerFactory:
         Returns:
             [WeightedRandomSampler]: Instance of WeightedRandomSampler.
         """
+        rnd_generator = torch.Generator().manual_seed(seed)
         # get the class weights
         target_counts = Counter([int(sample[label_pos]) for sample in dataset])  # uses generator expression
         target_tuples = [(k, v) for k, v in sorted(target_counts.items(), key=lambda item: item[0])]
         class_weights = {target_key: 1./target_count for target_key, target_count in target_tuples}
         sample_weights = [class_weights[sample[label_pos]] for sample in dataset]
-        sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(dataset))
+        sampler = WeightedRandomSampler(weights=sample_weights, num_samples=len(dataset), generator=rnd_generator)
         return sampler
+
+    @staticmethod
+    def get_random_sampler(dataset: InformedDatasetIteratorIF, seed: int = 0) -> Sampler:
+        rnd_generator = torch.Generator().manual_seed(seed)
+        return RandomSampler(data_source=dataset, generator=rnd_generator)
 
 
 class DatasetLoader(DataLoader):

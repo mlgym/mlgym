@@ -52,7 +52,7 @@ class EvalComponent(EvalComponentIF):
 
     def __init__(self, inference_component: InferenceComponent, post_processors: Dict[str, PredictPostprocessingComponent], metrics: List[Metric],
                  loss_funs: Dict[str, Loss], dataset_loaders: Dict[str, DatasetLoader], train_split_name: str, show_progress: bool = False,
-                 cpu_target_subscription_keys: List[str] = None, cpu_prediction_subscription_keys: List[str] = None, 
+                 cpu_target_subscription_keys: List[str] = None, cpu_prediction_subscription_keys: List[str] = None,
                  metrics_computation_config: List[Dict] = None, loss_computation_config: List[Dict] = None):
         self.loss_funs = loss_funs
         self.inference_component = inference_component
@@ -67,7 +67,7 @@ class EvalComponent(EvalComponentIF):
         self.logger = ConsoleLogger("logger_eval_component")
         # determines which metrics are applied to which splits (metric_key to split list)
         if metrics_computation_config is None:
-            self.metrics_computation_config = None 
+            self.metrics_computation_config = None
         else:
             self.metrics_computation_config = {m["metric_tag"]: m["applicable_splits"] for m in metrics_computation_config}
         self.loss_computation_config = loss_computation_config
@@ -113,9 +113,10 @@ class EvalComponent(EvalComponentIF):
         prediction_batch = InferenceResultBatch.combine(inference_result_batches_cpu)
         # select metrics for split
         if self.metrics_computation_config is not None:
-            metric_tags = [metric_tag for metric_tag, applicable_splits in self.metrics_computation_config.items() if split_name in applicable_splits]
+            metric_tags = [metric_tag for metric_tag, applicable_splits in self.metrics_computation_config.items()
+                           if split_name in applicable_splits]
             split_metrics = [metric for metric in self.metrics if metric.tag in metric_tags]
-        else: 
+        else:
             split_metrics = self.metrics
         metric_scores = self._calculate_metric_scores(prediction_batch, split_metrics)
 

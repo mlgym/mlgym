@@ -61,6 +61,7 @@ data_loaders:
   config:
     batch_size: 50
     weigthed_sampling_split_name: train
+    seeds: [0, 1, 2]
 
 model_registry:
   component_type_key: MODEL_REGISTRY
