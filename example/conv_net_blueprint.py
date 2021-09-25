@@ -7,12 +7,12 @@ from ml_gym.gym.jobs import AbstractGymJob, GymJobFactory
 from ml_gym.batching.batch import DatasetBatch
 from dataclasses import dataclass
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector
-from ml_gym.data_handling.postprocessors.collator import CollatorIF
+from ml_gym.data_handling.postprocessors.collator import Collator
 
 
 @dataclass
-class MNISTCollator(CollatorIF):
-    target_publication_key: str
+class MNISTCollator(Collator):
+    target_publication_key: str = None
 
     def __call__(self, batch: List[torch.Tensor]):
         """
@@ -20,7 +20,7 @@ class MNISTCollator(CollatorIF):
         :return:
         """
         # batch contains a list of tuples of structure (sequence, target)
-        inputs = [item[0] for item in batch]
+        inputs = [item[0].to(self.device) for item in batch]
         inputs = torch.stack(inputs)
         # transform into vector
         # inputs = inputs.view(inputs.shape[0], -1)
