@@ -4,6 +4,8 @@ from typing import Callable, Dict
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 from torch.utils.data.sampler import Sampler
 from collections import Counter
+import torch
+from ml_gym.data_handling.postprocessors.collator import Collator
 
 
 class DatasetLoaderFactory:
@@ -42,9 +44,18 @@ class SamplerFactory:
 
 
 class DatasetLoader(DataLoader):
-    def __init__(self, dataset_iterator: InformedDatasetIteratorIF, batch_size: int, sampler: Sampler, collate_fn: Callable = None):
+    def __init__(self, dataset_iterator: InformedDatasetIteratorIF, batch_size: int, sampler: Sampler, collate_fn: Collator = None):
         super().__init__(dataset=dataset_iterator, sampler=sampler, batch_size=batch_size, collate_fn=collate_fn)
 
     @property
     def dataset_name(self) -> str:
         return self.dataset.dataset_meta.dataset_name
+
+    @property
+    def device(self) -> torch.device:
+        return self.collate_fn.device
+
+    @device.setter
+    def device(self, d: torch.device):
+        if self.collate_fn is not None:
+            self.collate_fn.device = d

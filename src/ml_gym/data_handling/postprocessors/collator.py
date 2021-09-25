@@ -1,11 +1,13 @@
-from dataclasses import dataclass
-from abc import ABC, abstractmethod
-from typing import List
+from dataclasses import dataclass, field
+from abc import abstractmethod
+from typing import List, Callable
 import torch
 
 
 @dataclass
-class CollatorIF(ABC):
+class Collator(Callable):
+
+    device: torch.device = field(default_factory=lambda: torch.device("cpu"))
 
     @abstractmethod
     def __call__(self, batch: List[torch.Tensor]):

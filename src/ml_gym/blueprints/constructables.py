@@ -19,7 +19,7 @@ from ml_gym.metrics.metrics import Metric, binary_aupr_score, binary_auroc_score
 from ml_gym.metrics.metric_factory import MetricFactory
 from ml_gym.gym.evaluator import Evaluator, EvalComponent
 from ml_gym.data_handling.postprocessors.factory import ModelGymInformedIteratorFactory
-from ml_gym.data_handling.postprocessors.collator import CollatorIF
+from ml_gym.data_handling.postprocessors.collator import Collator
 from ml_gym.gym.post_processing import PredictPostProcessingIF, SoftmaxPostProcessorImpl, \
     ArgmaxPostProcessorImpl, SigmoidalPostProcessorImpl, DummyPostProcessorImpl, PredictPostProcessing, \
     BinarizationPostProcessorImpl
@@ -208,7 +208,7 @@ class OneHotEncodedTargetsIteratorConstructable(ComponentConstructable):
 @dataclass
 class DataCollatorConstructable(ComponentConstructable):
     collator_params: Dict = field(default_factory=Dict)
-    collator_type: Type[CollatorIF] = None
+    collator_type: Type[Collator] = None
 
     def _construct_impl(self) -> Callable:
         return self.collator_type(**self.collator_params)
@@ -222,7 +222,7 @@ class DataLoadersConstructable(ComponentConstructable):
 
     def _construct_impl(self) -> DatasetLoader:
         dataset_iterators_dict = self.get_requirement("iterators")
-        collator: CollatorIF = self.get_requirement("data_collator")
+        collator: Collator = self.get_requirement("data_collator")
         return DatasetLoaderFactory.get_splitted_data_loaders(dataset_splits=dataset_iterators_dict,
                                                               batch_size=self.batch_size,
                                                               collate_fn=collator,
@@ -267,6 +267,7 @@ class ModelRegistryConstructable(ComponentConstructable):
 class LossFunctionRegistryConstructable(ComponentConstructable):
     class LossKeys:
         LPLoss = "LPLoss"
+        LPPredictionLoss = "LPPredictionLoss"
         # LPLossScaled = "LPLossScaled"
         CrossEntropyLoss = "CrossEntropyLoss"
         BCEWithLogitsLoss = "BCEWithLogitsLoss"
@@ -277,6 +278,7 @@ class LossFunctionRegistryConstructable(ComponentConstructable):
         loss_fun_registry = ClassRegistry()
         default_mapping: Dict[str, Loss] = {
             LossFunctionRegistryConstructable.LossKeys.LPLoss: LossFactory.get_lp_loss,
+            LossFunctionRegistryConstructable.LossKeys.LPPredictionLoss: LossFactory.get_lp_loss,  # TODO this is legacy for DAE results from June 2021
             # LossFunctionRegistryConstructable.LossKeys.LPLossScaled: LossFactory.get_scaled_lp_loss,
             LossFunctionRegistryConstructable.LossKeys.BCEWithLogitsLoss: LossFactory.get_bce_with_logits_loss,
             LossFunctionRegistryConstructable.LossKeys.BCELoss: LossFactory.get_bce_loss,
@@ -437,8 +439,11 @@ class EvalComponentConstructable(ComponentConstructable):
                     postprocessors_dict[split].append(PredictPostProcessing(
                         prediction_post_processing_registry.get_instance(config["key"], **config["params"])))
             else:
-                postprocessors_dict["default"].append(PredictPostProcessing(
-                    prediction_post_processing_registry.get_instance(config["key"], **config["params"])))
+                if "params" in config:
+                    postprocessors_dict["default"].append(PredictPostProcessing(
+                        prediction_post_processing_registry.get_instance(config["key"], **config["params"])))
+                else:  # TODO this is the legacy version!
+                    postprocessors_dict["default"].append(PredictPostProcessing(prediction_post_processing_registry.get_instance(**config)))
 
         inference_component = InferenceComponent(no_grad=True)
         eval_component = EvalComponent(inference_component, postprocessors_dict, metric_funs, loss_funs, dataset_loaders, self.train_split_name,
