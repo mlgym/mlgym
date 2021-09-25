@@ -15,6 +15,7 @@ from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 import tqdm
+from ml_gym.gym.jobs import AbstractGymJob
 
 
 class ExportedModel:
@@ -55,8 +56,9 @@ class ExportedModel:
 class ComponentLoader:
 
     @staticmethod
-    def get_trained_exported_model(components: List, experiment_path: str, model_id: int, split_name: str) -> ExportedModel:
-        trained_model = ComponentLoader.get_trained_model(components, experiment_path, model_id)
+    def get_trained_exported_model(components: List, experiment_path: str, model_id: int,
+                                   split_name: str, device: torch.device = None) -> ExportedModel:
+        trained_model = ComponentLoader.get_trained_model(components, experiment_path, model_id, device)
         post_processors = components["eval_component"].post_processors[split_name]
         exported_model = ExportedModel.from_model_and_preprocessors(trained_model, post_processors)
         return exported_model
@@ -85,17 +87,17 @@ class ComponentLoader:
                                                    cv_config=cv_config,
                                                    grid_search_id="bla",
                                                    blue_print_type=blueprint_type)
-        blue_print = nested_cv.create_blue_prints(blueprint_type, gs_config, 1, dashify_logging_path="")[0]
+        blue_print = nested_cv.create_blue_prints(blueprint_type, AbstractGymJob.Type.STANDARD, gs_config, 1, dashify_logging_path="")[0]
         components = blueprint_type.construct_components(
             config=blue_print.config, component_names=component_names, external_injection=blue_print.external_injection)
         return components
 
     @staticmethod
-    def get_trained_model(components: List, experiment_path: str, model_id: int) -> NNModel:
+    def get_trained_model(components: List, experiment_path: str, model_id: int, device: torch.device = None) -> NNModel:
         model_state_dict_path = os.path.join(experiment_path, f"checkpoints/model_{model_id}.pt")
         model = deepcopy(components["model"])
         # load model
-        model_state = torch.load(model_state_dict_path)
+        model_state = torch.load(model_state_dict_path, map_location=device)
         model.load_state_dict(model_state)
         return model
 
