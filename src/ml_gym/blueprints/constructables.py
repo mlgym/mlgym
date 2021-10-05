@@ -137,6 +137,18 @@ class InMemoryDatasetIteratorConstructable(ComponentConstructable):
 
 
 @dataclass
+class ShuffledDatasetIteratorConstructable(ComponentConstructable):
+    seeds: Dict[str, Any] = field(default_factory=dict)
+    applicable_splits: List[str] = field(default_factory=list)
+
+    def _construct_impl(self) -> Dict[str, InformedDatasetIteratorIF]:
+        dataset_iterators_dict = self.get_requirement("iterators")
+        return {name: ModelGymInformedIteratorFactory.get_shuffled_iterator(self.component_identifier, iterator, self.seeds[name])
+                if name in self.applicable_splits else iterator
+                for name, iterator in dataset_iterators_dict.items()}
+
+
+@dataclass
 class FilteredLabelsIteratorConstructable(ComponentConstructable):
     filtered_labels: List[Any] = field(default_factory=list)
     applicable_splits: List[str] = field(default_factory=list)
@@ -219,7 +231,7 @@ class DataLoadersConstructable(ComponentConstructable):
     batch_size: int = 1
     weigthed_sampling_split_name: str = None
     label_pos: int = 2
-    seeds: List[int] = field(default_factory=List)
+    seeds: Dict[str, int] = field(default_factory=dict)
 
     def _construct_impl(self) -> DatasetLoader:
         dataset_iterators_dict = self.get_requirement("iterators")

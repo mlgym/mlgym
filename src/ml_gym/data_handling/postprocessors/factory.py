@@ -109,3 +109,8 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
     def get_in_memory_iterator(identifier: str, iterator: InformedDatasetIteratorIF) -> InformedDatasetIteratorIF:
         meta = MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier)
         return InformedDatasetFactory.get_in_memory_dataset_iterator(iterator, meta)
+
+    @staticmethod
+    def get_shuffled_iterator(identifier: str, iterator: InformedDatasetIteratorIF, seed: int) -> InformedDatasetIteratorIF:
+        meta = MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier)
+        return InformedDatasetFactory.get_shuffled_dataset_iterator(iterator, meta, seed)
