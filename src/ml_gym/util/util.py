@@ -19,9 +19,10 @@ from ml_gym.gym.jobs import AbstractGymJob
 
 
 class ExportedModel:
-    def __init__(self, model: NNModel, post_processors: List[PredictPostProcessingIF]):
+    def __init__(self, model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str = None):
         self.model = model
         self.post_processors = post_processors
+        self.model_path = model_path
 
     def predict_tensor(self, sample_tensor: torch.Tensor, targets: torch.Tensor = None, tags: torch.Tensor = None, no_grad: bool = True):
         if no_grad:
@@ -49,8 +50,8 @@ class ExportedModel:
         return InferenceResultBatch.combine(result_batches)
 
     @staticmethod
-    def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF]) -> "ExportedModel":
-        return ExportedModel(model, post_processors)
+    def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str ) -> "ExportedModel":
+        return ExportedModel(model, post_processors, model_path)
 
 
 class ComponentLoader:
@@ -60,7 +61,8 @@ class ComponentLoader:
                                    split_name: str, device: torch.device = None) -> ExportedModel:
         trained_model = ComponentLoader.get_trained_model(components, experiment_path, model_id, device)
         post_processors = components["eval_component"].post_processors[split_name]
-        exported_model = ExportedModel.from_model_and_preprocessors(trained_model, post_processors)
+        model_path = os.path.join(experiment_path, f"checkpoints/model_{model_id}.pt")
+        exported_model = ExportedModel.from_model_and_preprocessors(trained_model, post_processors, model_path)
         return exported_model
 
     @staticmethod
