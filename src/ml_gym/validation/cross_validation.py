@@ -86,7 +86,7 @@ class CrossValidation(ValidatorIF):
         return blueprints
 
     def run(self, blue_print_type: Type[BluePrint], gym: Gym, gs_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str):
-        job_type = AbstractGymJob.Type.LITE if self.keep_interim_results else AbstractGymJob.Type.STANDARD
+        job_type = AbstractGymJob.Type.STANDARD if self.keep_interim_results else AbstractGymJob.Type.LITE
         blueprints = self.create_blue_prints(blue_print_type=blue_print_type,
                                              gs_config=gs_config,
                                              dashify_logging_path=dashify_logging_path,
