@@ -2,6 +2,10 @@ from abc import ABC, abstractmethod
 from ml_gym.gym.evaluator import EvaluationBatchResult
 from typing import List, Dict, Any, BinaryIO
 from dashify.logging.dashify_logging import ExperimentInfo, DashifyLogger
+import glob
+import os
+from ml_gym.error_handling.exception import TrainingStateCorruptError
+import json
 
 
 class AbstractWriter(ABC):
@@ -66,10 +70,19 @@ class DashifyWriter(AbstractWriter):
 
 
 class DashifyReader:
+
     @staticmethod
     def load_model_state(experiment_info: ExperimentInfo, measurement_id: int) -> Dict:
         model_state = DashifyLogger.load_checkpoint_state_dict("model", experiment_info, measurement_id)
         return model_state
+
+    @staticmethod
+    def experiments_exist(experiment_info: ExperimentInfo, measurement_id: int) -> bool:
+        try:
+            DashifyReader.load_model_state(experiment_info, measurement_id)
+        except:
+            return False
+        return True
 
     @staticmethod
     def load_optimizer_state(experiment_info: ExperimentInfo, measurement_id: int) -> Dict:
@@ -81,3 +94,29 @@ class DashifyReader:
         file_name = f"state_{str(measurement_id)}.json"
         data_dict = DashifyLogger.load_dict(file_name, experiment_info)
         return data_dict
+
+    @staticmethod
+    def get_last_epoch(experiment_info: ExperimentInfo) -> int:
+        # TODO integrate into DashifyML
+        # get epoch of latest model
+        checkpoint_folder_path = os.path.join(experiment_info.full_experiment_path, DashifyLogger.checkpoint_folder)
+        model_paths = glob.glob(os.path.join(checkpoint_folder_path, "model_*.pt"))
+        if not model_paths:
+            model_epoch = -1
+        else:
+            model_epoch = max([int(p.split("model_")[-1][:-3]) for p in model_paths])
+
+        # get epoch according to metrics
+        metrics_path = os.path.join(experiment_info.full_experiment_path, "metrics.json")
+        with open(metrics_path, "r") as f:
+            metrics = json.load(f)
+        if not metrics.keys():
+            metric_epoch = -1
+        else:
+            metric_epoch = len(metrics[list(metrics.keys())[0]]) - 1
+
+        # final check
+        if model_epoch != metric_epoch:
+            raise TrainingStateCorruptError(
+                f"The experiment {experiment_info.experiment_id} has checkpointed the model at epoch {model_epoch} and but has evaluated the model until epoch {metric_epoch}.")
+        return model_epoch
