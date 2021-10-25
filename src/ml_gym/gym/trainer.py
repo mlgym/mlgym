@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Dict, List, Callable, Any
 from ml_gym.loss_functions.loss_functions import Loss
 from ml_gym.models.nn.net import NNModel
@@ -10,6 +11,7 @@ from ml_gym.optimizers.optimizer import OptimizerAdapter
 import tqdm
 from ml_gym.util.logger import ConsoleLogger
 from ml_gym.gym.post_processing import PredictPostProcessingIF
+from ml_gym.error_handling.exception import ModelAlreadyFullyTrainedError
 
 
 class TrainComponent(StatefulComponent):
@@ -29,13 +31,13 @@ class TrainComponent(StatefulComponent):
         optimizer.step()
 
     def train_epoch(self, model: NNModel, optimizer: OptimizerAdapter, data_loader: DatasetLoader,
-                    device: torch.device) -> NNModel:
+                    device: torch.device, epoch: int) -> NNModel:
         self.map_batches(fun=self.train_batch,
                          loader=data_loader,
                          fun_params={"device": device,
                                      "model": model,
                                      "optimizer": optimizer},
-                         show_progress=self.show_progress)
+                         progress_info=f"Training {data_loader.dataset_name}  @epoch {epoch}")
         return model
 
     # def warm_up(self, model: NNModel, data_loader: DatasetLoader, device: torch.device):
@@ -74,26 +76,55 @@ class TrainComponent(StatefulComponent):
 
     @staticmethod
     def map_batches(fun: Callable[[DatasetBatch, NNModel], Any], loader: DatasetLoader,
-                    fun_params: Dict[str, Any] = None, show_progress: bool = False) -> List[InferenceResultBatch]:
+                    fun_params: Dict[str, Any] = None, progress_info: str = None) -> List[InferenceResultBatch]:
         """
         Applies a function to each dataset_batch within a DatasetLoader
         """
         fun_params = fun_params if fun_params is not None else dict()
-        if show_progress:
-            return [fun(dataset_batch, **fun_params) for dataset_batch in tqdm.tqdm(loader, desc="Batches processed:")]
+        if progress_info:
+            return [fun(dataset_batch, **fun_params) for dataset_batch in tqdm.tqdm(loader, desc=progress_info)]
         else:
             return [fun(dataset_batch, **fun_params) for dataset_batch in loader]
 
 
-class Trainer(StatefulComponent):
+class TrainerIF(StatefulComponent):
+
+    @abstractmethod
+    def is_done(self) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_num_epochs(self, num_epochs: int):
+        raise NotImplementedError
+
+    @abstractmethod
+    def set_current_epoch(self, epoch: int):
+        raise NotImplementedError
+
+
+class Trainer(TrainerIF):
     def __init__(self, train_component: TrainComponent, train_loader: DatasetLoader, verbose=False):
         self.train_component = train_component
         self.train_loader = train_loader
         self.verbose = verbose
+        self.current_epoch = 1
+        self.num_epochs = -1
+
+    def is_done(self) -> bool:
+        return self.current_epoch > self.num_epochs  # training starts at epoch 1, epoch 0 is just for evaluation, therefore >
+
+    def set_num_epochs(self, num_epochs: int):
+        self.num_epochs = num_epochs
+
+    def set_current_epoch(self, epoch: int):
+        self.current_epoch = epoch
 
     # def warm_up(self, model: NNModel, device: torch.device):
     #     self.train_component.warm_up(model, self.train_loader, device)
 
     def train_epoch(self, model: NNModel, optimizer: OptimizerAdapter, device: torch.device) -> NNModel:
-        model = self.train_component.train_epoch(model, optimizer, self.train_loader, device)
+        if self.current_epoch > self.num_epochs:
+            raise ModelAlreadyFullyTrainedError(f"Model has been already trained for {self.current_epoch}/{self.num_epochs} epochs.")
+        model = self.train_component.train_epoch(model, optimizer, self.train_loader, device, self.current_epoch)
+        self.current_epoch += 1
         return model

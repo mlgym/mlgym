@@ -9,7 +9,8 @@ class BluePrint(ABC):
     """ Abstract class that provides a blueprint for creating `AbstractGymJob`
     """
 
-    def __init__(self, run_mode: AbstractGymJob.Mode, job_type: AbstractGymJob.Type, model_name: str, dataset_name: str,  epochs: List[int], config: Dict[str, Any], dashify_logging_dir: str,
+    def __init__(self, run_mode: AbstractGymJob.Mode, job_type: AbstractGymJob.Type, model_name: str, dataset_name: str,  epochs: int,
+                 config: Dict[str, Any], dashify_logging_dir: str,
                  grid_search_id: str, run_id: str, external_injection: Dict[str, Any] = None):
 
         self.run_mode = run_mode
@@ -52,11 +53,9 @@ def create_blueprint(blue_print_class: Type[BluePrint],
                      grid_search_id: str,
                      external_injection: Dict[str, Any] = None) -> List[BluePrint]:
 
-    epochs = list(range(num_epochs))
-
     blue_print = blue_print_class(grid_search_id=grid_search_id,
                                   run_id=str(experiment_id),
-                                  epochs=epochs,
+                                  epochs=num_epochs,
                                   run_mode=run_mode,
                                   config=experiment_config,
                                   dashify_logging_dir=dashify_logging_path,

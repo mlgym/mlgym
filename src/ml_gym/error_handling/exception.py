@@ -13,6 +13,15 @@ class ModelNotTrainedError(Exception):
     pass
 
 
+class ModelAlreadyFullyTrainedError(Exception):
+    """Exception raised when model is fully trained but training for another epoch was initiated."""
+    pass
+
+
+class TrainingStateCorruptError(Exception):
+    """Raised e.g., when the number of checkpointed models does not match the number of evaluations in the metrics.json"""
+
+
 class DatasetFileCorruptError(Exception):
     """Thrown when integrity checks indicate that a given file is corrupt."""
     pass
