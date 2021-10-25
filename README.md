@@ -11,6 +11,14 @@ Futhermore, MLgym provides the following key features:
 * **Reproducibility** of results due to full experiment specification including dataset, preprocessing routines, model architecture, loss function, metrics and more within a single YAML config.
 * Component registry to register custom components with dependencies. For instance one can define a new preprocessing routine component. This component may depend on an iterator component, as specified in the experiment config. During runtime these components are instantiated on the fly.       
 
+* Resume training after crash
+
+* Custom training routines, e.g., training with partially frozen network weights
+
+* Large scale, multi GPU training supporting Grid Search, Nested Cross Validation, Cross Validation
+
+* Reduced logging to reduce storage footprint of model and optimizer states
+
 **Please note, that at the moment this code should be treated as experimental and is not production ready.** 
 
 ## Install
