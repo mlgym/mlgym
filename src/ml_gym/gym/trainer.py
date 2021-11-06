@@ -81,7 +81,7 @@ class TrainComponent(StatefulComponent):
         Applies a function to each dataset_batch within a DatasetLoader
         """
         fun_params = fun_params if fun_params is not None else dict()
-        if progress_info:
+        if progress_info is not None:
             return [fun(dataset_batch, **fun_params) for dataset_batch in tqdm.tqdm(loader, desc=progress_info)]
         else:
             return [fun(dataset_batch, **fun_params) for dataset_batch in loader]
