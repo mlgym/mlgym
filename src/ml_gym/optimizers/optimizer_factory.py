@@ -1,5 +1,4 @@
 from torch.optim import Optimizer, SGD, Adam, Adadelta
-from functools import partial
 from typing import Dict
 from ml_gym.optimizers.optimizer import OptimizerAdapter
 
@@ -13,5 +12,5 @@ class OptimizerFactory:
 
     @classmethod
     def get_optimizer(cls, optimizer_key: str, params: Dict) -> OptimizerAdapter:
-        optimizer_partial = partial(cls.optimizer_map[optimizer_key], **params)
-        return OptimizerAdapter(optimizer_partial=optimizer_partial)
+        optimizer_class = cls.optimizer_map[optimizer_key]
+        return OptimizerAdapter(optimizer_class=optimizer_class, optimizer_params=params)

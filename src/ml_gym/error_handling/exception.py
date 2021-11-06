@@ -64,3 +64,9 @@ class ValidationModeNotValidError(Exception):
 
 class InvalidTensorFormatError(Exception):
     """Raised when a torch tensor has the wrong format for subsequent computation"""
+    pass
+
+
+class OptimizerNotInitializedError(Exception):
+    """Raised when we want to run an operation on an optimizer, which was not instantiated, yet."""
+    pass
