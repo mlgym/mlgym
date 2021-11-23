@@ -56,7 +56,7 @@ class Batch(ABC):
 
     @staticmethod
     def _copy_tensor_dict(d: Dict[Any, torch.Tensor]):
-        return {k: v.clone() for k, v in d.items()}
+        return {k: v.detach().clone() for k, v in d.items()}
 
     @staticmethod
     def _combine_tensor_dicts(tensor_dicts: List[Dict[Any, torch.Tensor]]) -> Dict[Any, torch.Tensor]:
@@ -137,9 +137,9 @@ class DatasetBatch(Batch, TorchDeviceMixin):
         return len(self._samples)
 
     def __deepcopy__(self, memo) -> 'DatasetBatch':
-        samples_ = self.samples.clone()
+        samples_ = self.samples.detach().clone()
         targets_ = self._copy_tensor_dict(self.targets)
-        tags_ = self.tags.clone()
+        tags_ = self.tags.detach().clone()
         return DatasetBatch(samples=samples_, targets=targets_, tags=tags_)
 
     @staticmethod
@@ -219,7 +219,7 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
     def __deepcopy__(self, memo) -> 'InferenceResultBatch':
         predictions_ = self._copy_tensor_dict(self.predictions)
         targets_ = self._copy_tensor_dict(self.targets)
-        tags_ = self.tags.clone()
+        tags_ = self.tags.detach().clone()
         return InferenceResultBatch(predictions=predictions_, targets=targets_, tags=tags_)
 
     def split_results(self, target_keys: List[str], predictions_keys: List[str], device: torch.device):

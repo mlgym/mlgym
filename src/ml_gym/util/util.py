@@ -101,6 +101,7 @@ class ComponentLoader:
         # load model
         model_state = torch.load(model_state_dict_path, map_location=device)
         model.load_state_dict(model_state)
+        model = model.to(device)
         return model
 
     @staticmethod
