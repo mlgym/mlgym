@@ -133,6 +133,7 @@ class GymJobLite(AbstractGymJob):
         self.run_mode = run_mode
         self.model = model
         self.optimizer = optimizer
+        self.optimizer.register_model_params(model_params=self.model.parameters())
         self.epochs = epochs
         self.evaluator = evaluator
         self.trainer = trainer
