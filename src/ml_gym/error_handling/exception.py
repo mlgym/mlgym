@@ -47,6 +47,11 @@ class ComponentConstructionError(Exception):
     pass
 
 
+class DependentComponentNotFoundError(Exception):
+    """Exception raised when a component required by a parent component could not be found"""
+    pass
+
+
 class SingletonAlreadyInstantiatedError(Exception):
     """Exception raised when trying to get another instance from a singleton class"""
     pass
@@ -64,7 +69,6 @@ class ValidationModeNotValidError(Exception):
 
 class InvalidTensorFormatError(Exception):
     """Raised when a torch tensor has the wrong format for subsequent computation"""
-    pass
 
 
 class OptimizerNotInitializedError(Exception):
