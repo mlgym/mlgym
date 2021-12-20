@@ -2,7 +2,7 @@ import copy
 from typing import Dict, Any, List, Optional, Type, Union
 from collections import namedtuple
 from dataclasses import dataclass, field
-from ml_gym.error_handling.exception import ComponentConstructionError
+from ml_gym.error_handling.exception import ComponentConstructionError, InjectMappingNotFoundError, DependentComponentNotFoundError
 from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIteratorConstructable, \
     DatasetIteratorSplitsConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
     OptimizerConstructable, ModelRegistryConstructable, ModelConstructable, LossFunctionRegistryConstructable, \
@@ -10,7 +10,6 @@ from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIter
     FilteredLabelsIteratorConstructable, FeatureEncodedIteratorConstructable, CombinedDatasetIteratorConstructable, \
     DataCollatorConstructable, PredictionPostProcessingRegistryConstructable, TrainComponentConstructable, EvalComponentConstructable, \
     IteratorViewConstructable, OneHotEncodedTargetsIteratorConstructable, InMemoryDatasetIteratorConstructable, ShuffledDatasetIteratorConstructable
-from ml_gym.error_handling.exception import InjectMappingNotFoundError
 # from ml_gym.util.logger import LogLevel, ConsoleLogger
 
 
@@ -27,7 +26,7 @@ class Injector:
                     if key == "injectable":
                         if tree["injectable"]["id"] not in self.mapping:
                             if self.raise_mapping_not_found:
-                                raise InjectMappingNotFoundError
+                                raise InjectMappingNotFoundError(f"Could not find injectable with id {tree['injectable']['id']}")
                             else:
                                 tree[key] = sub_tree
                         else:
@@ -191,10 +190,17 @@ class ComponentFactory:
             Dict: Component dictionary (component name -> Component)
         """
         def build_component(component_name: str, component_representation_graph: Dict[str, ComponentRepresentation], components: Dict[str, Any]):
-            component_representation = component_representation_graph[component_name]
+            try:
+                component_representation = component_representation_graph[component_name]
+            except ValueError as e:
+                raise DependentComponentNotFoundError(f"Could not find component {component_name}.") from e
+
             # build the requirements
-            requirement_components = {name: build_component(requirement.component_name, component_representation_graph, {})
-                                      for name, requirement in component_representation.requirements.items()}
+            try:
+                requirement_components = {name: build_component(requirement.component_name, component_representation_graph, {})
+                                        for name, requirement in component_representation.requirements.items()}
+            except DependentComponentNotFoundError as dcnf_error:
+                raise ComponentConstructionError(f"Error building requirements for component {component_name}.") from dcnf_error
 
             # collect the requirements
             requirements = {name: Requirement(requirement_components[name], requirement.subscription)
