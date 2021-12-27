@@ -74,3 +74,8 @@ class InvalidTensorFormatError(Exception):
 class OptimizerNotInitializedError(Exception):
     """Raised when we want to run an operation on an optimizer, which was not instantiated, yet."""
     pass
+
+
+class EventStorageInvalidIndexingError(Exception):
+    """Raised when an event is tried to indexed within the event storage but the index is not present."""
+    pass
