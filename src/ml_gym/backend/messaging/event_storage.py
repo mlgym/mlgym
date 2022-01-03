@@ -12,31 +12,34 @@ class EventStorageIF(ABC):
     def get_event(self, event_id: int) -> Event:
         raise NotImplementedError
 
-    def get_last_event_key(self) -> int:
-        raise NotImplementedError
-
-    def has_next(self, event_id: int) -> bool:
-        raise NotImplementedError
-
-    def get_next(self, last_event_id: int) -> Tuple[int, Event]:
+    def __iter__(self) -> Tuple[str, Event]:
         raise NotImplementedError
 
 
 class ListEventStorage(EventStorageIF):
-
     def __init__(self):
         self._storage: List[Event] = []
 
     def add_event(self, event: Event):
+        # TODO make this thing thread / multiprocessing safe
+        event_id = len(self._storage)
         self._storage.append(event)
+        return event_id
 
     def get_event(self, event_id: int) -> Event:
         if len(self._storage)-1 < event_id:
             raise EventStorageInvalidIndexingError(f"Could not access event at index {event_id}.")
         return self._storage[event_id]
 
-    def has_next(self, event_id: int) -> bool:
-        return event_id + 1 < len(self._storage)
+    def __iter__(self) -> Tuple[str, Event]:
+        current = 0
+        stop = len(self._storage)
+        while current < stop:
+            yield current, self._storage[current]
+            current += 1
 
-    def get_next(self, last_event_id: int) -> Tuple[int, Event]:
-        return last_event_id+1, self.get_event(last_event_id+1)
+
+class EventStorageFactory:
+    @staticmethod
+    def get_list_event_storage() -> ListEventStorage:
+        return ListEventStorage()
