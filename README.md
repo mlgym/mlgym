@@ -1,3 +1,6 @@
+![mlGym_logo](https://user-images.githubusercontent.com/47029859/148430747-eecca494-47b9-4ad0-9272-78da091a85f2.png)
+
+
 # MLgym 
 
 a python framework for distributed machine learning model training in research.
