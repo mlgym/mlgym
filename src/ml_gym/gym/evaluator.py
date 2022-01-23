@@ -14,6 +14,7 @@ import tqdm
 from ml_gym.util.logger import ConsoleLogger
 import numpy as np
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent
+from ml_gym.error_handling.exception import MetricCalculationError, LossCalculationError
 
 
 class AbstractEvaluator(StatefulComponent):
@@ -69,7 +70,6 @@ class EvalComponent(EvalComponentIF):
         self.metrics_computation_config = None if metrics_computation_config is None else {m["metric_tag"]: m["applicable_splits"] for m in metrics_computation_config}
         # determines which losses are applied to which splits (loss_key to split list)
         self.loss_computation_config = None if loss_computation_config is None else {m["loss_tag"]: m["applicable_splits"] for m in loss_computation_config}
-        
 
     # def warm_up(self, model: NNModel, device: torch.device):
     #     def init_loss_funs(batch: InferenceResultBatch):
@@ -94,9 +94,9 @@ class EvalComponent(EvalComponentIF):
         return [self.evaluate_dataset_split(model, device, split_name, loader) for split_name, loader in self.dataset_loaders.items()]
 
     def evaluate_dataset_split(self, model: NNModel, device: torch.device, split_name: str, dataset_loader: DatasetLoader) -> EvaluationBatchResult:
+        dataset_loader.device = device
         dataset_loader_iterator = tqdm.tqdm(dataset_loader, desc=f"Evaluating {dataset_loader.dataset_name} - {split_name}") if self.show_progress else dataset_loader
         post_processors = self.post_processors[split_name] + self.post_processors["default"]
-
 
         # calc losses
         if self.loss_computation_config is not None:
@@ -147,12 +147,25 @@ class EvalComponent(EvalComponentIF):
         return inference_result_batch
 
     def _calculate_metric_scores(self, inference_batch: InferenceResultBatch, split_metrics: List[Metric]) -> Dict[str, List[float]]:
-        return {metric.tag: [metric(inference_batch)] for metric in split_metrics}
+        metric_scores = {}
+        for metric in split_metrics:
+            try:
+                metric_scores[metric.tag] = [metric(inference_batch)]
+            except Exception as e:
+                raise MetricCalculationError(f"Error during calculation of metric {metric.tag}") from e
+        return metric_scores
 
     def _calculate_loss_scores(self, forward_batch: InferenceResultBatch, split_loss_funs: Dict[str, Loss]) -> Dict[str, List[float]]:
-        return {loss_key: self._get_batch_loss(loss_fun, forward_batch) for loss_key, loss_fun in split_loss_funs.items()}
+        loss_scores = {}
+        for loss_key, loss_fun in split_loss_funs.items():
+            try:
+                loss_scores[loss_key] = self._get_batch_loss(loss_fun, forward_batch)
+            except Exception as e:
+                raise LossCalculationError("Error during calculation of loss {loss_key}") from e
+
+        return loss_scores
 
     def _get_batch_loss(self, loss_fun: Loss, forward_batch: InferenceResultBatch) -> List[float]:
         loss = loss_fun(forward_batch)
-        loss = [loss.detach().item()]
+        loss = [loss.sum().detach().item()]
         return loss
