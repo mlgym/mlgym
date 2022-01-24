@@ -52,6 +52,16 @@ class DependentComponentNotFoundError(Exception):
     pass
 
 
+class ClassRegistryKeyNotFoundError(Exception):
+    """Exception raised when requested key is not present in the class registry"""
+    pass
+
+
+class ClassRegistryItemInstantiationError(Exception):
+    """Raised when an item in the class registry could not be built"""
+    pass
+
+
 class SingletonAlreadyInstantiatedError(Exception):
     """Exception raised when trying to get another instance from a singleton class"""
     pass
