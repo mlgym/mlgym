@@ -7,11 +7,13 @@ class ClientFactory:
     @staticmethod
     def get_buffered_client(client_id: str, host: str, port: int, disconnect_buffer_size: int):
         sio_client = socketio.Client()
-        return BufferedClient(client_id=client_id,
-                              host=host,
-                              port=port,
-                              disconnect_buffer_size=disconnect_buffer_size,
-                              sio_client=sio_client)
+        bc = BufferedClient(client_id=client_id,
+                            host=host,
+                            port=port,
+                            disconnect_buffer_size=disconnect_buffer_size,
+                            sio_client=sio_client)
+        bc.connect()
+        return bc
 
 
 class BufferedClient:
@@ -50,9 +52,8 @@ if __name__ == "__main__":
     port = 5000
     client_id = "worker_1"
     bc = ClientFactory.get_buffered_client(client_id=client_id, host=host, port=port, disconnect_buffer_size=0)
-    bc.connect()
     count = 0
     while True:
         bc.emit(message_key="mlgym_event", message=f"Message {count}")
         count += 1
-        time.sleep(5)
+        time.sleep(0.01)

@@ -207,8 +207,7 @@ class ComponentFactory:
                             for name, requirement in component_representation.requirements.items()}
             # build the requested component
             component_variants_registry = self.component_factory_registry[component_representation.component_type_key]
-            component = component_variants_registry.construct(
-                component_representation.variant_key, component_representation.name, component_representation.config, requirements)
+            component = component_variants_registry.construct(component_representation.variant_key, component_representation.name, component_representation.config, requirements)
             return component
 
         # calculate the dependency graph of components

@@ -1,9 +1,15 @@
 from threading import Lock
 from flask import Flask, render_template, session, request, copy_current_request_context
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, rooms, disconnect
-from ml_gym.backend.messaging.event_storage import ListEventStorage
-from typing import List
+from ml_gym.backend.messaging.event_storage import EventStorageIF, EventStorageFactory
+from typing import List, Dict
 from collections import defaultdict
+
+
+class EventSubscriberIF:
+
+    def callback(self):
+        raise NotImplementedError
 
 
 class WebSocketServer:
@@ -20,16 +26,16 @@ class WebSocketServer:
         self._port = port
         self._socketio = SocketIO(app, async_mode=async_mode)
         self._client_sids = []
-        self._room_event_storage = {}
+        self._room_id_to_event_storage: Dict[str, EventStorageIF] = {"mlgym_event_subscribers": EventStorageFactory.get_list_event_storage()}
         self._init_call_backs()
 
-    def _register_callback_funs(self):
-        self._socketio.on("join", self.on_join)
-        self._socketio.on("leave", self.on_leave)
-        self._socketio.on("mlgym_event", self.on_mlgym_event)
-        self._socketio.on("ping", self.on_ping)
-        self._socketio.on("client_connected", self.on_client_connected)
-        self._socketio.on("client_disconnected", self.on_client_disconnected)
+    # def _register_callback_funs(self):
+    #     self._socketio.on("join", self.on_join)
+    #     self._socketio.on("leave", self.on_leave)
+    #     self._socketio.on("mlgym_event", self.on_mlgym_event)
+    #     self._socketio.on("ping", self.on_ping)
+    #     self._socketio.on("client_connected", self.on_client_connected)
+    #     self._socketio.on("client_disconnected", self.on_client_disconnected)
 
     def emit_server_log_message(self, data):
         emit("server_log_message", data)
@@ -38,22 +44,30 @@ class WebSocketServer:
     def client_sids(self) -> List[str]:
         return self._client_sids
 
+    def _send_event_history_to_client(self, client_id: str, room_id: str):
+        event_storage = self._room_id_to_event_storage[room_id]
+        for event_id, event in event_storage:
+            emit('mlgym_event', {'event_id': event_id, 'data': event}, room=client_id)
+
     def _init_call_backs(self):
 
         @self._socketio.on("join")
         def on_join(data):
-            self._client_sids.append(request.sid)
+            client_sid = request.sid
+            self._client_sids.append(client_sid)
             if 'client_id' in data:
                 client_id = data['client_id']
             else:
                 client_id = "<unknown>"
             rooms_to_join = data['rooms']
             for room in rooms_to_join:
-                if room not in self._room_event_storage:
-                    self._room_event_storage[room] = ListEventStorage()
+                if room not in self._room_id_to_event_storage:
+                    self._room_id_to_event_storage[room] = EventStorageFactory.get_list_event_storage()
                 join_room(room)
             print(f"Client {client_id} joined rooms: {rooms()}")
             self.emit_server_log_message(f"Client {client_id} joined rooms: {rooms()}")
+            for room in rooms_to_join:
+                self._send_event_history_to_client(client_sid, room)
 
         @self._socketio.on("leave")
         def on_leave():
@@ -66,9 +80,8 @@ class WebSocketServer:
         @self._socketio.on("mlgym_event")
         def on_mlgym_event(data):
             print("mlgym_event: " + str(data))
-            emit('mlgym_event',
-                 {'data': data},
-                 to="mlgym_event_subscribers")
+            event_id = self._room_id_to_event_storage["mlgym_event_subscribers"].add_event(data)
+            emit('mlgym_event', {'event_id': event_id, 'data': data}, to="mlgym_event_subscribers")
 
     # @socketio.event
     # def disconnect_request():
