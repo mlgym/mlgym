@@ -11,7 +11,8 @@ from ml_gym.data_handling.postprocessors.collator import Collator
 class DatasetLoaderFactory:
     @staticmethod
     def get_splitted_data_loaders(dataset_splits: Dict[str, InformedDatasetIteratorIF], batch_size: int, collate_fn: Callable = None,
-                                  weigthed_sampling_split_name: str = None, label_pos: int = 2, seeds: Dict[str, int] = None) -> Dict[str, "DatasetLoader"]:
+                                  weigthed_sampling_split_name: str = None, label_pos: int = 2, seeds: Dict[str, int] = None,
+                                  drop_last: bool = False) -> Dict[str, "DatasetLoader"]:
         seeds = {} if seeds is None else seeds
         # NOTE: Weighting is only applied to the split specified by `weigthed_sampling_split_name`.
         data_loaders = {}
@@ -25,7 +26,8 @@ class DatasetLoaderFactory:
             data_loaders[split_name] = DatasetLoader(dataset_iterator=dataset_split,
                                                      batch_size=batch_size,
                                                      sampler=sampler,
-                                                     collate_fn=collate_fn)
+                                                     collate_fn=collate_fn,
+                                                     drop_last=drop_last)
         return data_loaders
 
 
@@ -58,8 +60,9 @@ class SamplerFactory:
 
 
 class DatasetLoader(DataLoader):
-    def __init__(self, dataset_iterator: InformedDatasetIteratorIF, batch_size: int, sampler: Sampler, collate_fn: Collator = None):
-        super().__init__(dataset=dataset_iterator, sampler=sampler, batch_size=batch_size, collate_fn=collate_fn)
+    def __init__(self, dataset_iterator: InformedDatasetIteratorIF, batch_size: int, sampler: Sampler, 
+                 collate_fn: Collator = None, drop_last: bool = False):
+        super().__init__(dataset=dataset_iterator, sampler=sampler, batch_size=batch_size, collate_fn=collate_fn, drop_last=drop_last)
 
     @property
     def dataset_name(self) -> str:
