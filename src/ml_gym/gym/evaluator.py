@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from enum import Enum
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Union
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 import torch
 from ml_gym.batching.batch import DatasetBatch, EvaluationBatchResult, InferenceResultBatch
@@ -14,7 +14,7 @@ import tqdm
 from ml_gym.util.logger import ConsoleLogger
 import numpy as np
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent
-from ml_gym.error_handling.exception import MetricCalculationError, LossCalculationError
+from ml_gym.error_handling.exception import BatchStateError, EvaluationError, MetricCalculationError, LossCalculationError
 
 
 class AbstractEvaluator(StatefulComponent):
@@ -53,7 +53,7 @@ class EvalComponent(EvalComponentIF):
 
     def __init__(self, inference_component: InferenceComponent, post_processors: Dict[str, PredictPostprocessingComponent], metrics: List[Metric],
                  loss_funs: Dict[str, Loss], dataset_loaders: Dict[str, DatasetLoader], train_split_name: str, show_progress: bool = False,
-                 cpu_target_subscription_keys: List[str] = None, cpu_prediction_subscription_keys: List[str] = None,
+                 cpu_target_subscription_keys: List[str] = None, cpu_prediction_subscription_keys: List[Union[str, List]] = None,
                  metrics_computation_config: List[Dict] = None, loss_computation_config: List[Dict] = None):
         self.loss_funs = loss_funs
         self.inference_component = inference_component
@@ -63,8 +63,8 @@ class EvalComponent(EvalComponentIF):
         self.dataset_loaders = dataset_loaders
         self.train_split_name = train_split_name
         self.show_progress = show_progress
-        self.cpu_target_subscription_keys = set(cpu_target_subscription_keys)
-        self.cpu_prediction_subscription_keys = set(cpu_prediction_subscription_keys)
+        self.cpu_target_subscription_keys = cpu_target_subscription_keys
+        self.cpu_prediction_subscription_keys = cpu_prediction_subscription_keys
         self.logger = ConsoleLogger("logger_eval_component")
         # determines which metrics are applied to which splits (metric_key to split list)
         self.metrics_computation_config = None if metrics_computation_config is None else {m["metric_tag"]: m["applicable_splits"] for m in metrics_computation_config}
@@ -117,7 +117,11 @@ class EvalComponent(EvalComponentIF):
             inference_result_batches_cpu.append(irb_filtered)
 
         # calc metrics
-        prediction_batch = InferenceResultBatch.combine(inference_result_batches_cpu)
+        try:
+            prediction_batch = InferenceResultBatch.combine(inference_result_batches_cpu)
+        except BatchStateError as e:
+            raise EvaluationError(f"Error combining inference result batch on split {split_name}.") from e
+
         # select metrics for split
         if self.metrics_computation_config is not None:
             metric_tags = [metric_tag for metric_tag, applicable_splits in self.metrics_computation_config.items() if split_name in applicable_splits]
