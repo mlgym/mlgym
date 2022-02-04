@@ -232,6 +232,7 @@ class DataLoadersConstructable(ComponentConstructable):
     weigthed_sampling_split_name: str = None
     label_pos: int = 2
     seeds: Dict[str, int] = field(default_factory=dict)
+    drop_last: bool = False
 
     def _construct_impl(self) -> DatasetLoader:
         dataset_iterators_dict = self.get_requirement("iterators")
@@ -241,7 +242,8 @@ class DataLoadersConstructable(ComponentConstructable):
                                                               collate_fn=collator,
                                                               weigthed_sampling_split_name=self.weigthed_sampling_split_name,
                                                               label_pos=self.label_pos,
-                                                              seeds=self.seeds)
+                                                              seeds=self.seeds,
+                                                              drop_last=self.drop_last)
 
 
 @dataclass
