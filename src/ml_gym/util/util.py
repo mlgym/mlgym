@@ -19,12 +19,24 @@ from ml_gym.gym.jobs import AbstractGymJob
 
 
 class ExportedModel:
-    def __init__(self, model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str = None):
+    def __init__(self, model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str = None, device: torch.device = None):
         self.model = model
         self.post_processors = post_processors
         self.model_path = model_path
+        self._device = device if device is not None else torch.device("cpu")
+        self.model.to(self._device)
+
+    @property
+    def device(self) -> torch.device:
+        return self._device
+
+    @device.setter
+    def device(self, d: torch.device):
+        self._device = d
+        self.model.to(self._device)
 
     def predict_tensor(self, sample_tensor: torch.Tensor, targets: torch.Tensor = None, tags: torch.Tensor = None, no_grad: bool = True):
+        sample_tensor = sample_tensor.to(self._device)
         if no_grad:
             with torch.no_grad():
                 forward_result = self.model.forward(sample_tensor)
@@ -35,6 +47,7 @@ class ExportedModel:
         return result_batch
 
     def predict_dataset_batch(self, batch: DatasetBatch, no_grad: bool = True) -> InferenceResultBatch:
+        batch.to_device(self._device)
         if no_grad:
             with torch.no_grad():
                 forward_result = self.model.forward(batch.samples)
@@ -43,15 +56,17 @@ class ExportedModel:
 
         result_batch = InferenceResultBatch(targets=deepcopy(batch.targets), tags=deepcopy(batch.tags), predictions=forward_result)
         result_batch = PredictPostprocessingComponent.post_process(result_batch, post_processors=self.post_processors)
+        result_batch.to_cpu()
         return result_batch
 
     def predict_data_loader(self, dataset_loader: DatasetLoader, no_grad: bool = True) -> InferenceResultBatch:
+        dataset_loader.device = self._device
         result_batches = [self.predict_dataset_batch(batch, no_grad) for batch in tqdm.tqdm(dataset_loader, desc="Batches processed:")]
         return InferenceResultBatch.combine(result_batches)
 
     @staticmethod
-    def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str ) -> "ExportedModel":
-        return ExportedModel(model, post_processors, model_path)
+    def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str, device: torch.device = None ) -> "ExportedModel":
+        return ExportedModel(model, post_processors, model_path, device=device)
 
 
 class ComponentLoader:
@@ -62,7 +77,7 @@ class ComponentLoader:
         trained_model = ComponentLoader.get_trained_model(components, experiment_path, model_id, device)
         post_processors = components["eval_component"].post_processors[split_name]
         model_path = os.path.join(experiment_path, f"checkpoints/model_{model_id}.pt")
-        exported_model = ExportedModel.from_model_and_preprocessors(trained_model, post_processors, model_path)
+        exported_model = ExportedModel.from_model_and_preprocessors(trained_model, post_processors, model_path, device)
         return exported_model
 
     @staticmethod
