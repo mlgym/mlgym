@@ -4,9 +4,9 @@ import json
 import os
 import torch
 from data_stack.dataset.iterator import DatasetIteratorIF
-from typing import Dict, List, Type
+from typing import Dict, List, Type, Callable
 from copy import deepcopy
-from ml_gym.data_handling.dataset_loader import DatasetLoader
+from ml_gym.data_handling.dataset_loader import DatasetLoader, DatasetLoaderFactory
 from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.util.grid_search import GridSearch
 from ml_gym.validation.validator_factory import ValidatorFactory
@@ -16,6 +16,7 @@ from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingCom
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 import tqdm
 from ml_gym.gym.jobs import AbstractGymJob
+from data_stack.dataset.iterator import InformedDatasetIteratorIF
 
 
 class ExportedModel:
@@ -58,6 +59,12 @@ class ExportedModel:
         result_batch = PredictPostprocessingComponent.post_process(result_batch, post_processors=self.post_processors)
         result_batch.to_cpu()
         return result_batch
+
+    def predict_dataset_iterator(self, dataset_iterator: InformedDatasetIteratorIF,
+                                 batch_size: int, collate_fn: Callable, no_grad: bool = True) -> InferenceResultBatch:
+        dataset_loader = DatasetLoaderFactory.get_splitted_data_loaders({"x": dataset_iterator}, batch_size=batch_size, collate_fn=collate_fn)["x"]
+        irb = self.predict_data_loader(dataset_loader=dataset_loader, no_grad=no_grad)
+        return irb
 
     def predict_data_loader(self, dataset_loader: DatasetLoader, no_grad: bool = True) -> InferenceResultBatch:
         dataset_loader.device = self._device
