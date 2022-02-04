@@ -6,7 +6,7 @@ import torch
 from data_stack.dataset.iterator import DatasetIteratorIF
 from typing import Dict, List, Type
 from copy import deepcopy
-from ml_gym.data_handling.dataset_loader import DatasetLoader
+from ml_gym.data_handling.dataset_loader import DatasetLoader, DatasetLoaderFactory
 from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.util.grid_search import GridSearch
 from ml_gym.validation.validator_factory import ValidatorFactory
@@ -16,6 +16,7 @@ from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingCom
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 import tqdm
 from ml_gym.gym.jobs import AbstractGymJob
+from data_stack.dataset.iterator import InformedDatasetIteratorIF
 
 
 class ExportedModel:
@@ -49,8 +50,15 @@ class ExportedModel:
         result_batches = [self.predict_dataset_batch(batch, no_grad) for batch in tqdm.tqdm(dataset_loader, desc="Batches processed:")]
         return InferenceResultBatch.combine(result_batches)
 
+    def predict_dataset_iterator(self, split_name: str, dataset_iterator: InformedDatasetIteratorIF,
+                                 batch_size: int, no_grad: bool = True) -> InferenceResultBatch:
+        dataset_loader = DatasetLoaderFactory.get_splitted_data_loaders({split_name: dataset_iterator}, batch_size=batch_size)
+
+        irb = self.predict_data_loader(dataset_loader=dataset_loader, no_grad=no_grad)
+        return irb
+
     @staticmethod
-    def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str ) -> "ExportedModel":
+    def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str) -> "ExportedModel":
         return ExportedModel(model, post_processors, model_path)
 
 
