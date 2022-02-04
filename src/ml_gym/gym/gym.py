@@ -15,7 +15,7 @@ class Gym:
     def __init__(self, process_count: int = 1, device_ids: List[int] = None, log_std_to_file: bool = True):
         self.devices = get_devices(device_ids)
         self.log_std_to_file = log_std_to_file
-        self.pool = Pool(num_processes=process_count, devices=self.devices)
+        self.pool = Pool(num_processes=process_count, devices=self.devices, websocket_server_host="http://127.0.0.1", websocket_server_port=5000)
         self.jobs: List[Job] = []
 
     def run(self, parallel=True):
