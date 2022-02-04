@@ -37,6 +37,11 @@ class BatchStateError(Exception):
     pass
 
 
+class EvaluationError(Exception):
+    """Exception raised when somthing goes wrong within the evaluation."""
+    pass
+
+
 class ExperimentInfoMissing(Exception):
     """Exception raised when experiment info object is missing"""
     pass
@@ -83,6 +88,14 @@ class InvalidTensorFormatError(Exception):
 
 class OptimizerNotInitializedError(Exception):
     """Raised when we want to run an operation on an optimizer, which was not instantiated, yet."""
+    pass
+
+class MetricCalculationError(Exception):
+    """Raised when there was an error during metric calculation"""
+    pass
+
+class LossCalculationError(Exception):
+    """Raised when there was an error during loss calculation"""
     pass
 
 
