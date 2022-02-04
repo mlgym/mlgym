@@ -13,10 +13,10 @@ from ml_gym.multiprocessing.job import JobStatus
 
 class WebsocketJobStatusSubscriber(JobStatusSubscriberIF):
 
-    def __init__(self):
+    def __init__(self, host: str, port: int):
         self.sio_client: BufferedClient = ClientFactory.get_buffered_client(client_id="pool_event_publisher",
-                                                                            host="http://127.0.0.1",
-                                                                            port=5000,
+                                                                            host=host,
+                                                                            port=port,
                                                                             disconnect_buffer_size=0)
 
     def callback_job_event(self, job: Job):
@@ -26,7 +26,7 @@ class WebsocketJobStatusSubscriber(JobStatusSubscriberIF):
 
 
 class Pool:
-    def __init__(self, num_processes: int, devices: List[torch.device], max_jobs_per_process: int = 1):
+    def __init__(self, num_processes: int, devices: List[torch.device], max_jobs_per_process: int = 1, websocket_server_host: str = None, websocket_server_port: int = None):
         self.num_processes = num_processes
         self.job_q = Queue()
         self.job_update_q = Queue()
@@ -36,7 +36,8 @@ class Pool:
         self.logger: QLogger = QueuedLogging.get_qlogger("logger_pool")
         self.logger.log(LogLevel.INFO, f"Initialized to run jobs on: {self.devices}")
         self.job_collection = JobCollection()
-        self.job_collection.add_subscriber(WebsocketJobStatusSubscriber())
+        if websocket_server_host is not None and websocket_server_port is not None:
+            self.job_collection.add_subscriber(WebsocketJobStatusSubscriber())
 
     def add_job(self, job: Job):
         self.job_q.put(job)
