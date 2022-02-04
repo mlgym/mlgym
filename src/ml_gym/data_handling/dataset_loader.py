@@ -1,6 +1,6 @@
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import RandomSampler, WeightedRandomSampler
-from typing import Callable, Dict, List
+from typing import Callable, Dict
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 from torch.utils.data.sampler import Sampler
 from collections import Counter

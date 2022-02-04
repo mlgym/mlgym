@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from enum import IntEnum, Enum
 import torch
 from typing import Callable, Dict, List
@@ -44,6 +45,7 @@ class Job:
 
 class JobStatusSubscriberIF:
 
+    @abstractmethod
     def callback_job_event(self, job: Job):
         raise NotImplementedError
 

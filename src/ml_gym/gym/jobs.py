@@ -107,7 +107,7 @@ class GymJob(AbstractGymJob):
             DashifyWriter.save_binary_state("model", self.model.state_dict(), self._experiment_info, 0)
             # we only register the model parameters here, so we can instantiate the internal optimizer within 
             # OptimizerAdapter. Only then, we can retrieve the state_dict of the internal optimizer. 
-            self.optimizer.register_model_params(model_params=self.model.parameters())
+            self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
             DashifyWriter.save_binary_state("optimizer", self.optimizer.state_dict(), self._experiment_info, 0)
             self.save_state_of_stateful_components(0)
         self.trainer.set_num_epochs(num_epochs=self.epochs)
@@ -133,7 +133,7 @@ class GymJobLite(AbstractGymJob):
         self.run_mode = run_mode
         self.model = model
         self.optimizer = optimizer
-        self.optimizer.register_model_params(model_params=self.model.parameters())
+        self.optimizer.register_model_params(dict(self.model.named_parameters()))
         self.epochs = epochs
         self.evaluator = evaluator
         self.trainer = trainer
