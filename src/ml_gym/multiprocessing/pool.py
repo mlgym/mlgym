@@ -37,7 +37,7 @@ class Pool:
         self.logger.log(LogLevel.INFO, f"Initialized to run jobs on: {self.devices}")
         self.job_collection = JobCollection()
         if websocket_server_host is not None and websocket_server_port is not None:
-            self.job_collection.add_subscriber(WebsocketJobStatusSubscriber())
+            self.job_collection.add_subscriber(WebsocketJobStatusSubscriber(host=websocket_server_host, port=websocket_server_port))
 
     def add_job(self, job: Job):
         self.job_q.put(job)
