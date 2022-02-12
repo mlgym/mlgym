@@ -247,21 +247,6 @@ class DataLoadersConstructable(ComponentConstructable):
 
 
 @dataclass
-class ExperimentInfoConstructable(ComponentConstructable):
-    log_dir: str = ""
-    grid_search_id: str = ""
-    run_id: str = ""
-    model_name: str = ""
-
-    def _construct_impl(self):
-        return DashifyLogger.create_new_experiment(log_dir=self.log_dir,
-                                                   subfolder_id=self.grid_search_id,
-                                                   model_name=self.model_name,
-                                                   dataset_name="",  # TODO fix ugly hack
-                                                   run_id=self.run_id)
-
-
-@dataclass
 class OptimizerConstructable(ComponentConstructable):
     optimizer_key: str = ""
     params: Dict[str, Any] = field(default_factory=dict)
