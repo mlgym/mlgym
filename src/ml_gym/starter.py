@@ -96,11 +96,12 @@ class MLGymStarter:
                                                    re_eval=re_eval,
                                                    keep_interim_results=self.keep_interim_results)
 
-        nested_cv.run(blue_print_type=self.blue_print_class,
-                      gym=gym,
-                      gs_config=gs_config,
-                      num_epochs=self.num_epochs,
-                      dashify_logging_path=self.dashify_logging_path)
+        blueprints = nested_cv.create_blueprints(blue_print_type=self.blue_print_class,
+                                                 gs_config=gs_config,
+                                                 num_epochs=self.num_epochs,
+                                                 dashify_logging_path=self.dashify_logging_path)
+        gym.add_blue_prints(blueprints)
+        gym.run(parallel=True)
 
     def run_cross_validation(self, gym: Gym, cv_config: Dict[str, Any], gs_config: Dict[str, Any], grid_search_id: str,
                              re_eval: bool = False):
@@ -111,17 +112,19 @@ class MLGymStarter:
                                                                re_eval=re_eval,
                                                                keep_interim_results=self.keep_interim_results)
 
-        cross_validator.run(blue_print_type=self.blue_print_class,
-                            gym=gym,
-                            gs_config=gs_config,
-                            num_epochs=self.num_epochs,
-                            dashify_logging_path=self.dashify_logging_path)
+        blueprints = cross_validator.create_blueprints(blue_print_type=self.blue_print_class,
+                                                       gs_config=gs_config,
+                                                       num_epochs=self.num_epochs,
+                                                       dashify_logging_path=self.dashify_logging_path)
+        gym.add_blue_prints(blueprints)
+        gym.run(parallel=True)
 
     def run_grid_search(self, gym: Gym, gs_config: Dict[str, Any], grid_search_id: str, re_eval: bool = False):
         gs_validator = ValidatorFactory.get_gs_validator(grid_search_id=grid_search_id, re_eval=re_eval,
                                                          keep_interim_results=self.keep_interim_results)
-        gs_validator.run(blue_print_type=self.blue_print_class,
-                         gym=gym,
-                         gs_config=gs_config,
-                         num_epochs=self.num_epochs,
-                         dashify_logging_path=self.dashify_logging_path)
+        blueprints = gs_validator.create_blueprints(blue_print_type=self.blue_print_class,
+                                                    gs_config=gs_config,
+                                                    num_epochs=self.num_epochs,
+                                                    dashify_logging_path=self.dashify_logging_path)
+        gym.add_blue_prints(blueprints)
+        gym.run(parallel=True)

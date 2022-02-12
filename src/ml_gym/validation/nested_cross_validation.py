@@ -1,6 +1,6 @@
 from typing import Dict, Any, Tuple, List, Type
 from data_stack.dataset.iterator import DatasetIteratorIF
-from ml_gym.blueprints.blue_prints import create_blueprint
+from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.gym import Gym
 from ml_gym.gym.jobs import AbstractGymJob
 from data_stack.dataset.splitter import SplitterFactory
@@ -104,14 +104,14 @@ class NestedCV(ValidatorIF):
                                       **split}
                 injector = Injector(mapping=external_injection)
                 experiment_config_injected = injector.inject_pass(component_parameters=experiment_config)
-                bp = create_blueprint(blue_print_class=blue_print_type,
-                                      run_mode=AbstractGymJob.Mode.TRAIN if not self.re_eval else AbstractGymJob.Mode.EVAL,
-                                      job_type=job_type,
-                                      experiment_config=experiment_config_injected,
-                                      dashify_logging_path=dashify_logging_path,
-                                      num_epochs=num_epochs,
-                                      grid_search_id=self.grid_search_id,
-                                      experiment_id=experiment_id)
+                bp = BluePrint.create_blueprint(blue_print_class=blue_print_type,
+                                                run_mode=AbstractGymJob.Mode.TRAIN if not self.re_eval else AbstractGymJob.Mode.EVAL,
+                                                job_type=job_type,
+                                                experiment_config=experiment_config_injected,
+                                                dashify_logging_path=dashify_logging_path,
+                                                num_epochs=num_epochs,
+                                                grid_search_id=self.grid_search_id,
+                                                experiment_id=experiment_id)
                 blueprints.append(bp)
                 experiment_id = experiment_id + 1
         return blueprints
