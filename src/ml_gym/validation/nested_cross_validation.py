@@ -84,7 +84,7 @@ class NestedCV(ValidatorIF):
                 splits.append(split)
         return splits
 
-    def create_blue_prints(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type, gs_config: Dict[str, Any], num_epochs: int,
+    def _get_blue_prints(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type, gs_config: Dict[str, Any], num_epochs: int,
                            dashify_logging_path: str) -> List[Type[BluePrint]]:
 
         run_id_to_config_dict = {run_id: config for run_id, config in enumerate(GridSearch.create_gs_from_config_dict(gs_config))}
@@ -116,12 +116,12 @@ class NestedCV(ValidatorIF):
                 experiment_id = experiment_id + 1
         return blueprints
 
-    def run(self, blue_print_type: Type[BluePrint], gym: Gym, gs_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str):
+    def create_blueprints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any], num_epochs: int,
+                          dashify_logging_path: str) -> List[BluePrint]:
         job_type = AbstractGymJob.Type.STANDARD if self.keep_interim_results else AbstractGymJob.Type.LITE
-        blueprints = self.create_blue_prints(blue_print_type=blue_print_type,
+        blueprints = self._get_blue_prints(blue_print_type=blue_print_type,
                                              gs_config=gs_config,
                                              dashify_logging_path=dashify_logging_path,
                                              num_epochs=num_epochs,
                                              job_type=job_type)
-        gym.add_blue_prints(blueprints)
-        gym.run(parallel=True)
+        return blueprints
