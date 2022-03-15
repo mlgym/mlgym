@@ -32,7 +32,7 @@ class Evaluator(AbstractEvaluator):
         self.eval_component = eval_component
 
     def evaluate(self, model: NNModel, device: torch.device) -> List[EvaluationBatchResult]:
-        return self.eval_component.evaluate(model, device)
+        return self.eval_component.evaluate(model, device)  # returns a EvaluationBatchResult for each split
 
     # def warm_up(self, model: NNModel, device: torch.device):
     #     self.eval_component.warm_up(model, device)
@@ -67,9 +67,11 @@ class EvalComponent(EvalComponentIF):
         self.cpu_prediction_subscription_keys = cpu_prediction_subscription_keys
         self.logger = ConsoleLogger("logger_eval_component")
         # determines which metrics are applied to which splits (metric_key to split list)
-        self.metrics_computation_config = None if metrics_computation_config is None else {m["metric_tag"]: m["applicable_splits"] for m in metrics_computation_config}
+        self.metrics_computation_config = None if metrics_computation_config is None else {
+            m["metric_tag"]: m["applicable_splits"] for m in metrics_computation_config}
         # determines which losses are applied to which splits (loss_key to split list)
-        self.loss_computation_config = None if loss_computation_config is None else {m["loss_tag"]: m["applicable_splits"] for m in loss_computation_config}
+        self.loss_computation_config = None if loss_computation_config is None else {
+            m["loss_tag"]: m["applicable_splits"] for m in loss_computation_config}
 
     # def warm_up(self, model: NNModel, device: torch.device):
     #     def init_loss_funs(batch: InferenceResultBatch):
@@ -95,12 +97,14 @@ class EvalComponent(EvalComponentIF):
 
     def evaluate_dataset_split(self, model: NNModel, device: torch.device, split_name: str, dataset_loader: DatasetLoader) -> EvaluationBatchResult:
         dataset_loader.device = device
-        dataset_loader_iterator = tqdm.tqdm(dataset_loader, desc=f"Evaluating {dataset_loader.dataset_name} - {split_name}") if self.show_progress else dataset_loader
+        dataset_loader_iterator = tqdm.tqdm(
+            dataset_loader, desc=f"Evaluating {dataset_loader.dataset_name} - {split_name}") if self.show_progress else dataset_loader
         post_processors = self.post_processors[split_name] + self.post_processors["default"]
 
         # calc losses
         if self.loss_computation_config is not None:
-            loss_tags = [loss_tag for loss_tag, applicable_splits in self.loss_computation_config.items() if split_name in applicable_splits]
+            loss_tags = [loss_tag for loss_tag, applicable_splits in self.loss_computation_config.items()
+                         if split_name in applicable_splits]
             split_loss_funs = {tag: loss_fun for tag, loss_fun in self.loss_funs.items() if tag in loss_tags}
         else:
             split_loss_funs = self.loss_funs
@@ -124,7 +128,8 @@ class EvalComponent(EvalComponentIF):
 
         # select metrics for split
         if self.metrics_computation_config is not None:
-            metric_tags = [metric_tag for metric_tag, applicable_splits in self.metrics_computation_config.items() if split_name in applicable_splits]
+            metric_tags = [metric_tag for metric_tag, applicable_splits in self.metrics_computation_config.items()
+                           if split_name in applicable_splits]
             split_metrics = [metric for metric in self.metrics if metric.tag in metric_tags]
         else:
             split_metrics = self.metrics

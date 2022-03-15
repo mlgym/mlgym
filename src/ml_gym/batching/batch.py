@@ -246,9 +246,9 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
         filtered_targets = {key: self._targets[key].to(device) for key in target_keys if key in self._targets}
 
         filtered_predictions = {}
-        for p_keys in predictions_keys_list: 
+        for p_keys in predictions_keys_list:
             _filter_predictions(p_keys, self.predictions, filtered_predictions)
- 
+
         filtered_predictions = TorchDeviceMixin._dict_tensor_to_device(filtered_predictions, device)
         tags = self.tags.to(device)
         return InferenceResultBatch(targets=filtered_targets, predictions=filtered_predictions, tags=tags)
