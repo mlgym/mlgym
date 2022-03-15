@@ -7,22 +7,19 @@ from ml_gym.multiprocessing.job import JobType, Job, JobCollection, JobStatusSub
 from ml_gym.multiprocessing.worker import WorkerProcessWrapper
 from ml_gym.util.logger import QueuedLogging
 from ml_gym.util.logger import LogLevel, QLogger
-from ml_gym.backend.streaming.client import ClientFactory, BufferedClient
 from ml_gym.multiprocessing.job import JobStatus
+from ml_gym.persistency.logging import MLgymStatusLoggerIF
 
 
 class WebsocketJobStatusSubscriber(JobStatusSubscriberIF):
 
-    def __init__(self, host: str, port: int):
-        self.sio_client: BufferedClient = ClientFactory.get_buffered_client(client_id="pool_event_publisher",
-                                                                            host=host,
-                                                                            port=port,
-                                                                            disconnect_buffer_size=0)
+    def __init__(self, logger: MLgymStatusLoggerIF):
+        self._logger = logger
 
     def callback_job_event(self, job: Job):
         parameter_keys = ["job_id", "job_type", "status", "starting_time", "finishing_time", "error", "stacktrace", "device"]
         representation = {key: val for key, val in vars(job).items() if key in parameter_keys}
-        self.sio_client.emit(message_key="mlgym_event", message=representation)
+        self._logger.log_raw_message(raw_log_message=representation)
 
 
 class Pool:
@@ -36,8 +33,8 @@ class Pool:
         self.logger: QLogger = QueuedLogging.get_qlogger("logger_pool")
         self.logger.log(LogLevel.INFO, f"Initialized to run jobs on: {self.devices}")
         self.job_collection = JobCollection()
-        if websocket_server_host is not None and websocket_server_port is not None:
-            self.job_collection.add_subscriber(WebsocketJobStatusSubscriber(host=websocket_server_host, port=websocket_server_port))
+        # if websocket_server_host is not None and websocket_server_port is not None:
+        #     self.job_collection.add_subscriber(WebsocketJobStatusSubscriber(host=websocket_server_host, port=websocket_server_port))
 
     def add_job(self, job: Job):
         self.job_q.put(job)

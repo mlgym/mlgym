@@ -35,6 +35,9 @@ class MLGymStarter:
         self.grid_search_id = grid_search_id  # only set if we want to reevaluate a grid search
         self.keep_interim_results = keep_interim_results
 
+        # create MLgymLoggers
+        
+
     @staticmethod
     def _create_gym(process_count: int, device_ids, log_std_to_file: bool) -> Gym:
         gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)

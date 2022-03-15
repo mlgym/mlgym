@@ -36,6 +36,16 @@ class DashifyWriter(AbstractWriter):
         DashifyLogger.save_dict(file_name, data_dict, experiment_info)
 
     @staticmethod
+    def log_raw_experiment_message(data_dict: Dict[str, Any], experiment_info: ExperimentInfo):
+        file_name = "raw_messages.log"
+        DashifyLogger.log_raw_experiment_message(file_name, data_dict, experiment_info)
+
+    @staticmethod
+    def log_raw_gs_message(data_dict: Dict[str, Any], experiment_info: ExperimentInfo):
+        file_name = "raw_messages.log"
+        DashifyLogger.log_raw_gs_message(file_name, data_dict, experiment_info)
+
+    @staticmethod
     def log_measurement_result(results: List[EvaluationBatchResult], experiment_info: ExperimentInfo,
                                measurement_id: int):
         results_dict = {}
