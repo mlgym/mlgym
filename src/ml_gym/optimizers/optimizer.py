@@ -78,6 +78,10 @@ class OptimizerAdapter(object):
             raise OptimizerNotInitializedError("Internal optimizer was not instantiated. Has a model been registered for this optimizer?")
         self._optimizer.add_param_group(param_group)
 
+    @property
+    def param_groups(self):
+        return self._optimizer.param_groups
+
     def __deepcopy__(self, memo):
         cls = self.__class__
         result = cls.__new__(cls)
