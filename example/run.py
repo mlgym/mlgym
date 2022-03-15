@@ -14,8 +14,8 @@ def parse_args():
     parser.add_argument('--evaluation_config_path', type=str, required=False, help='Path to the evaluation config')
     parser.add_argument('--gpus', type=int, nargs='+', help='Indices of GPUs to distribute the GS over', default=None)
     parser.add_argument('--log_std_to_file', default=False, action="store_true", help='Flag for forwarding std output to file')
-    parser.add_argument('--keep_interim_results', default=False, action="store_true",
-                        help='Flag if intermediate results i.e., models, optimizer etc. states are to be stored')
+    parser.add_argument('--keep_interim_results', default=False, action="store_true", help='Flag if intermediate results i.e., models, optimizer etc. states are to be stored')
+    parser.add_argument('--websocket_logging_servers', type=str, nargs='+', help='List of websocket logging servers, e.g., 127.0.0.1:9090 127.0.0.1:8080', default=None)
 
     args = parser.parse_args()
     num_epochs = args.num_epochs
@@ -28,11 +28,12 @@ def parse_args():
     log_std_to_file = args.log_std_to_file
     evaluation_config_path = args.evaluation_config_path
     keep_interim_results = args.keep_interim_results
-    return num_epochs, validation_mode, dashify_logging_path, text_logging_path, gs_config_path, evaluation_config_path, process_count, gpus, log_std_to_file, keep_interim_results
+    websocket_logging_servers = [(ip, int(port)) for ip, port in [connection.split(":") for connection in args.websocket_logging_servers]]
+    return num_epochs, validation_mode, dashify_logging_path, text_logging_path, gs_config_path, evaluation_config_path, process_count, gpus, log_std_to_file, keep_interim_results, websocket_logging_servers
 
 
 if __name__ == '__main__':
-    num_epochs, validation_mode, dashify_logging_path, text_logging_path, gs_config_path, evaluation_config_path, process_count, gpus, log_std_to_file, keep_interim_results = parse_args()
+    num_epochs, validation_mode, dashify_logging_path, text_logging_path, gs_config_path, evaluation_config_path, process_count, gpus, log_std_to_file, keep_interim_results, websocket_logging_servers = parse_args()
     starter = MLGymStarter(blue_print_class=ConvNetBluePrint,
                            validation_mode=MLGymStarter.ValidationMode[validation_mode],
                            dashify_logging_path=dashify_logging_path,
