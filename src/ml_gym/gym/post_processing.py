@@ -44,6 +44,23 @@ class ArgmaxPostProcessorImpl(PredictPostProcessingIF):
         return result_batch
 
 
+class MaxOrMinPostProcessorImpl(PredictPostProcessingIF):
+    def __init__(self, prediction_subscription_key: str, prediction_publication_key: str, agg_fun: str):
+        self.prediction_subscription_key = prediction_subscription_key
+        self.prediction_publication_key = prediction_publication_key
+        if agg_fun == "max":
+            self.agg_fun = torch.max
+        elif agg_fun == "min":
+            self.agg_fun = torch.min
+        else:
+            raise NotImplementedError("agg_fun={agg_fun} is not an applicable parameter")
+
+    def postprocess(self, result_batch: InferenceResultBatch) -> InferenceResultBatch:
+        predictions = self.agg_fun(result_batch.get_predictions(self.prediction_subscription_key), dim=1)[0]
+        result_batch.add_predictions(key=self.prediction_publication_key, predictions=predictions)
+        return result_batch
+
+
 class BinarizationPostProcessorImpl(PredictPostProcessingIF):
     def __init__(self, prediction_subscription_key: str, prediction_publication_key: str, threshold=0.5):
         self.prediction_subscription_key = prediction_subscription_key
