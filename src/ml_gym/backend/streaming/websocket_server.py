@@ -118,7 +118,7 @@ class WebSocketServer:
 if __name__ == '__main__':
     async_mode = None
 
-    app = Flask(__name__, template_folder="/Users/sofiatraba/Documents/GitHub/mlgym/src/ml_gym/backend/streaming/template")
+    app = Flask(__name__, template_folder="template")
     app.config['SECRET_KEY'] = 'secret!'
 
     # thread = socketio.start_background_task(background_thread, )
