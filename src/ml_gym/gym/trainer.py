@@ -32,6 +32,7 @@ class TrainComponent(StatefulComponent):
 
     def train_epoch(self, model: NNModel, optimizer: OptimizerAdapter, data_loader: DatasetLoader,
                     device: torch.device, epoch: int) -> NNModel:
+        data_loader.device = device
         self.map_batches(fun=self.train_batch,
                          loader=data_loader,
                          fun_params={"device": device,

@@ -69,7 +69,6 @@ class EvalComponent(EvalComponentIF):
         self.metrics_computation_config = None if metrics_computation_config is None else {m["metric_tag"]: m["applicable_splits"] for m in metrics_computation_config}
         # determines which losses are applied to which splits (loss_key to split list)
         self.loss_computation_config = None if loss_computation_config is None else {m["loss_tag"]: m["applicable_splits"] for m in loss_computation_config}
-        
 
     # def warm_up(self, model: NNModel, device: torch.device):
     #     def init_loss_funs(batch: InferenceResultBatch):
@@ -94,9 +93,9 @@ class EvalComponent(EvalComponentIF):
         return [self.evaluate_dataset_split(model, device, split_name, loader) for split_name, loader in self.dataset_loaders.items()]
 
     def evaluate_dataset_split(self, model: NNModel, device: torch.device, split_name: str, dataset_loader: DatasetLoader) -> EvaluationBatchResult:
+        dataset_loader.device = device
         dataset_loader_iterator = tqdm.tqdm(dataset_loader, desc=f"Evaluating {dataset_loader.dataset_name} - {split_name}") if self.show_progress else dataset_loader
         post_processors = self.post_processors[split_name] + self.post_processors["default"]
-
 
         # calc losses
         if self.loss_computation_config is not None:
