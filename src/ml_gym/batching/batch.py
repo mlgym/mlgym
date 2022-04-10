@@ -222,9 +222,29 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
         tags_ = self.tags.detach().clone()
         return InferenceResultBatch(predictions=predictions_, targets=targets_, tags=tags_)
 
-    def split_results(self, target_keys: List[str], predictions_keys: List[str], device: torch.device):
+    def split_results(self, target_keys: List[str], predictions_keys: List[Union[str, List]], device: torch.device):
+        def _filter_predictions(predictions_keys: List[str], predictions: Dict, filtered_predictions: Dict):
+            p_key = predictions_keys[0]
+            if p_key == "*":
+                p_keys = list(predictions.keys())
+            else:
+                p_keys = [p_key]
+            if len(predictions_keys) == 1:
+                for p_key in p_keys:
+                    filtered_predictions[p_key] = predictions[p_key]
+            else:
+                for p_key in p_keys:
+                    if p_key not in filtered_predictions:
+                        filtered_predictions[p_key] = {}
+                    _filter_predictions(predictions_keys[1:], predictions[p_key], filtered_predictions[p_key])
+
+        predictions_keys_list = [[p_key] if isinstance(p_key, str) else p_key for p_key in predictions_keys]
         filtered_targets = {key: self._targets[key].to(device) for key in target_keys if key in self._targets}
-        filtered_predictions = {key: self._predictions[key] for key in predictions_keys}
+
+        filtered_predictions = {}
+        for p_keys in predictions_keys_list: 
+            _filter_predictions(p_keys, self.predictions, filtered_predictions)
+ 
         filtered_predictions = TorchDeviceMixin._dict_tensor_to_device(filtered_predictions, device)
         tags = self.tags.to(device)
         return InferenceResultBatch(targets=filtered_targets, predictions=filtered_predictions, tags=tags)

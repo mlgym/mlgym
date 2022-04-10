@@ -62,8 +62,8 @@ class EvalComponent(EvalComponentIF):
         self.dataset_loaders = dataset_loaders
         self.train_split_name = train_split_name
         self.show_progress = show_progress
-        self.cpu_target_subscription_keys = set(cpu_target_subscription_keys)
-        self.cpu_prediction_subscription_keys = set(cpu_prediction_subscription_keys)
+        self.cpu_target_subscription_keys = cpu_target_subscription_keys
+        self.cpu_prediction_subscription_keys = cpu_prediction_subscription_keys
         self.logger = ConsoleLogger("logger_eval_component")
         # determines which metrics are applied to which splits (metric_key to split list)
         self.metrics_computation_config = None if metrics_computation_config is None else {m["metric_tag"]: m["applicable_splits"] for m in metrics_computation_config}
