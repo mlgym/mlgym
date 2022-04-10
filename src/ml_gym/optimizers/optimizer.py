@@ -1,5 +1,4 @@
 from torch.optim.optimizer import Optimizer
-from functools import partial
 from typing import Dict, Any, Type
 from copy import deepcopy
 from ml_gym.error_handling.exception import OptimizerNotInitializedError
@@ -15,17 +14,18 @@ class OptimizerAdapter(object):
         self._state_dict = None
 
     def register_model_params(self, model_params: Dict, restore_state: bool=True):
+        model_params_list = model_params.values()
         if not restore_state:
-            self._optimizer = self._optimizer_class(**self._optimizer_params, params=model_params)
+            self._optimizer = self._optimizer_class(**self._optimizer_params, params=model_params_list)
             return
 
         # since we instantiate a new optimizer when we register a model, we have to save and restore the optimizer state
         if self._optimizer is not None:
             state_dict = self.state_dict()
-            self._optimizer = self._optimizer_class(**self._optimizer_params, params=model_params)
+            self._optimizer = self._optimizer_class(**self._optimizer_params, params=model_params_list)
             self.load_state_dict(state_dict)
         else:
-            self._optimizer = self._optimizer_class(**self._optimizer_params, params=model_params)
+            self._optimizer = self._optimizer_class(**self._optimizer_params, params=model_params_list)
             if self._state_dict is not None:
                 self._optimizer.load_state_dict(self._state_dict)
                 self._state_dict = None
