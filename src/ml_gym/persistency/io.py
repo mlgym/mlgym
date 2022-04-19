@@ -115,8 +115,10 @@ class DashifyReader:
         else:
             metric_epoch = len(metrics[list(metrics.keys())[0]]) - 1
 
-        # final check
-        if model_epoch != metric_epoch:
-            raise TrainingStateCorruptError(
-                f"The experiment {experiment_info.experiment_id} has checkpointed the model at epoch {model_epoch} and but has evaluated the model until epoch {metric_epoch}.")
+        # The model can be trained until epoch n but the model might have been only evaluated until n-1
+        # this is ok, since the first step is to reevaluate the model for the last epoch. 
+        # The second normal case is that a model is trained and evaluated until epoch n.
+        # All other cases, indicate a corrupted training state.
+        if not (model_epoch == metric_epoch or model_epoch-1 == metric_epoch):
+            raise TrainingStateCorruptError(f"The experiment {experiment_info.experiment_id} has checkpointed the model at epoch {model_epoch} and but has evaluated the model until epoch {metric_epoch}.")
         return model_epoch

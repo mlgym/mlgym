@@ -4,6 +4,7 @@ from ml_gym.blueprints.blue_prints import create_blueprint
 from ml_gym.gym.gym import Gym
 from ml_gym.gym.jobs import AbstractGymJob
 from data_stack.dataset.splitter import SplitterFactory
+from ml_gym.modes import RunMode
 from ml_gym.validation.validator import ValidatorIF
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.blueprints.component_factory import Injector
@@ -12,7 +13,7 @@ from ml_gym.util.grid_search import GridSearch
 
 class CrossValidation(ValidatorIF):
     def __init__(self, dataset_iterator: DatasetIteratorIF, num_folds: int, stratification: bool,
-                 target_pos: int, shuffle: bool, grid_search_id: str, seed: int, re_eval: bool = False,
+                 target_pos: int, shuffle: bool, grid_search_id: str, seed: int, run_mode: RunMode,
                  keep_interim_results: bool = True):
         self.num_folds = num_folds
         self.stratification = stratification
@@ -21,7 +22,7 @@ class CrossValidation(ValidatorIF):
         self.grid_search_id = grid_search_id
         self.target_pos = target_pos
         self.shuffle = shuffle
-        self.re_eval = re_eval
+        self.run_mode = run_mode
         self.keep_interim_results = keep_interim_results
 
     def _get_fold_indices(self) -> List[List[int]]:
@@ -74,7 +75,7 @@ class CrossValidation(ValidatorIF):
                 injector = Injector(mapping=external_injection)
                 experiment_config_injected = injector.inject_pass(component_parameters=experiment_config)
                 bp = create_blueprint(blue_print_class=blue_print_type,
-                                      run_mode=AbstractGymJob.Mode.TRAIN if not self.re_eval else AbstractGymJob.Mode.EVAL,
+                                      run_mode=self.run_mode,
                                       job_type=job_type,
                                       experiment_config=experiment_config_injected,
                                       dashify_logging_path=dashify_logging_path,
