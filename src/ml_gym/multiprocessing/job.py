@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from enum import IntEnum, Enum
+from ml_gym.blueprints.blue_prints import BluePrint
 import torch
 from typing import Callable, Dict, List
 
@@ -16,10 +17,11 @@ class JobStatus(str, Enum):
 
 
 class Job:
-    def __init__(self, job_id: int, fun: Callable, param_dict: Dict, job_type: JobType = JobType.CALC):
+    def __init__(self, job_id: int, fun: Callable, blue_print: BluePrint, param_dict: Dict, job_type: JobType = JobType.CALC):
         self.job_id = job_id
         self.job_type = job_type
         self.fun = fun
+        self.blue_print = blue_print
         self.param_dict = param_dict
 
         self.status = JobStatus.INIT
@@ -34,13 +36,17 @@ class Job:
     def device(self) -> torch.device:
         return self._device
 
+    @property
+    def experiment_id(self) -> str:
+        return self.blue_print.get_experiment_id()
+
     @device.setter
     def device(self, value: torch.device):
         self._device = value
 
     def execute(self):
         self.param_dict["device"] = self._device
-        return self.fun(**self.param_dict)
+        return self.fun(blue_print=self.blue_print, **self.param_dict)
 
 
 class JobStatusSubscriberIF:
