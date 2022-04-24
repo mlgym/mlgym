@@ -34,7 +34,7 @@ class BufferedClient:
         sio_client.on("server_log_message", BufferedClient.on_server_log_message)
 
     def connect(self):
-        self._sio_client.connect(f"{self._host}:{self._port}")
+        self._sio_client.connect(f"http://{self._host}:{self._port}")
         self.emit("join", {"client_id": self._client_id, "rooms": ["trainers", self._client_id]})
 
     def leave(self):

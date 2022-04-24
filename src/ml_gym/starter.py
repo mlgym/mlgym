@@ -39,8 +39,10 @@ class MLGymStarter:
         self.logger_collection_constructable = logger_collection_constructable
 
     @staticmethod
-    def _create_gym(process_count: int, device_ids, log_std_to_file: bool) -> Gym:
-        gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
+    def _create_gym(process_count: int, device_ids, log_std_to_file: bool,
+                    logger_collection_constructable: MLgymStatusLoggerCollectionConstructable) -> Gym:
+        gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file,
+                  logger_collection_constructable=logger_collection_constructable)
         return gym
 
     @staticmethod
@@ -72,7 +74,8 @@ class MLGymStarter:
             self._save_gs_config(self.gs_config_path, self.dashify_logging_path, grid_search_id)
 
         self._setup_logging_environment(self.text_logging_path)
-        gym = MLGymStarter._create_gym(process_count=self.process_count, device_ids=self.gpus, log_std_to_file=self.log_std_to_file)
+        gym = MLGymStarter._create_gym(process_count=self.process_count, device_ids=self.gpus, log_std_to_file=self.log_std_to_file,
+                                       logger_collection_constructable=self.logger_collection_constructable)
         gs_config = YAMLConfigLoader.load(self.gs_config_path)
         if self.validation_mode == ValidationMode.NESTED_CV:
             self._save_evaluation_config(self.evaluation_config_path, self.dashify_logging_path, grid_search_id)

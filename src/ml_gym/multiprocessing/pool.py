@@ -17,9 +17,9 @@ class JobStatusLoggingSubscriber(JobStatusSubscriberIF):
         self._logger = logger
 
     def callback_job_event(self, job: Job):
-        parameter_keys = ["job_id", "job_type", "experiment_id", "status", "starting_time", "finishing_time", "error",
-                          "stacktrace", "device"]
-        representation = {key: val for key, val in vars(job).items() if key in parameter_keys}
+        representation = {"job_id": job.job_id, "job_type": job.job_type, "experiment_id": job.experiment_id, "status": job.status,
+                          "starting_time": job.starting_time, "finishing_time": job.finishing_time, "error": job.error,
+                          "stacktrace": job.stacktrace, "device": job.device}
         self._logger.log_job_status(**representation)
 
 
@@ -37,7 +37,8 @@ class Pool:
         self.job_collection = JobCollection()
         if logger_collection_constructable is not None:
             logger_collection = logger_collection_constructable.construct()
-            self.job_collection.add_subscriber(logger_collection)
+            subscriber = JobStatusLoggingSubscriber(logger_collection)
+            self.job_collection.add_subscriber(subscriber)
 
     def add_job(self, job: Job):
         self.job_q.put(job)
