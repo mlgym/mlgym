@@ -3,6 +3,7 @@ from ml_gym.models.nn.net import NNModel
 from dashify.logging.dashify_logging import ExperimentInfo
 from ml_gym.gym.evaluator import Evaluator
 from ml_gym.gym.trainer import Trainer
+from ml_gym.modes import RunMode
 from ml_gym.optimizers.optimizer import OptimizerAdapter
 import torch
 from ml_gym.gym.stateful_components import StatefulComponent
@@ -14,9 +15,6 @@ from ml_gym.util.logger import ConsoleLogger
 
 
 class AbstractGymJob(StatefulComponent):
-    class Mode(Enum):
-        EVAL = "eval"
-        TRAIN = "training"
 
     class Type(Enum):
         STANDARD = "standard"
@@ -53,7 +51,7 @@ class AbstractGymJob(StatefulComponent):
 
 class GymJob(AbstractGymJob):
 
-    def __init__(self, run_mode: AbstractGymJob.Mode.TRAIN, model: NNModel, optimizer: OptimizerAdapter, trainer: Trainer,
+    def __init__(self, run_mode: RunMode, model: NNModel, optimizer: OptimizerAdapter, trainer: Trainer,
                  evaluator: Evaluator, experiment_info: ExperimentInfo, epochs: List[int]):
         super().__init__(experiment_info)
         self.run_mode = run_mode
@@ -62,7 +60,7 @@ class GymJob(AbstractGymJob):
         self.epochs = epochs
         self.evaluator = evaluator
         self.trainer = trainer
-        self._execution_method = self._execute_train if run_mode == GymJob.Mode.TRAIN else self._execute_eval
+        self._execution_method = self._execute_eval if run_mode == RunMode.RE_EVAL else self._execute_train
 
     def _train_step(self, device: torch.device, epoch: int) -> NNModel:
         self.restore_state_in_stateful_components(epoch - 1)
@@ -88,11 +86,6 @@ class GymJob(AbstractGymJob):
         evaluation_result = self.evaluator.evaluate(self.model, device)
         DashifyWriter.log_measurement_result(evaluation_result, self._experiment_info, measurement_id=epoch)
 
-    # def _warmup(self, device: torch.device, measurement_id: int):
-    #     # self.evaluator.warm_up(self.model, device)
-    #     # self.trainer.warm_up(self.model, device)
-    #     self.save_state_of_stateful_components(measurement_id=measurement_id)
-
     def execute(self, device: torch.device):
         """ Executes the job
 
@@ -103,22 +96,25 @@ class GymJob(AbstractGymJob):
 
     def _execute_train(self, device: torch.device):
         trained_epochs = max(DashifyReader.get_last_epoch(self.experiment_info), 0)
-        if trained_epochs == 0:
+        self.trainer.set_num_epochs(num_epochs=self.epochs)
+        
+        if self.run_mode == RunMode.TRAIN:
             DashifyWriter.save_binary_state("model", self.model.state_dict(), self._experiment_info, 0)
             # we only register the model parameters here, so we can instantiate the internal optimizer within
             # OptimizerAdapter. Only then, we can retrieve the state_dict of the internal optimizer.
             self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
             DashifyWriter.save_binary_state("optimizer", self.optimizer.state_dict(), self._experiment_info, 0)
             self.save_state_of_stateful_components(0)
-        self.trainer.set_num_epochs(num_epochs=self.epochs)
+        elif self.run_mode == RunMode.WARM_START:
+            self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
+        
+        self._evaluation_step(device, epoch=trained_epochs)
         self.trainer.set_current_epoch(trained_epochs+1)
         while not self.trainer.is_done():
-            current_epoch = self.trainer.current_epoch
             # self.logger.log(LogLevel.DEBUG, "Executing evaluation step")
-            self._evaluation_step(device, current_epoch-1)
             # self.logger.log(LogLevel.DEBUG, "Executing training step")
-            self._train_step(device, epoch=current_epoch)
-        self._evaluation_step(device, current_epoch)
+            self._train_step(device, epoch=self.trainer.current_epoch)
+            self._evaluation_step(device, epoch=self.trainer.current_epoch-1)
 
     def _execute_eval(self, device: torch.device):
         for epoch in self.epochs:
@@ -127,7 +123,7 @@ class GymJob(AbstractGymJob):
 
 class GymJobLite(AbstractGymJob):
 
-    def __init__(self, run_mode: AbstractGymJob.Mode, model: NNModel, optimizer: OptimizerAdapter, trainer: Trainer,
+    def __init__(self, run_mode: RunMode, model: NNModel, optimizer: OptimizerAdapter, trainer: Trainer,
                  evaluator: Evaluator, experiment_info: ExperimentInfo, epochs: List[int]):
         super().__init__(experiment_info)
         self.run_mode = run_mode
@@ -137,7 +133,7 @@ class GymJobLite(AbstractGymJob):
         self.epochs = epochs
         self.evaluator = evaluator
         self.trainer = trainer
-        self._execution_method = self._execute_train if run_mode == GymJob.Mode.TRAIN else self._execute_eval
+        self._execution_method = self._execute_eval if run_mode == RunMode.RE_EVAL else self._execute_train
 
     def _train_step(self, device: torch.device, epoch: int) -> NNModel:
         # self.restore_state_in_stateful_components(measurement_id - 1)
@@ -148,10 +144,10 @@ class GymJobLite(AbstractGymJob):
         self.model = self.trainer.train_epoch(self.model, self.optimizer, device)
         return self.model
 
-    def _evaluation_step(self, device: torch.device, measurement_id: int):
+    def _evaluation_step(self, device: torch.device, epoch: int):
         self.model.to(device)
         evaluation_result = self.evaluator.evaluate(self.model, device)
-        DashifyWriter.log_measurement_result(evaluation_result, self._experiment_info, measurement_id=measurement_id)
+        DashifyWriter.log_measurement_result(evaluation_result, self._experiment_info, measurement_id=epoch)
 
     def execute(self, device: torch.device):
         """ Executes the job
@@ -185,7 +181,7 @@ class GymJobLite(AbstractGymJob):
 
 class GymJobFactory:
     @staticmethod
-    def get_gym_job(run_mode: AbstractGymJob.Mode, experiment_info: ExperimentInfo, epochs: List[int],
+    def get_gym_job(run_mode: RunMode, experiment_info: ExperimentInfo, epochs: List[int],
                     job_type: AbstractGymJob.Type = AbstractGymJob.Type.STANDARD, **components: Dict[str, Any]) -> AbstractGymJob:
         if job_type == AbstractGymJob.Type.LITE:
             return GymJobLite(run_mode=run_mode, experiment_info=experiment_info, epochs=epochs, **components)

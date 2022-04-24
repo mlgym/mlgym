@@ -2,15 +2,16 @@ from typing import Dict, Any, Type, List
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.gym import Gym
 from ml_gym.gym.jobs import AbstractGymJob
+from ml_gym.modes import RunMode
 from ml_gym.validation.validator import ValidatorIF
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.util.grid_search import GridSearch
 
 
 class GridSearchValidator(ValidatorIF):
-    def __init__(self, grid_search_id: str, re_eval: bool = False, keep_interim_results: bool = True):
+    def __init__(self, grid_search_id: str, run_mode: RunMode, keep_interim_results: bool = True):
         self.grid_search_id = grid_search_id
-        self.re_eval = re_eval
+        self.run_mode = run_mode
         self.keep_interim_results = keep_interim_results
 
     def create_blueprints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any],
@@ -21,7 +22,7 @@ class GridSearchValidator(ValidatorIF):
         blueprints = []
         for config_id, experiment_config in run_id_to_config_dict.items():
             blueprint = BluePrint.create_blueprint(blue_print_class=blue_print_type,
-                                                   run_mode=AbstractGymJob.Mode.TRAIN if not self.re_eval else AbstractGymJob.Mode.EVAL,
+                                                   run_mode=self.run_mode,
                                                    experiment_config=experiment_config,
                                                    dashify_logging_path=dashify_logging_path,
                                                    num_epochs=num_epochs,
