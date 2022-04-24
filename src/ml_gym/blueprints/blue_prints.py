@@ -3,6 +3,7 @@ from ml_gym.gym.jobs import GymJob
 from dashify.logging.dashify_logging import DashifyLogger, ExperimentInfo
 from ml_gym.gym.jobs import AbstractGymJob
 from typing import List, Type, Dict, Any
+import os
 
 
 class BluePrint(ABC):
@@ -23,6 +24,10 @@ class BluePrint(ABC):
         self.model_name = model_name
         self.dataset_name = dataset_name
         self.external_injection = external_injection if external_injection is not None else {}
+
+    def get_experiment_id(self) -> str:
+        # TODO normally this is handled within experiment_info. Needs to be refactored.
+        return os.path.join(self.grid_search_id, self.model_name, self.dataset_name, self.run_id)
 
     @abstractmethod
     def construct(self) -> GymJob:

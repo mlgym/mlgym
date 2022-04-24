@@ -16,10 +16,10 @@ class JobStatusLoggingSubscriber(JobStatusSubscriberIF):
     def __init__(self, logger: MLgymStatusLoggerIF):
         self._logger = logger
 
-    def callback_job_event(self, job: Job, model_id: str):
-        parameter_keys = ["job_id", "job_type", "status", "starting_time", "finishing_time", "error", "stacktrace", "device"]
+    def callback_job_event(self, job: Job):
+        parameter_keys = ["job_id", "job_type", "experiment_id", "status", "starting_time", "finishing_time", "error",
+                          "stacktrace", "device"]
         representation = {key: val for key, val in vars(job).items() if key in parameter_keys}
-        representation["model_id"] = model_id
         self._logger.log_job_status(**representation)
 
 
@@ -51,7 +51,7 @@ class Pool:
 
     def run(self):
         # we have to add the termination jobs at the end of the queue such that the processes stop working and don't get stuck in jobs_q.get()
-        termination_jobs = [Job(job_id=i+len(self.job_collection), fun=None, param_dict=None,
+        termination_jobs = [Job(job_id=i+len(self.job_collection), fun=None, blue_print=None, param_dict=None,
                                 job_type=JobType.TERMINATE) for i in range(self.num_processes)]
         self.add_jobs(termination_jobs)
         # create and start worker processes

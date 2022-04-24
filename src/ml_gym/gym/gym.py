@@ -1,3 +1,4 @@
+from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
 import torch
 from dashify.logging.dashify_logging import ExperimentTracking
 from typing import List
@@ -12,11 +13,12 @@ torch.multiprocessing.set_start_method('spawn', force=True)
 
 
 class Gym:
-    def __init__(self, process_count: int = 1, device_ids: List[int] = None, log_std_to_file: bool = True):
+    def __init__(self, process_count: int = 1, device_ids: List[int] = None, log_std_to_file: bool = True,
+                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None):
         self.devices = get_devices(device_ids)
+        self.logger_collection_constructable = logger_collection_constructable
         self.log_std_to_file = log_std_to_file
-        self.pool = Pool(num_processes=process_count, devices=self.devices,
-                         websocket_server_host="http://127.0.0.1", websocket_server_port=5000)
+        self.pool = Pool(num_processes=process_count, devices=self.devices, logger_collection_constructable=logger_collection_constructable)
         self.jobs: List[Job] = []
 
     def run(self, parallel=True):
@@ -33,7 +35,7 @@ class Gym:
             self.work(self.devices[0])
 
     def add_blue_print(self, blue_print: BluePrint):
-        job = Job(job_id=len(self.jobs), fun=Gym._run_job, param_dict={"blue_print": blue_print, "log_std_to_file": self.log_std_to_file})
+        job = Job(job_id=len(self.jobs), fun=Gym._run_job, blue_print=blue_print, param_dict={"log_std_to_file": self.log_std_to_file})
         self.jobs.append(job)
 
     def add_blue_prints(self, blue_prints: List[BluePrint]):

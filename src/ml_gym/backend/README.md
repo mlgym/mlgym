@@ -27,7 +27,7 @@ tracks the job status from within Pool.
         "job_id":1,
         "job_type": <CALC, TERMINATE>
         "status": <INIT, RUNNING, DONE>,
-        "model_id": <path_to_model>
+        "experiment_id": <path_to_model>
         "starting_time": 123,
         "finishing_time": 123,
         "error": "error message",
@@ -46,7 +46,7 @@ tracks the model training status from within GymJob.
     "event_type": "model_status",
     "creation_ts": "1",
     "payload": { 
-        "model_id": <path to model>,
+        "experiment_id": <path to model>,
         "status": <TRAINING, EVALUATING>,
         "current_epoch": 102,
         "splits": ["train", "val", "test"],
@@ -66,7 +66,7 @@ metric scores of a model at a specific epoch.
     "creation_ts": "1",
     "payload": {
         "epoch": 100,
-        "model_id": <path to model>,
+        "experiment_id": <path to model>,
         "metric_scores": [
             {
                 "metric": "f1_score", 
