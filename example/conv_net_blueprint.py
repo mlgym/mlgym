@@ -69,6 +69,5 @@ class ConvNetBluePrint(BluePrint):
         component_names = ["model", "trainer", "optimizer", "evaluator"]
         components = ConvNetBluePrint.construct_components(self.config, component_names, self.external_injection)
 
-        gym_job = GymJobFactory.get_gym_job(self.run_mode, job_type=self.job_type,
-                                            experiment_info=experiment_info, epochs=self.epochs, **components)
+        gym_job = GymJobFactory.get_gym_job(self.run_mode, job_type=self.job_type, experiment_info=experiment_info, epochs=self.epochs, **components)
         return gym_job

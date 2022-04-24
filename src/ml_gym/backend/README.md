@@ -86,3 +86,14 @@ metric scores of a model at a specific epoch.
     }
 }
 ```
+
+Implemenation idea: 
+
+Add subscribers to trainer, evaluator and gymjob. We need to inject them via 
+For trainer and evaluator we add the subribers within the blueprints. E.g., trainer.add_subscriber(subscriber)
+
+We add the subscriber constructble to the blueprint via the GridSearchValidator.create_blueprints().
+
+Subscriber constructable that we parameterize within the Gym and then pass down to trainer, evalautor via gymjob. The idea is that the constructable has a  unique inteface for construction and the constructed object always has the same interface for logging. Due to that we can implement various types of loggers (local, websocket etc.)
+
+

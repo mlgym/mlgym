@@ -1,6 +1,7 @@
 from typing import List, Type, Dict, Any
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.gym import Gym
+from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
 from ml_gym.validation.validator_factory import ValidatorFactory
 from datetime import datetime
 from ml_gym.util.logger import QueuedLogging
@@ -21,7 +22,8 @@ class MLGymStarter:
 
     def __init__(self, blue_print_class: Type[BluePrint], validation_mode: ValidationMode, num_epochs: int, dashify_logging_path: str,
                  gs_config_path: str, evaluation_config_path: str, text_logging_path: str, process_count: int,
-                 gpus: List[int], log_std_to_file: bool, grid_search_id: str = None, keep_interim_results: bool = True) -> None:
+                 gpus: List[int], log_std_to_file: bool, grid_search_id: str = None, keep_interim_results: bool = True,
+                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> None:
         self.blue_print_class = blue_print_class
         self.num_epochs = num_epochs
         self.validation_mode = validation_mode
@@ -34,9 +36,7 @@ class MLGymStarter:
         self.gs_config_path = gs_config_path
         self.grid_search_id = grid_search_id  # only set if we want to reevaluate a grid search
         self.keep_interim_results = keep_interim_results
-
-        # create MLgymLoggers
-        
+        self.logger_collection_constructable = logger_collection_constructable
 
     @staticmethod
     def _create_gym(process_count: int, device_ids, log_std_to_file: bool) -> Gym:

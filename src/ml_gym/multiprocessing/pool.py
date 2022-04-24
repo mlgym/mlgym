@@ -8,22 +8,24 @@ from ml_gym.multiprocessing.worker import WorkerProcessWrapper
 from ml_gym.util.logger import QueuedLogging
 from ml_gym.util.logger import LogLevel, QLogger
 from ml_gym.multiprocessing.job import JobStatus
-from ml_gym.persistency.logging import MLgymStatusLoggerIF
+from ml_gym.persistency.logging import MLgymStatusLoggerIF, MLgymStatusLoggerCollectionConstructable
 
 
-class WebsocketJobStatusSubscriber(JobStatusSubscriberIF):
+class JobStatusLoggingSubscriber(JobStatusSubscriberIF):
 
     def __init__(self, logger: MLgymStatusLoggerIF):
         self._logger = logger
 
-    def callback_job_event(self, job: Job):
+    def callback_job_event(self, job: Job, model_id: str):
         parameter_keys = ["job_id", "job_type", "status", "starting_time", "finishing_time", "error", "stacktrace", "device"]
         representation = {key: val for key, val in vars(job).items() if key in parameter_keys}
-        self._logger.log_raw_message(raw_log_message=representation)
+        representation["model_id"] = model_id
+        self._logger.log_job_status(**representation)
 
 
 class Pool:
-    def __init__(self, num_processes: int, devices: List[torch.device], max_jobs_per_process: int = 1, websocket_server_host: str = None, websocket_server_port: int = None):
+    def __init__(self, num_processes: int, devices: List[torch.device], max_jobs_per_process: int = 1,
+                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None):
         self.num_processes = num_processes
         self.job_q = Queue()
         self.job_update_q = Queue()
@@ -33,8 +35,9 @@ class Pool:
         self.logger: QLogger = QueuedLogging.get_qlogger("logger_pool")
         self.logger.log(LogLevel.INFO, f"Initialized to run jobs on: {self.devices}")
         self.job_collection = JobCollection()
-        # if websocket_server_host is not None and websocket_server_port is not None:
-        #     self.job_collection.add_subscriber(WebsocketJobStatusSubscriber(host=websocket_server_host, port=websocket_server_port))
+        if logger_collection_constructable is not None:
+            logger_collection = logger_collection_constructable.construct()
+            self.job_collection.add_subscriber(logger_collection)
 
     def add_job(self, job: Job):
         self.job_q.put(job)
