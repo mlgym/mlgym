@@ -5,7 +5,7 @@
 
 a python framework for distributed machine learning model training in research.
 
-[![CircleCI](https://circleci.com/gh/le1nux/mlgym.svg?style=svg)](https://circleci.com/gh/le1nux/mlgym)
+[![CircleCI](https://circleci.com/gh/mlgym/mlgym/tree/master.svg?style=svg)](https://circleci.com/gh/mlgym/mlgym/tree/master)
 
 At its core, MLgym offers functionality to run gridsearches of Pytorch models at scale split over multiple GPUs and centrally store the results using [DashifyML](https://github.com/dashifyML/dashifyML). 
 

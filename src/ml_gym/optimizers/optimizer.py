@@ -14,6 +14,7 @@ class OptimizerAdapter(object):
         self._state_dict = None
 
     def register_model_params(self, model_params: Dict, restore_state: bool = True):
+
         model_params_list = model_params.values()
         if not restore_state:
             self._optimizer = self._optimizer_class(**self._optimizer_params, params=model_params_list)
@@ -76,6 +77,10 @@ class OptimizerAdapter(object):
         if self._optimizer is None:
             raise OptimizerNotInitializedError("Internal optimizer was not instantiated. Has a model been registered for this optimizer?")
         self._optimizer.add_param_group(param_group)
+
+    @property
+    def param_groups(self):
+        return self._optimizer.param_groups
 
     def __deepcopy__(self, memo):
         cls = self.__class__
