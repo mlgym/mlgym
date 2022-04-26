@@ -5,6 +5,7 @@ from ml_gym.gym.jobs import AbstractGymJob
 from typing import List, Type, Dict, Any
 import os
 from ml_gym.modes import RunMode
+from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
 
 
 class BluePrint(ABC):
@@ -12,8 +13,9 @@ class BluePrint(ABC):
     """
 
     def __init__(self, run_mode: RunMode, job_type: AbstractGymJob.Type, model_name: str, dataset_name: str,  epochs: int,
-                 config: Dict[str, Any], dashify_logging_dir: str,
-                 grid_search_id: str, run_id: str, external_injection: Dict[str, Any] = None):
+                 config: Dict[str, Any], dashify_logging_dir: str, grid_search_id: str, run_id: str,
+                 external_injection: Dict[str, Any] = None,
+                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None):
 
         self.run_mode = run_mode
         self.job_type = job_type
@@ -25,6 +27,7 @@ class BluePrint(ABC):
         self.model_name = model_name
         self.dataset_name = dataset_name
         self.external_injection = external_injection if external_injection is not None else {}
+        self.logger_collection_constructable = logger_collection_constructable
 
     def get_experiment_id(self) -> str:
         # TODO normally this is handled within experiment_info. Needs to be refactored.
@@ -59,7 +62,8 @@ class BluePrint(ABC):
                          dashify_logging_path: str,
                          num_epochs: int,
                          grid_search_id: str,
-                         external_injection: Dict[str, Any] = None) -> List["BluePrint"]:
+                         external_injection: Dict[str, Any] = None,
+                         logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List["BluePrint"]:
 
         blue_print = blue_print_class(grid_search_id=grid_search_id,
                                       run_id=str(experiment_id),
@@ -68,5 +72,6 @@ class BluePrint(ABC):
                                       config=experiment_config,
                                       dashify_logging_dir=dashify_logging_path,
                                       external_injection=external_injection,
-                                      job_type=job_type)
+                                      job_type=job_type,
+                                      logger_collection_constructable=logger_collection_constructable)
         return blue_print
