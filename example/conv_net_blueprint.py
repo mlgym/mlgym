@@ -1,5 +1,6 @@
 from typing import Dict, List, Any
 from ml_gym.modes import RunMode
+from ml_gym.persistency.logging import ExperimentStatusLogger, MLgymStatusLoggerCollectionConstructable
 import torch
 from conv_net import ConvNet
 from ml_gym.blueprints.constructables import ModelRegistryConstructable
@@ -44,11 +45,12 @@ class MyModelRegistryConstructable(ModelRegistryConstructable):
 class ConvNetBluePrint(BluePrint):
     def __init__(self, run_mode: RunMode, job_type: AbstractGymJob.Type, config: Dict, epochs: int,
                  dashify_logging_dir: str, grid_search_id: str,
-                 run_id: str, external_injection: Dict[str, Any] = None):
+                 run_id: str, external_injection: Dict[str, Any] = None,
+                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None):
         model_name = "conv_net"
         dataset_name = ""
         super().__init__(run_mode, job_type, model_name, dataset_name, epochs, config, dashify_logging_dir, grid_search_id,
-                         run_id, external_injection)
+                         run_id, external_injection, logger_collection_constructable)
 
     @staticmethod
     def construct_components(config: Dict, component_names: List[str], external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -70,5 +72,12 @@ class ConvNetBluePrint(BluePrint):
         component_names = ["model", "trainer", "optimizer", "evaluator"]
         components = ConvNetBluePrint.construct_components(self.config, component_names, self.external_injection)
 
-        gym_job = GymJobFactory.get_gym_job(self.run_mode, job_type=self.job_type, experiment_info=experiment_info, epochs=self.epochs, **components)
+        logger_collection = self.logger_collection_constructable.construct()
+        experiment_status_logger = ExperimentStatusLogger(logger=logger_collection, experiment_id=self.get_experiment_id())
+
+        components["trainer"].set_experiment_status_logger(experiment_status_logger)
+        components["evaluator"].set_experiment_status_logger(experiment_status_logger)
+
+        gym_job = GymJobFactory.get_gym_job(self.run_mode, job_type=self.job_type, experiment_info=experiment_info,
+                                            epochs=self.epochs, **components)
         return gym_job

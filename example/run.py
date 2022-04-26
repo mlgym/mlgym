@@ -34,7 +34,8 @@ def parse_args():
     log_std_to_file = args.log_std_to_file
     evaluation_config_path = args.evaluation_config_path
     keep_interim_results = args.keep_interim_results
-    websocket_logging_servers = [(ip, int(port)) for ip, port in [connection.split(":") for connection in args.websocket_logging_servers]]
+    websocket_logging_servers = [(f"{protocol}:{ip}", int(port)) for protocol, ip, port in [
+        connection.split(":") for connection in args.websocket_logging_servers]]
     return num_epochs, validation_mode, run_mode, dashify_logging_path, text_logging_path, gs_config_path, evaluation_config_path, process_count, gpus, log_std_to_file, keep_interim_results, websocket_logging_servers
 
 
