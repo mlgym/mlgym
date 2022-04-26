@@ -46,6 +46,7 @@ class WebSocketServer:
 
     def _send_event_history_to_client(self, client_id: str, room_id: str):
         event_storage = self._room_id_to_event_storage[room_id]
+        print(f"=== WEBSOCKET SERVER LOG ===: Sending {len(event_storage)} old messages from room {room_id} to client {client_id}")
         for event_id, event in event_storage:
             emit('mlgym_event', {'event_id': event_id, 'data': event}, room=client_id)
 

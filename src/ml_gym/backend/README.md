@@ -43,18 +43,30 @@ tracks the model training status from within GymJob.
 
 ```json
 {
-    "event_type": "model_status",
+    "event_type": "experiment_status",
     "creation_ts": "1",
     "payload": { 
         "experiment_id": <path to model>,
         "status": <TRAINING, EVALUATING>,
+        "num_epochs": 200,
         "current_epoch": 102,
         "splits": ["train", "val", "test"],
         "current_split": "val",
-        "split_progress": 59
+        "num_batches": 1052,
+        "current_batch": 59
     }
 }
 ```
+
+Train neural network
+```
+for epoch in epochs:
+    for batch in batches of train split:
+        train(neural network on given batch)
+    
+    evaluate(neural network on all splits)
+```
+
 
 **Model Evaluation**:
 
@@ -77,7 +89,7 @@ metric scores of a model at a specific epoch.
         ],
         "loss_scores": [
             {
-                "metric": "bce_loss", 
+                "loss": "bce_loss", 
                 "split": "train",
                 "score": 0.1
             },
