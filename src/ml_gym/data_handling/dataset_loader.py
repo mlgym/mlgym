@@ -44,7 +44,7 @@ class SamplerFactory:
         Returns:
             [WeightedRandomSampler]: Instance of WeightedRandomSampler.
         """
-        rnd_generator = torch.Generator().manual_seed(seed) if seed is not None  else None
+        rnd_generator = torch.Generator().manual_seed(seed) if seed is not None else None
         # get the class weights
         target_counts = Counter([int(sample[label_pos]) for sample in dataset])  # uses generator expression
         target_tuples = [(k, v) for k, v in sorted(target_counts.items(), key=lambda item: item[0])]
@@ -55,18 +55,22 @@ class SamplerFactory:
 
     @staticmethod
     def get_random_sampler(dataset: InformedDatasetIteratorIF, seed: int = 0) -> Sampler:
-        rnd_generator = torch.Generator().manual_seed(seed) if seed is not None  else None
+        rnd_generator = torch.Generator().manual_seed(seed) if seed is not None else None
         return RandomSampler(data_source=dataset, generator=rnd_generator)
 
 
 class DatasetLoader(DataLoader):
-    def __init__(self, dataset_iterator: InformedDatasetIteratorIF, batch_size: int, sampler: Sampler, 
+    def __init__(self, dataset_iterator: InformedDatasetIteratorIF, batch_size: int, sampler: Sampler,
                  collate_fn: Collator = None, drop_last: bool = False):
         super().__init__(dataset=dataset_iterator, sampler=sampler, batch_size=batch_size, collate_fn=collate_fn, drop_last=drop_last)
 
     @property
     def dataset_name(self) -> str:
         return self.dataset.dataset_meta.dataset_name
+
+    @property
+    def dataset_tag(self) -> str:
+        return self.dataset.dataset_meta.dataset_tag
 
     @property
     def device(self) -> torch.device:
