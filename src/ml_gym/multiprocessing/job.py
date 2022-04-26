@@ -1,19 +1,8 @@
 from abc import abstractmethod
-from enum import IntEnum, Enum
 from ml_gym.blueprints.blue_prints import BluePrint
+from ml_gym.multiprocessing.states import JobStatus, JobType
 import torch
 from typing import Callable, Dict, List
-
-
-class JobType(IntEnum):
-    CALC = 1
-    TERMINATE = 2
-
-
-class JobStatus(str, Enum):
-    INIT = "INIT"
-    RUNNING = "RUNNING"
-    DONE = "DONE"
 
 
 class Job:

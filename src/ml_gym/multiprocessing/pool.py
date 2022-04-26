@@ -8,12 +8,12 @@ from ml_gym.multiprocessing.worker import WorkerProcessWrapper
 from ml_gym.util.logger import QueuedLogging
 from ml_gym.util.logger import LogLevel, QLogger
 from ml_gym.multiprocessing.job import JobStatus
-from ml_gym.persistency.logging import MLgymStatusLoggerIF, MLgymStatusLoggerCollectionConstructable
+from ml_gym.persistency.logging import JobStatusLogger, MLgymStatusLoggerCollectionConstructable
 
 
 class JobStatusLoggingSubscriber(JobStatusSubscriberIF):
 
-    def __init__(self, logger: MLgymStatusLoggerIF):
+    def __init__(self, logger: JobStatusLogger):
         self._logger = logger
 
     def callback_job_event(self, job: Job):
@@ -37,7 +37,8 @@ class Pool:
         self.job_collection = JobCollection()
         if logger_collection_constructable is not None:
             logger_collection = logger_collection_constructable.construct()
-            subscriber = JobStatusLoggingSubscriber(logger_collection)
+            job_status_logger = JobStatusLogger(logger=logger_collection)
+            subscriber = JobStatusLoggingSubscriber(job_status_logger)
             self.job_collection.add_subscriber(subscriber)
 
     def add_job(self, job: Job):
