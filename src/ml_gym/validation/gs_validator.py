@@ -1,10 +1,9 @@
 from typing import Dict, Any, Type, List
 from ml_gym.blueprints.blue_prints import BluePrint
-from ml_gym.gym.gym import Gym
 from ml_gym.gym.jobs import AbstractGymJob
 from ml_gym.modes import RunMode
+from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
 from ml_gym.validation.validator import ValidatorIF
-from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.util.grid_search import GridSearch
 
 
@@ -15,7 +14,8 @@ class GridSearchValidator(ValidatorIF):
         self.keep_interim_results = keep_interim_results
 
     def create_blueprints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any],
-                          num_epochs: int, dashify_logging_path: str) -> List[BluePrint]:
+                          num_epochs: int, dashify_logging_path: str,
+                          logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List[BluePrint]:
         run_id_to_config_dict = {run_id: config for run_id, config in enumerate(GridSearch.create_gs_from_config_dict(gs_config))}
         job_type = AbstractGymJob.Type.STANDARD if self.keep_interim_results else AbstractGymJob.Type.LITE
 
@@ -28,6 +28,7 @@ class GridSearchValidator(ValidatorIF):
                                                    num_epochs=num_epochs,
                                                    grid_search_id=self.grid_search_id,
                                                    experiment_id=config_id,
-                                                   job_type=job_type)
+                                                   job_type=job_type,
+                                                   logger_collection_constructable=logger_collection_constructable)
             blueprints.append(blueprint)
         return blueprints

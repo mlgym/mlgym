@@ -97,7 +97,7 @@ class GymJob(AbstractGymJob):
     def _execute_train(self, device: torch.device):
         trained_epochs = max(DashifyReader.get_last_epoch(self.experiment_info), 0)
         self.trainer.set_num_epochs(num_epochs=self.epochs)
-        
+
         if self.run_mode == RunMode.TRAIN:
             DashifyWriter.save_binary_state("model", self.model.state_dict(), self._experiment_info, 0)
             # we only register the model parameters here, so we can instantiate the internal optimizer within
@@ -107,7 +107,7 @@ class GymJob(AbstractGymJob):
             self.save_state_of_stateful_components(0)
         elif self.run_mode == RunMode.WARM_START:
             self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
-        
+
         self._evaluation_step(device, epoch=trained_epochs)
         self.trainer.set_current_epoch(trained_epochs+1)
         while not self.trainer.is_done():
@@ -144,9 +144,9 @@ class GymJobLite(AbstractGymJob):
         self.model = self.trainer.train_epoch(self.model, self.optimizer, device)
         return self.model
 
-    def _evaluation_step(self, device: torch.device, epoch: int):
+    def _evaluation_step(self, device: torch.device, epoch: int, num_epochs: int):
         self.model.to(device)
-        evaluation_result = self.evaluator.evaluate(self.model, device)
+        evaluation_result = self.evaluator.evaluate(self.model, device, epoch, num_epochs)
         DashifyWriter.log_measurement_result(evaluation_result, self._experiment_info, measurement_id=epoch)
 
     def execute(self, device: torch.device):
@@ -160,14 +160,15 @@ class GymJobLite(AbstractGymJob):
     def _execute_train(self, device: torch.device):
         trained_epochs = max(DashifyReader.get_last_epoch(self.experiment_info), 0)
         self.trainer.set_num_epochs(num_epochs=self.epochs)
+        self.evaluator.set_num_epochs(num_epochs=self.epochs)
         self.trainer.set_current_epoch(trained_epochs+1)
         while not self.trainer.is_done():
             current_epoch = self.trainer.current_epoch
             # self.logger.log(LogLevel.DEBUG, "Executing evaluation step")
-            self._evaluation_step(device, current_epoch-1)
+            self._evaluation_step(device, current_epoch-1, self.epochs)
             # self.logger.log(LogLevel.DEBUG, "Executing training step")
             model = self._train_step(device, epoch=current_epoch)
-        self._evaluation_step(device, current_epoch)
+        self._evaluation_step(device, current_epoch, self.epochs)
 
         # log the final model / training state
         DashifyWriter.save_binary_state("model", model.state_dict(), self._experiment_info, current_epoch)

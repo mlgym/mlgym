@@ -4,6 +4,7 @@ from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.jobs import AbstractGymJob
 from data_stack.dataset.splitter import SplitterFactory
 from ml_gym.modes import RunMode
+from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
 from ml_gym.validation.validator import ValidatorIF
 from ml_gym.blueprints.component_factory import Injector
 from ml_gym.util.grid_search import GridSearch
@@ -55,7 +56,8 @@ class CrossValidation(ValidatorIF):
         return splits
 
     def create_blue_prints(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type, gs_config: Dict[str, Any],
-                           num_epochs: int, dashify_logging_path: str) -> List[Type[BluePrint]]:
+                           num_epochs: int, dashify_logging_path: str,
+                           logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List[Type[BluePrint]]:
 
         run_id_to_config_dict = {run_id: config for run_id, config in enumerate(GridSearch.create_gs_from_config_dict(gs_config))}
 
@@ -79,17 +81,19 @@ class CrossValidation(ValidatorIF):
                                                 dashify_logging_path=dashify_logging_path,
                                                 num_epochs=num_epochs,
                                                 grid_search_id=self.grid_search_id,
-                                                experiment_id=experiment_id)
+                                                experiment_id=experiment_id,
+                                                logger_collection_constructable=logger_collection_constructable)
                 blueprints.append(bp)
                 experiment_id = experiment_id + 1
         return blueprints
 
-    def create_blueprints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any], num_epochs: int,
-                          dashify_logging_path: str) -> List[BluePrint]:
+    def create_blueprints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str,
+                          logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List[BluePrint]:
         job_type = AbstractGymJob.Type.STANDARD if self.keep_interim_results else AbstractGymJob.Type.LITE
         blueprints = self.create_blue_prints(blue_print_type=blue_print_type,
                                              gs_config=gs_config,
                                              dashify_logging_path=dashify_logging_path,
                                              num_epochs=num_epochs,
-                                             job_type=job_type)
+                                             job_type=job_type,
+                                             logger_collection_constructable=logger_collection_constructable)
         return blueprints
