@@ -104,7 +104,8 @@ class MLGymStarter:
         blueprints = nested_cv.create_blueprints(blue_print_type=self.blue_print_class,
                                                  gs_config=gs_config,
                                                  num_epochs=self.num_epochs,
-                                                 dashify_logging_path=self.dashify_logging_path)
+                                                 dashify_logging_path=self.dashify_logging_path,
+                                                 logger_collection_constructable=self.logger_collection_constructable)
         gym.add_blue_prints(blueprints)
         gym.run(parallel=True)
 
@@ -115,12 +116,13 @@ class MLGymStarter:
                                                                grid_search_id=grid_search_id,
                                                                blue_print_type=self.blue_print_class,
                                                                run_mode=run_mode,
-                                                               keep_interim_results=self.keep_interim_results)
+                                                               keep_interim_results=self.keep_interim_results,)
 
         blueprints = cross_validator.create_blueprints(blue_print_type=self.blue_print_class,
                                                        gs_config=gs_config,
                                                        num_epochs=self.num_epochs,
-                                                       dashify_logging_path=self.dashify_logging_path)
+                                                       dashify_logging_path=self.dashify_logging_path,
+                                                       logger_collection_constructable=self.logger_collection_constructable)
         gym.add_blue_prints(blueprints)
         gym.run(parallel=True)
 
@@ -131,6 +133,7 @@ class MLGymStarter:
         blueprints = gs_validator.create_blueprints(blue_print_type=self.blue_print_class,
                                                     gs_config=gs_config,
                                                     num_epochs=self.num_epochs,
-                                                    dashify_logging_path=self.dashify_logging_path)
+                                                    dashify_logging_path=self.dashify_logging_path,
+                                                    logger_collection_constructable=self.logger_collection_constructable)
         gym.add_blue_prints(blueprints)
         gym.run(parallel=True)

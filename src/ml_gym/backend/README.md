@@ -58,16 +58,6 @@ tracks the model training status from within GymJob.
 }
 ```
 
-Train neural network
-```
-for epoch in epochs:
-    for batch in batches of train split:
-        train(neural network on given batch)
-    
-    evaluate(neural network on all splits)
-```
-
-
 **Model Evaluation**:
 
 metric scores of a model at a specific epoch.
