@@ -2,6 +2,7 @@ from ml_gym.backend.messaging.events import Event
 from abc import ABC
 from typing import List, Tuple
 from ml_gym.error_handling.exception import EventStorageInvalidIndexingError
+from regex import R
 
 
 class EventStorageIF(ABC):
@@ -15,10 +16,16 @@ class EventStorageIF(ABC):
     def __iter__(self) -> Tuple[str, Event]:
         raise NotImplementedError
 
+    def __len__(self) -> int:
+        raise NotImplementedError
+
 
 class ListEventStorage(EventStorageIF):
     def __init__(self):
         self._storage: List[Event] = []
+
+    def __len__(self) -> int:
+        return len(self._storage)
 
     def add_event(self, event: Event):
         # TODO make this thing thread / multiprocessing safe
