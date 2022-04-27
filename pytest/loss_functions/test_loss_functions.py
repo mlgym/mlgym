@@ -98,7 +98,7 @@ class TestClassificationLossFunctions:
     @pytest.fixture
     def bce_with_logits_inference_batch_result(self) -> InferenceResultBatch:
         targets = torch.IntTensor([1, 1])  # [batch_size]
-        predictions = torch.FloatTensor([[10], [0]])
+        predictions = torch.FloatTensor([10, 0])
         return InferenceResultBatch(targets={TestClassificationLossFunctions.target_key: targets},
                                     predictions={TestClassificationLossFunctions.prediction_key: predictions},
                                     tags=None)
