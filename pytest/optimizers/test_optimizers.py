@@ -24,7 +24,6 @@ class TestOptimizerAdapter:
 
     @pytest.fixture
     def optimizer(self) -> OptimizerAdapter:
-        # optimizer_partial = partial(SGD, **{"lr": 1.0, "momentum": 0.9})
         optimizer = OptimizerAdapter(SGD, {"lr": 1.0, "momentum": 0.9})
         return optimizer
 
