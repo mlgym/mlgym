@@ -87,7 +87,7 @@ class JobStatusLogger:
 
     def log_job_status(self, job_id: int, job_type: JobType, status: JobStatus, experiment_id: str, starting_time: int, finishing_time: int,
                        device: torch.device, error: str = "", stacktrace: str = ""):
-        message = {"event_type": "evaluation_result", "creation_ts": get_timestamp()}
+        message = {"event_type": "job_status", "creation_ts": get_timestamp()}
         payload = {"job_id": job_id, "job_type": job_type.value, "status": status.value, "experiment_id": experiment_id,
                    "starting_time": starting_time, "finishing_time": finishing_time, "device": str(device), "error": error,
                    "stacktrace": stacktrace}
