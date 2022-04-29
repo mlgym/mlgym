@@ -29,14 +29,6 @@ class WebSocketServer:
         self._room_id_to_event_storage: Dict[str, EventStorageIF] = {"mlgym_event_subscribers": EventStorageFactory.get_list_event_storage()}
         self._init_call_backs()
 
-    # def _register_callback_funs(self):
-    #     self._socketio.on("join", self.on_join)
-    #     self._socketio.on("leave", self.on_leave)
-    #     self._socketio.on("mlgym_event", self.on_mlgym_event)
-    #     self._socketio.on("ping", self.on_ping)
-    #     self._socketio.on("client_connected", self.on_client_connected)
-    #     self._socketio.on("client_disconnected", self.on_client_disconnected)
-
     def emit_server_log_message(self, data):
         emit("server_log_message", data)
 
