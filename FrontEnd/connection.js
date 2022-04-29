@@ -1,5 +1,4 @@
 
-
 // Create WebSocket connection.
 const socket = new WebSocket('ws://localhost:3000');
 
@@ -10,7 +9,16 @@ socket.addEventListener('open', function (event) {
 
 // Listen for messages
 socket.addEventListener('message', function (event) {
-    console.log('Message from server ', event.data);
-    console.log(JSON.parse(event.data));
-
+  //  console.log('Message from server ', event.data);
+  //   const data = event.data;
 });
+
+socket.onmessage = function(event){
+  console.log(event.data);
+  const data = event.data;
+  return data
+}
+
+function startWebSocket(data){
+  $("#messages").append(data);
+}

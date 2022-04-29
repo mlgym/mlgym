@@ -2,12 +2,12 @@ const express = require('express')
 const app = express()
 const server = require('http').createServer(app);
 const WebSocket = require('ws');
-fs = require('fs'),
-JSONStream = require('JSONStream'),
-es = require('event-stream');
-
-
+const fs = require('fs');
 const wss = new WebSocket.Server({ server:server });
+const JSONStream = require('JSONStream');
+const es = require('event-stream');
+
+const websocketStream = require("websocket-stream");
 
 var getStream = function () {
     var jsonData = 'public/example.json',
@@ -15,27 +15,17 @@ var getStream = function () {
         parser = JSONStream.parse('*');
     return stream.pipe(parser);
 };
-
-getStream()
-    .pipe(es.mapSync(function (data) {
-        console.log(data);
-    }));
+//var json = {"event_id": 0, "data": {"event_type": "evaluation_result", "creation_ts": 1650878091595520, "payload": {"job_id": 0, "job_type": 1, "status": "INIT", "experiment_id": "2022-04-25--11-14-51/conv_net/0", "starting_time": -1, "finishing_time": -1, "device": "", "error": null, "stacktrace": null}}}
 
 wss.on('connection', function connection(ws) {
   console.log('A new client Connected!');
-  ws.send('Welcome New Client!');
-  ws.send(JSON.stringify(msg));
+  ws.send('Welcome New Client!\n');
+  ws.send('\n');
+  getStream()
+      .pipe(es.mapSync(function (data) {
+          ws.send(JSON.stringify(data) + "\n");
+      }));
 
-//to be deleted, clients do no send messages.
-  ws.on('message', function incoming(message) {
-    console.log('received: %s', message);
-
-    wss.clients.forEach(function each(client) {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(message);
-      }
-    });
-  });
 });
 
 app.get('/', (req, res) => res.send('Hello World!'))
