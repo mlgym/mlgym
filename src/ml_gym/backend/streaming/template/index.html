@@ -30,10 +30,14 @@
             // to the client. The data is then displayed in the "Received"
             // section of the page.
             socket.on('mlgym_event', function (msg, cb) {
-                $('#log').append('<br>' + $('<div/>').text('<mlgym_event>: ' + JSON.stringify(msg)).html());
+                msg_json = JSON.parse(msg)
+                msg_string = JSON.stringify(msg_json)
+
+                $('#log').append('<br>' + $('<div/>').text('<mlgym_event>: ' + msg_string).html());
                 if (cb)
                     cb();
             });
+
             socket.on('server_log_message', function (msg, cb) {
                 $('#log').append('<br>' + $('<div/>').text('<server_log_message>: ' + msg).html());
                 if (cb)
