@@ -22,7 +22,7 @@ class WebSocketServer:
         self._init_call_backs()
 
         # load the log file
-        with open(log_file_path, "r") as fp:
+        with open(log_file_path, encoding="utf-8") as fp:
             self.log_list = fp.readlines()
 
     def run(self, app: Flask):
