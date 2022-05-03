@@ -3,7 +3,7 @@ import pytest
 import torch
 from torch.nn import Module
 from torch.nn.parameter import Parameter
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 from torch.optim.sgd import SGD
 from functools import partial
 from copy import deepcopy
@@ -28,6 +28,27 @@ class TestOptimizerAdapter:
         return optimizer
 
     @pytest.fixture
+    def restore_state(self) -> bool:
+        return False
+
+    @pytest.fixture
+    def optimizer_state_dict(self, model, data_batch) -> Dict[str, Any]:
+        optimizer = OptimizerAdapter(SGD, {"lr": 1.0, "momentum": 0.9})
+        optimizer.register_model_params(model_params=dict(model.named_parameters()))
+        x, y = data_batch
+        loss_fn = torch.nn.MSELoss(reduction='sum')
+
+        optimizer.zero_grad()
+        output = model(x)
+        loss = loss_fn(output, y)
+        loss.backward()
+        optimizer.step()
+
+        optimizer_state_1 = deepcopy(optimizer.state_dict())
+
+        return optimizer_state_1
+
+    @pytest.fixture
     def data_batch(self) -> Tuple[torch.Tensor, torch.Tensor]:
         x = torch.randn(TestOptimizerAdapter.num_samples, TestOptimizerAdapter.input_size)
         y = torch.randn(TestOptimizerAdapter.num_samples, TestOptimizerAdapter.output_size)
@@ -36,6 +57,11 @@ class TestOptimizerAdapter:
     def test_register_model_params(self, optimizer: OptimizerAdapter, model):
         assert optimizer._optimizer is None
         optimizer.register_model_params(model_params=dict(model.named_parameters()))
+        assert len(optimizer._optimizer.param_groups) > 0
+
+    def test_register_model_params_restore_state(self, optimizer: OptimizerAdapter, model, restore_state):
+        assert optimizer._optimizer is None
+        optimizer.register_model_params(model_params=dict(model.named_parameters()), restore_state=restore_state)
         assert len(optimizer._optimizer.param_groups) > 0
 
     def test_optimizer_state_change(self, data_batch, model, optimizer: OptimizerAdapter):
@@ -62,7 +88,8 @@ class TestOptimizerAdapter:
         optimizer_state_2 = deepcopy(optimizer.state_dict())
 
         assert optimizer_state_0 != optimizer_state_1
-        assert (optimizer_state_1["state"][0]["momentum_buffer"] != optimizer_state_2["state"][0]["momentum_buffer"]).all()
+        assert (optimizer_state_1["state"][0]["momentum_buffer"] != optimizer_state_2["state"][0][
+            "momentum_buffer"]).all()
 
     def test_optimizer_state_recovery(self, data_batch, model, optimizer: OptimizerAdapter):
         optimizer.register_model_params(model_params=dict(model.named_parameters()))
@@ -78,6 +105,20 @@ class TestOptimizerAdapter:
 
         optimizer_state = deepcopy(optimizer.state_dict())
         optimizer.register_model_params(model_params=dict(model.named_parameters()))
-        assert optimizer.state_dict() != optimizer_state
+        assert optimizer.state_dict() == optimizer_state
         optimizer.load_state_dict(optimizer_state)
-        assert (optimizer.state_dict()["state"][0]["momentum_buffer"] == optimizer_state["state"][0]["momentum_buffer"]).all()
+        assert (optimizer.state_dict()["state"][0]["momentum_buffer"] == optimizer_state["state"][0][
+            "momentum_buffer"]).all()
+
+    def test_load_state_dict(self, optimizer: OptimizerAdapter, model, optimizer_state_dict):
+        assert optimizer._optimizer is None
+        optimizer.load_state_dict(state_dict=optimizer_state_dict)
+        assert optimizer.state_dict() == optimizer_state_dict
+
+        assert optimizer._optimizer is None
+        optimizer.register_model_params(model_params=dict(model.named_parameters()))
+        assert (optimizer._optimizer.state_dict()["state"][0]["momentum_buffer"] == optimizer.state_dict()["state"][0][
+            "momentum_buffer"]).all()
+        assert (optimizer.state_dict()["state"][0]["momentum_buffer"] == optimizer_state_dict["state"][0][
+            "momentum_buffer"]).all()
+        assert optimizer._state_dict is None
