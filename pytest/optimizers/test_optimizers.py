@@ -104,8 +104,8 @@ class TestOptimizerAdapter:
         optimizer.step()
 
         optimizer_state = deepcopy(optimizer.state_dict())
-        optimizer.register_model_params(model_params=dict(model.named_parameters()))
-        assert optimizer.state_dict() == optimizer_state
+        optimizer.register_model_params(model_params=dict(model.named_parameters()), restore_state=False)
+        assert optimizer.state_dict() != optimizer_state
         optimizer.load_state_dict(optimizer_state)
         assert (optimizer.state_dict()["state"][0]["momentum_buffer"] == optimizer_state["state"][0][
             "momentum_buffer"]).all()
