@@ -51,7 +51,7 @@ data_collator:
 
 data_loaders:
   component_type_key: DATA_LOADER
-  variant_key: DEFAULT
+  variant_key: FUTURE
   requirements:
     - name: iterators
       component_name: splitted_dataset_iterators
@@ -60,7 +60,16 @@ data_loaders:
       component_name: data_collator
   config:
     batch_size: 50
-    weigthed_sampling_split_name: null
+    sampling_strategies:
+      train: 
+        strategy: WEIGHTED_RANDOM
+        seed: 10
+      val: 
+        strategy: IN_ORDER
+        seed: 10
+      test: 
+        strategy: RANDOM
+        seed: 10
 
 model_registry:
   component_type_key: MODEL_REGISTRY

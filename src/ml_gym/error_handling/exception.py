@@ -74,3 +74,8 @@ class InvalidTensorFormatError(Exception):
 class OptimizerNotInitializedError(Exception):
     """Raised when we want to run an operation on an optimizer, which was not instantiated, yet."""
     pass
+
+
+class SamplerNotFoundError(Exception):
+    """Raised when the sampler implemenation for a given datsetloader was not found."""
+    pass

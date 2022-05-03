@@ -29,11 +29,12 @@ class BluePrint(ABC):
         raise NotImplementedError
 
     def get_experiment_info(self) -> ExperimentInfo:
-        experiment_info = DashifyLogger.create_new_experiment(log_dir=self.dashify_logging_dir,
-                                                              subfolder_id=self.grid_search_id,
-                                                              model_name=self.model_name,
-                                                              dataset_name=self.dataset_name,
-                                                              run_id=self.run_id)
+        experiment_info = DashifyLogger.get_experiment_info(log_dir=self.dashify_logging_dir,
+                                                            subfolder_id=self.grid_search_id,
+                                                            model_name=self.model_name,
+                                                            dataset_name=self.dataset_name,
+                                                            run_id=self.run_id)
+        DashifyLogger.save_experiment_info(experiment_info)
         DashifyLogger.save_config(config=self.config, experiment_info=experiment_info)
         return experiment_info
 

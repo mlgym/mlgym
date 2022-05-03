@@ -1,12 +1,12 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Union, Type
-from dashify.logging.dashify_logging import DashifyLogger
 from data_stack.dataset.iterator import DatasetIteratorIF
 from data_stack.repository.repository import DatasetRepository
 from abc import abstractmethod, ABC
 from data_stack.io.storage_connectors import StorageConnectorFactory
 from data_stack.mnist.factory import MNISTFactory
+from deprecated import deprecated
 from ml_gym.data_handling.dataset_loader import DatasetLoader, DatasetLoaderFactory
 from ml_gym.optimizers.optimizer_factory import OptimizerFactory
 from ml_gym.models.nn.net import NNModel
@@ -27,6 +27,7 @@ from data_stack.dataset.meta import MetaFactory
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 from functools import partial
 from ml_gym.loss_functions.loss_factory import LossFactory
+import warnings
 
 
 @dataclass
@@ -227,11 +228,30 @@ class DataCollatorConstructable(ComponentConstructable):
 
 
 @dataclass
-class DataLoadersConstructable(ComponentConstructable):
+class DeprecatedDataLoadersConstructable(ComponentConstructable):
     batch_size: int = 1
     weigthed_sampling_split_name: str = None
     label_pos: int = 2
     seeds: Dict[str, int] = field(default_factory=dict)
+    drop_last: bool = False
+
+    def _construct_impl(self) -> DatasetLoader:
+        warnings.warn(message="Future DataLoader interface change. Expects sampling strategy in the future.", category=FutureWarning)
+        dataset_iterators_dict = self.get_requirement("iterators")
+        collator: Collator = self.get_requirement("data_collator")
+        return DatasetLoaderFactory.get_splitted_data_loaders_deprecated(dataset_splits=dataset_iterators_dict,
+                                                                         batch_size=self.batch_size,
+                                                                         collate_fn=collator,
+                                                                         weigthed_sampling_split_name=self.weigthed_sampling_split_name,
+                                                                         label_pos=self.label_pos,
+                                                                         seeds=self.seeds,
+                                                                         drop_last=self.drop_last)
+
+
+@dataclass
+class DataLoadersConstructable(ComponentConstructable):
+    batch_size: int = 1
+    sampling_strategies: Dict[str, Any] = field(default_factory=dict)
     drop_last: bool = False
 
     def _construct_impl(self) -> DatasetLoader:
@@ -240,9 +260,7 @@ class DataLoadersConstructable(ComponentConstructable):
         return DatasetLoaderFactory.get_splitted_data_loaders(dataset_splits=dataset_iterators_dict,
                                                               batch_size=self.batch_size,
                                                               collate_fn=collator,
-                                                              weigthed_sampling_split_name=self.weigthed_sampling_split_name,
-                                                              label_pos=self.label_pos,
-                                                              seeds=self.seeds,
+                                                              sampling_strategies=self.sampling_strategies,
                                                               drop_last=self.drop_last)
 
 
