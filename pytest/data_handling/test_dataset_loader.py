@@ -46,7 +46,7 @@ class TestSamplerFactory:
         iterator_dict = {"random_split": iterator_train, "weighted_random_split": iterator_train, "in_order_split": iterator_train}
         sampling_strategies = {"random_split": {"strategy": "RANDOM", "seed": 10},
                                "weighted_random_split": {"strategy": "WEIGHTED_RANDOM", "seed": 15, "label_pos": 0},
-                               "in_order_split": {"strategy": "IN_ORDER", "seed": 10}
+                               "in_order_split": {"strategy": "IN_ORDER"}
                                }
         splitted_data_loaders = DatasetLoaderFactory.get_splitted_data_loaders(dataset_splits=iterator_dict,
                                                                                batch_size=1,

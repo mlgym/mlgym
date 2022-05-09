@@ -6,7 +6,6 @@ from data_stack.repository.repository import DatasetRepository
 from abc import abstractmethod, ABC
 from data_stack.io.storage_connectors import StorageConnectorFactory
 from data_stack.mnist.factory import MNISTFactory
-from deprecated import deprecated
 from ml_gym.data_handling.dataset_loader import DatasetLoader, DatasetLoaderFactory
 from ml_gym.optimizers.optimizer_factory import OptimizerFactory
 from ml_gym.models.nn.net import NNModel
