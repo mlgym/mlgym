@@ -10,18 +10,15 @@ import json
 class TestInjector:
     @pytest.fixture
     def example_config(self) -> Dict[str, Any]:
-        return YAMLConfigLoader.load(
-            os.path.join("pytest/blueprints/component_factory/example_config.yml"))
+        return YAMLConfigLoader.load("pytest/blueprints/component_factory/example_config.yml")
 
     @pytest.fixture
     def example_config_injected(self) -> Dict[str, Any]:
-        return YAMLConfigLoader.load(
-            os.path.join("pytest/blueprints/component_factory/example_config_injected.yml"))
+        return YAMLConfigLoader.load("pytest/blueprints/component_factory/example_config_injected.yml")
 
     @pytest.fixture
     def example_injection(self) -> Dict[str, Any]:
-        return YAMLConfigLoader.load(
-            os.path.join("pytest/blueprints/component_factory/example_injection.yml"))
+        return YAMLConfigLoader.load("pytest/blueprints/component_factory/example_injection.yml")
 
     def test_constructable(self, example_config: Dict[str, Any], example_config_injected: Dict[str, Any],
                            example_injection: Dict[str, Any]):

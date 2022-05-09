@@ -28,11 +28,12 @@ class TestOptimizerAdapter:
         return optimizer
 
     @pytest.fixture
-    def restore_state(self) -> bool:
+    def false_restore_state(self) -> bool:
         return False
 
     @pytest.fixture
     def optimizer_state_dict(self, model, data_batch) -> Dict[str, Any]:
+        # To have a state dict
         optimizer = OptimizerAdapter(SGD, {"lr": 1.0, "momentum": 0.9})
         optimizer.register_model_params(model_params=dict(model.named_parameters()))
         x, y = data_batch
@@ -59,9 +60,11 @@ class TestOptimizerAdapter:
         optimizer.register_model_params(model_params=dict(model.named_parameters()))
         assert len(optimizer._optimizer.param_groups) > 0
 
-    def test_register_model_params_restore_state(self, optimizer: OptimizerAdapter, model, restore_state):
-        assert optimizer._optimizer is None
-        optimizer.register_model_params(model_params=dict(model.named_parameters()), restore_state=restore_state)
+    def test_register_model_params_without_restore_state(self, optimizer: OptimizerAdapter, model, false_restore_state):
+        # If not restore_state,
+        # reinitialize the optimizer._optimizer with given model_params,
+        # no matter the optimizer._optimizer is None or not
+        optimizer.register_model_params(model_params=dict(model.named_parameters()), restore_state=false_restore_state)
         assert len(optimizer._optimizer.param_groups) > 0
 
     def test_optimizer_state_change(self, data_batch, model, optimizer: OptimizerAdapter):
@@ -111,12 +114,18 @@ class TestOptimizerAdapter:
             "momentum_buffer"]).all()
 
     def test_load_state_dict(self, optimizer: OptimizerAdapter, model, optimizer_state_dict):
+        # test when the optimizer._optimizer is None and self._state_dict is not None
+        # Firstly load state dict for optimizer, to make optimizer._state_dict not None
         assert optimizer._optimizer is None
         optimizer.load_state_dict(state_dict=optimizer_state_dict)
         assert optimizer.state_dict() == optimizer_state_dict
 
-        assert optimizer._optimizer is None
+        # initialize a optimizer._optimizer,
+        # it would load the state dict from optimizer._state_dict for optimizer._optimizer
+        assert optimizer._optimizer is None and optimizer._state_dict is not None
         optimizer.register_model_params(model_params=dict(model.named_parameters()))
+
+        # check if optimizer._optimizer.state_dict() same with the optimizer_state_dict
         assert (optimizer._optimizer.state_dict()["state"][0]["momentum_buffer"] == optimizer.state_dict()["state"][0][
             "momentum_buffer"]).all()
         assert (optimizer.state_dict()["state"][0]["momentum_buffer"] == optimizer_state_dict["state"][0][
