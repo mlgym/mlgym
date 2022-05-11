@@ -1,5 +1,5 @@
 import pytest
-from dashify.logging.dashify_logging import ExperimentInfo
+from dashify.logging.dashify_logging import ExperimentInfo, DashifyLogger
 from ml_gym.persistency.io import DashifyReader
 import os
 
