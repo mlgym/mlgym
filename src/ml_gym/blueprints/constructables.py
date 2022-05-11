@@ -59,7 +59,7 @@ class ComponentConstructable(ABC):
         return self.constructed
 
     @abstractmethod
-    def _construct_impl():
+    def _construct_impl(self):
         raise NotImplementedError
 
     def get_requirement(self, name: str) -> List[Any]:
