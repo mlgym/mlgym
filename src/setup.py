@@ -5,7 +5,7 @@ with open("../README.md", "r") as fh:
 
 setup(
     name='mlgym',
-    version='0.0.57',
+    version='0.0.59',
     author='Max Luebbering, Rajkumar Ramamurthy',
     description="MLgym, a python framework for distributed machine learning model training in research.",
     long_description=long_description,
@@ -24,5 +24,5 @@ setup(
         "scikit-learn"
     ],
     python_requires=">=3.7",
-    url="https://github.com/le1nux/mlgym"
+    url="https://github.com/mlgym/mlgym"
 )

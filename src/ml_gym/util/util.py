@@ -62,7 +62,11 @@ class ExportedModel:
 
     def predict_dataset_iterator(self, dataset_iterator: InformedDatasetIteratorIF,
                                  batch_size: int, collate_fn: Callable, no_grad: bool = True) -> InferenceResultBatch:
-        dataset_loader = DatasetLoaderFactory.get_splitted_data_loaders({"x": dataset_iterator}, batch_size=batch_size, collate_fn=collate_fn)["x"]
+        split_key = "dataset_split"
+        sampling_strategies = {split_key: {"strategy": "IN_ORDER"}}
+        dataset_loader = DatasetLoaderFactory.get_splitted_data_loaders({split_key: dataset_iterator}, batch_size=batch_size,
+                                                                        sampling_strategies=sampling_strategies,
+                                                                        collate_fn=collate_fn)[split_key]
         irb = self.predict_data_loader(dataset_loader=dataset_loader, no_grad=no_grad)
         return irb
 
@@ -72,7 +76,7 @@ class ExportedModel:
         return InferenceResultBatch.combine(result_batches)
 
     @staticmethod
-    def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str, device: torch.device = None ) -> "ExportedModel":
+    def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str, device: torch.device = None) -> "ExportedModel":
         return ExportedModel(model, post_processors, model_path, device=device)
 
 

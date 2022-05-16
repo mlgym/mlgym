@@ -46,6 +46,6 @@ For usage see this [example](https://github.com/le1nux/mlgym/tree/master/example
 
 ## Copyright
 
-Copyright (c) 2020 Max Lübbering, Rajkumar Ramamurthy
+Copyright (c) 2020 Max Lübbering
 
-For license see: https://github.com/le1nux/mlgym/blob/master/LICENSE
+For license see: https://github.com/mlgym/mlgym/blob/master/LICENSE
