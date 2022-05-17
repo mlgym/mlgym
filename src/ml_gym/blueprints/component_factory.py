@@ -1,10 +1,10 @@
 import copy
-from typing import Dict, Any, List, Optional, Type, Union
+from typing import Dict, Any, List, Type, Union
 from collections import namedtuple
 from dataclasses import dataclass, field
 from ml_gym.error_handling.exception import ComponentConstructionError, InjectMappingNotFoundError, DependentComponentNotFoundError
 from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIteratorConstructable, \
-    DatasetIteratorSplitsConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
+    DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
     OptimizerConstructable, ModelRegistryConstructable, ModelConstructable, LossFunctionRegistryConstructable, \
     MetricFunctionRegistryConstructable, TrainerConstructable, EvaluatorConstructable, MappedLabelsIteratorConstructable, \
     FilteredLabelsIteratorConstructable, FeatureEncodedIteratorConstructable, CombinedDatasetIteratorConstructable, \
@@ -92,7 +92,7 @@ class ComponentFactory:
 
             try:
                 constructable = self.constructables[variant_key]
-                component = constructable(component_identifier=component_name, requirements=requirements, **config).construct()
+                component = constructable(component_identifier=component_name, requirements=requirements, **copy.deepcopy(config)).construct()
             except Exception as e:
                 raise ComponentConstructionError(f"Error during component creation from {constructable}") from e
             return component
@@ -119,7 +119,8 @@ class ComponentFactory:
             ComponentVariant("MAPPED_LABELS_ITERATOR", "DEFAULT", MappedLabelsIteratorConstructable),
             ComponentVariant("DATA_COLLATOR", "DEFAULT", DataCollatorConstructable),
             ComponentVariant("FEATURE_ENCODED_ITERATORS", "DEFAULT", FeatureEncodedIteratorConstructable),
-            ComponentVariant("DATA_LOADER", "DEFAULT", DataLoadersConstructable),
+            ComponentVariant("DATA_LOADER", "DEFAULT", DeprecatedDataLoadersConstructable),
+            ComponentVariant("DATA_LOADER", "FUTURE", DataLoadersConstructable),
             ComponentVariant("OPTIMIZER", "DEFAULT", OptimizerConstructable),
             ComponentVariant("MODEL_REGISTRY", "DEFAULT", ModelRegistryConstructable),
             ComponentVariant("LOSS_FUNCTION_REGISTRY", "DEFAULT", LossFunctionRegistryConstructable),

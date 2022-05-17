@@ -41,14 +41,36 @@ class TestSamplerFactory:
         assert sample_weights[100] * 200 == 1
         assert sample_weights[300] * 300 == 1
 
-    def test_split_data_loaders(self, iterator_train: InformedDatasetIteratorIF, iterator_test: InformedDatasetIteratorIF):
+    def test_split_data_loaders(self, iterator_train: InformedDatasetIteratorIF):
         torch.manual_seed(0)
-        iterator_dict = {"train": iterator_train, "test": iterator_test}
-        splitted_data_loaders = DatasetLoaderFactory.get_splitted_data_loaders(
-            iterator_dict, batch_size=1, collate_fn=None, weigthed_sampling_split_name="train", label_pos=0)
-        train_samples = [int(i[0]) for i in splitted_data_loaders["train"]]
-        test_samples = [int(i[0]) for i in splitted_data_loaders["test"]]
-        assert len(train_samples) == len(iterator_train)
-        assert len(test_samples) == len(iterator_test)
-        assert Counter(train_samples) == {2: 218, 3: 192, 1: 190}
-        assert Counter(test_samples) == {2: 20, 3: 30, 1: 10}
+        iterator_dict = {"random_split": iterator_train, "weighted_random_split": iterator_train, "in_order_split": iterator_train}
+        sampling_strategies = {"random_split": {"strategy": "RANDOM", "seed": 10},
+                               "weighted_random_split": {"strategy": "WEIGHTED_RANDOM", "seed": 15, "label_pos": 0},
+                               "in_order_split": {"strategy": "IN_ORDER"}
+                               }
+        splitted_data_loaders = DatasetLoaderFactory.get_splitted_data_loaders(dataset_splits=iterator_dict,
+                                                                               batch_size=1,
+                                                                               collate_fn=None,
+                                                                               sampling_strategies=sampling_strategies)
+        
+        # iterate through all dataloaders 
+        random_samples = [int(i[0]) for i in splitted_data_loaders["random_split"]]
+        weighted_samples = [int(i[0]) for i in splitted_data_loaders["weighted_random_split"]]
+        in_order_samples = [int(i[0]) for i in splitted_data_loaders["in_order_split"]]
+
+        # make sure the number of samples matches the iterator length
+        assert len(random_samples) == len(iterator_train)
+        assert len(weighted_samples) == len(iterator_train)
+        assert len(in_order_samples) == len(iterator_train)
+
+        iterator_samples = [i[0] for i in iterator_train]
+        # make sure the in_order split is actually in order
+        assert in_order_samples == iterator_samples
+        # make sure that random sampler is not in order
+        assert random_samples != iterator_samples
+        # only the order should be different but not the number of samples (we don't resample, we just shuffle the order)
+        assert Counter(random_samples) == {2: 200, 3: 300, 1: 100}
+        # make sure that the each class has the same probability of being drawn
+        assert Counter(weighted_samples) == {3: 212, 2: 201, 1: 187}
+        
+
