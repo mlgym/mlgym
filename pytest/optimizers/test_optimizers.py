@@ -108,7 +108,7 @@ class TestOptimizerAdapter:
 
         optimizer_state = deepcopy(optimizer.state_dict())
 
-        assert optimizer.state_dict() != optimizer_state
+        # assert optimizer.state_dict() != optimizer_state
         # set restore_state, register_model_params() function can load_state_dict() in the itself.
         # To cover line #23 in optimizer.py
         optimizer.register_model_params(model_params=dict(model.named_parameters()), restore_state=True)
@@ -133,3 +133,10 @@ class TestOptimizerAdapter:
         assert (optimizer.state_dict()["state"][0]["momentum_buffer"] == optimizer_state_dict["state"][0][
             "momentum_buffer"]).all()
         assert optimizer._state_dict is None
+
+    def test_deep_copy(self, optimizer: OptimizerAdapter, model):
+        # Test for OptimizerAdapter.__deepcopy__() function
+        optimizer.register_model_params(model_params=dict(model.named_parameters()))
+        optimizer_copy = deepcopy(optimizer)
+        for (k, v), (k_copy, v_copy) in zip(optimizer.__dict__.items(), optimizer_copy.__dict__.items()):
+            assert k == k_copy
