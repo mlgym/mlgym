@@ -140,3 +140,10 @@ class TestOptimizerAdapter:
         optimizer_copy = deepcopy(optimizer)
         for (k, v), (k_copy, v_copy) in zip(optimizer.__dict__.items(), optimizer_copy.__dict__.items()):
             assert k == k_copy
+
+    def test_set_state(self, optimizer_state_dict, model):
+        # To test OptimizerAdapter.__setstate__()
+        optimizer = OptimizerAdapter(SGD, {"lr": 1.0, "momentum": 0.9})
+        optimizer.register_model_params(model_params=dict(model.named_parameters()))
+        optimizer.__setstate__(optimizer_state_dict)
+        assert optimizer.state_dict() == optimizer_state_dict
