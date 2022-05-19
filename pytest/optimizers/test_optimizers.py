@@ -107,9 +107,11 @@ class TestOptimizerAdapter:
         optimizer.step()
 
         optimizer_state = deepcopy(optimizer.state_dict())
-        optimizer.register_model_params(model_params=dict(model.named_parameters()), restore_state=False)
+
         assert optimizer.state_dict() != optimizer_state
-        optimizer.load_state_dict(optimizer_state)
+        # set restore_state, register_model_params() function can load_state_dict() in the itself.
+        # To cover line #23 in optimizer.py
+        optimizer.register_model_params(model_params=dict(model.named_parameters()), restore_state=True)
         assert (optimizer.state_dict()["state"][0]["momentum_buffer"] == optimizer_state["state"][0][
             "momentum_buffer"]).all()
 
