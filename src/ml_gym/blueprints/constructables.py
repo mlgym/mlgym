@@ -7,6 +7,7 @@ from abc import abstractmethod, ABC
 from data_stack.io.storage_connectors import StorageConnectorFactory
 from data_stack.mnist.factory import MNISTFactory
 from ml_gym.data_handling.dataset_loader import DatasetLoader, DatasetLoaderFactory
+from ml_gym.optimizers.optimizer import OptimizerAdapter, OptimizerBundle
 from ml_gym.optimizers.optimizer_factory import OptimizerFactory
 from ml_gym.models.nn.net import NNModel
 from collections.abc import Mapping
@@ -268,8 +269,29 @@ class OptimizerConstructable(ComponentConstructable):
     optimizer_key: str = ""
     params: Dict[str, Any] = field(default_factory=dict)
 
-    def _construct_impl(self):
+    def _construct_impl(self) -> OptimizerAdapter:
         return OptimizerFactory.get_optimizer(self.optimizer_key, self.params)
+
+
+@dataclass
+class OptimizerBundleConstructable(ComponentConstructable):
+
+    optimizers_config: Dict[str, Any] = field(default_factory=list)
+    # {
+    #     "o_1": {"optimizer_key": "ADAM", "params": {"lr": 1, "momentum": 0.9}},
+    #     "o_2": {"optimizer_key": "SGD", "params": {"lr": 2, "momentum": 0.8}}
+    # }
+
+    optimizer_key_to_param_key_filters: Dict[str, Any] = field(default_factory=dict)
+    # {
+    #     "o_1": ["encoder_1", "encoder_2"],
+    #     "o_2": ["bias"]
+    # }
+
+    def _construct_impl(self) -> OptimizerAdapter:
+        optimizers = {optimizer_id: OptimizerFactory.get_optimizer(**optimizer_config)
+                      for optimizer_id, optimizer_config in self.optimizers_config.items()}
+        return OptimizerBundle(optimizers=optimizers, optimizer_key_to_param_key_filters=self.optimizer_key_to_param_key_filters)
 
 
 @dataclass
