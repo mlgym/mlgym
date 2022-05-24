@@ -58,7 +58,6 @@ class ComponentRepresentation:
             f"component_type_key='{self.component_type_key}'," \
             f"variant_key='{self.variant_key}'," \
             f"config={str(self.config)}," \
-            f"hash='{self.hash}'," \
             f"requirements={self.requirements}])"
 
     def __repr__(self):
@@ -89,10 +88,12 @@ class ComponentFactory:
         def construct(self, variant_key: str, component_name: str, config: Dict[str, Any] = None, requirements: List[Any] = None):
             if config is None:
                 config = {}
-
+            constructable = None
             try:
                 constructable = self.constructables[variant_key]
                 component = constructable(component_identifier=component_name, requirements=requirements, **copy.deepcopy(config)).construct()
+            except KeyError as e:
+                raise ComponentConstructionError(f"Error: Could not find {variant_key}. Forgot to register?") from e
             except Exception as e:
                 raise ComponentConstructionError(f"Error during component creation from {constructable}") from e
             return component
@@ -208,8 +209,10 @@ class ComponentFactory:
                             for name, requirement in component_representation.requirements.items()}
             # build the requested component
             component_variants_registry = self.component_factory_registry[component_representation.component_type_key]
-            component = component_variants_registry.construct(
-                component_representation.variant_key, component_representation.name, component_representation.config, requirements)
+            try:
+                component = component_variants_registry.construct(component_representation.variant_key, component_representation.name, component_representation.config, requirements)
+            except ComponentConstructionError as cc_error:
+                raise ComponentConstructionError(f"Error constructing {component_representation}") from cc_error
             return component
 
         # calculate the dependency graph of components
