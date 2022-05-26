@@ -1,13 +1,13 @@
+![mlGym_logo](https://user-images.githubusercontent.com/47029859/148430747-eecca494-47b9-4ad0-9272-78da091a85f2.png)
 
-![mlGym_logo](https://user-images.githubusercontent.com/47029859/148429538-c15df7b3-5686-42e6-b143-603b239b7184.png)
 
-# MLgym 
+# MLgym
 
 a python framework for distributed machine learning model training in research.
 
 [![CircleCI](https://circleci.com/gh/le1nux/mlgym.svg?style=svg)](https://circleci.com/gh/le1nux/mlgym)
 
-At its core, MLgym offers functionality to run gridsearches of Pytorch models at scale split over multiple GPUs and centrally store the results using [DashifyML](https://github.com/dashifyML/dashifyML). 
+At its core, MLgym offers functionality to run gridsearches of Pytorch models at scale split over multiple GPUs and centrally store the results using [DashifyML](https://github.com/dashifyML/dashifyML).
 
 Futhermore, MLgym provides the following key features:
 
@@ -22,7 +22,7 @@ Futhermore, MLgym provides the following key features:
 
 * Reduced logging to reduce storage footprint of model and optimizer states
 
-**Please note, that at the moment this code should be treated as experimental and is not production ready.** 
+**Please note, that at the moment this code should be treated as experimental and is not production ready.**
 
 ## Install
 
@@ -30,7 +30,7 @@ there are two options to install MLgym, the easiest way is to install it from  t
 
 ```bash
 pip install mlgym
-``` 
+```
 
 For the latest version, one can directly install it from source by `cd` into the root folder and then running  
 
