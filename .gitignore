@@ -118,3 +118,4 @@ general_logs/
 */dashify_logs*
 dashify_logging
 general_logging
+.DS_Store
