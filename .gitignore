@@ -117,4 +117,4 @@ general_logs/
 */general_logging*
 */dashify_logs*
 dashify_logging
-general_logging
+general_logging.DS_Store
