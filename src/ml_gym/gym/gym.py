@@ -41,7 +41,7 @@ class Gym:
 
     @staticmethod
     def _run_job(blue_print: BluePrint, device: torch.device, log_std_to_file: bool) -> AbstractGymJob:
-        gym_job = AbstractGymJob.from_blue_print(blue_print)
+        gym_job = AbstractGymJob.from_blue_print(blue_print, device=device)
         decorated_runner = ExperimentTracking(gym_job.experiment_info, log_to_file=log_std_to_file)(partial(gym_job.execute, device=device))
         decorated_runner(device=device)
         return gym_job
