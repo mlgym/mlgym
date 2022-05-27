@@ -4,6 +4,8 @@ from dashify.logging.dashify_logging import DashifyLogger, ExperimentInfo
 from ml_gym.gym.jobs import AbstractGymJob
 from typing import List, Type, Dict, Any
 
+import torch
+
 
 class BluePrint(ABC):
     """ Abstract class that provides a blueprint for creating `AbstractGymJob`
@@ -25,7 +27,7 @@ class BluePrint(ABC):
         self.external_injection = external_injection if external_injection is not None else {}
 
     @abstractmethod
-    def construct(self) -> GymJob:
+    def construct(self, device: torch.device = None) -> GymJob:
         raise NotImplementedError
 
     def get_experiment_info(self) -> ExperimentInfo:
@@ -40,7 +42,8 @@ class BluePrint(ABC):
 
     @staticmethod
     @abstractmethod
-    def construct_components(config: Dict, component_names: List[str], external_injection: Dict[str, Any] = None) -> List[Any]:
+    def construct_components(config: Dict, component_names: List[str], device: torch.device,
+                             external_injection: Dict[str, Any] = None) -> List[Any]:
         return NotImplementedError
 
 
