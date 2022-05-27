@@ -39,8 +39,8 @@ class AbstractGymJob(StatefulComponent):
         raise NotImplementedError
 
     @staticmethod
-    def from_blue_print(blue_print) -> 'AbstractGymJob':
-        return blue_print.construct()
+    def from_blue_print(blue_print, device: torch.device) -> 'AbstractGymJob':
+        return blue_print.construct(device)
 
     def save_state_of_stateful_components(self, measurement_id: int):
         state = self.get_state()
@@ -105,8 +105,8 @@ class GymJob(AbstractGymJob):
         trained_epochs = max(DashifyReader.get_last_epoch(self.experiment_info), 0)
         if trained_epochs == 0:
             DashifyWriter.save_binary_state("model", self.model.state_dict(), self._experiment_info, 0)
-            # we only register the model parameters here, so we can instantiate the internal optimizer within 
-            # OptimizerAdapter. Only then, we can retrieve the state_dict of the internal optimizer. 
+            # we only register the model parameters here, so we can instantiate the internal optimizer within
+            # OptimizerAdapter. Only then, we can retrieve the state_dict of the internal optimizer.
             self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
             DashifyWriter.save_binary_state("optimizer", self.optimizer.state_dict(), self._experiment_info, 0)
             self.save_state_of_stateful_components(0)
