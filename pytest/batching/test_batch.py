@@ -1,3 +1,5 @@
+from typing import List, Union
+
 import pytest
 import torch
 from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch
@@ -12,12 +14,24 @@ class TestInferenceResultBatch:
         targets = torch.IntTensor([0, 0, 0, 1, 1, 1])
         tags = torch.IntTensor([0, 0, 0, 1, 1, 1])
         predictions = {"a": torch.FloatTensor([0, 0.1, 0.01, 0.9, 0.7, 1]),
-                       "b": {"b_1":  torch.FloatTensor([0, 0.1, 0.01, 0.9, 0.7, 1]),
-                             "b_2":  torch.FloatTensor([0, 0.1, 0.01, 0.9, 0.7, 1])}
+                       "b": {"b_1": torch.FloatTensor([0, 0.1, 0.01, 0.9, 0.7, 1]),
+                             "b_2": torch.FloatTensor([0, 0.1, 0.01, 0.9, 0.7, 1])}
                        }
         return InferenceResultBatch(targets={TestInferenceResultBatch.target_key: targets},
                                     predictions=predictions,
                                     tags=tags)
+
+    @pytest.fixture
+    def target_keys(self) -> List[str]:
+        return None
+
+    @pytest.fixture
+    def predictions_keys(self) -> List[Union[str, List]]:
+        return
+
+    @pytest.fixture
+    def device(self) -> torch.device:
+        return
 
     # test device operations
     def test_to_device(self, inference_batch_result: InferenceResultBatch):
@@ -32,6 +46,10 @@ class TestInferenceResultBatch:
 
     def test_detach(self, inference_batch_result: InferenceResultBatch):
         inference_batch_result.detach()
+
+    def test_split_results(self, target_keys, predictions_keys, device):
+
+        pass
 
 
 class TestDatasetBatch:
