@@ -2,7 +2,8 @@ import pytest
 from ml_gym.blueprints.constructables import DatasetIteratorConstructable, Requirement, \
     DatasetIteratorSplitsConstructable, \
     CombinedDatasetIteratorConstructable, FilteredLabelsIteratorConstructable, MappedLabelsIteratorConstructable, \
-    FeatureEncodedIteratorConstructable, IteratorViewConstructable, InMemoryDatasetIteratorConstructable
+    FeatureEncodedIteratorConstructable, IteratorViewConstructable, InMemoryDatasetIteratorConstructable, \
+    ShuffledDatasetIteratorConstructable
 import tempfile
 import shutil
 from data_stack.repository.repository import DatasetRepository
@@ -96,6 +97,39 @@ class TestInMemoryDatasetIteratorConstructable(IteratorFixtures):
 
         assert isinstance(iterator_train, InformedDatasetIterator)
         assert isinstance(iterator_test, InformedDatasetIterator)
+
+
+class TestShuffledDatasetIteratorConstructable(IteratorFixtures):
+    def test_constructable(self, informed_iterators):
+        applicable_splits = ["train", "test"]
+        seeds = {"train": 0, "test": 0}
+        requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"])}
+
+        # construct InMemoryDatasetIterator
+        constructable = InMemoryDatasetIteratorConstructable(component_identifier="memory_component",
+                                                             requirements=requirements)
+        iterators = constructable.construct()
+
+        sample, target, tag = iterators["train"][0]
+
+        # construct a ShuffledDatasetIterator
+        shuffled_constructable = ShuffledDatasetIteratorConstructable(component_identifier="shuffled_component",
+                                                                      requirements=requirements,
+                                                                      applicable_splits=applicable_splits,
+                                                                      seeds=seeds)
+
+        shuffled_iterators = shuffled_constructable.construct()
+
+        shuffled_sample, shuffled_target, shuffled_tag = shuffled_iterators["train"][0]
+
+        assert list(sample.shape) == [28, 28]
+        assert isinstance(target, int)
+
+        assert isinstance(shuffled_iterators["train"], InformedDatasetIterator)
+        assert isinstance(shuffled_iterators["test"], InformedDatasetIterator)
+
+        # assert if shuffled_sample != sample
+        assert (shuffled_sample != sample).any()
 
 
 class TestFilteredLabelsIteratorConstructable(IteratorFixtures):
