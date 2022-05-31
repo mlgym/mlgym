@@ -1,14 +1,17 @@
 import pytest
+import torch
 from ml_gym.blueprints.constructables import DatasetIteratorConstructable, Requirement, \
     DatasetIteratorSplitsConstructable, \
     CombinedDatasetIteratorConstructable, FilteredLabelsIteratorConstructable, MappedLabelsIteratorConstructable, \
     FeatureEncodedIteratorConstructable, IteratorViewConstructable, InMemoryDatasetIteratorConstructable, \
-    ShuffledDatasetIteratorConstructable, OneHotEncodedTargetsIteratorConstructable
+    ShuffledDatasetIteratorConstructable, OneHotEncodedTargetsIteratorConstructable, DataCollatorConstructable
 import tempfile
 import shutil
 from data_stack.repository.repository import DatasetRepository
-from typing import Dict
+from typing import Dict, List
 from data_stack.dataset.iterator import InformedDatasetIteratorIF, InformedDatasetIterator
+from ml_gym.data_handling.postprocessors.collator import Collator
+
 from mocked_classes import MockedMNISTFactory
 
 
@@ -37,6 +40,14 @@ class IteratorFixtures:
                                                      split_configs=[{"split": "train"}, {"split": "test"}])
         iterators = constructable.construct()
         return iterators
+
+    @pytest.fixture
+    def collator_type(self):
+        class MNISTCollator(Collator):
+            def __call__(self, batch: List[torch.Tensor]):
+                pass
+
+        return MNISTCollator
 
 
 class TestDatasetIteratorSplitsConstructable(IteratorFixtures):
@@ -213,6 +224,19 @@ class TestOneHotEncodedTargetsIteratorConstructable(IteratorFixtures):
         assert isinstance(target, int)
 
         assert isinstance(iterator_train_encoded, InformedDatasetIteratorIF)
+
+
+class TestDataCollatorConstructable(IteratorFixtures):
+    def test_constructable(self, informed_iterators, collator_type):
+        requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"])}
+        collator_params = {}
+        collator_type = collator_type
+        constructable = DataCollatorConstructable(component_identifier="one_hot_targets_component",
+                                                  requirements=requirements,
+                                                  collator_params=collator_params,
+                                                  collator_type=collator_type)
+        iterators = constructable.construct()
+        assert isinstance(iterators, collator_type)
 
 
 class TestIteratorViewConstructable(IteratorFixtures):
