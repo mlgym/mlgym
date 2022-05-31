@@ -5,7 +5,7 @@ from ml_gym.blueprints.constructables import DatasetIteratorConstructable, Requi
     CombinedDatasetIteratorConstructable, FilteredLabelsIteratorConstructable, MappedLabelsIteratorConstructable, \
     FeatureEncodedIteratorConstructable, IteratorViewConstructable, InMemoryDatasetIteratorConstructable, \
     ShuffledDatasetIteratorConstructable, OneHotEncodedTargetsIteratorConstructable, DataCollatorConstructable, \
-    DataLoadersConstructable
+    DataLoadersConstructable, OptimizerConstructable
 import tempfile
 import shutil
 from data_stack.repository.repository import DatasetRepository
@@ -13,6 +13,8 @@ from typing import Dict, List
 from data_stack.dataset.iterator import InformedDatasetIteratorIF, InformedDatasetIterator
 from ml_gym.data_handling.dataset_loader import SamplerFactory
 from ml_gym.data_handling.postprocessors.collator import Collator
+from ml_gym.optimizers.optimizer import OptimizerAdapter
+from torch.optim.sgd import SGD
 from torch.utils.data import RandomSampler, WeightedRandomSampler
 
 from mocked_classes import MockedMNISTFactory
@@ -271,6 +273,20 @@ class TestDataLoadersConstructable(IteratorFixtures):
         iterators = constructable.construct()
         assert isinstance(iterators["train"].sampler, RandomSampler)
         assert isinstance(iterators["test"].sampler, WeightedRandomSampler)
+
+
+class TestOptimizerConstructable(IteratorFixtures):
+
+    def test_constructable(self, informed_iterators):
+        optimizer_key = "SGD"
+        params = {"lr": 1.0, "momentum": 0.9}
+
+        constructable = OptimizerConstructable(optimizer_key=optimizer_key, params=params)
+        iterators = constructable.construct()
+
+        assert isinstance(iterators, OptimizerAdapter)
+        assert iterators._optimizer_class == SGD
+        assert iterators._optimizer_params == params
 
 
 class TestIteratorViewConstructable(IteratorFixtures):
