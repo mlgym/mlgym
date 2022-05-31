@@ -5,7 +5,8 @@ from ml_gym.blueprints.constructables import DatasetIteratorConstructable, Requi
     CombinedDatasetIteratorConstructable, FilteredLabelsIteratorConstructable, MappedLabelsIteratorConstructable, \
     FeatureEncodedIteratorConstructable, IteratorViewConstructable, InMemoryDatasetIteratorConstructable, \
     ShuffledDatasetIteratorConstructable, OneHotEncodedTargetsIteratorConstructable, DataCollatorConstructable, \
-    DataLoadersConstructable, OptimizerConstructable
+    DataLoadersConstructable, OptimizerConstructable, ModelRegistryConstructable, LossFunctionRegistryConstructable, \
+    MetricFunctionRegistryConstructable, PredictionPostProcessingRegistryConstructable
 import tempfile
 import shutil
 from data_stack.repository.repository import DatasetRepository
@@ -13,7 +14,10 @@ from typing import Dict, List
 from data_stack.dataset.iterator import InformedDatasetIteratorIF, InformedDatasetIterator
 from ml_gym.data_handling.dataset_loader import SamplerFactory
 from ml_gym.data_handling.postprocessors.collator import Collator
+from ml_gym.gym.post_processing import SoftmaxPostProcessorImpl, ArgmaxPostProcessorImpl, MaxOrMinPostProcessorImpl, \
+    SigmoidalPostProcessorImpl, BinarizationPostProcessorImpl, DummyPostProcessorImpl
 from ml_gym.optimizers.optimizer import OptimizerAdapter
+from ml_gym.registries.class_registry import ClassRegistry
 from torch.optim.sgd import SGD
 from torch.utils.data import RandomSampler, WeightedRandomSampler
 
@@ -63,6 +67,12 @@ class IteratorFixtures:
                                                   requirements=requirements,
                                                   collator_params=collator_params,
                                                   collator_type=collator_type)
+        iterators = constructable.construct()
+        return iterators
+
+    @pytest.fixture
+    def model_registry(self):
+        constructable = ModelRegistryConstructable()
         iterators = constructable.construct()
         return iterators
 
@@ -275,9 +285,9 @@ class TestDataLoadersConstructable(IteratorFixtures):
         assert isinstance(iterators["test"].sampler, WeightedRandomSampler)
 
 
-class TestOptimizerConstructable(IteratorFixtures):
+class TestOptimizerConstructable:
 
-    def test_constructable(self, informed_iterators):
+    def test_constructable(self):
         optimizer_key = "SGD"
         params = {"lr": 1.0, "momentum": 0.9}
 
@@ -287,6 +297,46 @@ class TestOptimizerConstructable(IteratorFixtures):
         assert isinstance(iterators, OptimizerAdapter)
         assert iterators._optimizer_class == SGD
         assert iterators._optimizer_params == params
+
+
+class TestModelRegistryConstructable:
+    def test_constructable(self):
+        constructable = ModelRegistryConstructable()
+        iterators = constructable.construct()
+        assert isinstance(iterators, ClassRegistry)
+
+
+class TestLossFunctionRegistryConstructable:
+    def test_constructable(self):
+        constructable = LossFunctionRegistryConstructable()
+        iterators = constructable.construct()
+        assert len(iterators._store) != 0
+
+
+class TestMetricFunctionRegistryConstructable:
+    def test_constructable(self):
+        constructable = MetricFunctionRegistryConstructable()
+        iterators = constructable.construct()
+        assert len(iterators._store) != 0
+
+
+class TestPredictionPostProcessingRegistryConstructable:
+    def test_constructable(self):
+        constructable = PredictionPostProcessingRegistryConstructable()
+        iterators = constructable.construct()
+        assert len(iterators._store) != 0
+        assert iterators[
+                   PredictionPostProcessingRegistryConstructable.FunctionKeys.SOFT_MAX] == SoftmaxPostProcessorImpl
+        assert iterators[PredictionPostProcessingRegistryConstructable.FunctionKeys.ARG_MAX] == ArgmaxPostProcessorImpl
+        assert iterators[
+                   PredictionPostProcessingRegistryConstructable.FunctionKeys.MIN_OR_MAX] == MaxOrMinPostProcessorImpl
+        assert iterators[
+                   PredictionPostProcessingRegistryConstructable.FunctionKeys.SIGMOIDAL] == SigmoidalPostProcessorImpl
+        assert iterators[
+                   PredictionPostProcessingRegistryConstructable.FunctionKeys.BINARIZATION] == BinarizationPostProcessorImpl
+        assert iterators[PredictionPostProcessingRegistryConstructable.FunctionKeys.DUMMY] == DummyPostProcessorImpl
+
+
 
 
 class TestIteratorViewConstructable(IteratorFixtures):
