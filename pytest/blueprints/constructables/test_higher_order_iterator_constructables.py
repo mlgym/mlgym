@@ -4,13 +4,16 @@ from ml_gym.blueprints.constructables import DatasetIteratorConstructable, Requi
     DatasetIteratorSplitsConstructable, \
     CombinedDatasetIteratorConstructable, FilteredLabelsIteratorConstructable, MappedLabelsIteratorConstructable, \
     FeatureEncodedIteratorConstructable, IteratorViewConstructable, InMemoryDatasetIteratorConstructable, \
-    ShuffledDatasetIteratorConstructable, OneHotEncodedTargetsIteratorConstructable, DataCollatorConstructable
+    ShuffledDatasetIteratorConstructable, OneHotEncodedTargetsIteratorConstructable, DataCollatorConstructable, \
+    DataLoadersConstructable
 import tempfile
 import shutil
 from data_stack.repository.repository import DatasetRepository
 from typing import Dict, List
 from data_stack.dataset.iterator import InformedDatasetIteratorIF, InformedDatasetIterator
+from ml_gym.data_handling.dataset_loader import SamplerFactory
 from ml_gym.data_handling.postprocessors.collator import Collator
+from torch.utils.data import RandomSampler, WeightedRandomSampler
 
 from mocked_classes import MockedMNISTFactory
 
@@ -48,6 +51,18 @@ class IteratorFixtures:
                 pass
 
         return MNISTCollator
+
+    @pytest.fixture
+    def data_collator(self, informed_iterators, collator_type):
+        requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"])}
+        collator_params = {}
+        collator_type = collator_type
+        constructable = DataCollatorConstructable(component_identifier="one_hot_targets_component",
+                                                  requirements=requirements,
+                                                  collator_params=collator_params,
+                                                  collator_type=collator_type)
+        iterators = constructable.construct()
+        return iterators
 
 
 class TestDatasetIteratorSplitsConstructable(IteratorFixtures):
@@ -237,6 +252,25 @@ class TestDataCollatorConstructable(IteratorFixtures):
                                                   collator_type=collator_type)
         iterators = constructable.construct()
         assert isinstance(iterators, collator_type)
+
+
+class TestDataLoadersConstructable(IteratorFixtures):
+    def test_constructable(self, informed_iterators, data_collator):
+        requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"]),
+                        "data_collator": Requirement(components=data_collator, subscription=["train", "test"])}
+        batch_size: int = 16
+        sampling_strategies = {'train': {"strategy": "RANDOM", "seed": 0},
+                               "test": {"strategy": "WEIGHTED_RANDOM", "label_pos": 2, "seed": 0}}
+        drop_last: bool = False
+        constructable = DataLoadersConstructable(component_identifier="data_loader_component",
+                                                 requirements=requirements,
+                                                 batch_size=batch_size,
+                                                 sampling_strategies=sampling_strategies,
+                                                 drop_last=drop_last
+                                                 )
+        iterators = constructable.construct()
+        assert isinstance(iterators["train"].sampler, RandomSampler)
+        assert isinstance(iterators["test"].sampler, WeightedRandomSampler)
 
 
 class TestIteratorViewConstructable(IteratorFixtures):
