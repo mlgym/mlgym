@@ -1,5 +1,6 @@
 from abc import ABC
 from typing import Dict, Any, List
+from ml_gym.error_handling.exception import StatefulComponentError
 
 
 class StatefulComponent(ABC):
@@ -11,18 +12,25 @@ class StatefulComponent(ABC):
         Args:
             state: state as nested dictionary
         """
+        state_keys = set(state.keys())
+
         for attr in dir(self):
             if attr.startswith('__'):
                 continue
             if self._is_stateful_attribute(attr):
                 attr_reference = getattr(self, attr)
                 attr_reference.set_state(state[str(attr)])
+                state_keys.remove(str(attr))
             elif self._is_list_attribute(attr) and str(attr) in state:
                 attr_reference = getattr(self, attr)
                 self._set_state_list_attribute(attr_reference, state[str(attr)])
+                state_keys.remove(str(attr))
             elif self._is_dict_attribute(attr) and str(attr) in state:
                 attr_reference = getattr(self, attr)
                 self._set_state_dict_attribute(attr_reference, state[attr])
+                state_keys.remove(str(attr))
+        if len(state_keys) > 0:
+            raise StatefulComponentError(f"Could not set the state for components {list(state_keys)}")
 
     def get_state(self) -> Dict[str, Any]:
         """ Returns the state of all attributes having type `StatefulComponent`
