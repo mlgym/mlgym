@@ -85,15 +85,14 @@ class DashifyReader:
         return True
 
     @staticmethod
-    def load_optimizer_state(experiment_info: ExperimentInfo, measurement_id: int) -> Dict:
-        optimizer_state = DashifyLogger.load_checkpoint_state_dict("optimizer", experiment_info, measurement_id)
-        return optimizer_state
+    def load_trainer_state(experiment_info: ExperimentInfo, measurement_id: int) -> Dict:
+        trainer_state = DashifyLogger.load_checkpoint_state_dict("trainer", experiment_info, measurement_id)
+        return trainer_state
 
     @staticmethod
-    def load_state(experiment_info: ExperimentInfo, measurement_id: int = 0) -> Dict[str, Any]:
-        file_name = f"state_{str(measurement_id)}.json"
-        data_dict = DashifyLogger.load_dict(file_name, experiment_info)
-        return data_dict
+    def load_state(key: str, experiment_info: ExperimentInfo, measurement_id: int) -> Dict[str, Any]:
+        state_dict = DashifyLogger.load_checkpoint_state_dict(key, experiment_info, measurement_id)
+        return state_dict
 
     @staticmethod
     def get_last_epoch(experiment_info: ExperimentInfo) -> int:
