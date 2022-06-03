@@ -79,3 +79,8 @@ class OptimizerNotInitializedError(Exception):
 class SamplerNotFoundError(Exception):
     """Raised when the sampler implemenation for a given datsetloader was not found."""
     pass
+
+
+class StatefulComponentError(Exception):
+    """Raised when the state of a stateful component could not be reconstructed or retrieved."""
+    pass

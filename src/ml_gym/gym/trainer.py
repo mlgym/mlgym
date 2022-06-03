@@ -1,10 +1,11 @@
 from abc import abstractmethod
 from typing import Dict, List, Callable, Any
+from ml_gym.gym.evaluator import EvalComponent
 from ml_gym.loss_functions.loss_functions import Loss
 from ml_gym.models.nn.net import NNModel
 from ml_gym.data_handling.dataset_loader import DatasetLoader
 import torch
-from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch
+from ml_gym.batching.batch import EvaluationBatchResult, InferenceResultBatch, DatasetBatch
 from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.gym.stateful_components import StatefulComponent
 from ml_gym.optimizers.optimizer import OptimizerAdapter
@@ -40,29 +41,6 @@ class TrainComponent(StatefulComponent):
                                      "optimizer": optimizer},
                          progress_info=f"Training {data_loader.dataset_name}  @epoch {epoch}")
         return model
-
-    # def warm_up(self, model: NNModel, data_loader: DatasetLoader, device: torch.device):
-    #     def init_loss(loss_fun: Loss, batch: InferenceResultBatch):
-    #         if isinstance(loss_fun, LossWarmupMixin):
-    #             loss_fun.warm_up(batch)
-    #             loss_fun.finish_warmup()
-
-    #     def check_if_initiable_component(loss_fun: Loss):
-    #         return isinstance(loss_fun, LossWarmupMixin)
-
-    #     if check_if_initiable_component(self.loss_fun):
-    #         self.logger.log(LogLevel.INFO, "Running warmup...")
-    #         with torch.no_grad():
-    #             prediction_batches = self.map_batches(fun=self.forward_batch,
-    #                                                   fun_params={"calculation_device": device, "model": model,
-    #                                                               "result_device": torch.device("cpu")},
-    #                                                   loader=data_loader,
-    #                                                   show_progress=self.show_progress)
-    #         # problem
-    #         prediction_batch = InferenceResultBatch.combine(prediction_batches)
-    #         init_loss(self.loss_fun, prediction_batch)
-    #     else:
-    #         self.logger.log(LogLevel.INFO, "Skipping training warmup. No special loss functions to be initialized.")
 
     def forward_batch(self, dataset_batch: DatasetBatch, model: NNModel, device: torch.device,) -> InferenceResultBatch:
         model = model.to(device)
@@ -104,12 +82,13 @@ class TrainerIF(StatefulComponent):
 
 
 class Trainer(TrainerIF):
-    def __init__(self, train_component: TrainComponent, train_loader: DatasetLoader, verbose=False):
+    def __init__(self, train_component: TrainComponent, train_loader: DatasetLoader, optimizer: OptimizerAdapter, verbose=False):
         self.train_component = train_component
         self.train_loader = train_loader
         self.verbose = verbose
         self.current_epoch = 1
         self.num_epochs = -1
+        self.optimizer = optimizer
 
     def is_done(self) -> bool:
         return self.current_epoch > self.num_epochs  # training starts at epoch 1, epoch 0 is just for evaluation, therefore >
@@ -120,12 +99,25 @@ class Trainer(TrainerIF):
     def set_current_epoch(self, epoch: int):
         self.current_epoch = epoch
 
-    # def warm_up(self, model: NNModel, device: torch.device):
-    #     self.train_component.warm_up(model, self.train_loader, device)
-
-    def train_epoch(self, model: NNModel, optimizer: OptimizerAdapter, device: torch.device) -> NNModel:
+    def train_epoch(self, model: NNModel, device: torch.device) -> NNModel:
+        # we can register the same model multile times. Each time we instantiate a new optimizer with the previous state and register the model params
+        # in the future we could improve this by checking if a model has been registered within the optimizer already. 
+        self.optimizer.register_model_params(dict(model.named_parameters()))
         if self.current_epoch > self.num_epochs:
             raise ModelAlreadyFullyTrainedError(f"Model has been already trained for {self.current_epoch}/{self.num_epochs} epochs.")
-        model = self.train_component.train_epoch(model, optimizer, self.train_loader, device, self.current_epoch)
+        model = self.train_component.train_epoch(model, self.optimizer, self.train_loader, device, self.current_epoch)
         self.current_epoch += 1
+        return model
+
+
+class ReduceLrOnPlateauScheduledTrainer(Trainer):
+    def __init__(self, train_component: TrainComponent, train_loader: DatasetLoader, eval_component: EvalComponent, verbose=False):
+        super().__init__(train_component=train_component, train_loader=train_loader, verbose=verbose)
+        self.eval_component = eval_component
+        self.lr_scheduler = ReduceLROnPlateau(optimizer, 'min')
+
+    def train_epoch(self, model: NNModel, optimizer: OptimizerAdapter, device: torch.device) -> NNModel:
+        model = super().train_component(model, optimizer, device)
+        eval_result_list: List[EvaluationBatchResult] = self.eval_component.evaluate(model, device)
+
         return model
