@@ -150,6 +150,8 @@ trainer:
     - name: data_loaders
       component_name: data_loaders
       subscription: train
+    - name: optimizer
+      component_name: optimizer
 
 eval_component:
   component_type_key: EVAL_COMPONENT
@@ -210,3 +212,17 @@ evaluator:
   requirements:
     - name: eval_component
       component_name: eval_component
+
+state_logging_criterion_strategy_registry:
+  component_type_key: STATE_LOGGING_CRITERION_STRATEGY_REGISTRY
+  variant_key: DEFAULT
+
+state_logging:
+  component_type_key: STATE_LOGGING
+  variant_key: DEFAULT
+  requirements:
+    - name: state_logging_criterion_strategy_registry
+      component_name: state_logging_criterion_strategy_registry
+  config:
+    strategy_config:
+      key: LOG_ALL
