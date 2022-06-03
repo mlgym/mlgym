@@ -67,7 +67,7 @@ class ConvNetBluePrint(BluePrint):
 
     def construct(self) -> 'AbstractGymJob':
         experiment_info = self.get_experiment_info()
-        component_names = ["model", "trainer", "evaluator", "state_logging"]
+        component_names = ["model", "trainer", "evaluator", "state_logging", "early_stopping"]
         components = ConvNetBluePrint.construct_components(self.config, component_names, self.external_injection)
 
         gym_job = GymJobFactory.get_gym_job(self.run_mode, job_type=self.job_type,

@@ -20,8 +20,8 @@ dataset_iterators:
   config:
     dataset_identifier: mnist
     split_configs:
-        - split: train 
-        - split: test
+      - split: train
+      - split: test
 
 splitted_dataset_iterators:
   component_type_key: SPLITTED_DATASET_ITERATORS
@@ -172,7 +172,7 @@ eval_component:
   config:
     cpu_target_subscription_keys:
       - *target_key_anchor
-    cpu_prediction_subscription_keys: 
+    cpu_prediction_subscription_keys:
       - *postprocessing_argmax_key_anchor
       - *model_prediction_key_anchor
     post_processors_config:
@@ -226,3 +226,18 @@ state_logging:
   config:
     strategy_config:
       key: LOG_ALL
+
+early_stopping_criterion_strategy_registry:
+  component_type_key: EARLY_STOPPING_CRITERION_STRATEGY_REGISTRY
+  variant_key: DEFAULT
+
+early_stopping:
+  component_type_key: EARLY_STOPPING
+  variant_key: DEFAULT
+  requirements:
+    - name: early_stopping_criterion_strategy_registry
+      component_name: early_stopping_criterion_strategy_registry
+  config:
+    strategy_config:
+      key: DUMMY_EARLY_STOPPING_AFTER_NUM_EPOCHS
+      num_epochs: 2
