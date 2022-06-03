@@ -6,7 +6,7 @@ from ml_gym.error_handling.exception import ComponentConstructionError, InjectMa
 from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIteratorConstructable, \
     DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
     OptimizerConstructable, ModelRegistryConstructable, ModelConstructable, LossFunctionRegistryConstructable, \
-    MetricFunctionRegistryConstructable, TrainerConstructable, EvaluatorConstructable, MappedLabelsIteratorConstructable, \
+    MetricFunctionRegistryConstructable, StateLoggingConstructable, StateLoggingCriterionStrategyRegistryConstructable, TrainerConstructable, EvaluatorConstructable, MappedLabelsIteratorConstructable, \
     FilteredLabelsIteratorConstructable, FeatureEncodedIteratorConstructable, CombinedDatasetIteratorConstructable, \
     DataCollatorConstructable, PredictionPostProcessingRegistryConstructable, TrainComponentConstructable, EvalComponentConstructable, \
     IteratorViewConstructable, OneHotEncodedTargetsIteratorConstructable, InMemoryDatasetIteratorConstructable, ShuffledDatasetIteratorConstructable
@@ -92,7 +92,8 @@ class ComponentFactory:
 
             try:
                 constructable = self.constructables[variant_key]
-                component = constructable(component_identifier=component_name, requirements=requirements, **copy.deepcopy(config)).construct()
+                component = constructable(component_identifier=component_name,
+                                          requirements=requirements, **copy.deepcopy(config)).construct()
             except Exception as e:
                 raise ComponentConstructionError(f"Error during component creation from {constructable}") from e
             return component
@@ -130,7 +131,10 @@ class ComponentFactory:
             ComponentVariant("TRAIN_COMPONENT", "DEFAULT", TrainComponentConstructable),
             ComponentVariant("TRAINER", "DEFAULT", TrainerConstructable),
             ComponentVariant("EVAL_COMPONENT", "DEFAULT", EvalComponentConstructable),
-            ComponentVariant("EVALUATOR", "DEFAULT", EvaluatorConstructable)
+            ComponentVariant("EVALUATOR", "DEFAULT", EvaluatorConstructable),
+            ComponentVariant("STATE_LOGGING_CRITERION_STRATEGY_REGISTRY", "DEFAULT", StateLoggingCriterionStrategyRegistryConstructable),
+            ComponentVariant("STATE_LOGGING", "DEFAULT", StateLoggingConstructable)
+
         ]
         self.component_factory_registry: Dict[str, Any] = {}
         for variant in default_component_variants:
@@ -199,7 +203,7 @@ class ComponentFactory:
             # build the requirements
             try:
                 requirement_components = {name: build_component(requirement.component_name, component_representation_graph, {})
-                                        for name, requirement in component_representation.requirements.items()}
+                                          for name, requirement in component_representation.requirements.items()}
             except DependentComponentNotFoundError as dcnf_error:
                 raise ComponentConstructionError(f"Error building requirements for component {component_name}.") from dcnf_error
 

@@ -7,9 +7,11 @@ from abc import abstractmethod, ABC
 from data_stack.io.storage_connectors import StorageConnectorFactory
 from data_stack.mnist.factory import MNISTFactory
 from ml_gym.data_handling.dataset_loader import DatasetLoader, DatasetLoaderFactory
+from ml_gym.optimizers.optimizer import OptimizerAdapter
 from ml_gym.optimizers.optimizer_factory import OptimizerFactory
 from ml_gym.models.nn.net import NNModel
 from collections.abc import Mapping
+from ml_gym.persistency.state_logging import LogAllCriterionStrategyImpl, StateLogging, StateLoggingCriterionStrategyIF, StateLoggingIF
 from ml_gym.registries.class_registry import ClassRegistry
 from ml_gym.gym.trainer import Trainer, TrainComponent, InferenceComponent
 from ml_gym.loss_functions.loss_functions import Loss
@@ -427,7 +429,8 @@ class TrainerConstructable(ComponentConstructable):
     def _construct_impl(self) -> Trainer:
         train_loader: DatasetLoader = self.get_requirement("data_loaders")
         train_component: TrainComponent = self.get_requirement("train_component")
-        trainer = Trainer(train_component=train_component, train_loader=train_loader, verbose=True)
+        optimizer: OptimizerAdapter = self.get_requirement("optimizer")
+        trainer = Trainer(train_component=train_component, train_loader=train_loader, optimizer=optimizer, verbose=True)
         return trainer
 
 
@@ -479,3 +482,30 @@ class EvaluatorConstructable(ComponentConstructable):
         eval_component: EvalComponent = self.get_requirement("eval_component")
         evaluator = Evaluator(eval_component)
         return evaluator
+
+
+@dataclass
+class StateLoggingCriterionStrategyRegistryConstructable(ComponentConstructable):
+    class StrategyKeys:
+        LOG_ALL = "LOG_ALL"
+
+    def _construct_impl(self):
+        state_logging_strategy_registry = ClassRegistry()
+        default_mapping: Dict[str, PredictPostProcessingIF] = {
+            StateLoggingCriterionStrategyRegistryConstructable.StrategyKeys.LOG_ALL: LogAllCriterionStrategyImpl,
+        }
+        for key, postprocessing_type in default_mapping.items():
+            state_logging_strategy_registry.add_class(key, postprocessing_type)
+        return state_logging_strategy_registry
+
+
+@dataclass
+class StateLoggingConstructable(ComponentConstructable):
+
+    strategy_config: Dict[str, Any] = field(default_factory=dict)
+
+    def _construct_impl(self) -> StateLoggingIF:
+        state_logging_strategy_registry: ClassRegistry = self.get_requirement("state_logging_criterion_strategy_registry")
+        strategy_impl = state_logging_strategy_registry.get_instance(**self.strategy_config)
+        state_logging = StateLogging(state_logging_criterion_strategy=strategy_impl)
+        return state_logging

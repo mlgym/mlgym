@@ -9,7 +9,7 @@ from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.gym.stateful_components import StatefulComponent
 from ml_gym.metrics.metrics import Metric
 from ml_gym.models.nn.net import NNModel
-from ml_gym.loss_functions.loss_functions import Loss, LossWarmupMixin
+from ml_gym.loss_functions.loss_functions import Loss
 import tqdm
 from ml_gym.util.logger import ConsoleLogger
 import numpy as np
@@ -69,25 +69,6 @@ class EvalComponent(EvalComponentIF):
         self.metrics_computation_config = None if metrics_computation_config is None else {m["metric_tag"]: m["applicable_splits"] for m in metrics_computation_config}
         # determines which losses are applied to which splits (loss_key to split list)
         self.loss_computation_config = None if loss_computation_config is None else {m["loss_tag"]: m["applicable_splits"] for m in loss_computation_config}
-
-    # def warm_up(self, model: NNModel, device: torch.device):
-    #     def init_loss_funs(batch: InferenceResultBatch):
-    #         for _, loss_fun in self.loss_funs.items():
-    #             if isinstance(loss_fun, LossWarmupMixin):
-    #                 loss_fun.warm_up(batch)
-    #                 loss_fun.finish_warmup()
-
-    #     if any([isinstance(loss_fun, LossWarmupMixin) for _, loss_fun in self.loss_funs.items()]):
-    #         self.logger.log(LogLevel.INFO, "Running warmup...")
-    #         prediction_batches = self.map_batches(fun=self.forward_batch,
-    #                                               fun_params={"calculation_device": device, "model": model,
-    #                                                           "result_device": torch.device("cpu")},
-    #                                               loader=self.dataset_loaders[self.train_split_name],
-    #                                               show_progress=self.show_progress)
-    #         prediction_batch = InferenceResultBatch.combine(prediction_batches)
-    #         init_loss_funs(prediction_batch)
-    #     else:
-    #         self.logger.log(LogLevel.INFO, "Skipping evaluation warmup. No special loss functions to be initialized.")
 
     def evaluate(self, model: NNModel, device: torch.device) -> List[EvaluationBatchResult]:
         return [self.evaluate_dataset_split(model, device, split_name, loader) for split_name, loader in self.dataset_loaders.items()]
