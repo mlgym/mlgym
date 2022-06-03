@@ -10,7 +10,7 @@ from ml_gym.modes import RunMode
 from abc import abstractmethod
 from ml_gym.models.nn.net import NNModel
 from dashify.logging.dashify_logging import ExperimentInfo
-from ml_gym.gym.evaluator import Evaluator
+from ml_gym.gym.evaluator import EarlyStoppingIF, Evaluator
 from ml_gym.gym.trainer import Trainer
 
 
@@ -52,7 +52,7 @@ class GymJob(AbstractGymJob):
 
     def __init__(self, run_mode: RunMode, model: NNModel, trainer: Trainer,
                  evaluator: Evaluator, experiment_info: ExperimentInfo, epochs: int,
-                 state_logging: StateLoggingIF):
+                 state_logging: StateLoggingIF, early_stopping: EarlyStoppingIF):
         super().__init__(experiment_info)
         self.run_mode = run_mode
         self.model = model
@@ -61,6 +61,7 @@ class GymJob(AbstractGymJob):
         self.trainer = trainer
         self._execution_method = self._execute_eval if run_mode == RunMode.RE_EVAL else self._execute_train
         self.state_logging = state_logging
+        self.early_stopping = early_stopping
 
     def _train_step(self, device: torch.device, epoch: int) -> NNModel:
         # self.restore_state_in_stateful_components(epoch - 1)
@@ -118,6 +119,11 @@ class GymJob(AbstractGymJob):
                                           experiment_info=self._experiment_info, epoch=current_epoch)
             # save results
             DashifyWriter.log_measurement_result(evaluation_result, self._experiment_info, measurement_id=current_epoch)
+
+            # check for early stopping criterion
+            if self.early_stopping is not None:
+                if self.early_stopping.is_stopping_criterion_fulfilled(eval_results=evaluation_result):
+                    break
 
     def _execute_eval(self, device: torch.device):
         for epoch in self.epochs:
