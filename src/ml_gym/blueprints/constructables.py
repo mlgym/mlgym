@@ -18,7 +18,7 @@ from ml_gym.loss_functions.loss_functions import Loss
 from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score, balanced_accuracy_score
 from ml_gym.metrics.metrics import Metric, binary_aupr_score, binary_auroc_score
 from ml_gym.metrics.metric_factory import MetricFactory
-from ml_gym.gym.evaluator import Evaluator, EvalComponent
+from ml_gym.gym.evaluator import DummyEarlyStoppingAfterNumEpochsCriterionStrategyImpl, EarlyStopping, EarlyStoppingCriterionStrategyIF, EarlyStoppingIF, Evaluator, EvalComponent
 from ml_gym.data_handling.postprocessors.factory import ModelGymInformedIteratorFactory
 from ml_gym.data_handling.postprocessors.collator import Collator
 from ml_gym.gym.post_processing import PredictPostProcessingIF, SoftmaxPostProcessorImpl, \
@@ -491,11 +491,11 @@ class StateLoggingCriterionStrategyRegistryConstructable(ComponentConstructable)
 
     def _construct_impl(self):
         state_logging_strategy_registry = ClassRegistry()
-        default_mapping: Dict[str, PredictPostProcessingIF] = {
+        default_mapping: Dict[str, StateLoggingCriterionStrategyIF] = {
             StateLoggingCriterionStrategyRegistryConstructable.StrategyKeys.LOG_ALL: LogAllCriterionStrategyImpl,
         }
-        for key, postprocessing_type in default_mapping.items():
-            state_logging_strategy_registry.add_class(key, postprocessing_type)
+        for key, strategy_type in default_mapping.items():
+            state_logging_strategy_registry.add_class(key, strategy_type)
         return state_logging_strategy_registry
 
 
@@ -509,3 +509,30 @@ class StateLoggingConstructable(ComponentConstructable):
         strategy_impl = state_logging_strategy_registry.get_instance(**self.strategy_config)
         state_logging = StateLogging(state_logging_criterion_strategy=strategy_impl)
         return state_logging
+
+
+@dataclass
+class EarlyStoppingCriterionStrategyRegistryConstructable(ComponentConstructable):
+    class StrategyKeys:
+        DUMMY_EARLY_STOPPING_AFTER_NUM_EPOCHS = "DUMMY_EARLY_STOPPING_AFTER_NUM_EPOCHS"
+
+    def _construct_impl(self):
+        early_stopping_strategy_registry = ClassRegistry()
+        default_mapping: Dict[str, EarlyStoppingCriterionStrategyIF] = {
+            EarlyStoppingCriterionStrategyRegistryConstructable.StrategyKeys.DUMMY_EARLY_STOPPING_AFTER_NUM_EPOCHS: DummyEarlyStoppingAfterNumEpochsCriterionStrategyImpl,
+        }
+        for key, strategy_type in default_mapping.items():
+            early_stopping_strategy_registry.add_class(key, strategy_type)
+        return early_stopping_strategy_registry
+
+
+@dataclass
+class EarlyStoppingConstructable(ComponentConstructable):
+
+    strategy_config: Dict[str, Any] = field(default_factory=dict)
+
+    def _construct_impl(self) -> EarlyStoppingIF:
+        early_stopping_strategy_registry: ClassRegistry = self.get_requirement("early_stopping_criterion_strategy_registry")
+        strategy_impl = early_stopping_strategy_registry.get_instance(**self.strategy_config)
+        early_stopping = EarlyStopping(early_stopping_criterion_strategy=strategy_impl)
+        return early_stopping

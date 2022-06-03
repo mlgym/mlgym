@@ -4,7 +4,7 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from ml_gym.error_handling.exception import ComponentConstructionError, InjectMappingNotFoundError, DependentComponentNotFoundError
 from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIteratorConstructable, \
-    DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
+    DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, EarlyStoppingConstructable, EarlyStoppingCriterionStrategyRegistryConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
     OptimizerConstructable, ModelRegistryConstructable, ModelConstructable, LossFunctionRegistryConstructable, \
     MetricFunctionRegistryConstructable, StateLoggingConstructable, StateLoggingCriterionStrategyRegistryConstructable, TrainerConstructable, EvaluatorConstructable, MappedLabelsIteratorConstructable, \
     FilteredLabelsIteratorConstructable, FeatureEncodedIteratorConstructable, CombinedDatasetIteratorConstructable, \
@@ -133,7 +133,9 @@ class ComponentFactory:
             ComponentVariant("EVAL_COMPONENT", "DEFAULT", EvalComponentConstructable),
             ComponentVariant("EVALUATOR", "DEFAULT", EvaluatorConstructable),
             ComponentVariant("STATE_LOGGING_CRITERION_STRATEGY_REGISTRY", "DEFAULT", StateLoggingCriterionStrategyRegistryConstructable),
-            ComponentVariant("STATE_LOGGING", "DEFAULT", StateLoggingConstructable)
+            ComponentVariant("STATE_LOGGING", "DEFAULT", StateLoggingConstructable),
+            ComponentVariant("EARLY_STOPPING_CRITERION_STRATEGY_REGISTRY", "DEFAULT", EarlyStoppingCriterionStrategyRegistryConstructable),
+            ComponentVariant("EARLY_STOPPING", "DEFAULT", EarlyStoppingConstructable)
 
         ]
         self.component_factory_registry: Dict[str, Any] = {}
