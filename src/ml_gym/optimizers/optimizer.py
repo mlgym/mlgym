@@ -1,10 +1,11 @@
+from ml_gym.gym.stateful_components import StatefulComponent
 from torch.optim.optimizer import Optimizer
 from typing import Dict, Any, Type
 from copy import deepcopy
 from ml_gym.error_handling.exception import OptimizerNotInitializedError
 
 
-class OptimizerAdapter(object):
+class OptimizerAdapter(StatefulComponent, object):
 
     def __init__(self, optimizer_class: Type[Optimizer], optimizer_params: Dict = None):
         self._optimizer_class = optimizer_class
@@ -13,7 +14,20 @@ class OptimizerAdapter(object):
         self._optimizer: Optimizer = None
         self._state_dict = None
 
-    def register_model_params(self, model_params: Dict, restore_state: bool=True):
+    def set_state(self, state: Dict[str, Any]):
+        """ Sets the the state of all attributes having type `StatefulComponent`
+        Args:
+            state: state as nested dictionary
+        """
+        self.load_state_dict(state)
+
+    def get_state(self) -> Dict[str, Any]:
+        """ Returns the state of all attributes having type `StatefulComponent`
+        Returns: state as nested dictionary
+        """
+        return self.state_dict()
+
+    def register_model_params(self, model_params: Dict, restore_state: bool = True):
         model_params_list = model_params.values()
         if not restore_state:
             self._optimizer = self._optimizer_class(**self._optimizer_params, params=model_params_list)
@@ -55,7 +69,6 @@ class OptimizerAdapter(object):
             return self._state_dict
         else:
             raise OptimizerNotInitializedError("Cannot access state_dict, because internal optimizer was not instantiated.")
-
 
     def load_state_dict(self, state_dict: Dict):
         if self._optimizer is not None:
