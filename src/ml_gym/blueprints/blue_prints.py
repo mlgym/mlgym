@@ -3,13 +3,14 @@ from ml_gym.gym.jobs import GymJob
 from dashify.logging.dashify_logging import DashifyLogger, ExperimentInfo
 from ml_gym.gym.jobs import AbstractGymJob
 from typing import List, Type, Dict, Any
+from ml_gym.modes import RunMode
 
 
 class BluePrint(ABC):
     """ Abstract class that provides a blueprint for creating `AbstractGymJob`
     """
 
-    def __init__(self, run_mode: AbstractGymJob.Mode, job_type: AbstractGymJob.Type, model_name: str, dataset_name: str,  epochs: int,
+    def __init__(self, run_mode: RunMode, job_type: AbstractGymJob.Type, model_name: str, dataset_name: str,  epochs: int,
                  config: Dict[str, Any], dashify_logging_dir: str,
                  grid_search_id: str, run_id: str, external_injection: Dict[str, Any] = None):
 
@@ -34,7 +35,8 @@ class BluePrint(ABC):
                                                             model_name=self.model_name,
                                                             dataset_name=self.dataset_name,
                                                             run_id=self.run_id)
-        DashifyLogger.save_experiment_info(experiment_info)
+        if self.run_mode == RunMode.TRAIN:
+            DashifyLogger.save_experiment_info(experiment_info)
         DashifyLogger.save_config(config=self.config, experiment_info=experiment_info)
         return experiment_info
 
@@ -45,7 +47,7 @@ class BluePrint(ABC):
 
 
 def create_blueprint(blue_print_class: Type[BluePrint],
-                     run_mode: AbstractGymJob.Mode,
+                     run_mode: RunMode,
                      job_type: AbstractGymJob.Type,
                      experiment_config: Dict[str, Any],
                      experiment_id: int,

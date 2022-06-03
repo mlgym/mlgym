@@ -1,23 +1,25 @@
+from ml_gym.persistency.state_logging import StateLoggingIF
+from ml_gym.util.logger import ConsoleLogger
+from typing import List, Dict, Any
+from enum import Enum
+from ml_gym.persistency.io import DashifyWriter
+from ml_gym.persistency.io import DashifyReader
+from ml_gym.gym.stateful_components import StatefulComponent
+import torch
+from ml_gym.optimizers.optimizer import OptimizerAdapter
+from ml_gym.modes import RunMode
 from abc import ABC, abstractmethod, abstractstaticmethod
 from ml_gym.batching.batch import EvaluationBatchResult
 from ml_gym.models.nn.net import NNModel
 from dashify.logging.dashify_logging import ExperimentInfo
 from ml_gym.gym.evaluator import Evaluator
 from ml_gym.gym.trainer import Trainer
-import torch
-from ml_gym.gym.stateful_components import StatefulComponent
-from ml_gym.persistency.io import DashifyReader
-from ml_gym.persistency.io import DashifyWriter
-from enum import Enum
-from typing import List, Dict, Any
-from ml_gym.util.logger import ConsoleLogger
-from ml_gym.persistency.state_logging import StateLoggingIF
+<< << << < HEAD
+== == == =
+>>>>>> > warm_start
 
 
 class AbstractGymJob(StatefulComponent):
-    class Mode(Enum):
-        EVAL = "eval"
-        TRAIN = "training"
 
     class Type(Enum):
         STANDARD = "standard"
@@ -62,7 +64,7 @@ class GymJob(AbstractGymJob):
         self.epochs = epochs
         self.evaluator = evaluator
         self.trainer = trainer
-        self._execution_method = self._execute_train if run_mode == GymJob.Mode.TRAIN else self._execute_eval
+        self._execution_method = self._execute_eval if run_mode == RunMode.RE_EVAL else self._execute_train
         self.state_logging = state_logging
 
     def _train_step(self, device: torch.device, epoch: int) -> NNModel:
@@ -187,7 +189,7 @@ class GymJob(AbstractGymJob):
 
 class GymJobFactory:
     @staticmethod
-    def get_gym_job(run_mode: AbstractGymJob.Mode, experiment_info: ExperimentInfo, epochs: List[int],
+    def get_gym_job(run_mode: RunMode, experiment_info: ExperimentInfo, epochs: List[int],
                     job_type: AbstractGymJob.Type = AbstractGymJob.Type.STANDARD, **components: Dict[str, Any]) -> AbstractGymJob:
         if job_type == AbstractGymJob.Type.STANDARD:
             return GymJob(run_mode=run_mode, experiment_info=experiment_info, epochs=epochs, **components)
