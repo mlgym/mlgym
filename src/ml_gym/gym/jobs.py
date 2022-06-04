@@ -103,6 +103,8 @@ class GymJob(AbstractGymJob):
             self.model.load_state_dict(model_state)
             trainer_state = self.state_logging.load_state(key="trainer", experiment_info=self._experiment_info, epoch=trained_epochs)
             self.trainer.set_state(trainer_state)
+            early_stopping_state = self.state_logging.load_state(key="early_stopping", experiment_info=self._experiment_info, epoch=trained_epochs)
+            self.early_stopping.set_state(early_stopping_state)
 
         self.trainer.set_num_epochs(num_epochs=self.epochs)
         self.trainer.set_current_epoch(trained_epochs+1)
@@ -124,6 +126,8 @@ class GymJob(AbstractGymJob):
             if self.early_stopping is not None:
                 if self.early_stopping.is_stopping_criterion_fulfilled(eval_results=evaluation_result):
                     break
+                self.state_logging.save_state(key="early_stopping", state_dict=self.early_stopping.get_state(), eval_results=evaluation_result,
+                                              experiment_info=self._experiment_info, epoch=current_epoch)
 
     def _execute_eval(self, device: torch.device):
         for epoch in self.epochs:

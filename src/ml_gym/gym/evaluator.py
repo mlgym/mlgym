@@ -143,7 +143,7 @@ class EvalComponent(EvalComponentIF):
         return loss
 
 
-class EarlyStoppingCriterionStrategyIF(ABC):
+class EarlyStoppingCriterionStrategyIF(StatefulComponent, ABC):
 
     @abstractmethod
     def is_stopping_criterion_fulfilled(self, eval_results: List[EvaluationBatchResult]) -> bool:
@@ -151,7 +151,7 @@ class EarlyStoppingCriterionStrategyIF(ABC):
 
 
 class DummyEarlyStoppingAfterNumEpochsCriterionStrategyImpl(EarlyStoppingCriterionStrategyIF):
-    def __init__(self, num_epochs: int) -> None:
+    def __init__(self, num_epochs: int):
         super().__init__()
         self.num_epochs = num_epochs
         self.trained_epochs = 0
@@ -160,8 +160,15 @@ class DummyEarlyStoppingAfterNumEpochsCriterionStrategyImpl(EarlyStoppingCriteri
         self.trained_epochs += 1
         return self.trained_epochs >= self.num_epochs
 
+    def set_state(self, state: Dict[str, Any]):
+        self.num_epochs = state["num_epochs"]
+        self.trained_epochs = state["trained_epochs"]
 
-class EarlyStoppingIF(ABC):
+    def get_state(self) -> Dict[str, Any]:
+        return {"num_epochs": self.num_epochs, "trained_epochs": self.trained_epochs}
+
+
+class EarlyStoppingIF(StatefulComponent, ABC):
 
     @abstractmethod
     def is_stopping_criterion_fulfilled(self, eval_results: List[EvaluationBatchResult]) -> bool:
