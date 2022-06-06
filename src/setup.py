@@ -21,7 +21,8 @@ setup(
         "datastack",
         "scipy",
         "dashifyML",
-        "scikit-learn"
+        "scikit-learn",
+        "deepspeed"
     ],
     python_requires=">=3.7",
     url="https://github.com/mlgym/mlgym"
