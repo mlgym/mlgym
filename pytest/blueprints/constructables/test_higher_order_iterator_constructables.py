@@ -1,25 +1,14 @@
 import pytest
-import torch
 from ml_gym.blueprints.constructables import DatasetIteratorConstructable, Requirement, \
     DatasetIteratorSplitsConstructable, \
     CombinedDatasetIteratorConstructable, FilteredLabelsIteratorConstructable, MappedLabelsIteratorConstructable, \
     FeatureEncodedIteratorConstructable, IteratorViewConstructable, InMemoryDatasetIteratorConstructable, \
-    ShuffledDatasetIteratorConstructable, OneHotEncodedTargetsIteratorConstructable, DataCollatorConstructable, \
-    DataLoadersConstructable, OptimizerConstructable, ModelRegistryConstructable, LossFunctionRegistryConstructable, \
-    MetricFunctionRegistryConstructable, PredictionPostProcessingRegistryConstructable
+    ShuffledDatasetIteratorConstructable, OneHotEncodedTargetsIteratorConstructable
 import tempfile
 import shutil
 from data_stack.repository.repository import DatasetRepository
-from typing import Dict, List
+from typing import Dict
 from data_stack.dataset.iterator import InformedDatasetIteratorIF, InformedDatasetIterator
-from ml_gym.data_handling.dataset_loader import SamplerFactory
-from ml_gym.data_handling.postprocessors.collator import Collator
-from ml_gym.gym.post_processing import SoftmaxPostProcessorImpl, ArgmaxPostProcessorImpl, MaxOrMinPostProcessorImpl, \
-    SigmoidalPostProcessorImpl, BinarizationPostProcessorImpl, DummyPostProcessorImpl
-from ml_gym.optimizers.optimizer import OptimizerAdapter
-from ml_gym.registries.class_registry import ClassRegistry
-from torch.optim.sgd import SGD
-from torch.utils.data import RandomSampler, WeightedRandomSampler
 
 from mocked_classes import MockedMNISTFactory
 
@@ -47,32 +36,6 @@ class IteratorFixtures:
                                                      requirements=repository_requirement,
                                                      dataset_identifier="mnist",
                                                      split_configs=[{"split": "train"}, {"split": "test"}])
-        iterators = constructable.construct()
-        return iterators
-
-    @pytest.fixture
-    def collator_type(self):
-        class MNISTCollator(Collator):
-            def __call__(self, batch: List[torch.Tensor]):
-                pass
-
-        return MNISTCollator
-
-    @pytest.fixture
-    def data_collator(self, informed_iterators, collator_type):
-        requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"])}
-        collator_params = {}
-        collator_type = collator_type
-        constructable = DataCollatorConstructable(component_identifier="one_hot_targets_component",
-                                                  requirements=requirements,
-                                                  collator_params=collator_params,
-                                                  collator_type=collator_type)
-        iterators = constructable.construct()
-        return iterators
-
-    @pytest.fixture
-    def model_registry(self):
-        constructable = ModelRegistryConstructable()
         iterators = constructable.construct()
         return iterators
 
@@ -236,107 +199,23 @@ class TestFeatureEncodedIteratorConstructable(IteratorFixtures):
         # print(DatasetIteratorReportGenerator.generate_report(iterator_train_encoded))
 
 
-# class TestOneHotEncodedTargetsIteratorConstructable(IteratorFixtures):
-#     def test_constructable(self, informed_iterators):
-#         requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"])}
-#         target_vector_size = 2
-#         constructable = OneHotEncodedTargetsIteratorConstructable(component_identifier="one_hot_targets_component",
-#                                                                   requirements=requirements,
-#                                                                   target_vector_size=target_vector_size,
-#                                                                   applicable_splits=["train"])
-#         iterators = constructable.construct()
-#         iterator_train_encoded = iterators["train"]
-#         sample, target, tag = iterator_train_encoded[0]
-#         assert list(sample.shape) == [28, 28]
-#         assert isinstance(target, int)
-#
-#         assert isinstance(iterator_train_encoded, InformedDatasetIteratorIF)
-
-
-class TestDataCollatorConstructable(IteratorFixtures):
-    def test_constructable(self, informed_iterators, collator_type):
+class TestOneHotEncodedTargetsIteratorConstructable(IteratorFixtures):
+    def test_constructable(self, informed_iterators):
         requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"])}
-        collator_params = {}
-        collator_type = collator_type
-        constructable = DataCollatorConstructable(component_identifier="one_hot_targets_component",
-                                                  requirements=requirements,
-                                                  collator_params=collator_params,
-                                                  collator_type=collator_type)
+        target_vector_size = 10
+        constructable = OneHotEncodedTargetsIteratorConstructable(component_identifier="one_hot_targets_component",
+                                                                  requirements=requirements,
+                                                                  target_vector_size=target_vector_size,
+                                                                  applicable_splits=["train"])
         iterators = constructable.construct()
-        assert isinstance(iterators, collator_type)
+        _, label, _ = informed_iterators["train"][0]
+        iterator_train_encoded = iterators["train"]
+        sample, target, tag = iterator_train_encoded[0]
+        assert list(sample.shape) == [28, 28]
+        assert len(target) == target_vector_size
+        assert target[int(label)] == 1
 
-
-class TestDataLoadersConstructable(IteratorFixtures):
-    def test_constructable(self, informed_iterators, data_collator):
-        requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"]),
-                        "data_collator": Requirement(components=data_collator, subscription=["train", "test"])}
-        batch_size: int = 16
-        sampling_strategies = {'train': {"strategy": "RANDOM", "seed": 0},
-                               "test": {"strategy": "WEIGHTED_RANDOM", "label_pos": 2, "seed": 0}}
-        drop_last: bool = False
-        constructable = DataLoadersConstructable(component_identifier="data_loader_component",
-                                                 requirements=requirements,
-                                                 batch_size=batch_size,
-                                                 sampling_strategies=sampling_strategies,
-                                                 drop_last=drop_last
-                                                 )
-        iterators = constructable.construct()
-        assert isinstance(iterators["train"].sampler, RandomSampler)
-        assert isinstance(iterators["test"].sampler, WeightedRandomSampler)
-
-
-class TestOptimizerConstructable:
-
-    def test_constructable(self):
-        optimizer_key = "SGD"
-        params = {"lr": 1.0, "momentum": 0.9}
-
-        constructable = OptimizerConstructable(optimizer_key=optimizer_key, params=params)
-        iterators = constructable.construct()
-
-        assert isinstance(iterators, OptimizerAdapter)
-        assert iterators._optimizer_class == SGD
-        assert iterators._optimizer_params == params
-
-
-class TestModelRegistryConstructable:
-    def test_constructable(self):
-        constructable = ModelRegistryConstructable()
-        iterators = constructable.construct()
-        assert isinstance(iterators, ClassRegistry)
-
-
-class TestLossFunctionRegistryConstructable:
-    def test_constructable(self):
-        constructable = LossFunctionRegistryConstructable()
-        iterators = constructable.construct()
-        assert len(iterators._store) != 0
-
-
-class TestMetricFunctionRegistryConstructable:
-    def test_constructable(self):
-        constructable = MetricFunctionRegistryConstructable()
-        iterators = constructable.construct()
-        assert len(iterators._store) != 0
-
-
-class TestPredictionPostProcessingRegistryConstructable:
-    def test_constructable(self):
-        constructable = PredictionPostProcessingRegistryConstructable()
-        iterators = constructable.construct()
-        assert len(iterators._store) != 0
-        assert iterators[
-                   PredictionPostProcessingRegistryConstructable.FunctionKeys.SOFT_MAX] == SoftmaxPostProcessorImpl
-        assert iterators[PredictionPostProcessingRegistryConstructable.FunctionKeys.ARG_MAX] == ArgmaxPostProcessorImpl
-        assert iterators[
-                   PredictionPostProcessingRegistryConstructable.FunctionKeys.MIN_OR_MAX] == MaxOrMinPostProcessorImpl
-        assert iterators[
-                   PredictionPostProcessingRegistryConstructable.FunctionKeys.SIGMOIDAL] == SigmoidalPostProcessorImpl
-        assert iterators[
-                   PredictionPostProcessingRegistryConstructable.FunctionKeys.BINARIZATION] == BinarizationPostProcessorImpl
-        assert iterators[PredictionPostProcessingRegistryConstructable.FunctionKeys.DUMMY] == DummyPostProcessorImpl
-
-
+        assert isinstance(iterator_train_encoded, InformedDatasetIteratorIF)
 
 
 class TestIteratorViewConstructable(IteratorFixtures):
