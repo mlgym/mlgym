@@ -91,7 +91,7 @@ class EvalComponentFixture(RegistryFixture, DataLoaderFixture):
         return train_component
 
 
-class TestTrainerConstructable(TrainComponentFixture):
+class TestTrainerConstructable(TrainComponentFixture, DataLoaderFixture):
     def test_constructable(self, data_loader, train_component):
         requirements = {
             "data_loaders": Requirement(components=data_loader),
