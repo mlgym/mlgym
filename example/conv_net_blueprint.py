@@ -49,10 +49,9 @@ class ConvNetBluePrint(BluePrint):
         super().__init__(run_mode, job_type, model_name, dataset_name, epochs, config, dashify_logging_dir, grid_search_id,
                          run_id, external_injection)
 
-    @staticmethod
-    def construct_components(config: Dict, component_names: List[str], external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
-        if external_injection is not None:
-            injection_mapping = {"id_conv_mnist_standard_collator": MNISTCollator, **external_injection}
+    def construct_components(self, component_names: List[str]) -> Dict[str, Any]:
+        if self.external_injection is not None:
+            injection_mapping = {"id_conv_mnist_standard_collator": MNISTCollator, **self.external_injection}
             injector = Injector(injection_mapping, raise_mapping_not_found=True)
 
         else:
@@ -61,13 +60,13 @@ class ConvNetBluePrint(BluePrint):
 
         component_factory = ComponentFactory(injector)
         component_factory.register_component_type("MODEL_REGISTRY", "DEFAULT", MyModelRegistryConstructable)
-        components = component_factory.build_components_from_config(config, component_names)
+        components = component_factory.build_components_from_config(self.config, component_names)
         return components
 
     def construct(self) -> 'AbstractGymJob':
         experiment_info = self.get_experiment_info()
         component_names = ["model", "trainer", "optimizer", "evaluator"]
-        components = ConvNetBluePrint.construct_components(self.config, component_names, self.external_injection)
+        components = self.construct_components(component_names)
 
         gym_job = GymJobFactory.get_gym_job(self.run_mode, job_type=self.job_type,
                                             experiment_info=experiment_info, epochs=self.epochs, **components)

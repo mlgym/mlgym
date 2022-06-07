@@ -38,9 +38,8 @@ class BluePrint(ABC):
         DashifyLogger.save_config(config=self.config, experiment_info=experiment_info)
         return experiment_info
 
-    @staticmethod
     @abstractmethod
-    def construct_components(config: Dict, component_names: List[str], external_injection: Dict[str, Any] = None) -> List[Any]:
+    def construct_components(component_names: List[str]) -> Dict[str, Any]:
         return NotImplementedError
 
 
