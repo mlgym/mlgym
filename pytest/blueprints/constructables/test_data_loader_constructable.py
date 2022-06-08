@@ -6,7 +6,7 @@ from ml_gym.blueprints.constructables import Requirement, DataCollatorConstructa
     DatasetIteratorConstructable, DeprecatedDataLoadersConstructable
 from ml_gym.data_handling.dataset_loader import DatasetLoader
 from ml_gym.data_handling.postprocessors.collator import Collator
-from torch.utils.data import RandomSampler, WeightedRandomSampler
+from torch.utils.data import RandomSampler, WeightedRandomSampler, SequentialSampler
 
 import torch
 from typing import List, Dict
@@ -73,8 +73,7 @@ class TestDataLoadersConstructable(CollatorFixture):
                                  ({'train': {"strategy": "RANDOM", "seed": 0}}, True, 16, RandomSampler),
                                  ({"train": {"strategy": "WEIGHTED_RANDOM", "label_pos": 2, "seed": 0}}, False, 32,
                                   WeightedRandomSampler),
-                                 pytest.param({"train": {"strategy": "IN_ORDER", "label_pos": 2, "seed": 0}}, True, 32,
-                                              None, marks=[pytest.mark.xfail]),
+                                 ({"train": {"strategy": "IN_ORDER"}}, True, 32, SequentialSampler),
                              ])
     def test_constructable(self, sampling_strategies, drop_last, batch_size, sampler_class, informed_iterators,
                            data_collator):
