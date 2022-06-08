@@ -47,9 +47,19 @@ class TestInferenceResultBatch:
     def test_detach(self, inference_batch_result: InferenceResultBatch):
         inference_batch_result.detach()
 
-    def test_split_results(self, target_keys, predictions_keys, device):
-
-        pass
+    @pytest.mark.parametrize("target_keys, predictions_keys, target_num, predictions_num",
+                             [
+                                 (["*"], ["*"], 0, 2),
+                                 (["target_key"], ["*"], 1, 2),
+                                 (["_____"], ["a", "b"], 0, 2),
+                                 (["target_key"], ["a", "b"], 1, 2),
+                                 pytest.param(["target_key"], ["_", "b"], 1, 1, marks=pytest.mark.xfail),
+                             ])
+    def test_split_results(self, inference_batch_result, target_keys, predictions_keys, target_num, predictions_num):
+        filtered_inference_batch_result = inference_batch_result.split_results(target_keys, predictions_keys,
+                                                                               torch.device("cpu"))
+        assert len(filtered_inference_batch_result.targets) == target_num
+        assert len(filtered_inference_batch_result.predictions) == predictions_num
 
 
 class TestDatasetBatch:
