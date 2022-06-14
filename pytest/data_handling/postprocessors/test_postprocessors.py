@@ -1,6 +1,72 @@
+import random
+import torch
 import pytest
 from typing import Tuple
-from ml_gym.data_handling.postprocessors.postprocessor import OneHotEncodedTargetPostProcessor, LabelMapperPostProcessor
+
+from data_stack.dataset.iterator import SequenceDatasetIterator, InformedDatasetIterator
+from data_stack.dataset.meta import IteratorMeta, DatasetMeta
+from ml_gym.data_handling.postprocessors.feature_encoder import CategoricalEncoder
+from ml_gym.data_handling.postprocessors.postprocessor import OneHotEncodedTargetPostProcessor, \
+    LabelMapperPostProcessor, FeatureEncoderPostProcessor
+
+
+class MockedIterator(SequenceDatasetIterator):
+
+    def __init__(self, num_samples: int = 500):
+        targets = [random.randint(0, 9) for _ in range(num_samples)]
+        samples = torch.randint(10, (num_samples, 50))
+        dataset_sequences = [samples, targets, targets]
+        super().__init__(dataset_sequences=dataset_sequences)
+
+
+class TestFeatureEncoderPostProcessor:
+    @pytest.fixture
+    def iterators(self):
+        iterator = MockedIterator()
+        iterator_meta = IteratorMeta(sample_pos=0, target_pos=1, tag_pos=2)
+        dataset_meta = DatasetMeta(identifier="identifier", dataset_name="dataset_name",
+                                   dataset_tag="dataset_tag", iterator_meta=iterator_meta)
+        iterator = InformedDatasetIterator(iterator, dataset_meta)
+        iterators = {"train": iterator, "test": iterator}
+        return iterators
+
+    @pytest.fixture
+    def sample(self, iterators):
+        return iterators["train"][0]
+
+    @pytest.fixture
+    def sample_position(self, iterators):
+        sample_position = iterators["train"].dataset_meta.sample_pos
+        return sample_position
+
+    @pytest.fixture
+    def custom_encoders(self):
+        custom_encoders = {"categorical2": CategoricalEncoder}
+        return custom_encoders
+
+    @pytest.mark.parametrize('sequential', [True, False])
+    def test_postprocess(self, iterators, sample_position, sample, custom_encoders, sequential):
+        feature_encoding_configs = [{"feature_type": "categorical", "feature_names": [0, 1, 2], "train_split": "train"}]
+
+        feature_encoder_post_processor = FeatureEncoderPostProcessor(sample_position=sample_position,
+                                                                     feature_encoding_configs=feature_encoding_configs,
+                                                                     custom_encoders=custom_encoders,
+                                                                     sequential=sequential
+                                                                     )
+        feature_encoder_post_processor.fit(iterators)
+
+        postprocess_sample = feature_encoder_post_processor.postprocess(sample=sample)
+
+        rep = feature_encoder_post_processor.get_output_pattern()
+        encoded_vector_length = 0
+        for index, encoder in feature_encoder_post_processor.encoders.items():
+            encoded_vector_length += encoder.get_output_size()
+
+        # the first three columns are encoded into three 10-dim vectors
+        assert len(postprocess_sample[0]) == len(sample[0]) - len(
+            feature_encoding_configs[0]["feature_names"]) + encoded_vector_length
+        # assert the first column are encoded into a 10 dim vector, the position of corresponding value is 1 (one-hot)
+        assert postprocess_sample[0][sample[0][0]] == 1
 
 
 class TestOneHotEncodedTargetPostProcessor:
