@@ -92,7 +92,7 @@ class TestOptimizerBundle:
         optimizer_bundle.step()
         optimizer_state_2 = deepcopy(optimizer_bundle.state_dict())
 
-        optimizer_bundle.zero_grad()
+        optimizer_bundle.zero_grad(optimizer_id="SGD")
         output = model(x)
         loss = loss_fn(output, y)
         loss.backward()
