@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
 import torch
-from src.ml_gym.data_handling.postprocessors.feature_encoder import ContinuousEncoder, CategoricalEncoder
-
+from ml_gym.data_handling.postprocessors.feature_encoder import ContinuousEncoder, CategoricalEncoder
 
 
 class TestCategoricalEncoder:
