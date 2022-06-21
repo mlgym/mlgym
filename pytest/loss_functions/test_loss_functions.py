@@ -1,7 +1,8 @@
 import pytest
 import torch
 from ml_gym.batching.batch import InferenceResultBatch
-from ml_gym.loss_functions.loss_functions import LPLoss, CrossEntropyLoss, NLLLoss, BCEWithLogitsLoss  # , LPLossScaled
+from ml_gym.loss_functions.loss_functions import LPLoss, CrossEntropyLoss, NLLLoss, BCEWithLogitsLoss, \
+    BCELoss  # , LPLossScaled
 import torch.nn as nn
 
 
@@ -13,15 +14,19 @@ class TestLPLossFunctions:
 
     @pytest.fixture
     def inference_batch_result_train(self) -> InferenceResultBatch:
-        targets = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size])*2  # [batch_size, sample_size]
-        predictions = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size])*3
-        return InferenceResultBatch(targets={TestLPLossFunctions.target_key: targets}, predictions={TestLPLossFunctions.prediction_key: predictions}, tags=None)
+        targets = torch.ones(
+            size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size]) * 2  # [batch_size, sample_size]
+        predictions = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size]) * 3
+        return InferenceResultBatch(targets={TestLPLossFunctions.target_key: targets},
+                                    predictions={TestLPLossFunctions.prediction_key: predictions}, tags=None)
 
     @pytest.fixture
     def inference_batch_result_test(self) -> InferenceResultBatch:
-        targets = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size])*2  # [batch_size, sample_size]
-        predictions = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size])*5
-        return InferenceResultBatch(targets={TestLPLossFunctions.target_key: targets}, predictions={TestLPLossFunctions.prediction_key: predictions}, tags=None)
+        targets = torch.ones(
+            size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size]) * 2  # [batch_size, sample_size]
+        predictions = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size]) * 5
+        return InferenceResultBatch(targets={TestLPLossFunctions.target_key: targets},
+                                    predictions={TestLPLossFunctions.prediction_key: predictions}, tags=None)
 
     @pytest.mark.parametrize("exponent,root, torch_loss_fun", [
         (2, 1, nn.MSELoss(reduction="sum")),  # squared L2 norm
@@ -31,7 +36,8 @@ class TestLPLossFunctions:
         targets = inference_batch_result_train.targets[TestLPLossFunctions.target_key]
         predictions = inference_batch_result_train.predictions[TestLPLossFunctions.prediction_key]
 
-        total_loss = (torch.sum((targets[0, :] - predictions[0, :]).abs()**exponent) ** (1/root)).sum()*TestLPLossFunctions.batch_size
+        total_loss = (torch.sum((targets[0, :] - predictions[0, :]).abs() ** exponent) ** (
+                1 / root)).sum() * TestLPLossFunctions.batch_size
         calc_loss = LPLoss(target_subscription_key=TestLPLossFunctions.target_key,
                            prediction_subscription_key=TestLPLossFunctions.prediction_key,
                            root=root,
@@ -49,7 +55,7 @@ class TestLPLossFunctions:
                           root=2,
                           exponent=2,
                           average_batch_loss=False,
-                          sample_selection_fun=lambda inference_batch_result:  mask)
+                          sample_selection_fun=lambda inference_batch_result: mask)
         assert len(loss_fun(inference_batch_result_train)) == sum(mask)
 
     # @pytest.mark.parametrize("exponent, root", [
@@ -103,6 +109,14 @@ class TestClassificationLossFunctions:
                                     predictions={TestClassificationLossFunctions.prediction_key: predictions},
                                     tags=None)
 
+    @pytest.fixture
+    def bce_loss_inference_batch_result(self) -> InferenceResultBatch:
+        targets = torch.IntTensor([1, 1])  # [batch_size]
+        predictions = torch.FloatTensor([1, 0])
+        return InferenceResultBatch(targets={TestClassificationLossFunctions.target_key: targets},
+                                    predictions={TestClassificationLossFunctions.prediction_key: predictions},
+                                    tags=None)
+
     def test_cross_entropy_loss(self, cross_entropy_inference_batch_result):
         ce_loss_fun = CrossEntropyLoss(target_subscription_key=TestLPLossFunctions.target_key,
                                        prediction_subscription_key=TestLPLossFunctions.prediction_key,
@@ -125,4 +139,10 @@ class TestClassificationLossFunctions:
         loss_fun = BCEWithLogitsLoss(target_subscription_key=TestLPLossFunctions.target_key,
                                      prediction_subscription_key=TestLPLossFunctions.prediction_key)
         loss = loss_fun(bce_with_logits_inference_batch_result)
+        assert True
+
+    def test_bce_loss(self, bce_loss_inference_batch_result):
+        loss_fun = BCELoss(target_subscription_key=TestLPLossFunctions.target_key,
+                           prediction_subscription_key=TestLPLossFunctions.prediction_key)
+        loss = loss_fun(bce_loss_inference_batch_result)
         assert True
