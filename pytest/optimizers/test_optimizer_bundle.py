@@ -8,7 +8,7 @@ from torch.optim import SGD
 from torch.optim.adam import Adam
 
 from test_optimizers import TestOptimizerAdapter
-from src.ml_gym.optimizers.optimizer import OptimizerBundle
+from ml_gym.optimizers.optimizer import OptimizerBundle
 import torch
 
 
