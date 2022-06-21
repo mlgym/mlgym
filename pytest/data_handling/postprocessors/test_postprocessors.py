@@ -1,9 +1,7 @@
-import random
-import torch
 import pytest
 from typing import Tuple
 
-from data_stack.dataset.iterator import SequenceDatasetIterator, InformedDatasetIterator
+from data_stack.dataset.iterator import InformedDatasetIterator
 from data_stack.dataset.meta import IteratorMeta, DatasetMeta
 from ml_gym.data_handling.postprocessors.feature_encoder import CategoricalEncoder
 from ml_gym.data_handling.postprocessors.postprocessor import OneHotEncodedTargetPostProcessor, \
