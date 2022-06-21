@@ -8,14 +8,7 @@ import torch
 from ml_gym.models.nn.net import NNModel
 from ml_gym.registries.class_registry import ClassRegistry
 
-
-class MockedNNModel(NNModel):
-    def __init__(self, seed, layer_config: Dict = None, prediction_publication_key: str = None):
-        super().__init__(seed=seed)
-        self.prediction_publication_key = prediction_publication_key
-
-    def forward_impl(self, inputs: torch.Tensor):
-        pass
+from mocked_classes import MockedNNModel
 
 
 class ModelFixtures:
@@ -54,9 +47,9 @@ class TestModelRegistryConstructable(ModelFixtures):
         assert model_registry._store["mocked_nn"] == mocked_nn_class
 
         # assert if it is able to get a model instance using model_registry
-        model_registry_instance = model_registry.get_instance("mocked_nn", seed=seed, layer_config=layer_config,
-                                                              prediction_publication_key=prediction_publication_key)
-        assert isinstance(model_registry_instance, mocked_nn_class)
+        model = model_registry.get_instance("mocked_nn", seed=seed, layer_config=layer_config,
+                                            prediction_publication_key=prediction_publication_key)
+        assert isinstance(model, mocked_nn_class)
 
 
 class TestModelConstructable(ModelFixtures):

@@ -13,7 +13,7 @@ from typing import List, Dict
 import tempfile
 import shutil
 
-from mocked_classes import MockedMNISTFactory
+from mocked_classes import MockedMNISTFactory, MockedCollator
 
 
 class IteratorFixtures:
@@ -46,12 +46,6 @@ class IteratorFixtures:
 class CollatorFixture(IteratorFixtures):
     @pytest.fixture
     def collator_type(self):
-        class MockedCollator(Collator):
-            target_publication_key: str = None
-
-            def __call__(self, batch: List[torch.Tensor]):
-                pass
-
         return MockedCollator
 
     @pytest.fixture
