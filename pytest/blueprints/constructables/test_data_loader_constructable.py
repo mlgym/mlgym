@@ -5,10 +5,8 @@ from data_stack.repository.repository import DatasetRepository
 from ml_gym.blueprints.constructables import Requirement, DataCollatorConstructable, DataLoadersConstructable, \
     DatasetIteratorConstructable, DeprecatedDataLoadersConstructable
 from ml_gym.data_handling.dataset_loader import DatasetLoader
-from ml_gym.data_handling.postprocessors.collator import Collator
 from torch.utils.data import RandomSampler, WeightedRandomSampler, SequentialSampler
 
-import torch
 from typing import List, Dict
 import tempfile
 import shutil
