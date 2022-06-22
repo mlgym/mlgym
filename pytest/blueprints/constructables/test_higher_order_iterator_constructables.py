@@ -1,12 +1,15 @@
 import pytest
-from ml_gym.blueprints.constructables import DatasetIteratorConstructable, Requirement, DatasetIteratorSplitsConstructable,\
+from ml_gym.blueprints.constructables import DatasetIteratorConstructable, Requirement, \
+    DatasetIteratorSplitsConstructable, \
     CombinedDatasetIteratorConstructable, FilteredLabelsIteratorConstructable, MappedLabelsIteratorConstructable, \
-    FeatureEncodedIteratorConstructable, IteratorViewConstructable
+    FeatureEncodedIteratorConstructable, IteratorViewConstructable, InMemoryDatasetIteratorConstructable, \
+    ShuffledDatasetIteratorConstructable, OneHotEncodedTargetsIteratorConstructable
 import tempfile
 import shutil
 from data_stack.repository.repository import DatasetRepository
 from typing import Dict
-from data_stack.dataset.iterator import InformedDatasetIteratorIF
+from data_stack.dataset.iterator import InformedDatasetIteratorIF, InformedDatasetIterator
+
 from mocked_classes import MockedMNISTFactory
 
 
@@ -52,8 +55,8 @@ class TestDatasetIteratorSplitsConstructable(IteratorFixtures):
         assert isinstance(target, int)
         assert isinstance(iterator_1, InformedDatasetIteratorIF)
         assert isinstance(iterator_2, InformedDatasetIteratorIF)
-        assert int(len(informed_iterators["train"])*0.7) == len(iterator_1)
-        assert int(len(informed_iterators["train"])*0.3) == len(iterator_2)
+        assert int(len(informed_iterators["train"]) * 0.7) == len(iterator_1)
+        assert int(len(informed_iterators["train"]) * 0.3) == len(iterator_2)
         # print(DatasetIteratorReportGenerator.generate_report(iterator_1))
 
 
@@ -61,9 +64,10 @@ class TestCombinedDatasetIteratorConstructable(IteratorFixtures):
 
     def test_constructable(self, informed_iterators):
         requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"])}
-        combine_configs = [{"new_split": "full", "old_splits": [{"iterators_name": "iterators", "splits": ["train", "test"]}]},
-                           {"new_split": "train", "old_splits": [{"iterators_name": "iterators", "splits": ["train"]}]},
-                           {"new_split": "test", "old_splits": [{"iterators_name": "iterators", "splits": ["test"]}]}]
+        combine_configs = [
+            {"new_split": "full", "old_splits": [{"iterators_name": "iterators", "splits": ["train", "test"]}]},
+            {"new_split": "train", "old_splits": [{"iterators_name": "iterators", "splits": ["train"]}]},
+            {"new_split": "test", "old_splits": [{"iterators_name": "iterators", "splits": ["test"]}]}]
         constructable = CombinedDatasetIteratorConstructable(component_identifier="combined_component",
                                                              requirements=requirements,
                                                              combine_configs=combine_configs)
@@ -79,6 +83,49 @@ class TestCombinedDatasetIteratorConstructable(IteratorFixtures):
 
         assert int(len(iterator_full)) == len(iterator_train) + len(iterator_test)
         # print(DatasetIteratorReportGenerator.generate_report(iterator_full))
+
+
+class TestInMemoryDatasetIteratorConstructable(IteratorFixtures):
+    def test_constructable(self, informed_iterators):
+        requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"])}
+        constructable = InMemoryDatasetIteratorConstructable(component_identifier="memory_component",
+                                                             requirements=requirements)
+        iterators = constructable.construct()
+        iterator_train, iterator_test = iterators["train"], iterators["test"]
+        sample, target, tag = iterator_train[0]
+        assert list(sample.shape) == [28, 28]
+        assert isinstance(target, int)
+
+        assert isinstance(iterator_train, InformedDatasetIterator)
+        assert isinstance(iterator_test, InformedDatasetIterator)
+
+
+class TestShuffledDatasetIteratorConstructable(IteratorFixtures):
+    def test_constructable(self, informed_iterators):
+        applicable_splits = ["train", "test"]
+        seeds = {"train": 0, "test": 0}
+        requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"])}
+
+        sample, target, tag = informed_iterators["train"][0]
+
+        # construct a ShuffledDatasetIterator
+        shuffled_constructable = ShuffledDatasetIteratorConstructable(component_identifier="shuffled_component",
+                                                                      requirements=requirements,
+                                                                      applicable_splits=applicable_splits,
+                                                                      seeds=seeds)
+
+        shuffled_iterators = shuffled_constructable.construct()
+
+        shuffled_sample, shuffled_target, shuffled_tag = shuffled_iterators["train"][0]
+
+        assert list(sample.shape) == [28, 28]
+        assert isinstance(target, int)
+
+        assert isinstance(shuffled_iterators["train"], InformedDatasetIterator)
+        assert isinstance(shuffled_iterators["test"], InformedDatasetIterator)
+
+        # assert if shuffled_sample != sample
+        assert (shuffled_sample != sample).any()
 
 
 class TestFilteredLabelsIteratorConstructable(IteratorFixtures):
@@ -150,6 +197,25 @@ class TestFeatureEncodedIteratorConstructable(IteratorFixtures):
 
         assert isinstance(iterator_train_encoded, InformedDatasetIteratorIF)
         # print(DatasetIteratorReportGenerator.generate_report(iterator_train_encoded))
+
+
+class TestOneHotEncodedTargetsIteratorConstructable(IteratorFixtures):
+    def test_constructable(self, informed_iterators):
+        requirements = {"iterators": Requirement(components=informed_iterators, subscription=["train", "test"])}
+        target_vector_size = 10
+        constructable = OneHotEncodedTargetsIteratorConstructable(component_identifier="one_hot_targets_component",
+                                                                  requirements=requirements,
+                                                                  target_vector_size=target_vector_size,
+                                                                  applicable_splits=["train"])
+        iterators = constructable.construct()
+        _, label, _ = informed_iterators["train"][0]
+        iterator_train_encoded = iterators["train"]
+        sample, target, tag = iterator_train_encoded[0]
+        assert list(sample.shape) == [28, 28]
+        assert len(target) == target_vector_size
+        assert target[int(label)] == 1
+
+        assert isinstance(iterator_train_encoded, InformedDatasetIteratorIF)
 
 
 class TestIteratorViewConstructable(IteratorFixtures):
