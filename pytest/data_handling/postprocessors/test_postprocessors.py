@@ -3,7 +3,7 @@ from typing import Tuple
 
 from data_stack.dataset.iterator import InformedDatasetIterator
 from data_stack.dataset.meta import IteratorMeta, DatasetMeta
-from ml_gym.data_handling.postprocessors.feature_encoder import CategoricalEncoder
+from ml_gym.data_handling.postprocessors.feature_encoder import CategoricalEncoder, ContinuousEncoder
 from ml_gym.data_handling.postprocessors.postprocessor import OneHotEncodedTargetPostProcessor, \
     LabelMapperPostProcessor, FeatureEncoderPostProcessor
 
@@ -32,12 +32,15 @@ class TestFeatureEncoderPostProcessor:
 
     @pytest.fixture
     def custom_encoders(self):
-        custom_encoders = {"categorical2": CategoricalEncoder}
+        custom_encoders = {"categorical2": CategoricalEncoder, "continuous2": ContinuousEncoder}
         return custom_encoders
 
     @pytest.mark.parametrize('sequential', [True, False])
     def test_postprocess(self, iterators, sample_position, sample, custom_encoders, sequential):
-        feature_encoding_configs = [{"feature_type": "categorical", "feature_names": [0, 1, 2], "train_split": "train"}]
+        feature_encoding_configs = [
+            {"feature_type": "categorical2", "feature_names": [0, 1, 2], "train_split": "train"},
+            {"feature_type": "continuous2", "feature_names": [3, 4], "train_split": "train"},
+        ]
 
         feature_encoder_post_processor = FeatureEncoderPostProcessor(sample_position=sample_position,
                                                                      feature_encoding_configs=feature_encoding_configs,
@@ -55,9 +58,17 @@ class TestFeatureEncoderPostProcessor:
 
         # the first three columns are encoded into three 10-dim vectors
         assert len(postprocess_sample[0]) == len(sample[0]) - len(
-            feature_encoding_configs[0]["feature_names"]) + encoded_vector_length
-        # assert the first column are encoded into a 10 dim vector, the position of corresponding value is 1 (one-hot)
+            feature_encoding_configs[0]["feature_names"]) - len(
+            feature_encoding_configs[1]["feature_names"]) + encoded_vector_length
+        # The first three columns are encoded by CategoricalEncoder,
+        # the values of each column are transformed to 1, because all the values in one column are the same.
         assert postprocess_sample[0][sample[0][0]] == 1
+        assert postprocess_sample[0][sample[0][1]] == 1
+        assert postprocess_sample[0][sample[0][2]] == 1
+        # The last two columns are encoded by ContinuousEncoder,
+        # the values of each column are transformed to 0, because all the values in one column are the same
+        assert postprocess_sample[0][sample[0][3]] == 0
+        assert postprocess_sample[0][sample[0][4]] == 0
 
 
 class TestOneHotEncodedTargetPostProcessor:
