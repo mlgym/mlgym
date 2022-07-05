@@ -28,4 +28,4 @@ class TestPostProcessedDatasetIterator:
         assert len(postprocess_dataset_iterator) == len(iterator)
         assert postprocess_dataset_iterator.underlying_iterators[0] == iterator
         item = postprocess_dataset_iterator[1]
-        assert int(item[1][6].numpy()) == 1
+        assert int(item[1][3].numpy()) == 1
