@@ -1,3 +1,6 @@
+import math
+
+import numpy as np
 import pytest
 import torch
 from ml_gym.batching.batch import InferenceResultBatch
@@ -13,7 +16,7 @@ class TestLPLossFunctions:
     sample_size = 100
 
     @pytest.fixture
-    def inference_batch_result_train(self) -> InferenceResultBatch:
+    def inference_result_batch_train(self) -> InferenceResultBatch:
         targets = torch.ones(
             size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size]) * 2  # [batch_size, sample_size]
         predictions = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size]) * 3
@@ -21,7 +24,7 @@ class TestLPLossFunctions:
                                     predictions={TestLPLossFunctions.prediction_key: predictions}, tags=None)
 
     @pytest.fixture
-    def inference_batch_result_test(self) -> InferenceResultBatch:
+    def inference_result_batch_test(self) -> InferenceResultBatch:
         targets = torch.ones(
             size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size]) * 2  # [batch_size, sample_size]
         predictions = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size]) * 5
@@ -112,7 +115,7 @@ class TestClassificationLossFunctions:
     @pytest.fixture
     def bce_loss_inference_batch_result(self) -> InferenceResultBatch:
         targets = torch.IntTensor([1, 1])  # [batch_size]
-        predictions = torch.FloatTensor([1, 0])
+        predictions = torch.FloatTensor([0.2, 0.2])
         return InferenceResultBatch(targets={TestClassificationLossFunctions.target_key: targets},
                                     predictions={TestClassificationLossFunctions.prediction_key: predictions},
                                     tags=None)
@@ -136,13 +139,29 @@ class TestClassificationLossFunctions:
         assert all(nll_loss == ce_loss)
 
     def test_bce_with_logits_loss(self, bce_with_logits_inference_batch_result):
+        average_batch_loss = True
         loss_fun = BCEWithLogitsLoss(target_subscription_key=TestLPLossFunctions.target_key,
-                                     prediction_subscription_key=TestLPLossFunctions.prediction_key)
+                                     prediction_subscription_key=TestLPLossFunctions.prediction_key,
+                                     average_batch_loss=average_batch_loss)
         loss = loss_fun(bce_with_logits_inference_batch_result)
-        assert True
+
+        # compute the BCEWithLogitsLoss manually
+        def sigmoid(x):
+            return 1 / (1 + torch.exp(-x))
+
+        t = bce_with_logits_inference_batch_result.get_targets(TestLPLossFunctions.target_key).float()  # .flatten()
+        p = bce_with_logits_inference_batch_result.get_predictions(TestLPLossFunctions.prediction_key)
+
+        loss_manually = -1 * (t * torch.log(sigmoid(p)) + (1 - t) * torch.log(1 - sigmoid(p)))
+        mean_loss_manually = torch.mean(loss_manually)
+        assert abs(mean_loss_manually - loss )< 0.01
 
     def test_bce_loss(self, bce_loss_inference_batch_result):
         loss_fun = BCELoss(target_subscription_key=TestLPLossFunctions.target_key,
                            prediction_subscription_key=TestLPLossFunctions.prediction_key)
         loss = loss_fun(bce_loss_inference_batch_result)
-        assert True
+        t = bce_loss_inference_batch_result.get_targets(TestLPLossFunctions.target_key).float()  # .flatten()
+        p = bce_loss_inference_batch_result.get_predictions(TestLPLossFunctions.prediction_key)
+        loss_manually = -1 * (t * torch.log(p) + (1 - t) * torch.log(1 - p))
+        mean_loss_manually = torch.mean(loss_manually)
+        assert abs(mean_loss_manually - loss) < 0.01
