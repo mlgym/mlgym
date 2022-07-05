@@ -194,7 +194,7 @@ class TestFeatureEncodedIteratorConstructable(IteratorFixtures):
         assert list(sample.shape) == [28, 28]
         assert isinstance(target, int)
 
-        assert isinstance(iterator_train_encoded._dataset_iterator, InformedDatasetIteratorIF)
+        assert isinstance(iterator_train_encoded._dataset_iterator, PostProcessedDatasetIterator)
         # print(DatasetIteratorReportGenerator.generate_report(iterator_train_encoded))
 
 
