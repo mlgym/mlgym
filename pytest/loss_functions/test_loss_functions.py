@@ -35,9 +35,9 @@ class TestLPLossFunctions:
         (2, 1, nn.MSELoss(reduction="sum")),  # squared L2 norm
         (1, 1, nn.L1Loss(reduction="sum"))  # L1 loss
     ])
-    def test_lp_loss(self, exponent, root, torch_loss_fun, inference_batch_result_train):
-        targets = inference_batch_result_train.targets[TestLPLossFunctions.target_key]
-        predictions = inference_batch_result_train.predictions[TestLPLossFunctions.prediction_key]
+    def test_lp_loss(self, exponent, root, torch_loss_fun, inference_result_batch_train):
+        targets = inference_result_batch_train.targets[TestLPLossFunctions.target_key]
+        predictions = inference_result_batch_train.predictions[TestLPLossFunctions.prediction_key]
 
         total_loss = (torch.sum((targets[0, :] - predictions[0, :]).abs() ** exponent) ** (
                 1 / root)).sum() * TestLPLossFunctions.batch_size
@@ -45,12 +45,12 @@ class TestLPLossFunctions:
                            prediction_subscription_key=TestLPLossFunctions.prediction_key,
                            root=root,
                            exponent=exponent,
-                           average_batch_loss=False)(inference_batch_result_train).sum()
+                           average_batch_loss=False)(inference_result_batch_train).sum()
         torch_loss = torch_loss_fun(predictions, targets)
         assert total_loss == calc_loss
         assert calc_loss == torch_loss
 
-    def test_loss_selection(self, inference_batch_result_train):
+    def test_loss_selection(self, inference_result_batch_train):
         mask = ([True, False] * int(TestLPLossFunctions.batch_size))[:TestLPLossFunctions.batch_size]
 
         loss_fun = LPLoss(target_subscription_key=TestLPLossFunctions.target_key,
@@ -59,7 +59,7 @@ class TestLPLossFunctions:
                           exponent=2,
                           average_batch_loss=False,
                           sample_selection_fun=lambda inference_batch_result: mask)
-        assert len(loss_fun(inference_batch_result_train)) == sum(mask)
+        assert len(loss_fun(inference_result_batch_train)) == sum(mask)
 
     # @pytest.mark.parametrize("exponent, root", [
     #     (2, 1),  # squared L2 norm
