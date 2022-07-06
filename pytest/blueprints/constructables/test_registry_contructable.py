@@ -47,9 +47,6 @@ class TestModelRegistryConstructable(ModelFixtures):
         assert model_registry._store["mocked_nn"] == mocked_nn_class
 
         # assert if it is able to get a model instance using model_registry
-        model = model_registry.get_instance("mocked_nn", seed=seed, layer_config=layer_config,
-                                            prediction_publication_key=prediction_publication_key)
-        assert isinstance(model, mocked_nn_class)
 
 
 class TestModelConstructable(ModelFixtures):

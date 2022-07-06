@@ -8,7 +8,9 @@ import tempfile
 import shutil
 from data_stack.repository.repository import DatasetRepository
 from typing import Dict
-from data_stack.dataset.iterator import InformedDatasetIteratorIF, InformedDatasetIterator
+from data_stack.dataset.iterator import InformedDatasetIteratorIF, InformedDatasetIterator, InMemoryDatasetIterator, \
+    DatasetIteratorView
+from ml_gym.data_handling.iterators import PostProcessedDatasetIterator
 
 from mocked_classes import MockedMNISTFactory
 
@@ -96,8 +98,8 @@ class TestInMemoryDatasetIteratorConstructable(IteratorFixtures):
         assert list(sample.shape) == [28, 28]
         assert isinstance(target, int)
 
-        assert isinstance(iterator_train, InformedDatasetIterator)
-        assert isinstance(iterator_test, InformedDatasetIterator)
+        assert isinstance(iterator_train._dataset_iterator, InMemoryDatasetIterator)
+        assert isinstance(iterator_test._dataset_iterator, InMemoryDatasetIterator)
 
 
 class TestShuffledDatasetIteratorConstructable(IteratorFixtures):
@@ -121,11 +123,8 @@ class TestShuffledDatasetIteratorConstructable(IteratorFixtures):
         assert list(sample.shape) == [28, 28]
         assert isinstance(target, int)
 
-        assert isinstance(shuffled_iterators["train"], InformedDatasetIterator)
-        assert isinstance(shuffled_iterators["test"], InformedDatasetIterator)
-
-        # assert if shuffled_sample != sample
-        assert (shuffled_sample != sample).any()
+        assert isinstance(shuffled_iterators["train"]._dataset_iterator, DatasetIteratorView)
+        assert isinstance(shuffled_iterators["test"]._dataset_iterator, DatasetIteratorView)
 
 
 class TestFilteredLabelsIteratorConstructable(IteratorFixtures):
@@ -195,7 +194,7 @@ class TestFeatureEncodedIteratorConstructable(IteratorFixtures):
         assert list(sample.shape) == [28, 28]
         assert isinstance(target, int)
 
-        assert isinstance(iterator_train_encoded, InformedDatasetIteratorIF)
+        assert isinstance(iterator_train_encoded._dataset_iterator, PostProcessedDatasetIterator)
         # print(DatasetIteratorReportGenerator.generate_report(iterator_train_encoded))
 
 
@@ -215,7 +214,7 @@ class TestOneHotEncodedTargetsIteratorConstructable(IteratorFixtures):
         assert len(target) == target_vector_size
         assert target[int(label)] == 1
 
-        assert isinstance(iterator_train_encoded, InformedDatasetIteratorIF)
+        assert isinstance(iterator_train_encoded._dataset_iterator, PostProcessedDatasetIterator)
 
 
 class TestIteratorViewConstructable(IteratorFixtures):
