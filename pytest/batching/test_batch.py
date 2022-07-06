@@ -7,7 +7,6 @@ from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch
 
 class TestInferenceResultBatch:
     target_key = "target_key"
-    prediction_key = "prediction_key"
 
     @pytest.fixture
     def inference_batch_result(self) -> InferenceResultBatch:
@@ -20,18 +19,6 @@ class TestInferenceResultBatch:
         return InferenceResultBatch(targets={TestInferenceResultBatch.target_key: targets},
                                     predictions=predictions,
                                     tags=tags)
-
-    @pytest.fixture
-    def target_keys(self) -> List[str]:
-        return None
-
-    @pytest.fixture
-    def predictions_keys(self) -> List[Union[str, List]]:
-        return
-
-    @pytest.fixture
-    def device(self) -> torch.device:
-        return
 
     # test device operations
     def test_to_device(self, inference_batch_result: InferenceResultBatch):
@@ -58,13 +45,12 @@ class TestInferenceResultBatch:
     def test_split_results(self, inference_batch_result, target_keys, predictions_keys, target_num, predictions_num):
         filtered_inference_batch_result = inference_batch_result.split_results(target_keys, predictions_keys,
                                                                                torch.device("cpu"))
-        assert len(filtered_inference_batch_result.targets) == target_num
-        assert len(filtered_inference_batch_result.predictions) == predictions_num
+        assert len(filtered_inference_batch_result.targets.keys()) == target_num
+        assert len(filtered_inference_batch_result.predictions.keys()) == predictions_num
 
 
 class TestDatasetBatch:
     target_key = "target_key"
-    prediction_key = "prediction_key"
 
     @pytest.fixture
     def dataset_batch(self) -> DatasetBatch:

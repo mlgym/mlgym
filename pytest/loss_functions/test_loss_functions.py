@@ -1,7 +1,11 @@
+import math
+
+import numpy as np
 import pytest
 import torch
 from ml_gym.batching.batch import InferenceResultBatch
-from ml_gym.loss_functions.loss_functions import LPLoss, CrossEntropyLoss, NLLLoss, BCEWithLogitsLoss  # , LPLossScaled
+from ml_gym.loss_functions.loss_functions import LPLoss, CrossEntropyLoss, NLLLoss, BCEWithLogitsLoss, \
+    BCELoss  # , LPLossScaled
 import torch.nn as nn
 
 
@@ -12,36 +16,41 @@ class TestLPLossFunctions:
     sample_size = 100
 
     @pytest.fixture
-    def inference_batch_result_train(self) -> InferenceResultBatch:
-        targets = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size])*2  # [batch_size, sample_size]
-        predictions = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size])*3
-        return InferenceResultBatch(targets={TestLPLossFunctions.target_key: targets}, predictions={TestLPLossFunctions.prediction_key: predictions}, tags=None)
+    def inference_result_batch_train(self) -> InferenceResultBatch:
+        targets = torch.ones(
+            size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size]) * 2  # [batch_size, sample_size]
+        predictions = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size]) * 3
+        return InferenceResultBatch(targets={TestLPLossFunctions.target_key: targets},
+                                    predictions={TestLPLossFunctions.prediction_key: predictions}, tags=None)
 
     @pytest.fixture
-    def inference_batch_result_test(self) -> InferenceResultBatch:
-        targets = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size])*2  # [batch_size, sample_size]
-        predictions = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size])*5
-        return InferenceResultBatch(targets={TestLPLossFunctions.target_key: targets}, predictions={TestLPLossFunctions.prediction_key: predictions}, tags=None)
+    def inference_result_batch_test(self) -> InferenceResultBatch:
+        targets = torch.ones(
+            size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size]) * 2  # [batch_size, sample_size]
+        predictions = torch.ones(size=[TestLPLossFunctions.batch_size, TestLPLossFunctions.sample_size]) * 5
+        return InferenceResultBatch(targets={TestLPLossFunctions.target_key: targets},
+                                    predictions={TestLPLossFunctions.prediction_key: predictions}, tags=None)
 
     @pytest.mark.parametrize("exponent,root, torch_loss_fun", [
         (2, 1, nn.MSELoss(reduction="sum")),  # squared L2 norm
         (1, 1, nn.L1Loss(reduction="sum"))  # L1 loss
     ])
-    def test_lp_loss(self, exponent, root, torch_loss_fun, inference_batch_result_train):
-        targets = inference_batch_result_train.targets[TestLPLossFunctions.target_key]
-        predictions = inference_batch_result_train.predictions[TestLPLossFunctions.prediction_key]
+    def test_lp_loss(self, exponent, root, torch_loss_fun, inference_result_batch_train):
+        targets = inference_result_batch_train.targets[TestLPLossFunctions.target_key]
+        predictions = inference_result_batch_train.predictions[TestLPLossFunctions.prediction_key]
 
-        total_loss = (torch.sum((targets[0, :] - predictions[0, :]).abs()**exponent) ** (1/root)).sum()*TestLPLossFunctions.batch_size
+        total_loss = (torch.sum((targets[0, :] - predictions[0, :]).abs() ** exponent) ** (
+                1 / root)).sum() * TestLPLossFunctions.batch_size
         calc_loss = LPLoss(target_subscription_key=TestLPLossFunctions.target_key,
                            prediction_subscription_key=TestLPLossFunctions.prediction_key,
                            root=root,
                            exponent=exponent,
-                           average_batch_loss=False)(inference_batch_result_train).sum()
+                           average_batch_loss=False)(inference_result_batch_train).sum()
         torch_loss = torch_loss_fun(predictions, targets)
         assert total_loss == calc_loss
         assert calc_loss == torch_loss
 
-    def test_loss_selection(self, inference_batch_result_train):
+    def test_loss_selection(self, inference_result_batch_train):
         mask = ([True, False] * int(TestLPLossFunctions.batch_size))[:TestLPLossFunctions.batch_size]
 
         loss_fun = LPLoss(target_subscription_key=TestLPLossFunctions.target_key,
@@ -49,8 +58,8 @@ class TestLPLossFunctions:
                           root=2,
                           exponent=2,
                           average_batch_loss=False,
-                          sample_selection_fun=lambda inference_batch_result:  mask)
-        assert len(loss_fun(inference_batch_result_train)) == sum(mask)
+                          sample_selection_fun=lambda inference_batch_result: mask)
+        assert len(loss_fun(inference_result_batch_train)) == sum(mask)
 
     # @pytest.mark.parametrize("exponent, root", [
     #     (2, 1),  # squared L2 norm
@@ -103,6 +112,14 @@ class TestClassificationLossFunctions:
                                     predictions={TestClassificationLossFunctions.prediction_key: predictions},
                                     tags=None)
 
+    @pytest.fixture
+    def bce_loss_inference_batch_result(self) -> InferenceResultBatch:
+        targets = torch.IntTensor([1, 1])  # [batch_size]
+        predictions = torch.FloatTensor([0.2, 0.2])
+        return InferenceResultBatch(targets={TestClassificationLossFunctions.target_key: targets},
+                                    predictions={TestClassificationLossFunctions.prediction_key: predictions},
+                                    tags=None)
+
     def test_cross_entropy_loss(self, cross_entropy_inference_batch_result):
         ce_loss_fun = CrossEntropyLoss(target_subscription_key=TestLPLossFunctions.target_key,
                                        prediction_subscription_key=TestLPLossFunctions.prediction_key,
@@ -122,7 +139,29 @@ class TestClassificationLossFunctions:
         assert all(nll_loss == ce_loss)
 
     def test_bce_with_logits_loss(self, bce_with_logits_inference_batch_result):
+        average_batch_loss = True
         loss_fun = BCEWithLogitsLoss(target_subscription_key=TestLPLossFunctions.target_key,
-                                     prediction_subscription_key=TestLPLossFunctions.prediction_key)
+                                     prediction_subscription_key=TestLPLossFunctions.prediction_key,
+                                     average_batch_loss=average_batch_loss)
         loss = loss_fun(bce_with_logits_inference_batch_result)
-        assert True
+
+        # compute the BCEWithLogitsLoss manually
+        def sigmoid(x):
+            return 1 / (1 + torch.exp(-x))
+
+        t = bce_with_logits_inference_batch_result.get_targets(TestLPLossFunctions.target_key).float()  # .flatten()
+        p = bce_with_logits_inference_batch_result.get_predictions(TestLPLossFunctions.prediction_key)
+
+        loss_manually = -1 * (t * torch.log(sigmoid(p)) + (1 - t) * torch.log(1 - sigmoid(p)))
+        mean_loss_manually = torch.mean(loss_manually)
+        assert abs(mean_loss_manually - loss )< 0.01
+
+    def test_bce_loss(self, bce_loss_inference_batch_result):
+        loss_fun = BCELoss(target_subscription_key=TestLPLossFunctions.target_key,
+                           prediction_subscription_key=TestLPLossFunctions.prediction_key)
+        loss = loss_fun(bce_loss_inference_batch_result)
+        t = bce_loss_inference_batch_result.get_targets(TestLPLossFunctions.target_key).float()  # .flatten()
+        p = bce_loss_inference_batch_result.get_predictions(TestLPLossFunctions.prediction_key)
+        loss_manually = -1 * (t * torch.log(p) + (1 - t) * torch.log(1 - p))
+        mean_loss_manually = torch.mean(loss_manually)
+        assert abs(mean_loss_manually - loss) < 0.01

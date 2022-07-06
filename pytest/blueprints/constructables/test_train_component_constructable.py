@@ -53,19 +53,34 @@ class DataLoaderFixture(CollatorFixture):
         return data_loader
 
 
-class TestTrainComponentConstructable(RegistryFixture):
-    def test_constructable(self, prediction_postprocessing_registry, loss_function_registry):
-        requirements = {
-            "prediction_postprocessing_registry": Requirement(components=prediction_postprocessing_registry),
-            "loss_function_registry": Requirement(components=loss_function_registry)}
-        loss_fun_config: Dict = {"key": "CrossEntropyLoss", "target_subscription_key": "target_key",
-                                 "prediction_subscription_key": "model_prediction_key"}
+class TrainConfigFixture:
+    @pytest.fixture
+    def post_processors_config(self):
         post_processors_config: List[Dict] = [
             {"key": "ARG_MAX",
              "params": {"prediction_subscription_key": "model_prediction_key_anchor",
                         "prediction_publication_key": "postprocessing_argmax_key_anchor"}}]
+        return post_processors_config
 
-        show_progress: bool = False
+    @pytest.fixture
+    def loss_fun_config(self):
+        loss_fun_config: Dict = {"key": "CrossEntropyLoss", "target_subscription_key": "target_key",
+                                 "prediction_subscription_key": "model_prediction_key"}
+
+        return loss_fun_config
+
+    @pytest.fixture
+    def show_progress(self):
+        return False
+
+
+class TestTrainComponentConstructable(RegistryFixture, TrainConfigFixture):
+    def test_constructable(self, prediction_postprocessing_registry, loss_function_registry, loss_fun_config,
+                           post_processors_config, show_progress):
+        requirements = {
+            "prediction_postprocessing_registry": Requirement(components=prediction_postprocessing_registry),
+            "loss_function_registry": Requirement(components=loss_function_registry)}
+
         constructable = TrainComponentConstructable(component_identifier="train_component_constructable",
                                                     requirements=requirements,
                                                     loss_fun_config=loss_fun_config,
@@ -76,5 +91,3 @@ class TestTrainComponentConstructable(RegistryFixture):
         assert isinstance(train_component, TrainComponent)
         assert isinstance(train_component.post_processors[0].postprocessing_impl, ArgmaxPostProcessorImpl)
         assert isinstance(train_component.loss_fun, CrossEntropyLoss)
-
-

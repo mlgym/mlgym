@@ -5,15 +5,13 @@ from data_stack.repository.repository import DatasetRepository
 from ml_gym.blueprints.constructables import Requirement, DataCollatorConstructable, DataLoadersConstructable, \
     DatasetIteratorConstructable, DeprecatedDataLoadersConstructable
 from ml_gym.data_handling.dataset_loader import DatasetLoader
-from ml_gym.data_handling.postprocessors.collator import Collator
 from torch.utils.data import RandomSampler, WeightedRandomSampler, SequentialSampler
 
-import torch
 from typing import List, Dict
 import tempfile
 import shutil
 
-from mocked_classes import MockedMNISTFactory
+from mocked_classes import MockedMNISTFactory, MockedCollator
 
 
 class IteratorFixtures:
@@ -46,12 +44,6 @@ class IteratorFixtures:
 class CollatorFixture(IteratorFixtures):
     @pytest.fixture
     def collator_type(self):
-        class MockedCollator(Collator):
-            target_publication_key: str = None
-
-            def __call__(self, batch: List[torch.Tensor]):
-                pass
-
         return MockedCollator
 
     @pytest.fixture
