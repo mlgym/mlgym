@@ -44,9 +44,10 @@ class TestWorkerProcess(JobFixture, DeviceFixture, LoggingFixture):
         # wait until num_jobs_to_perform jobs done in job_q
         done_job = done_q.get()
         assert done_job.done and done_job.job_type == JobType.CALC and done_job.job_id == num_jobs_to_perform - 1
+        QueuedLogging.stop_listener()
 
     def test_work_process_wrapper(self, process_id: int, num_jobs_to_perform: int, job_q: Queue, done_q: Queue,
-                                  devices: List[torch.device], start_logging):
+                                  devices: List[torch.device]):
         process = WorkerProcessWrapper(process_id=process_id,
                                        num_jobs_to_perform=num_jobs_to_perform,
                                        device=devices[process_id % len(devices)],
@@ -56,10 +57,9 @@ class TestWorkerProcess(JobFixture, DeviceFixture, LoggingFixture):
         # wait until num_jobs_to_perform jobs done in job_q
         done_job = done_q.get()
         assert done_job.done and done_job.job_type == JobType.CALC and done_job.job_id == num_jobs_to_perform - 1
-        return process
 
     def test_recreate_process_if_done(self, process_id: int, num_jobs_to_perform: int, job_q: Queue, done_q: Queue,
-                                      devices: List[torch.device], start_logging):
+                                      devices: List[torch.device]):
         process = WorkerProcessWrapper(process_id=process_id,
                                        num_jobs_to_perform=num_jobs_to_perform,
                                        device=devices[process_id % len(devices)],

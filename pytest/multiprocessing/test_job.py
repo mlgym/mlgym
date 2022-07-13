@@ -70,6 +70,7 @@ class LoggingFixture:
             QueuedLogging.start_logging(queue, log_dir_path)
 
 
+
 class TestJob(JobFixture, DeviceFixture):
 
     def test_execute(self, job, arr):

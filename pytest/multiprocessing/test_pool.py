@@ -1,8 +1,10 @@
+from multiprocessing import Queue
 from typing import List
 
 import pytest
 from ml_gym.multiprocessing.job import Job
 from ml_gym.multiprocessing.pool import Pool
+from ml_gym.util.logger import QueuedLogging
 
 from test_job import JobFixture, DeviceFixture, LoggingFixture
 
@@ -29,6 +31,7 @@ class TestPool(JobFixture, DeviceFixture, LoggingFixture):
         for i in range(pool.job_count):
             pool.job_q.get()
         assert pool.job_q.empty()
+        QueuedLogging.stop_listener()
 
     def test_run(self, pool: Pool, jobs: List[Job], num_processes: int):
         pool.add_jobs(jobs)
@@ -37,3 +40,4 @@ class TestPool(JobFixture, DeviceFixture, LoggingFixture):
         assert pool.job_q.qsize() == 0
         assert pool.done_q.qsize() == 0
         assert len(pool.worker_processes) == num_processes
+        QueuedLogging.stop_listener()
