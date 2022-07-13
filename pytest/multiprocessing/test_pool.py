@@ -23,7 +23,16 @@ class TestPool(JobFixture, DeviceFixture, LoggingFixture):
         pool = Pool(num_processes=num_processes, devices=devices)
         return pool
 
-    def test_add_jobs(self, pool: Pool, jobs: List[Job]):
+    def test_add_job(self, pool: Pool, job: Job):
+        assert pool.job_q.empty()
+        pool.add_job(job)
+        assert pool.job_count == pool.job_q.qsize() == 1
+        # remove one by one
+        pool.job_q.get()
+        assert pool.job_q.empty()
+        QueuedLogging.stop_listener()
+
+    def test_add_jobs(self, pool: Pool, jobs: List[Job], num_processes):
         assert pool.job_q.empty()
         pool.add_jobs(jobs)
         assert not pool.job_q.empty() and pool.job_count == pool.job_q.qsize()
@@ -35,9 +44,25 @@ class TestPool(JobFixture, DeviceFixture, LoggingFixture):
 
     def test_run(self, pool: Pool, jobs: List[Job], num_processes: int):
         pool.add_jobs(jobs)
+        assert len(pool.worker_processes) == 0
         assert pool.job_q.qsize() == 10
         pool.run()
         assert pool.job_q.qsize() == 0
         assert pool.done_q.qsize() == 0
         assert len(pool.worker_processes) == num_processes
         QueuedLogging.stop_listener()
+
+    def test_create_or_replace_process(self, pool: Pool, num_processes:int):
+        for process_id in range(num_processes):
+            # add process
+            pool.create_or_replace_process(process_id, num_jobs_to_perform=1)
+            assert pool.worker_processes[process_id].process_id == process_id
+        assert len(pool.worker_processes) == num_processes
+
+        for process_id in range(num_processes):
+            # replace process
+            pool.create_or_replace_process(process_id, num_jobs_to_perform=1)
+            assert pool.worker_processes[process_id].process_id == process_id
+            assert len(pool.worker_processes) == num_processes
+        QueuedLogging.stop_listener()
+
