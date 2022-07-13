@@ -50,7 +50,7 @@ class DeviceFixture:
 
     @pytest.fixture
     def device_ids(self) -> List[int]:
-        return [0, 1, 2, 3]
+        return [0]
 
     @pytest.fixture
     def devices(self, device_ids) -> List[torch.device]:
