@@ -57,6 +57,8 @@ class TestPool(JobFixture, DeviceFixture, LoggingFixture):
             # add process
             pool.create_or_replace_process(process_id, num_jobs_to_perform=1)
             assert pool.worker_processes[process_id].process_id == process_id
+            assert len(pool.worker_processes) == process_id+1
+
         assert len(pool.worker_processes) == num_processes
 
         for process_id in range(num_processes):
