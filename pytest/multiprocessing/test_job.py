@@ -1,4 +1,4 @@
-from queue import Queue
+from multiprocessing import Queue
 from typing import List, Tuple
 
 import numpy as np
@@ -50,7 +50,7 @@ class DeviceFixture:
 
     @pytest.fixture
     def device_ids(self) -> List[int]:
-        return [0]
+        return [0, 1, 2, 3]
 
     @pytest.fixture
     def devices(self, device_ids) -> List[torch.device]:
