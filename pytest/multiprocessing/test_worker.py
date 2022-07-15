@@ -21,18 +21,13 @@ class TestWorkerProcess(JobFixture, DeviceFixture, LoggingFixture):
         return 1
 
     @pytest.fixture
-    def job_q(self, jobs):
+    def job_q(self, jobs: List[Job]):
         job_q = Queue()
         for job in jobs:
             job_q.put(job)
         termination_job = Job(job_id=-1, fun=None, param_dict=None, job_type=JobType.TERMINATE)
         job_q.put(termination_job)
         return job_q
-
-    @pytest.fixture
-    def done_q(self):
-        done_q = Queue()
-        return done_q
 
     def test_work_process(self, process_id: int, num_jobs_to_perform: int, job_q: Queue, done_q: Queue,
                           arrays: np.array, device: torch.device, start_logging):

@@ -2,6 +2,7 @@ from multiprocessing import Queue
 from typing import List
 
 import pytest
+import torch
 from ml_gym.multiprocessing.job import Job
 from ml_gym.multiprocessing.pool import Pool
 from ml_gym.util.logger import QueuedLogging
@@ -19,7 +20,7 @@ class TestPool(JobFixture, DeviceFixture, LoggingFixture):
         return False
 
     @pytest.fixture
-    def pool(self, num_processes, devices, start_logging) -> Pool:
+    def pool(self, num_processes: int, devices: List[torch.device], start_logging) -> Pool:
         pool = Pool(num_processes=num_processes, devices=devices)
         return pool
 
@@ -32,10 +33,11 @@ class TestPool(JobFixture, DeviceFixture, LoggingFixture):
         assert pool.job_q.empty()
         QueuedLogging.stop_listener()
 
-    def test_add_jobs(self, pool: Pool, jobs: List[Job], num_processes):
+    def test_add_jobs(self, pool: Pool, jobs: List[Job], num_processes:int):
         assert pool.job_q.empty()
         pool.add_jobs(jobs)
         assert not pool.job_q.empty() and pool.job_count == pool.job_q.qsize()
+        assert pool.job_count == len(jobs)
         # remove one by one
         for i in range(pool.job_count):
             pool.job_q.get()
@@ -52,12 +54,12 @@ class TestPool(JobFixture, DeviceFixture, LoggingFixture):
         assert len(pool.worker_processes) == num_processes
         QueuedLogging.stop_listener()
 
-    def test_create_or_replace_process(self, pool: Pool, num_processes:int):
+    def test_create_or_replace_process(self, pool: Pool, num_processes: int):
         for process_id in range(num_processes):
             # add process
             pool.create_or_replace_process(process_id, num_jobs_to_perform=1)
             assert pool.worker_processes[process_id].process_id == process_id
-            assert len(pool.worker_processes) == process_id+1
+            assert len(pool.worker_processes) == process_id + 1
 
         assert len(pool.worker_processes) == num_processes
 
@@ -67,4 +69,3 @@ class TestPool(JobFixture, DeviceFixture, LoggingFixture):
             assert pool.worker_processes[process_id].process_id == process_id
             assert len(pool.worker_processes) == num_processes
         QueuedLogging.stop_listener()
-
