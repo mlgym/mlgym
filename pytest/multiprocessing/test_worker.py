@@ -21,6 +21,11 @@ class TestWorkerProcess(JobFixture, DeviceFixture, LoggingFixture):
         return 1
 
     @pytest.fixture
+    def done_q(self):
+        done_q = Queue()
+        return done_q
+
+    @pytest.fixture
     def job_q(self, jobs: List[Job]):
         job_q = Queue()
         for job in jobs:
