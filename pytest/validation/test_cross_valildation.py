@@ -4,6 +4,7 @@ from typing import Type, Dict, Any
 
 import numpy as np
 from ml_gym.blueprints.blue_prints import BluePrint
+from ml_gym.gym.gym import Gym
 from ml_gym.gym.jobs import AbstractGymJob
 from ml_gym.io.config_parser import YAMLConfigLoader
 from ml_gym.util.grid_search import GridSearch
@@ -106,8 +107,14 @@ class TestCrossValidation:
         gs_config = GridSearch.create_gs_from_config_dict(gs_config)
         assert len(blueprints) == len(gs_config) * len(cv._get_fold_indices())
 
-        #
-    # # def test_run(self):
-    #     gym.add_blue_prints(blueprints)
-    #     gym.run(parallel=True)
-    #     pass
+    def test_run(self, iterator, cv, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
+                 gs_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str):
+        blueprints = cv.create_blue_prints(blue_print_type=blue_print_type,
+                                           gs_config=gs_config,
+                                           dashify_logging_path=dashify_logging_path,
+                                           num_epochs=num_epochs,
+                                           job_type=job_type)
+        gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
+        gym.add_blue_prints(blueprints)
+        gym.run(parallel=True)
+        pass
