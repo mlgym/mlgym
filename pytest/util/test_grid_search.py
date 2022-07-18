@@ -1,3 +1,4 @@
+import os
 from typing import List, Tuple, Any, Dict
 
 import pytest
@@ -52,6 +53,10 @@ class TestGridSearch:
             "p_4": [12, 13]
         }
 
+    @pytest.fixture
+    def config_path(self) -> str:
+        return os.path.join(os.path.abspath('.'), "..", "..", "example", "grid_search/gs_config.yml")
+
     def test_get_dict_obj(self, keys: List[str], values: Tuple[Any]):
         d = GridSearch._get_dict_obj(keys, values)
         assert d[keys[0]] == values[0] and d[keys[1]] == values[1]
@@ -70,8 +75,15 @@ class TestGridSearch:
 
         for config in configs:
             assert GridSearch.is_config_in_gs(config, node)
+        assert not GridSearch.is_config_in_gs({'p_1': 1, 'p_2': 2, 'p_4': [13, 13]}, node)
 
         c = configs[0]
         c_negligible = {'p_3': {'p_3.1': None}, 'p_1': None, 'p_4': [12, None]}
         GridSearch._delete_branches(c, c_negligible)
         print(GridSearch._is_config_equal(c, c))
+
+    def test_create_gs_configs_from_path(self, config_path):
+        configs = GridSearch.create_gs_configs_from_path(config_path)
+        assert configs[0]['optimizer']['config']['params']['lr'] == 0.01
+        assert configs[1]['optimizer']['config']['params']['lr'] == 0.001
+        assert configs[2]['optimizer']['config']['params']['lr'] == 0.0001
