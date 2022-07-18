@@ -1,6 +1,5 @@
 from typing import Dict, List, Any
 import torch
-from conv_net import ConvNet
 from ml_gym.blueprints.constructables import ModelRegistryConstructable
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.jobs import AbstractGymJob, GymJobFactory
@@ -8,6 +7,8 @@ from ml_gym.batching.batch import DatasetBatch
 from dataclasses import dataclass
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector
 from ml_gym.data_handling.postprocessors.collator import Collator
+
+from example.conv_net import ConvNet
 
 
 @dataclass

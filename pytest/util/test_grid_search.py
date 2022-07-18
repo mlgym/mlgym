@@ -55,7 +55,7 @@ class TestGridSearch:
 
     @pytest.fixture
     def config_path(self) -> str:
-        return "grid_search/gs_config.yml"
+        return "example/grid_search/gs_config.yml"
 
     def test_get_dict_obj(self, keys: List[str], values: Tuple[Any]):
         d = GridSearch._get_dict_obj(keys, values)
