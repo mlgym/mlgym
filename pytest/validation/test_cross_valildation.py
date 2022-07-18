@@ -1,3 +1,4 @@
+import os.path
 from collections import Counter
 from typing import Type, Dict, Any
 
@@ -87,17 +88,17 @@ class TestCrossValidation:
             assert len(split["id_split_indices"]["val"]) == len(set(split["id_split_indices"]["val"]))
             assert set(split["id_split_indices"]["val"]).isdisjoint(set(split["id_split_indices"]["train"]))
 
-    # @pytest.mark.parametrize("job_type",
-    #                          [AbstractGymJob.Type.STANDARD,
-    #                           AbstractGymJob.Type.LITE
-    #                           ])
-    # def test_create_blue_prints(self, iterator, cv, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
-    #                             gs_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str):
-    #     blueprints = cv.create_blue_prints(blue_print_type=blue_print_type,
-    #                                        gs_config=gs_config,
-    #                                        dashify_logging_path=dashify_logging_path,
-    #                                        num_epochs=num_epochs,
-    #                                        job_type=job_type)
+    @pytest.mark.parametrize("job_type",
+                             [AbstractGymJob.Type.STANDARD, AbstractGymJob.Type.LITE])
+    def test_create_blue_prints(self, iterator, cv, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
+                                gs_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str):
+        blueprints = cv.create_blue_prints(blue_print_type=blue_print_type,
+                                           gs_config=gs_config,
+                                           dashify_logging_path=dashify_logging_path,
+                                           num_epochs=num_epochs,
+                                           job_type=job_type)
+        assert blueprints
+
     #
     # # def test_run(self):
     #     gym.add_blue_prints(blueprints)
