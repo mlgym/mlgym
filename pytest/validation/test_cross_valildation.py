@@ -98,7 +98,7 @@ class TestCrossValidation:
                                            dashify_logging_path=dashify_logging_path,
                                            num_epochs=num_epochs,
                                            job_type=job_type)
-        assert blueprints
+        assert len(blueprints) == 15
 
     #
     # # def test_run(self):
