@@ -14,7 +14,7 @@ import torch
 import pytest
 
 
-# from example.conv_net_blueprint import ConvNetBluePrint
+from example.conv_net_blueprint import ConvNetBluePrint
 
 
 class TestCrossValidation:
@@ -34,7 +34,9 @@ class TestCrossValidation:
 
     @pytest.fixture
     def gs_path(self) -> str:
-        return "grid_search/gs_config.yml"
+        # return os.path.join(os.path.abspath('.'), "..", "..", "example", "grid_search/gs_config.yml")
+
+        return "example/grid_search/gs_config.yml"
 
     @pytest.fixture
     def gs_config(self, gs_path) -> Dict[str, Any]:
@@ -51,7 +53,7 @@ class TestCrossValidation:
 
     @pytest.fixture
     def blue_print_type(self) -> Type:
-        return BluePrint
+        return ConvNetBluePrint
 
     @pytest.fixture
     def cv(self, iterator) -> CrossValidation:
