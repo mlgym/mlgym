@@ -6,6 +6,7 @@ import numpy as np
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.jobs import AbstractGymJob
 from ml_gym.io.config_parser import YAMLConfigLoader
+from ml_gym.util.grid_search import GridSearch
 from ml_gym.validation.cross_validation import CrossValidation
 from data_stack.dataset.iterator import SequenceDatasetIterator
 from data_stack.dataset.factory import InformedDatasetFactory
@@ -33,9 +34,9 @@ class TestCrossValidation:
 
     @pytest.fixture
     def gs_path(self) -> str:
-        # return os.path.join(os.path.abspath('.'), "..", "..", "example", "grid_search/gs_config.yml")
+        return os.path.join(os.path.abspath('.'), "..", "..", "example", "grid_search/gs_config.yml")
 
-        return "example/grid_search/gs_config.yml"
+        # return "example/grid_search/gs_config.yml"
 
     @pytest.fixture
     def gs_config(self, gs_path) -> Dict[str, Any]:
@@ -44,7 +45,7 @@ class TestCrossValidation:
 
     @pytest.fixture
     def num_epochs(self) -> int:
-        return 50
+        return 20
 
     @pytest.fixture
     def dashify_logging_path(self) -> str:
@@ -55,9 +56,13 @@ class TestCrossValidation:
         return ConvNetBluePrint
 
     @pytest.fixture
-    def cv(self, iterator) -> CrossValidation:
+    def num_folds(self) -> int:
+        return 5
+
+    @pytest.fixture
+    def cv(self, iterator, num_folds) -> CrossValidation:
         cv = CrossValidation(dataset_iterator=iterator,
-                             num_folds=5,
+                             num_folds=num_folds,
                              stratification=False,
                              target_pos=1,
                              shuffle=True,
@@ -98,9 +103,10 @@ class TestCrossValidation:
                                            dashify_logging_path=dashify_logging_path,
                                            num_epochs=num_epochs,
                                            job_type=job_type)
-        assert len(blueprints) == 15
+        gs_config = GridSearch.create_gs_from_config_dict(gs_config)
+        assert len(blueprints) == len(gs_config) * len(cv._get_fold_indices())
 
-    #
+        #
     # # def test_run(self):
     #     gym.add_blue_prints(blueprints)
     #     gym.run(parallel=True)
