@@ -1,4 +1,3 @@
-import os.path
 from collections import Counter
 from typing import Type, Dict, Any, List
 from datetime import datetime
@@ -7,7 +6,6 @@ import numpy as np
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.gym import Gym
 from ml_gym.gym.jobs import AbstractGymJob
-from ml_gym.io.config_parser import YAMLConfigLoader
 from ml_gym.util.grid_search import GridSearch
 from ml_gym.util.logger import QueuedLogging
 from ml_gym.validation.cross_validation import CrossValidation
@@ -18,11 +16,12 @@ import torch
 from ml_gym.validation.validator_factory import ValidatorFactory
 
 from pytests.test_env.fixtures import LoggingFixture, DeviceFixture
-from pytests.test_env.mocked_blueprint import ConvNetBluePrint
 import pytest
 
+from pytests.test_env.validation_fixtures import ValidationFixtures
 
-class TestCrossValidation(LoggingFixture, DeviceFixture):
+
+class TestCrossValidation(LoggingFixture, DeviceFixture, ValidationFixtures):
     @pytest.fixture
     def iterator(self) -> str:
         targets = [1] * 100 + [2] * 200 + [3] * 300
@@ -38,54 +37,6 @@ class TestCrossValidation(LoggingFixture, DeviceFixture):
         return InformedDatasetFactory.get_dataset_iterator(iterator, meta)
 
     @pytest.fixture
-    def gs_path(self) -> str:
-        return os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/gs_config_cv.yml")
-        # return "example/grid_search/gs_config.yml"
-
-    @pytest.fixture
-    def cv_path(self) -> str:
-        return os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/cv_config.yml")
-        # return "example/grid_search/gs_config.yml"
-
-    @pytest.fixture
-    def log_dir_path(self) -> str:
-        return "general_logging"
-
-    @pytest.fixture
-    def gs_config(self, gs_path) -> Dict[str, Any]:
-        gs_config = YAMLConfigLoader.load(gs_path)
-        return gs_config
-
-    @pytest.fixture
-    def cv_config(self, cv_path) -> Dict[str, Any]:
-        cv_config = YAMLConfigLoader.load(cv_path)
-        return cv_config
-
-    @pytest.fixture
-    def num_epochs(self) -> int:
-        return 2
-
-    @pytest.fixture
-    def dashify_logging_path(self) -> str:
-        return "dashify_logging"
-
-    @pytest.fixture
-    def blue_print_type(self) -> Type:
-        return ConvNetBluePrint
-
-    @pytest.fixture
-    def num_folds(self) -> int:
-        return 5
-
-    @pytest.fixture
-    def process_count(self) -> int:
-        return 2
-
-    @pytest.fixture
-    def log_std_to_file(self) -> bool:
-        return False
-
-    @pytest.fixture
     def cv(self, iterator: InformedDatasetIterator, num_folds: int) -> CrossValidation:
         cv = CrossValidation(dataset_iterator=iterator,
                              num_folds=num_folds,
@@ -96,10 +47,6 @@ class TestCrossValidation(LoggingFixture, DeviceFixture):
                              seed=1)
 
         return cv
-
-    @pytest.fixture
-    def keep_interim_results(self):
-        return False
 
     def test_get_fold_indices(self, iterator: InformedDatasetIterator, cv: CrossValidation):
         indices = cv._get_fold_indices()
@@ -129,12 +76,12 @@ class TestCrossValidation(LoggingFixture, DeviceFixture):
     @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD, AbstractGymJob.Type.LITE])
     def test_create_blue_prints(self, blue_print_type: Type[BluePrint],
                                 job_type: AbstractGymJob.Type, gs_config: Dict[str, Any], cv_config: Dict[str, Any],
-                                num_epochs: int,
+                                grid_search_id: str, num_epochs: int,
                                 dashify_logging_path: str,
                                 keep_interim_results: bool):
         cross_validator = ValidatorFactory.get_cross_validator(gs_config=gs_config,
                                                                cv_config=cv_config,
-                                                               grid_search_id=datetime.now().strftime("%Y-%m-%d--%H-%M-%S"),
+                                                               grid_search_id=grid_search_id,
                                                                blue_print_type=blue_print_type,
                                                                re_eval=False,
                                                                keep_interim_results=keep_interim_results)
@@ -154,12 +101,12 @@ class TestCrossValidation(LoggingFixture, DeviceFixture):
 
     @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD])
     def test_run(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
-                 gs_config: Dict[str, Any], cv_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str,
-                 process_count: int, device_ids: List[int], log_std_to_file: bool, log_dir_path: str,
-                 keep_interim_results: bool, start_logging):
+                 gs_config: Dict[str, Any], cv_config: Dict[str, Any], grid_search_id: str, num_epochs: int,
+                 dashify_logging_path: str, process_count: int, device_ids: List[int], log_std_to_file: bool,
+                 log_dir_path: str, keep_interim_results: bool, start_logging):
         cross_validator = ValidatorFactory.get_cross_validator(gs_config=gs_config,
                                                                cv_config=cv_config,
-                                                               grid_search_id=datetime.now().strftime("%Y-%m-%d--%H-%M-%S"),
+                                                               grid_search_id=grid_search_id,
                                                                blue_print_type=blue_print_type,
                                                                re_eval=False,
                                                                keep_interim_results=keep_interim_results)
