@@ -7,7 +7,8 @@ from ml_gym.multiprocessing.job import Job
 from ml_gym.multiprocessing.pool import Pool
 from ml_gym.util.logger import QueuedLogging
 
-from test_job import JobFixture, DeviceFixture, LoggingFixture
+from pytests.multiprocessing.test_job import JobFixture
+from pytests.test_env.fixtures import LoggingFixture, DeviceFixture
 
 
 class TestPool(JobFixture, DeviceFixture, LoggingFixture):

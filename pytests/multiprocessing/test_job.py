@@ -1,14 +1,12 @@
-from multiprocessing import Queue
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 import pytest
 import torch
 from ml_gym.multiprocessing.job import Job
-from ml_gym.util.devices import get_devices
-from ml_gym.util.logger import QueuedLogging
 
-from mocked_func import mocked_sum
+from pytests.multiprocessing.mocked_func import mocked_sum
+from pytests.test_env.fixtures import DeviceFixture
 
 
 class JobFixture:
@@ -41,33 +39,6 @@ class JobFixture:
             job = Job(job_id=i, fun=mocked_sum, param_dict={"arr": arrays[i]})
             jobs.append(job)
         return jobs
-
-
-class DeviceFixture:
-    @pytest.fixture
-    def device(self) -> torch.device:
-        return torch.device(0)
-
-    @pytest.fixture
-    def device_ids(self) -> List[int]:
-        return [0, 1, 2, 3]
-
-    @pytest.fixture
-    def devices(self, device_ids: List[int]) -> List[torch.device]:
-        devices = get_devices(device_ids)
-        return devices
-
-
-class LoggingFixture:
-    @pytest.fixture
-    def log_dir_path(self) -> str:
-        return "general_logging"
-
-    @pytest.fixture
-    def start_logging(self, log_dir_path: str):
-        if QueuedLogging._instance is None:
-            queue = Queue()
-            QueuedLogging.start_logging(queue, log_dir_path)
 
 
 class TestJob(JobFixture, DeviceFixture):

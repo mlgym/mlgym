@@ -32,10 +32,10 @@ class BluePrint(ABC):
 
     def get_experiment_info(self) -> ExperimentInfo:
         experiment_info = DashifyLogger.get_experiment_info(log_dir=self.dashify_logging_dir,
-                                                            subfolder_id=self.grid_search_id,
+                                                            subfolder_id=str(self.grid_search_id),
                                                             model_name=self.model_name,
                                                             dataset_name=self.dataset_name,
-                                                            run_id=self.run_id)
+                                                            run_id=str(self.run_id))
         DashifyLogger.save_experiment_info(experiment_info)
         DashifyLogger.save_config(config=self.config, experiment_info=experiment_info)
         return experiment_info

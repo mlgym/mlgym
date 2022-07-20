@@ -8,7 +8,8 @@ from ml_gym.util.logger import QueuedLogging
 from multiprocessing import Queue
 import torch
 
-from test_job import JobFixture, DeviceFixture, LoggingFixture
+from pytests.multiprocessing.test_job import JobFixture
+from pytests.test_env.fixtures import DeviceFixture, LoggingFixture
 
 
 class TestWorkerProcess(JobFixture, DeviceFixture, LoggingFixture):
