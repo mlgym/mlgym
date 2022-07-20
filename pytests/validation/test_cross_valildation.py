@@ -1,6 +1,7 @@
 import os.path
 from collections import Counter
-from typing import Type, Dict, Any
+from multiprocessing import Queue
+from typing import Type, Dict, Any, List
 
 import numpy as np
 from ml_gym.blueprints.blue_prints import BluePrint
@@ -8,17 +9,19 @@ from ml_gym.gym.gym import Gym
 from ml_gym.gym.jobs import AbstractGymJob
 from ml_gym.io.config_parser import YAMLConfigLoader
 from ml_gym.util.grid_search import GridSearch
+from ml_gym.util.logger import QueuedLogging
 from ml_gym.validation.cross_validation import CrossValidation
 from data_stack.dataset.iterator import SequenceDatasetIterator
 from data_stack.dataset.factory import InformedDatasetFactory
 from data_stack.dataset.meta import MetaFactory
 import torch
+
+from pytests.test_env.fixtures import LoggingFixture
+from pytests.test_env.mocked_blueprint import ConvNetBluePrint
 import pytest
 
-from mocked_blueprint import ConvNetBluePrint
 
-
-class TestCrossValidation:
+class TestCrossValidation(LoggingFixture):
     @pytest.fixture
     def iterator(self) -> str:
         targets = [1] * 100 + [2] * 200 + [3] * 300
@@ -35,9 +38,13 @@ class TestCrossValidation:
 
     @pytest.fixture
     def gs_path(self) -> str:
-        # return os.path.join(os.path.abspath('.'), "..", "..", "example", "grid_search/gs_config.yml")
+        return os.path.join(os.path.abspath('.'), "..", "..", "example", "grid_search/gs_config.yml")
 
-        return "example/grid_search/gs_config.yml"
+        # return "example/grid_search/gs_config.yml"
+
+    @pytest.fixture
+    def log_dir_path(self) -> str:
+        return "general_logging"
 
     @pytest.fixture
     def gs_config(self, gs_path) -> Dict[str, Any]:
@@ -46,7 +53,7 @@ class TestCrossValidation:
 
     @pytest.fixture
     def num_epochs(self) -> int:
-        return 20
+        return 2
 
     @pytest.fixture
     def dashify_logging_path(self) -> str:
@@ -59,6 +66,18 @@ class TestCrossValidation:
     @pytest.fixture
     def num_folds(self) -> int:
         return 5
+
+    @pytest.fixture
+    def process_count(self) -> int:
+        return 2
+
+    @pytest.fixture
+    def device_ids(self) -> List[int]:
+        return [0, 1, 2, 3]
+
+    @pytest.fixture
+    def log_std_to_file(self) -> bool:
+        return False
 
     @pytest.fixture
     def cv(self, iterator, num_folds) -> CrossValidation:
@@ -81,9 +100,11 @@ class TestCrossValidation:
                 if i != j:
                     assert set(outer_fold_1).isdisjoint(outer_fold_2)
 
-        # check stratification
-        folder_indices = np.concatenate(indices, axis=0)
-        target_counts = dict(Counter([iterator[i][1].item() for i in folder_indices]))
+        for folder_indices in indices:
+            assert len(folder_indices) == 120
+        # check each folds
+        cat_indices = np.concatenate(indices, axis=0)
+        target_counts = dict(Counter([iterator[i][1].item() for i in cat_indices]))
         assert target_counts == {1.0: 100, 2.0: 200, 3.0: 300}
 
     def test_create_folds_splits(self, iterator, cv):
@@ -107,14 +128,17 @@ class TestCrossValidation:
         gs_config = GridSearch.create_gs_from_config_dict(gs_config)
         assert len(blueprints) == len(gs_config) * len(cv._get_fold_indices())
 
-    def test_run(self, iterator, cv, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
-                 gs_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str):
-        blueprints = cv.create_blue_prints(blue_print_type=blue_print_type,
-                                           gs_config=gs_config,
-                                           dashify_logging_path=dashify_logging_path,
-                                           num_epochs=num_epochs,
-                                           job_type=job_type)
-        gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
-        gym.add_blue_prints(blueprints)
-        gym.run(parallel=True)
-        pass
+    # @pytest.mark.parametrize("job_type",
+    #                          [AbstractGymJob.Type.STANDARD])
+    # def test_run(self, iterator, cv, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
+    #              gs_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str, process_count: int,
+    #              device_ids: List[int], log_std_to_file: bool, log_dir_path: str, start_logging):
+    #     blueprints = cv.create_blue_prints(blue_print_type=blue_print_type,
+    #                                        gs_config=gs_config,
+    #                                        dashify_logging_path=dashify_logging_path,
+    #                                        num_epochs=num_epochs,
+    #                                        job_type=job_type)
+    #     gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
+    #     gym.add_blue_prints(blueprints)
+    #     gym.run(parallel=True)
+    #     QueuedLogging.stop_listener()

@@ -80,7 +80,7 @@ class TestGridSearch:
         c = configs[0]
         c_negligible = {'p_3': {'p_3.1': None}, 'p_1': None, 'p_4': [12, None]}
         GridSearch._delete_branches(c, c_negligible)
-        print(GridSearch._is_config_equal(c, c))
+        assert GridSearch._is_config_equal(c, c)
 
     def test_create_gs_configs_from_path(self, config_path):
         configs = GridSearch.create_gs_configs_from_path(config_path)
