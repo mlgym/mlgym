@@ -11,10 +11,10 @@ class BluePrint(ABC):
     """ Abstract class that provides a blueprint for creating `AbstractGymJob`
     """
 
-    def __init__(self, run_mode: AbstractGymJob.Mode, job_type: AbstractGymJob.Type, model_name: str, dataset_name: str,  epochs: int,
+    def __init__(self, run_mode: AbstractGymJob.Mode, job_type: AbstractGymJob.Type, model_name: str, dataset_name: str,
+                 epochs: int,
                  config: Dict[str, Any], dashify_logging_dir: str,
                  grid_search_id: str, run_id: str, external_injection: Dict[str, Any] = None):
-
         self.run_mode = run_mode
         self.job_type = job_type
         self.config = config
@@ -42,7 +42,7 @@ class BluePrint(ABC):
 
     @staticmethod
     @abstractmethod
-    def construct_components(config: Dict, component_names: List[str], device: torch.device,
+    def construct_components(config: Dict, component_names: List[str], device: torch.device = None,
                              external_injection: Dict[str, Any] = None) -> List[Any]:
         return NotImplementedError
 
@@ -56,7 +56,6 @@ def create_blueprint(blue_print_class: Type[BluePrint],
                      num_epochs: int,
                      grid_search_id: str,
                      external_injection: Dict[str, Any] = None) -> List[BluePrint]:
-
     blue_print = blue_print_class(grid_search_id=grid_search_id,
                                   run_id=str(experiment_id),
                                   epochs=num_epochs,
