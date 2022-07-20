@@ -75,22 +75,22 @@ class TestCrossValidation(LoggingFixture, DeviceFixture, ValidationFixtures):
 
     @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD, AbstractGymJob.Type.LITE])
     def test_create_blue_prints(self, blue_print_type: Type[BluePrint],
-                                job_type: AbstractGymJob.Type, gs_config: Dict[str, Any], cv_config: Dict[str, Any],
+                                job_type: AbstractGymJob.Type, gs_cv_config: Dict[str, Any], cv_config: Dict[str, Any],
                                 grid_search_id: str, num_epochs: int,
                                 dashify_logging_path: str,
                                 keep_interim_results: bool):
-        cross_validator = ValidatorFactory.get_cross_validator(gs_config=gs_config,
+        cross_validator = ValidatorFactory.get_cross_validator(gs_config=gs_cv_config,
                                                                cv_config=cv_config,
                                                                grid_search_id=grid_search_id,
                                                                blue_print_type=blue_print_type,
                                                                re_eval=False,
                                                                keep_interim_results=keep_interim_results)
         blueprints = cross_validator.create_blue_prints(blue_print_type=blue_print_type,
-                                                        gs_config=gs_config,
+                                                        gs_config=gs_cv_config,
                                                         dashify_logging_path=dashify_logging_path,
                                                         num_epochs=num_epochs,
                                                         job_type=job_type)
-        gs_config = GridSearch.create_gs_from_config_dict(gs_config)
+        gs_config = GridSearch.create_gs_from_config_dict(gs_cv_config)
         assert len(blueprints) == len(gs_config) * len(cross_validator._get_fold_indices())
         for i, blueprint in enumerate(blueprints):
             blueprint.config['cv_experiment_information']["config"]['experiment_id'] = i
@@ -101,15 +101,15 @@ class TestCrossValidation(LoggingFixture, DeviceFixture, ValidationFixtures):
 
     @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD])
     def test_run(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
-                 gs_config: Dict[str, Any], cv_config: Dict[str, Any], grid_search_id: str, num_epochs: int,
+                 gs_cv_config: Dict[str, Any], cv_config: Dict[str, Any], grid_search_id: str, num_epochs: int,
                  dashify_logging_path: str, process_count: int, device_ids: List[int], log_std_to_file: bool,
                  log_dir_path: str, keep_interim_results: bool, start_logging):
-        cross_validator = ValidatorFactory.get_cross_validator(gs_config=gs_config,
+        cross_validator = ValidatorFactory.get_cross_validator(gs_config=gs_cv_config,
                                                                cv_config=cv_config,
                                                                grid_search_id=grid_search_id,
                                                                blue_print_type=blue_print_type,
                                                                re_eval=False,
                                                                keep_interim_results=keep_interim_results)
         gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
-        cross_validator.run(blue_print_type, gym, gs_config, num_epochs, dashify_logging_path)
+        cross_validator.run(blue_print_type, gym, gs_cv_config, num_epochs, dashify_logging_path)
         QueuedLogging.stop_listener()
