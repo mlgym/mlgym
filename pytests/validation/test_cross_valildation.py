@@ -99,17 +99,20 @@ class TestCrossValidation(LoggingFixture, DeviceFixture, ValidationFixtures):
             blueprint.run_id = str(i)
             blueprint.epochs = num_epochs
 
-    @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD])
-    def test_run(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
-                 gs_cv_config: Dict[str, Any], cv_config: Dict[str, Any], grid_search_id: str, num_epochs: int,
-                 dashify_logging_path: str, process_count: int, device_ids: List[int], log_std_to_file: bool,
-                 log_dir_path: str, keep_interim_results: bool, start_logging):
-        cross_validator = ValidatorFactory.get_cross_validator(gs_config=gs_cv_config,
-                                                               cv_config=cv_config,
-                                                               grid_search_id=grid_search_id,
-                                                               blue_print_type=blue_print_type,
-                                                               re_eval=False,
-                                                               keep_interim_results=keep_interim_results)
-        gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
-        cross_validator.run(blue_print_type, gym, gs_cv_config, num_epochs, dashify_logging_path)
-        QueuedLogging.stop_listener()
+    # @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD])
+    # def test_run(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
+    #              gs_cv_config: Dict[str, Any], cv_config: Dict[str, Any], grid_search_id: str, num_epochs: int,
+    #              dashify_logging_path: str, process_count: int, device_ids: List[int], log_std_to_file: bool,
+    #              log_dir_path: str, keep_interim_results: bool, start_logging):
+    #     iterator_key = cv_config["CV"]["iterator_key"]
+    #     split_key = cv_config["CV"]["split_key"]
+    #     component_names = [iterator_key]
+    #     components = blue_print_type.construct_components(config=gs_cv_config, component_names=component_names)
+    #     iterator = components[iterator_key][split_key]
+    #     cross_validator = CrossValidation(dataset_iterator=iterator, grid_search_id=grid_search_id,
+    #                                       **cv_config["CV"]["config"],
+    #                                       re_eval=False,
+    #                                       keep_interim_results=keep_interim_results)
+    #     gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
+    #     cross_validator.run(blue_print_type, gym, gs_cv_config, num_epochs, dashify_logging_path)
+    #     QueuedLogging.stop_listener()

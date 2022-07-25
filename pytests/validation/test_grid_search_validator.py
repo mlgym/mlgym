@@ -10,17 +10,17 @@ from pytests.test_env.fixtures import LoggingFixture, DeviceFixture
 from pytests.test_env.validation_fixtures import ValidationFixtures
 
 
-class TestGridSearchValidator(LoggingFixture, DeviceFixture, ValidationFixtures):
+# class TestGridSearchValidator(LoggingFixture, DeviceFixture, ValidationFixtures):
 
-    @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD])
-    def test_run(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
-                 gs_config: Dict[str, Any], grid_search_id: str, num_epochs: int,
-                 dashify_logging_path: str,
-                 process_count: int, device_ids: List[int], log_std_to_file: bool, log_dir_path: str,
-                 keep_interim_results: bool, start_logging):
-        gs_validator = ValidatorFactory.get_gs_validator(grid_search_id=grid_search_id,
-                                                         re_eval=False,
-                                                         keep_interim_results=keep_interim_results)
-        gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
-        gs_validator.run(blue_print_type, gym, gs_config, num_epochs, dashify_logging_path)
-        QueuedLogging.stop_listener()
+    # @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD])
+    # def test_run(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
+    #              gs_config: Dict[str, Any], grid_search_id: str, num_epochs: int,
+    #              dashify_logging_path: str,
+    #              process_count: int, device_ids: List[int], log_std_to_file: bool, log_dir_path: str,
+    #              keep_interim_results: bool, start_logging):
+    #     gs_validator = ValidatorFactory.get_gs_validator(grid_search_id=grid_search_id,
+    #                                                      re_eval=False,
+    #                                                      keep_interim_results=keep_interim_results)
+    #     gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
+    #     gs_validator.run(blue_print_type, gym, gs_config, num_epochs, dashify_logging_path)
+    #     QueuedLogging.stop_listener()
