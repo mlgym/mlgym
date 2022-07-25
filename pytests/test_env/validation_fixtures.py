@@ -72,7 +72,7 @@ class ValidationFixtures:
 
     @pytest.fixture
     def num_folds(self) -> int:
-        return 5
+        return 2
 
     @pytest.fixture
     def process_count(self) -> int:
