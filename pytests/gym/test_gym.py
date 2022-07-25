@@ -1,28 +1,16 @@
 from typing import List
 
 import pytest
-from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.gym import Gym
 import torch
 
 from example.conv_net_blueprint import ConvNetBluePrint
-from fixtures import DeviceFixture
+from pytests.test_env.fixtures import DeviceFixture
 
 torch.multiprocessing.set_start_method('spawn', force=True)
 
 
-class TestGym(DeviceFixture):
-    @pytest.fixture
-    def process_count(self) -> int:
-        return 2
-
-    @pytest.fixture
-    def device_ids(self) -> List[int]:
-        return [0, 1, 2, 3]
-
-    @pytest.fixture
-    def log_std_to_file(self) -> bool:
-        return False
+class TestGym(DeviceFixture, ):
 
     @pytest.fixture
     def blue_print(self, device):
