@@ -2,9 +2,11 @@ from typing import List
 
 import numpy as np
 import pytest
-from ml_gym.multiprocessing.job import Job
 import torch
-from ml_gym.util.devices import get_devices
+from ml_gym.multiprocessing.job import Job
+
+from pytests.multiprocessing.mocked_func import mocked_sum
+from pytests.test_env.fixtures import DeviceFixture
 
 
 class JobFixture:
@@ -39,24 +41,13 @@ class JobFixture:
         return jobs
 
 
-class DeviceFixture:
-    @pytest.fixture
-    def device(self) -> torch.device:
-        return torch.device(0)
+class TestJob(JobFixture, DeviceFixture):
 
-    @pytest.fixture
-    def device_ids(self) -> List[int]:
-        return [0, 1, 2, 3]
+    def test_execute(self, job: Job, arr: np.array):
+        s = job.execute()
+        assert s == np.sum(arr)
 
-    @pytest.fixture
-    def devices(self, device_ids: List[int]) -> List[torch.device]:
-        devices = get_devices(device_ids)
-        return devices
-
-
-def mocked_sum(arr, device):
-    arr = torch.tensor(np.array(arr), device=device)
-    s = 0
-    for i in arr:
-        s += i
-    return s
+    def test_device(self, job: Job, device: torch.device):
+        assert job.device is None
+        job.device = device
+        assert job._device == device
