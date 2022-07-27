@@ -97,11 +97,13 @@ class ConvNetBluePrint(BluePrint):
                  run_id: str, external_injection: Dict[str, Any] = None):
         model_name = "conv_net"
         dataset_name = ""
-        super().__init__(run_mode, job_type, model_name, dataset_name, epochs, config, dashify_logging_dir, grid_search_id,
+        super().__init__(run_mode, job_type, model_name, dataset_name, epochs, config, dashify_logging_dir,
+                         grid_search_id,
                          run_id, external_injection)
 
     @staticmethod
-    def construct_components(config: Dict, component_names: List[str], device: torch.device, external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
+    def construct_components(config: Dict, component_names: List[str], device: torch.device,
+                             external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
         if external_injection is not None:
             injection_mapping = {"id_conv_mnist_standard_collator": MNISTCollator,
                                  "id_computation_device": device,
@@ -114,13 +116,16 @@ class ConvNetBluePrint(BluePrint):
 
         component_factory = ComponentFactory(injector)
         component_factory.register_component_type("MODEL_REGISTRY", "DEFAULT", MyModelRegistryConstructable)
+        component_factory.register_component_type("MODEL_REGISTRY", "DEFAULT", MyModelRegistryConstructable)
+
         components = component_factory.build_components_from_config(config, component_names)
         return components
 
     def construct(self, device: torch.device = None) -> 'AbstractGymJob':
         experiment_info = self.get_experiment_info()
         component_names = ["model", "trainer", "optimizer", "evaluator"]
-        components = ConvNetBluePrint.construct_components(self.config, component_names, device, self.external_injection)
+        components = ConvNetBluePrint.construct_components(self.config, component_names, device,
+                                                           self.external_injection)
 
         gym_job = GymJobFactory.get_gym_job(self.run_mode, job_type=self.job_type,
                                             experiment_info=experiment_info, epochs=self.epochs, **components)
