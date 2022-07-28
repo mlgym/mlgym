@@ -40,8 +40,10 @@ class ValidationFixtures:
 
     @pytest.fixture
     def nested_cv_config(self) -> str:
-        nested_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env",
-                                      "nested_cross_validation/nested_cv_config.yml")
+        nested_cv_path = "pytests/test_env/nested_cross_validation/nested_cv_config.yml"
+
+        # nested_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env",
+        #                               "nested_cross_validation/nested_cv_config.yml")
         nested_cv_config = YAMLConfigLoader.load(nested_cv_path)
         return nested_cv_config
 
