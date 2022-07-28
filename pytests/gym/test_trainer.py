@@ -30,7 +30,7 @@ class TestTrainerComponent(ModelFixture, LossFixture, Postprocessors, DataLoader
 
     @pytest.fixture
     def epoch(self) -> int:
-        return 2
+        return 1
 
     @pytest.fixture
     def batch(self, data_loader: DataLoader, device: torch.device) -> DatasetBatch:
