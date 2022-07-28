@@ -34,10 +34,7 @@ class TestTrainerComponent(ModelFixture, LossFixture, Postprocessors, DataLoader
 
     @pytest.fixture
     def batch(self, data_loader: DataLoader, device: torch.device) -> DatasetBatch:
-        samples, targets = list(data_loader)[0][1], list(data_loader)[0][1]
-        dataset_batch = DatasetBatch(targets={"target_key": targets.clone()},
-                                     samples=samples.clone(),
-                                     tags=targets.clone())
+        dataset_batch = list(data_loader)[0]
         dataset_batch.to_device(device=device)
         return dataset_batch
 
