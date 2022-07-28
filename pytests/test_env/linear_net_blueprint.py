@@ -91,8 +91,8 @@ class MyModelRegistryConstructable(ModelRegistryConstructable):
 class MockedDatasetFactory(BaseDatasetFactory):
     def __init__(self):
         super().__init__()
-        samples = [1] * 100 + [2] * 200 + [3] * 300
-        targets = [1] * 100 + [2] * 200 + [3] * 300
+        samples = [1] * 10 + [2] * 20 + [3] * 30
+        targets = [1] * 10 + [2] * 20 + [3] * 30
 
         test_samples = [1] * 20 + [2] * 40 + [3] * 60
         test_targets = [1] * 20 + [2] * 40 + [3] * 60
