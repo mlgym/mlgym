@@ -8,8 +8,6 @@ global_config:
 dataset_repository:
   component_type_key: DATASET_REPOSITORY
   variant_key: DEFAULT
-  config:
-    storage_connector_path: *storage_path_anchor
 
 dataset_iterators:
   component_type_key: DATASET_ITERATORS
@@ -18,7 +16,7 @@ dataset_iterators:
     - name: repository
       component_name: dataset_repository
   config:
-    dataset_identifier: mnist
+    dataset_identifier: mocked_dataset
     split_configs:
         - split: train 
         - split: test
