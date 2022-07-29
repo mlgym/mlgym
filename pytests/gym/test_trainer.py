@@ -55,20 +55,20 @@ class TestTrainerComponent(ModelFixture, LossFixture, Postprocessors, DataLoader
 
         return train_component
 
-    # def test_train_batch(self, train_component: TrainComponent, batch: DatasetBatch, model: NNModel,
-    #                      optimizer: OptimizerAdapter, device: torch.device):
-    #     optimizer.register_model_params(dict(model.named_parameters()))
-    #
-    #     old_model_parameters = deepcopy(dict(model.named_parameters()))
-    #
-    #     train_component.train_batch(batch, model, optimizer, device)
-    #
-    #     model_parameters = dict(model.named_parameters())
-    #
-    #     for old_key, old_value in old_model_parameters.items():
-    #         for key, value in model_parameters.items():
-    #             if old_key == key:
-    #                 assert not (old_value.detach().cpu().numpy() == value.detach().cpu().numpy()).all()
+    def test_train_batch(self, train_component: TrainComponent, batch: DatasetBatch, model: NNModel,
+                         optimizer: OptimizerAdapter, device: torch.device):
+        optimizer.register_model_params(dict(model.named_parameters()))
+
+        old_model_parameters = deepcopy(dict(model.named_parameters()))
+
+        train_component.train_batch(batch, model, optimizer, device)
+
+        model_parameters = dict(model.named_parameters())
+
+        for old_key, old_value in old_model_parameters.items():
+            for key, value in model_parameters.items():
+                if old_key == key:
+                    assert not (old_value.detach().cpu().numpy() == value.detach().cpu().numpy()).all()
 
     # def test_train_epoch(self, train_component: TrainComponent, data_loader: DatasetLoader, model: NNModel,
     #                      optimizer: OptimizerAdapter, device: torch.device, epoch: int):
