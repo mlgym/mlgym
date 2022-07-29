@@ -11,6 +11,7 @@ from ml_gym.gym.trainer import TrainComponent, Trainer
 from ml_gym.loss_functions.loss_functions import Loss
 from ml_gym.models.nn.net import NNModel
 from ml_gym.optimizers.optimizer import OptimizerAdapter
+from ml_gym.util.devices import get_devices
 from torch.optim.sgd import SGD
 from torch.utils.data import DataLoader
 
@@ -22,7 +23,8 @@ class TestTrainerComponent(ModelFixture, LossFixture, Postprocessors, DataLoader
 
     @pytest.fixture
     def device(self) -> torch.device:
-        return torch.device(0)
+        device = get_devices([0])[0]
+        return device
 
     @pytest.fixture
     def show_progress(self) -> bool:
@@ -32,7 +34,7 @@ class TestTrainerComponent(ModelFixture, LossFixture, Postprocessors, DataLoader
     def epoch(self) -> int:
         return 1
 
-    # @pytest.fixture
+    @pytest.fixture
     def test_batch(self, data_loader: DatasetLoader, device: torch.device) -> DatasetBatch:
         dataset_batch = list(data_loader)[0]
         dataset_batch.to_device(device=device)
