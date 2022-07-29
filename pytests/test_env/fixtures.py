@@ -11,7 +11,9 @@ from ml_gym.util.logger import QueuedLogging
 class DeviceFixture:
     @pytest.fixture
     def device(self) -> torch.device:
-        return torch.device(0)
+        device = get_devices([0])[0]
+
+        return device
 
     @pytest.fixture
     def device_ids(self) -> List[int]:

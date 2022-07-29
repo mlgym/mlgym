@@ -99,22 +99,22 @@ class TestTrainer(TestTrainerComponent):
     def cur_epoch(self) -> int:
         return 1
 
-    # def test_trainer_epoch(self, trainer: Trainer, cur_epoch: int, epoch: int, model: NNModel,
-    #                        optimizer: OptimizerAdapter, device: torch.device):
-    #
-    #     old_model_parameters = deepcopy(dict(model.named_parameters()))
-    #
-    #     optimizer.register_model_params(dict(model.named_parameters()))
-    #
-    #     trainer.set_current_epoch(1)
-    #     trainer.set_num_epochs(epoch)
-    #     for i in range(epoch):
-    #         model = trainer.train_epoch(model, optimizer, device)
-    #     assert trainer.is_done()
-    #
-    #     model_parameters = dict(model.named_parameters())
-    #     # check if the model parameters changed
-    #     for old_key, old_value in old_model_parameters.items():
-    #         for key, value in model_parameters.items():
-    #             if old_key == key:
-    #                 assert not (old_value.detach().cpu().numpy() == value.detach().cpu().numpy()).all()
+    def test_trainer_epoch(self, trainer: Trainer, cur_epoch: int, epoch: int, model: NNModel,
+                           optimizer: OptimizerAdapter, device: torch.device):
+
+        old_model_parameters = deepcopy(dict(model.named_parameters()))
+
+        optimizer.register_model_params(dict(model.named_parameters()))
+
+        trainer.set_current_epoch(1)
+        trainer.set_num_epochs(epoch)
+        for i in range(epoch):
+            model = trainer.train_epoch(model, optimizer, device)
+        assert trainer.is_done()
+
+        model_parameters = dict(model.named_parameters())
+        # check if the model parameters changed
+        for old_key, old_value in old_model_parameters.items():
+            for key, value in model_parameters.items():
+                if old_key == key:
+                    assert not (old_value.detach().cpu().numpy() == value.detach().cpu().numpy()).all()
