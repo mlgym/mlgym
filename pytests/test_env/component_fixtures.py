@@ -97,9 +97,9 @@ class DataLoaderFixture(Keys):
         iterator = InformedDatasetFactory.get_dataset_iterator(dataset_iterator, meta)
         return iterator
 
-    # @pytest.fixture
-    def test_data_loader(self, dataset_iterator: InformedDatasetIteratorIF, batch_size: int, sampler: Sampler,
-                    collator: Collator, drop_last: bool = False) -> DataLoader:
+    @pytest.fixture
+    def data_loader(self, dataset_iterator: InformedDatasetIteratorIF, batch_size: int, sampler: Sampler,
+                    collator: Collator, drop_last: bool = False) -> DatasetLoader:
         data_loader = DatasetLoader(dataset_iterator=dataset_iterator,
                                     batch_size=batch_size,
                                     sampler=sampler,
