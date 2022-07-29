@@ -48,27 +48,28 @@ class TestTrainerComponent(ModelFixture, LossFixture, Postprocessors, DataLoader
         inference_component = InferenceComponent(no_grad=False)
         return inference_component
 
-    @pytest.fixture
-    def train_component(self, inference_component: InferenceComponent, postprocessors: List[PredictPostProcessingIF],
-                        train_loss_fun: Loss, show_progress: bool) -> TrainComponent:
+    # @pytest.fixture
+    def test_train_component(self, inference_component: InferenceComponent,
+                             postprocessors: List[PredictPostProcessingIF],
+                             train_loss_fun: Loss, show_progress: bool) -> TrainComponent:
         train_component = TrainComponent(inference_component, postprocessors, train_loss_fun, show_progress)
 
         return train_component
 
-    def test_train_batch(self, train_component: TrainComponent, batch: DatasetBatch, model: NNModel,
-                         optimizer: OptimizerAdapter, device: torch.device):
-        optimizer.register_model_params(dict(model.named_parameters()))
+    # def test_train_batch(self, train_component: TrainComponent, batch: DatasetBatch, model: NNModel,
+    #                      optimizer: OptimizerAdapter, device: torch.device):
+    #     optimizer.register_model_params(dict(model.named_parameters()))
 
-        old_model_parameters = deepcopy(dict(model.named_parameters()))
+    # old_model_parameters = deepcopy(dict(model.named_parameters()))
 
-        # train_component.train_batch(batch, model, optimizer, device)
-        #
-        # model_parameters = dict(model.named_parameters())
-        #
-        # for old_key, old_value in old_model_parameters.items():
-        #     for key, value in model_parameters.items():
-        #         if old_key == key:
-        #             assert not (old_value.detach().cpu().numpy() == value.detach().cpu().numpy()).all()
+    # train_component.train_batch(batch, model, optimizer, device)
+    #
+    # model_parameters = dict(model.named_parameters())
+    #
+    # for old_key, old_value in old_model_parameters.items():
+    #     for key, value in model_parameters.items():
+    #         if old_key == key:
+    #             assert not (old_value.detach().cpu().numpy() == value.detach().cpu().numpy()).all()
 
     # def test_train_epoch(self, train_component: TrainComponent, data_loader: DatasetLoader, model: NNModel,
     #                      optimizer: OptimizerAdapter, device: torch.device, epoch: int):
