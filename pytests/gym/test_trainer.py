@@ -32,8 +32,8 @@ class TestTrainerComponent(ModelFixture, LossFixture, Postprocessors, DataLoader
     def epoch(self) -> int:
         return 1
 
-    @pytest.fixture
-    def batch(self, data_loader: DataLoader, device: torch.device) -> DatasetBatch:
+    # @pytest.fixture
+    def test_batch(self, data_loader: DataLoader, device: torch.device) -> DatasetBatch:
         dataset_batch = list(data_loader)[0]
         dataset_batch.to_device(device=device)
         return dataset_batch
@@ -49,17 +49,17 @@ class TestTrainerComponent(ModelFixture, LossFixture, Postprocessors, DataLoader
         return inference_component
 
     @pytest.fixture
-    def train_component(self, inference_component: InferenceComponent, postprocessors: List[PredictPostProcessingIF],
+    def test_train_component(self, inference_component: InferenceComponent, postprocessors: List[PredictPostProcessingIF],
                         train_loss_fun: Loss, show_progress: bool) -> TrainComponent:
         train_component = TrainComponent(inference_component, postprocessors, train_loss_fun, show_progress)
 
         return train_component
 
-    def test_train_batch(self, train_component: TrainComponent, batch: DatasetBatch, model: NNModel,
-                         optimizer: OptimizerAdapter, device: torch.device):
-        optimizer.register_model_params(dict(model.named_parameters()))
-
-        old_model_parameters = deepcopy(dict(model.named_parameters()))
+    # def test_train_batch(self, train_component: TrainComponent, batch: DatasetBatch, model: NNModel,
+    #                      optimizer: OptimizerAdapter, device: torch.device):
+    #     optimizer.register_model_params(dict(model.named_parameters()))
+    #
+    #     old_model_parameters = deepcopy(dict(model.named_parameters()))
 
         # train_component.train_batch(batch, model, optimizer, device)
         #
