@@ -49,7 +49,7 @@ class TestTrainerComponent(ModelFixture, LossFixture, Postprocessors, DataLoader
         return inference_component
 
     @pytest.fixture
-    def test_train_component(self, inference_component: InferenceComponent, postprocessors: List[PredictPostProcessingIF],
+    def train_component(self, inference_component: InferenceComponent, postprocessors: List[PredictPostProcessingIF],
                         train_loss_fun: Loss, show_progress: bool) -> TrainComponent:
         train_component = TrainComponent(inference_component, postprocessors, train_loss_fun, show_progress)
 
