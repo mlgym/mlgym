@@ -1,4 +1,10 @@
+// =================== API TYPES ======================
+
 interface BaseMessageType {
+    event_id: number;
+}
+
+interface EventInfoType {
     event_type: string;
     creation_ts: number;
 }
@@ -15,13 +21,17 @@ export type JobStatusPayloadType = {
     device?: string // "GPU {1, ..., n}" or "CPU"
 }
 
+export type JobStatusInnerType = {
+    payload: JobStatusPayloadType
+} & EventInfoType
+
+
+export type JobStatusType = { data: JobStatusInnerType, } & BaseMessageType
+
+
 export type IOStatsType = {
     msgTS: Array<number>;
     lastPing: number;
     lastPong: number;
     isConnected: boolean;
-  };
-
-
-export type JobStatusType = { payload: JobStatusPayloadType } & BaseMessageType 
-
+};
