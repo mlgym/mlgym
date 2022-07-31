@@ -119,3 +119,6 @@ general_logs/
 dashify_logging
 general_logging
 pytest/persistency/example_experiments
+src/ml_gym/frontend/dashboard/public
+src/ml_gym/frontend/dashboard/node_modules
+src/ml_gym/frontend/node_modules
