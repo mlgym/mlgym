@@ -9,9 +9,8 @@ import Throughput from './routes/throughput_board'
 import io from 'socket.io-client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { useAppDispatch } from "./app/hooks"
-import { pingAdded } from "./features/ping/pingSlice"
-import {IOStatsType} from "./app/datatypes"
-
+import { IOStatsType } from "./app/datatypes"
+import { jobStatusAdded } from "./features/jobsStatus/jobsStatusSlice"
 
 const socket = io("http://localhost:7000");
 
@@ -22,12 +21,11 @@ export default function App() {
 
   const [sideBarExpanded, setSideBarExpanded] = useState<boolean>(true);
   const [selectedPageId, setSelectedPageId] = useState<number>(0)
-  const [ioStats, setIOStats] = useState<IOStatsType>({isConnected: socket.connected, msgTS: [], lastPing: 0, lastPong: 0 });
-  const [msgs, setMsgs] = useState<Array<any>>([]);
+  const [ioStats, setIOStats] = useState<IOStatsType>({ isConnected: socket.connected, msgTS: [], lastPing: 0, lastPong: 0 });
   const appDispatch = useAppDispatch()
 
 
-
+  // ============ IOSTATS functions ============
   const setLastPing = (ts: number) => {
     setIOStats(oldIOStats => ({
       ...oldIOStats,
@@ -59,6 +57,11 @@ export default function App() {
     }))
   }
 
+  // ============ MLgym Messages functions ============
+
+  const eventTypeToActionCreator: any = {
+    "job_status": jobStatusAdded
+  }
 
   useEffect(() => {
 
@@ -73,7 +76,14 @@ export default function App() {
 
     socket.on('mlgym_event', (msg) => {
       addMsgTs(new Date().getTime())
-      setMsgs(oldArray => [...oldArray, msg])
+      const msgRep = JSON.parse(msg)
+      const eventType: string = msgRep["data"]["event_type"]
+      if (eventType in eventTypeToActionCreator) {
+        const actionCreator = eventTypeToActionCreator[eventType]
+        appDispatch(actionCreator(msgRep))
+      } else {
+        console.log("WARNING: eventy type " + eventType + " not supported!")
+      }
     });
 
     socket.on('pong', () => {
@@ -102,7 +112,7 @@ export default function App() {
 
 
 
-  const msgs_rep = msgs.map(m => (<div> {JSON.stringify(m)}</div>))
+  // const msgs_rep = msgs.map(m => (<div> {JSON.stringify(m)}</div>))
 
 
   return (
