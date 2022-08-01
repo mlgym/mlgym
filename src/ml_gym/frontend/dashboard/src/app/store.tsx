@@ -1,11 +1,12 @@
 import { configureStore, ThunkAction, Action, } from '@reduxjs/toolkit'
 import jobStatusReducer from '../features/jobsStatus/jobsStatusSlice'
-import pingReducer from '../features/ping/pingSlice'
+import modelStatusReducer from '../features/modelsStatus/modelsStatusSlice'
+
 
 export const store = configureStore({
   reducer: {
-    jobStatus: jobStatusReducer,
-    ping: pingReducer
+    jobsStatus: jobStatusReducer,
+    modelsStatus: modelStatusReducer
   }
 });
 

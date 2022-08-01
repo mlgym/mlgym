@@ -1,21 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { JobStatusMessageCollectionType } from '../../app/datatypes'
+import { JobStatusMessageCollectionType, JobStatusType, JobStatusRowType} from '../../app/datatypes'
+import type { RootState } from '../../app/store';
+
 
 
 const initialState = {
     messages: [],
     job_id_to_latest_message_index: {}
-    // {
-    //     "event_id": 0,
-    //     "data": {
-    //         "event_type": "job_status",
-    //         "creation_ts": 1659089129,
-    //         "payload": { "job_id": 1, "job_type": 'CALC', "status": 'INIT', "experiment_id": "1/1", "starting_time": -1, "finishing_time": -1 },
-    //     }
-    // } as JobStatusType
 } as JobStatusMessageCollectionType
-
-
 
 
 const jobsStatusSlice = createSlice({
@@ -39,4 +31,20 @@ const jobsStatusSlice = createSlice({
 })
 
 export const { jobStatusAdded } = jobsStatusSlice.actions
+
+export const jobStatusRowsSelector = (state: RootState) => state.jobsStatus.messages.map((s: JobStatusType) => (
+    {
+        job_id: s.data.payload.job_id,
+        job_type: s.data.payload.job_type,
+        job_status: s.data.payload.status,
+        experiment_id: s.data.payload.experiment_id,
+        starting_time: s.data.payload.starting_time,
+        finishing_time: s.data.payload.finishing_time,
+        error: s.data.payload.error,
+        stacktrace: s.data.payload.stacktrace,
+        device: s.data.payload.device,
+    } as JobStatusRowType
+));
+
+
 export default jobsStatusSlice.reducer
