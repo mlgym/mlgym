@@ -1,7 +1,5 @@
 // =================== API TYPES ======================
 
-import internal from "stream";
-
 interface BaseMessageType {
     event_id: number;
 }
@@ -10,6 +8,9 @@ interface EventInfoType {
     event_type: string;
     creation_ts: number;
 }
+
+
+// Job status
 
 export type JobStatusPayloadType = {
     job_id: number;
@@ -31,9 +32,38 @@ export type JobStatusInnerType = {
 export type JobStatusType = { data: JobStatusInnerType, } & BaseMessageType
 
 
+// Model status
+
+export type ModelStatusPayloadType = {
+    experiment_id: number;
+    status: string; // <TRAINING, EVALUATING>,,
+    num_epochs: string; //<CALC, TERMINATE>
+    current_epoch: number;
+    splits: Array<string>;
+    current_split: string;
+    num_batches: number;
+    current_batch: number
+}
+
+
+export type ModelStatusInnerType = {
+    payload: ModelStatusPayloadType
+} & EventInfoType
+
+export type ModelStatusType = { data: ModelStatusInnerType, } & BaseMessageType
+
+
+
+// REDUX STORE
+
 export type JobStatusMessageCollectionType = {
     messages: Array<JobStatusType>;
-    job_id_to_latest_message_index: {[id: number]: number;}
+    job_id_to_latest_message_index: { [id: number]: number; }
+}
+
+export type ModelStatusMessageCollectionType = {
+    messages: Array<JobStatusType>;
+    experiment_id_to_latest_message_index: { [id: number]: number; }
 }
 
 
@@ -43,3 +73,4 @@ export type IOStatsType = {
     lastPong: number;
     isConnected: boolean;
 };
+
