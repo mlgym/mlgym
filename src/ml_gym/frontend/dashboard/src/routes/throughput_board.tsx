@@ -16,7 +16,7 @@ const getThroughput = (ioStats: IOStatsType, measurementDuration: number) => {
     while (i > 0 && msgTs[i] > threshold) {
       i--
     }
-    return ((msgTs.length - i) / measurementDuration)
+    return ((msgTs.length - i -1) / measurementDuration)
   };
 
 
