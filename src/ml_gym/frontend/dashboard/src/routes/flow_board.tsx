@@ -1,16 +1,12 @@
 import { AgGridReact } from "ag-grid-react";
 import React, { Component } from "react";
-// import { useAppSelector } from "../app/hooks"
 import type { RootState } from '../app/store';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
 import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
 import { jobStatusRowsSelector } from '../features/jobsStatus/jobsStatusSlice'
-// import { modelStatusRowsSelector } from '../features/modelsStatus/modelsStatusSlice'
 import { connect } from "react-redux";
 
 import { JobStatusRowType, ModelStatusRowType } from '../app/datatypes'
-// import { Root } from "react-dom/client";
-// import { bindActionCreators } from 'redux';
 
 type FlowBoardPropsType = {
     jobStatusRows: any

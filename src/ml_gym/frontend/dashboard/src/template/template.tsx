@@ -1,5 +1,5 @@
 import React from "react";
-import "./template_2.css";
+import "./template.css";
 import StackedLineChartIcon from '@mui/icons-material/StackedLineChart';
 import TuneIcon from '@mui/icons-material/Tune';
 import ModelTrainingIcon from '@mui/icons-material/ModelTraining';
