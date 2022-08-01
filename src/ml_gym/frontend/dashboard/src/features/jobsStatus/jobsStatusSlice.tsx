@@ -26,10 +26,13 @@ const jobsStatusSlice = createSlice({
             const job_id: number = action.payload.data.payload.job_id
             if (job_id in state.job_id_to_latest_message_index) {
                 const row_id = state.job_id_to_latest_message_index[job_id]
-                state.messages[row_id] = action.payload 
-            }else {
+                // prevents possible race condition
+                if (state.messages[row_id].event_id < action.payload.event_id) {
+                    state.messages[row_id] = action.payload
+                }
+            } else {
                 state.messages.push(action.payload)
-                state.job_id_to_latest_message_index[job_id] = state.messages.length -1
+                state.job_id_to_latest_message_index[job_id] = state.messages.length - 1
             }
         }
     }
