@@ -1,63 +1,90 @@
 import { AgGridReact } from "ag-grid-react";
-import React from "react";
-import { useAppSelector } from "../app/hooks"
+import React, { Component } from "react";
+// import { useAppSelector } from "../app/hooks"
 import type { RootState } from '../app/store';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
 import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
+import { jobStatusRowsSelector } from '../features/jobsStatus/jobsStatusSlice'
+// import { modelStatusRowsSelector } from '../features/modelsStatus/modelsStatusSlice'
+import { connect } from "react-redux";
 
-type FlowBoardProps = {
+import { JobStatusRowType, ModelStatusRowType } from '../app/datatypes'
+// import { Root } from "react-dom/client";
+// import { bindActionCreators } from 'redux';
+
+type FlowBoardPropsType = {
+    jobStatusRows: any
 };
 
 
-type JobStatusRowType = {
-    job_id: number;
-    job_type: string; //<CALC, TERMINATE>
-    status: string; //<INIT, RUNNING, DONE>,
+
+const statusRowsSelector = (state: RootState) => {
+    const jobStatusRows = jobStatusRowsSelector(state)
+
+    const fullRows = jobStatusRows.map((jobStatusRow: JobStatusRowType) => {
+        const latest_message_index = state.modelsStatus.experiment_id_to_latest_message_index[jobStatusRow.experiment_id]
+        if (latest_message_index) {
+            const modelStatusMessage = state.modelsStatus.messages[latest_message_index]
+            const modelStatusRow = {
+                experiment_id: modelStatusMessage.data.payload.experiment_id,
+                model_status: modelStatusMessage.data.payload.status,
+                num_epochs: modelStatusMessage.data.payload.num_epochs,
+                current_epoch: modelStatusMessage.data.payload.current_epoch,
+                splits: modelStatusMessage.data.payload.splits,
+                current_split: modelStatusMessage.data.payload.current_split,
+                epoch_progress: modelStatusMessage.data.payload.current_epoch / modelStatusMessage.data.payload.num_epochs,
+                batch_progress: modelStatusMessage.data.payload.current_batch / modelStatusMessage.data.payload.num_batches,
+            } as ModelStatusRowType
+
+
+            return { ...jobStatusRow, ...modelStatusRow }
+        } else {
+            return jobStatusRow
+        }
+    });
+
+    return fullRows
 }
 
 
-const jobStatusRowsSelector = (state: RootState) => state.jobStatus.map(s => (
-    {
-        job_id: s.data.payload.job_id,
-        job_type: s.data.payload.job_type,
-        status: s.data.payload.status,
-        experiment_id: s.data.payload.experiment_id,
-        starting_time: s.data.payload.starting_time,
-        finishing_time: s.data.payload.finishing_time,
-        error: s.data.payload.error,
-        stacktrace: s.data.payload.stacktrace,
-        device: s.data.payload.device,
-    } as JobStatusRowType
-)) //s.data.payload.job_id)
+
+const FlowBoard: React.FC<FlowBoardPropsType> = (jobStatusRows: any) => {
+
+    // class FlowBoard extends Component<FlowBoardPropsType> {
+    //     render() {
+    //const jobStatusRows = useAppSelector(statusRowsSelector)
 
 
-const FlowBoard: React.FC<FlowBoardProps> = ({ }) => {
-
-    const jobStatusRows = useAppSelector(jobStatusRowsSelector)
     const colDefs = [
         { field: "job_id" },
         { field: "job_type" },
-        { field: "status" },
+        { field: "job_status" },
         { field: "experiment_id" },
         { field: "starting_time" },
         { field: "finishing_time" },
+        { field: "epoch_progress" },
+        { field: "batch_progress" },
+        { field: "model_status" },
+        { field: "current_split" },
+        { field: "splits" },
         { field: "error" },
         { field: "stacktrace" },
         { field: "device" },
+
     ]
 
     return (
         <>
             <h1> Flow Board </h1>
             {/* <div>{jobIDs}</div> */}
-            <div className="ag-theme-alpine"  style={{width: 1800, height: 800}}>
+            <div className="ag-theme-alpine" style={{ width: 1800, height: 800 }}>
                 <AgGridReact
                     // {/* provide column definitions */}
                     columnDefs={colDefs}
                     // {/* specify auto group column definition */}
                     // autoGroupColumnDef={this.autoGroupColumnDef}
                     // {/* row data provided via props from the file store */}
-                    rowData={jobStatusRows}
+                    rowData={jobStatusRows.jobStatusRows}
                     // // enable tree data
                     // treeData={true}
                     // // {/* return tree hierarchy from supplied data */}
@@ -65,20 +92,36 @@ const FlowBoard: React.FC<FlowBoardProps> = ({ }) => {
                     // // {/* expand tree by default */}
                     // groupDefaultExpanded={-1}
                     // // {/* fit grid columns */}
-                    // onGridReady={params => params.api.sizeColumnsToFit()}
+                    onGridReady={params => params.api.sizeColumnsToFit()}
                     // // {/* provide context menu callback */}
                     // getContextMenuItems={this.getContextMenuItems}
                     // // {/* provide row drag end callback */}
                     // onRowDragEnd={this.onRowDragEnd}
                     // // {/* return id required for tree data and immutable data */}
-                    // getRowId={params => params.data.id}
+                    getRowId={(params: any) => params.data.job_id}
                     // // {/* specify our FileCellRenderer component */}
                     // components={this.components}
-                    >
+                    animateRows={true} // Optional - set to 'true' to have rows animate when sorted
+
+                >
                 </AgGridReact>
             </div>
         </>
     );
 }
+// }
 
-export default FlowBoard;
+const mapStateToProps = (state: RootState) => {
+    return { "jobStatusRows": statusRowsSelector(state) }
+};
+
+const mapDispatchToProps = (appDispatch: any) => ({
+    actions: {}
+});
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps,
+    null,
+    { forwardRef: true } // must be supplied for react/redux when using AgGridReact
+)(FlowBoard);
