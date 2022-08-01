@@ -11,15 +11,14 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { useAppDispatch } from "./app/hooks"
 import { IOStatsType } from "./app/datatypes"
 import { jobStatusAdded } from "./features/jobsStatus/jobsStatusSlice"
+import { modelStatusAdded } from "./features/modelsStatus/modelsStatusSlice"
 
 const socket = io("http://localhost:7000");
 
 
-
-
 export default function App() {
 
-  const [sideBarExpanded, setSideBarExpanded] = useState<boolean>(true);
+  const [sideBarExpanded, setSideBarExpanded] = useState<boolean>(false);
   const [selectedPageId, setSelectedPageId] = useState<number>(0)
   const [ioStats, setIOStats] = useState<IOStatsType>({ isConnected: socket.connected, msgTS: [], lastPing: 0, lastPong: 0 });
   const appDispatch = useAppDispatch()
@@ -60,7 +59,8 @@ export default function App() {
   // ============ MLgym Messages functions ============
 
   const eventTypeToActionCreator: any = {
-    "job_status": jobStatusAdded
+    "job_status": jobStatusAdded,
+    "experiment_status": modelStatusAdded
   }
 
   useEffect(() => {
