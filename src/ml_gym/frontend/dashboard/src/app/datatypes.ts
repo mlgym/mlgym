@@ -1,5 +1,7 @@
 // =================== API TYPES ======================
 
+import internal from "stream";
+
 interface BaseMessageType {
     event_id: number;
 }
@@ -27,6 +29,12 @@ export type JobStatusInnerType = {
 
 
 export type JobStatusType = { data: JobStatusInnerType, } & BaseMessageType
+
+
+export type JobStatusMessageCollectionType = {
+    messages: Array<JobStatusType>;
+    job_id_to_latest_message_index: {[id: number]: number;}
+}
 
 
 export type IOStatsType = {
