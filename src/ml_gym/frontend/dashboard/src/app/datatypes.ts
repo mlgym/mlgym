@@ -52,6 +52,31 @@ export type ModelStatusInnerType = {
 
 export type ModelStatusType = { data: ModelStatusInnerType, } & BaseMessageType
 
+// MODEL EVALUATION
+export type MetricScoreType = {
+    metric: string;
+    split: string;
+    score: number
+}
+
+export type LossScoreType = {
+    loss: string;
+    split: string;
+    score: number
+}
+
+export type ModelEvaluationPayloadType = {
+    epoch: number;
+    experiment_id: string; 
+    metric_scores: Array<MetricScoreType>;
+    loss_scores: Array<LossScoreType>;
+}
+
+export type ModelEvaluationInnerType = {
+    payload: ModelEvaluationPayloadType
+} & EventInfoType
+
+export type ModelEvaluationType = { data: ModelEvaluationInnerType, } & BaseMessageType
 
 // AG GRID TYPES
 
@@ -90,6 +115,10 @@ export type JobStatusMessageCollectionType = {
 export type ModelStatusMessageCollectionType = {
     messages: Array<ModelStatusType>;
     experiment_id_to_latest_message_index: { [id: string]: number; }
+}
+
+export type ModelEvaluationMessageCollectionType = {
+    messages: Array<ModelEvaluationType>;
 }
 
 
