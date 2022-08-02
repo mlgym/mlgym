@@ -98,6 +98,7 @@ export const filteredModelEvaluationSelector = (state: RootState, metricFilter: 
 const AnalysisBoard: React.FC<AnalysisBoardProps> = ({ }) => {
 
     const metricFilter = ["train/F1_SCORE_macro", "val/F1_SCORE_macro", "test/F1_SCORE_macro"]
+    const experimentIds = ["2022-04-29--22-25-49/conv_net/1", "2022-04-29--22-25-49/conv_net/1"]
 
     const metricSelector = useAppSelector((state: RootState) => filteredModelEvaluationSelector(state, "test/F1_SCORE_macro"))
 
