@@ -12,6 +12,8 @@ import { useAppDispatch } from "./app/hooks"
 import { IOStatsType } from "./app/datatypes"
 import { jobStatusAdded } from "./features/jobsStatus/jobsStatusSlice"
 import { modelStatusAdded } from "./features/modelsStatus/modelsStatusSlice"
+import { modelEvaluationAdded } from "./features/modelEvaluations/modelEvaluationsSlice"
+
 
 const socket = io("http://localhost:7000");
 
@@ -59,8 +61,9 @@ export default function App() {
   // ============ MLgym Messages functions ============
 
   const eventTypeToActionCreator: any = {
-    "job_status": jobStatusAdded,
-    "experiment_status": modelStatusAdded
+    // "job_status": jobStatusAdded,
+    // "experiment_status": modelStatusAdded,
+    "evaluation_result": modelEvaluationAdded
   }
 
   useEffect(() => {
