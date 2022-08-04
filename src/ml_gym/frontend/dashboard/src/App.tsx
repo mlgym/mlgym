@@ -9,10 +9,11 @@ import Throughput from './routes/throughput_board'
 import io from 'socket.io-client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { useAppDispatch } from "./app/hooks"
-import { IOStatsType } from "./app/datatypes"
+import { IOStatsType, FilterConfigType } from "./app/datatypes"
 import { jobStatusAdded } from "./features/jobsStatus/jobsStatusSlice"
 import { modelStatusAdded } from "./features/modelsStatus/modelsStatusSlice"
 import { modelEvaluationAdded } from "./features/modelEvaluations/modelEvaluationsSlice"
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 const socket = io("http://localhost:7000");
@@ -23,6 +24,9 @@ export default function App() {
   const [sideBarExpanded, setSideBarExpanded] = useState<boolean>(false);
   const [selectedPageId, setSelectedPageId] = useState<number>(0)
   const [ioStats, setIOStats] = useState<IOStatsType>({ isConnected: socket.connected, msgTS: [], lastPing: 0, lastPong: 0 });
+
+  const [filterConfig, setFilterConfig] = useState<FilterConfigType>({ metricFilterRegex: ".*", tmpMetricFilterRegex: ".*" })
+
   const appDispatch = useAppDispatch()
 
 
@@ -61,7 +65,7 @@ export default function App() {
   // ============ MLgym Messages functions ============
 
   const eventTypeToActionCreator: any = {
-    // "job_status": jobStatusAdded,
+    "job_status": jobStatusAdded,
     // "experiment_status": modelStatusAdded,
     "evaluation_result": modelEvaluationAdded
   }
@@ -121,7 +125,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="App">
-        <Template toggleSidebar={toggleSideBar} sideBarExpanded={sideBarExpanded} setSelectedPageId={setSelectedPageId} selectedPageId={selectedPageId} >
+        <Template toggleSidebar={toggleSideBar}
+          sideBarExpanded={sideBarExpanded}
+          setSelectedPageId={setSelectedPageId}
+          selectedPageId={selectedPageId}
+          filterConfig={filterConfig}
+          setFilterConfig={setFilterConfig}
+        >
           <Routes>
             <Route
               path="/flowboard"
@@ -129,7 +139,7 @@ export default function App() {
             />
             <Route
               path="/analysisboard"
-              element={<AnalysisBoard />}
+              element={<AnalysisBoard filterConfig={filterConfig}/>}
             />
             <Route
               path="/throughput"

@@ -4,7 +4,6 @@ import type { RootState } from '../../app/store';
 
 const initialState = {
     messages: [],
-    experiment_id_to_latest_message_index: {}
 } as ModelEvaluationMessageCollectionType
 
 
