@@ -119,7 +119,7 @@ export type ModelStatusMessageCollectionType = {
 
 export type ModelEvaluationMessageCollectionType = {
     messages: Array<ModelEvaluationType>;
-}
+};
 
 
 export type IOStatsType = {
@@ -129,3 +129,7 @@ export type IOStatsType = {
     isConnected: boolean;
 };
 
+export type FilterConfigType = {
+    metricFilterRegex: string;
+    tmpMetricFilterRegex: string;
+};
