@@ -1,3 +1,5 @@
+import "./analysis_board.css";
+
 import React from "react";
 import {
     LineChart,
@@ -9,58 +11,19 @@ import {
     Legend
 } from "recharts";
 import type { RootState } from '../app/store';
-import { ModelEvaluationType, ModelEvaluationPayloadType } from "../app/datatypes"
+import { ModelEvaluationType, ModelEvaluationPayloadType, FilterConfigType } from "../app/datatypes"
 import { useAppSelector } from "../app/hooks"
 
 
+function selectColor(index: number) {
+    const hue = index * 137.508; // use golden angle approximation
+    return `hsl(${hue},50%,75%)`;
+}
+
 type AnalysisBoardProps = {
+    filterConfig: FilterConfigType
 };
 
-
-const data = [
-    {
-        name: "Page A",
-        uv: 4000,
-        pv: 2400,
-        amt: 2400
-    },
-    {
-        name: "Page B",
-        uv: 3000,
-        pv: 1398,
-        amt: 2210
-    },
-    {
-        name: "Page C",
-        uv: 2000,
-        pv: 9800,
-        amt: 2290
-    },
-    {
-        name: "Page D",
-        uv: 2780,
-        pv: 3908,
-        amt: 2000
-    },
-    {
-        name: "Page E",
-        uv: 1890,
-        pv: 4800,
-        amt: 2181
-    },
-    {
-        name: "Page F",
-        uv: 2390,
-        pv: 3800,
-        amt: 2500
-    },
-    {
-        name: "Page G",
-        uv: 3490,
-        pv: 4300,
-        amt: 2100
-    }
-];
 
 
 export const modelEvaluationSelector = (state: RootState) => state.modelsEvaluation.messages.reduce((results: any, s: ModelEvaluationType) => {
@@ -94,41 +57,68 @@ export const filteredModelEvaluationSelector = (state: RootState, metricFilter: 
     }
 };
 
+type EvaluationLineChartPropsType = {
+    metricFilter: string
+    experimentIds: Array<string>;
+}
 
-const AnalysisBoard: React.FC<AnalysisBoardProps> = ({ }) => {
+type EvaluationChartLinePropsType = {
+    dataKey: string;
+    lineColor: string;
+}
 
-    const metricFilter = ["train/F1_SCORE_macro", "val/F1_SCORE_macro", "test/F1_SCORE_macro"]
-    const experimentIds = ["2022-04-29--22-25-49/conv_net/1", "2022-04-29--22-25-49/conv_net/1"]
+const EvaluationChart: React.FC<EvaluationLineChartPropsType> = ({ metricFilter, experimentIds }) => {
 
-    const metricSelector = useAppSelector((state: RootState) => filteredModelEvaluationSelector(state, "test/F1_SCORE_macro"))
+    const metricSelector = useAppSelector((state: RootState) => filteredModelEvaluationSelector(state, metricFilter))
+
+    const lines = experimentIds.map((eID, index) => <Line
+        dataKey={eID}
+        stroke={selectColor(index)}
+    />)
 
     return (
-        <>
-            <h1> Analysis Board </h1>
+        <div id="analysis-board-container">
+            <div>{metricFilter}</div>
             <LineChart
                 width={500}
                 height={300}
                 data={metricSelector}
-                margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5
-                }}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Line
-                    type="monotone"
-                    dataKey="2022-04-29--22-25-49/conv_net/1"
-                    stroke="#8884d8"
-                    activeDot={{ r: 8 }}
-                />
-                {/* <Line type="monotone" dataKey="uv" stroke="#82ca9d" /> */}
+                {lines}
             </LineChart>
+        </div>
+    )
+}
+
+
+
+const AnalysisBoard: React.FC<AnalysisBoardProps> = ({ filterConfig }) => {
+
+    const metricFilters = ["train/F1_SCORE_macro", "val/F1_SCORE_macro", "test/F1_SCORE_macro",
+        "train/PRECISION_macro", "val/PRECISION_macro", "test/PRECISION_macro",
+        "train/RECALL_macro", "val/RECALL_macro", "test/RECALL_macro"]
+
+    const experimentIds = ["2022-04-29--22-25-49/conv_net/0", "2022-04-29--22-25-49/conv_net/1"]
+
+    var regex = new RegExp(filterConfig.metricFilterRegex);
+    const selectedMetricFilters = metricFilters.reduce((selected: Array<string>, metricFilter: string) => {
+        if (regex.test(metricFilter))
+            selected.push(metricFilter)
+        return (selected)
+    }, []);
+
+    const charts = selectedMetricFilters.map((metricFilter: string) => <div className="diagram-cell"><EvaluationChart metricFilter={metricFilter} experimentIds={experimentIds} /></div>)
+
+    return (
+        <>
+            {/* <h1> Analysis Board </h1> */}
+            {charts}
         </>
     );
 }
