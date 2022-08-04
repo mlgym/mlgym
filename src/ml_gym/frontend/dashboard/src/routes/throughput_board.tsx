@@ -22,13 +22,13 @@ const getThroughput = (ioStats: IOStatsType, measurementDuration: number) => {
 const Throughput: React.FC<ThroughputProps> = ({ ioStats }) => {
 
     return (
-        <>
+        <div id="throughput-board-container">
             <h1> Throughput Board </h1>
             <div>Connected: {ioStats.isConnected ? "yes" : "no"}</div>
             <div>Messages received: {ioStats.msgTS.length}</div>
             <div>ping: {ioStats.lastPong - ioStats.lastPing}ms</div>
             <div>throughput: {getThroughput(ioStats, 5)}</div>
-        </>
+        </div>
     )
 }
 

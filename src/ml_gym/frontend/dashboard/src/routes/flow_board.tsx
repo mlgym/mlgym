@@ -71,9 +71,8 @@ const FlowBoard: React.FC<FlowBoardPropsType> = (jobStatusRows: any) => {
 
     return (
         <>
-            <h1> Flow Board </h1>
-            {/* <div>{jobIDs}</div> */}
-            <div className="ag-theme-alpine" style={{ width: 1800, height: 800 }}>
+            {/* <h1> Flow Board </h1> */}
+            <div className="ag-theme-alpine" id="ag-grid-container">
                 <AgGridReact
                     // {/* provide column definitions */}
                     columnDefs={colDefs}
