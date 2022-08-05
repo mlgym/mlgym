@@ -15,7 +15,6 @@ class TestPredictPostProcessingComponent(InferenceBatchResultFixture):
     @pytest.fixture
     def post_processors(self, prediction_subscription_key: str, prediction_publication_key: str) -> List[
         PredictPostProcessingIF]:
-        # 如何将所有 processor都验证一边
         dummy_post_processor_impl = DummyPostProcessorImpl()
         argmax_post_processor_impl = BinarizationPostProcessorImpl(prediction_subscription_key,
                                                                    prediction_publication_key)

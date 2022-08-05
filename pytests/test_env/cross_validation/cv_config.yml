@@ -6,7 +6,7 @@ CV:
   iterator_key: splitted_dataset_iterators
   split_key: train
   config:
-    num_folds: 3
+    num_folds: 5
     stratification: false
     target_pos: 1
     shuffle: false

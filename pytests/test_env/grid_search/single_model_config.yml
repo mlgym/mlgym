@@ -73,7 +73,7 @@ model:
   requirements:
     - name: model_registry
       component_name: model_registry
-      subscription: conv_net
+      subscription: linear_net
   config:
     model_definition:
       layer_config:

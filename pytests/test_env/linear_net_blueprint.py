@@ -91,8 +91,8 @@ class MyModelRegistryConstructable(ModelRegistryConstructable):
 class MockedDatasetFactory(BaseDatasetFactory):
     def __init__(self):
         super().__init__()
-        samples = [1] * 10 + [2] * 20 + [3] * 30
-        targets = [1] * 10 + [2] * 20 + [3] * 30
+        samples = [1] * 100 + [2] * 200 + [3] * 300
+        targets = [1] * 100 + [2] * 200 + [3] * 300
 
         test_samples = [1] * 20 + [2] * 40 + [3] * 60
         test_targets = [1] * 20 + [2] * 40 + [3] * 60
@@ -155,7 +155,7 @@ class LinearBluePrint(BluePrint):
     def __init__(self, run_mode: AbstractGymJob.Mode, job_type: AbstractGymJob.Type, config: Dict, epochs: int,
                  dashify_logging_dir: str, grid_search_id: str,
                  run_id: str, external_injection: Dict[str, Any] = None):
-        model_name = "conv_net"
+        model_name = "linear_net"
         dataset_name = ""
         super().__init__(run_mode, job_type, model_name, dataset_name, epochs, config, dashify_logging_dir,
                          grid_search_id,

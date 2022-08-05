@@ -10,16 +10,16 @@ from pytests.test_env.linear_net_blueprint import LinearBluePrint
 class ValidationFixtures:
     @pytest.fixture
     def gs_cv_config(self) -> str:
-        # gs_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/gs_config_cv.yml")
-        gs_cv_path = "pytests/test_env/cross_validation/gs_config_cv.yml"
+        gs_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/gs_config_cv.yml")
+        # gs_cv_path = "pytests/test_env/cross_validation/gs_config_cv.yml"
 
         gs_cv_config = YAMLConfigLoader.load(gs_cv_path)
         return gs_cv_config
 
     @pytest.fixture
     def cv_config(self) -> str:
-        # cv_path = os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/cv_config.yml")
-        cv_path = "pytests/test_env/cross_validation/cv_config.yml"
+        cv_path = os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/cv_config.yml")
+        # cv_path = "pytests/test_env/cross_validation/cv_config.yml"
         cv_config = YAMLConfigLoader.load(cv_path)
         return cv_config
 
@@ -57,7 +57,7 @@ class ValidationFixtures:
 
     @pytest.fixture
     def num_epochs(self) -> int:
-        return 1
+        return 20
 
     @pytest.fixture
     def dashify_logging_path(self) -> str:

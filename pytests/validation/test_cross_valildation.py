@@ -1,3 +1,6 @@
+import glob
+import os
+import re
 from collections import Counter
 from typing import Type, Dict, Any, List
 from datetime import datetime
@@ -93,11 +96,11 @@ class TestCrossValidation(LoggingFixture, DeviceFixture, ValidationFixtures):
         gs_config = GridSearch.create_gs_from_config_dict(gs_cv_config)
         assert len(blueprints) == len(gs_config) * len(cross_validator._get_fold_indices())
         for i, blueprint in enumerate(blueprints):
-            blueprint.config['cv_experiment_information']["config"]['experiment_id'] = i
-            blueprint.config['cv_experiment_information']["config"]['val_fold_id'] = i
-            blueprint.job_type = AbstractGymJob.Type.STANDARD
-            blueprint.run_id = str(i)
-            blueprint.epochs = num_epochs
+            assert blueprint.config['cv_experiment_information']["config"]['experiment_id'] == i
+            assert blueprint.config['cv_experiment_information']["config"]['val_fold_id'] == i
+            assert blueprint.job_type == job_type
+            assert blueprint.run_id == str(i)
+            assert blueprint.epochs == num_epochs
 
     @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD])
     def test_run(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
@@ -109,10 +112,23 @@ class TestCrossValidation(LoggingFixture, DeviceFixture, ValidationFixtures):
         component_names = [iterator_key]
         components = blue_print_type.construct_components(config=gs_cv_config, component_names=component_names)
         iterator = components[iterator_key][split_key]
+
         cross_validator = CrossValidation(dataset_iterator=iterator, grid_search_id=grid_search_id,
                                           **cv_config["CV"]["config"],
                                           re_eval=False,
                                           keep_interim_results=keep_interim_results)
+
         gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
         cross_validator.run(blue_print_type, gym, gs_cv_config, num_epochs, dashify_logging_path)
         QueuedLogging.stop_listener()
+
+        metric_paths = glob.glob(os.path.join(dashify_logging_path, grid_search_id, "**/**/metrics.json"))
+        model_paths = glob.glob(os.path.join(dashify_logging_path, grid_search_id, "**/**/**/model_*.pt"))
+
+        assert len(metric_paths) == int(cv_config["CV"]["config"]["num_folds"])
+        assert len(model_paths) == int(cv_config["CV"]["config"]["num_folds"])
+
+        for model_path in model_paths:
+            file_name = os.path.basename(model_path)
+            suffix = int(re.findall(r"\d+", file_name)[0])
+            assert suffix == num_epochs
