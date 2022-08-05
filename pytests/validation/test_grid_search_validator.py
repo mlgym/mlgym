@@ -1,4 +1,7 @@
 # import pytest
+import glob
+import os
+import re
 from typing import Type, Dict, Any, List
 
 import pytest
@@ -26,3 +29,10 @@ class TestGridSearchValidator(LoggingFixture, DeviceFixture, ValidationFixtures)
         gym = Gym(process_count, device_ids=device_ids, log_std_to_file=log_std_to_file)
         gs_validator.run(blue_print_type, gym, gs_config, num_epochs, dashify_logging_path)
         QueuedLogging.stop_listener()
+
+        model_paths = glob.glob(os.path.join(dashify_logging_path, grid_search_id, "**/**/**/model_*.pt"))
+
+        for model_path in model_paths:
+            file_name = os.path.basename(model_path)
+            suffix = int(re.findall(r"\d+", file_name)[0])
+            assert suffix == num_epochs
