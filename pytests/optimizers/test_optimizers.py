@@ -92,7 +92,7 @@ class TestOptimizerAdapter:
 
         assert optimizer_state_0 != optimizer_state_1
         assert (optimizer_state_1["state"][0]["momentum_buffer"] != optimizer_state_2["state"][0][
-            "momentum_buffer"]).all()
+            "momentum_buffer"]).any()
 
     def test_optimizer_state_recovery(self, data_batch, model, optimizer: OptimizerAdapter):
         optimizer.register_model_params(model_params=dict(model.named_parameters()))

@@ -64,6 +64,7 @@ class ConvNetBluePrint(BluePrint):
 
         component_factory = ComponentFactory(injector)
         component_factory.register_component_type("MODEL_REGISTRY", "DEFAULT", MyModelRegistryConstructable)
+
         components = component_factory.build_components_from_config(config, component_names)
         return components
 
