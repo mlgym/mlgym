@@ -77,13 +77,16 @@ const SideBar: React.FC<SideBarPropsType> = ({ toggleSidebar, sideBarExpanded, s
 
 const Template: React.FC<TemplatePropsType> = ({ toggleSidebar, sideBarExpanded, setSelectedPageId, selectedPageId, filterConfig, setFilterConfig, children }) => (
     <>
-        <div className="styles.body">
-            <SideBar toggleSidebar={toggleSidebar} sideBarExpanded={sideBarExpanded} setSelectedPageId={setSelectedPageId} selectedPageId={selectedPageId} />
+        {/* <div className="styles.body"> */}
+        <SideBar toggleSidebar={toggleSidebar} sideBarExpanded={sideBarExpanded} setSelectedPageId={setSelectedPageId} selectedPageId={selectedPageId} />
+
+        <div className="flex-container">
             <div className="children-content">
                 {children}
             </div>
             <GlobalConfig filterConfig={filterConfig} setFilterConfig={setFilterConfig} />
         </div>
+        {/* </div> */}
     </>
 
 );

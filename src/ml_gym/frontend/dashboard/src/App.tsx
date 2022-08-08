@@ -66,7 +66,7 @@ export default function App() {
 
   const eventTypeToActionCreator: any = {
     "job_status": jobStatusAdded,
-    // "experiment_status": modelStatusAdded,
+    "experiment_status": modelStatusAdded,
     "evaluation_result": modelEvaluationAdded
   }
 

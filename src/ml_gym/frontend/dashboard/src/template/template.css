@@ -195,6 +195,11 @@ a {
     margin-top: 1em;
 }
 
+.flex-container {
+    display: flex;
+    flex-direction: column
+}
+
 /* @media screen and (min-width: 768px) { */
 body {
     /* margin: calc(var(--header-height) + 1rem) 0 0 0;
