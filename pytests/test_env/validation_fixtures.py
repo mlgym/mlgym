@@ -38,8 +38,8 @@ class ValidationFixtures:
         return gs_path
 
     @pytest.fixture
-    def gs_config(self, gs_path) -> str:
-        gs_config = YAMLConfigLoader.load(gs_path)
+    def gs_config(self, gs_config_path) -> str:
+        gs_config = YAMLConfigLoader.load(gs_config_path)
         return gs_config
 
     @pytest.fixture
