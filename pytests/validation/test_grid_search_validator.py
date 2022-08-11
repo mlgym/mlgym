@@ -31,7 +31,7 @@ class TestGridSearchValidator(LoggingFixture, DeviceFixture, ValidationFixtures)
         QueuedLogging.stop_listener()
 
         model_paths = glob.glob(os.path.join(dashify_logging_path, grid_search_id, "**/**/**/model_*.pt"))
-
+        assert len(model_paths) != 0
         for model_path in model_paths:
             file_name = os.path.basename(model_path)
             suffix = int(re.findall(r"\d+", file_name)[0])
