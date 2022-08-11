@@ -57,6 +57,21 @@ class TestGymStarter(LoggingFixture, DeviceFixture, ValidationFixtures):
             file_name = os.path.basename(model_path)
             suffix = int(re.findall(r"\d+", file_name)[0])
             assert suffix == num_epochs
+        starter._stop_logging_environment()
+
+
+class TestGymStarterCV(LoggingFixture, DeviceFixture, ValidationFixtures):
+    @pytest.fixture
+    def dashify_logging_path(self):
+        return "dashify_logging"
+
+    @pytest.fixture
+    def text_logging_path(self):
+        return "general_logging"
+
+    @pytest.fixture
+    def gpus(self):
+        return [0]
 
     @pytest.mark.parametrize("validation_mode", [(MLGymStarter.ValidationMode.CROSS_VALIDATION)])
     def test_cv_starter(self, blue_print_type,
@@ -91,6 +106,7 @@ class TestGymStarter(LoggingFixture, DeviceFixture, ValidationFixtures):
             file_name = os.path.basename(model_path)
             suffix = int(re.findall(r"\d+", file_name)[0])
             assert suffix == num_epochs
+        starter._stop_logging_environment()
 
     # @pytest.mark.parametrize("validation_mode", [(MLGymStarter.ValidationMode.NESTED_CV)])
     # def test_nested_cv_starter(self, blue_print_type,

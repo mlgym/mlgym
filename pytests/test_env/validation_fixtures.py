@@ -11,8 +11,8 @@ class ValidationFixtures:
 
     @pytest.fixture
     def gs_cv_config_path(self) -> str:
-        # gs_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/gs_config_cv.yml")
-        gs_cv_path = "pytests/test_env/cross_validation/gs_config_cv.yml"
+        gs_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/gs_config_cv.yml")
+        # gs_cv_path = "pytests/test_env/cross_validation/gs_config_cv.yml"
         return gs_cv_path
 
     @pytest.fixture
@@ -22,8 +22,8 @@ class ValidationFixtures:
 
     @pytest.fixture
     def cv_config_path(self) -> str:
-        # cv_path = os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/cv_config.yml")
-        cv_path = "pytests/test_env/cross_validation/cv_config.yml"
+        cv_path = os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/cv_config.yml")
+        # cv_path = "pytests/test_env/cross_validation/cv_config.yml"
         return cv_path
 
     @pytest.fixture
@@ -33,8 +33,8 @@ class ValidationFixtures:
 
     @pytest.fixture
     def gs_config_path(self) -> str:
-        # gs_path = os.path.join(os.path.abspath('.'), "..", "test_env", "grid_search/gs_config.yml")
-        gs_path = "pytests/test_env/grid_search/gs_config.yml"
+        gs_path = os.path.join(os.path.abspath('.'), "..", "test_env", "grid_search/gs_config.yml")
+        # gs_path = "pytests/test_env/grid_search/gs_config.yml"
         return gs_path
 
     @pytest.fixture
@@ -44,9 +44,9 @@ class ValidationFixtures:
 
     @pytest.fixture
     def gs_nested_cv_path(self) -> str:
-        # gs_nested_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env",
-        #                                  "nested_cross_validation/gs_config_nested_cv.yml")
-        gs_nested_cv_path = "pytests/test_env/nested_cross_validation/gs_config_nested_cv.yml"
+        gs_nested_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env",
+                                         "nested_cross_validation/gs_config_nested_cv.yml")
+        # gs_nested_cv_path = "pytests/test_env/nested_cross_validation/gs_config_nested_cv.yml"
         return gs_nested_cv_path
 
     @pytest.fixture
@@ -56,9 +56,9 @@ class ValidationFixtures:
 
     @pytest.fixture
     def nested_cv_path(self) -> str:
-        # nested_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env",
-        #                               "nested_cross_validation/nested_cv_config.yml")
-        nested_cv_path = "pytests/test_env/nested_cross_validation/nested_cv_config.yml"
+        nested_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env",
+                                      "nested_cross_validation/nested_cv_config.yml")
+        # nested_cv_path = "pytests/test_env/nested_cross_validation/nested_cv_config.yml"
 
         return nested_cv_path
 
