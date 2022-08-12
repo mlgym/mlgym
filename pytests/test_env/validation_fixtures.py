@@ -1,6 +1,6 @@
 from datetime import datetime
 import os
-from typing import Type
+from typing import Type, Dict, Any
 
 import pytest
 from ml_gym.io.config_parser import YAMLConfigLoader
@@ -16,7 +16,7 @@ class ValidationFixtures:
         return gs_cv_path
 
     @pytest.fixture
-    def gs_cv_config(self, gs_cv_config_path) -> str:
+    def gs_cv_config(self, gs_cv_config_path) -> Dict[str, Any]:
         gs_cv_config = YAMLConfigLoader.load(gs_cv_config_path)
         return gs_cv_config
 
@@ -27,7 +27,7 @@ class ValidationFixtures:
         return cv_path
 
     @pytest.fixture
-    def cv_config(self, cv_config_path) -> str:
+    def cv_config(self, cv_config_path) -> Dict[str, Any]:
         cv_config = YAMLConfigLoader.load(cv_config_path)
         return cv_config
 
@@ -38,7 +38,7 @@ class ValidationFixtures:
         return gs_path
 
     @pytest.fixture
-    def gs_config(self, gs_config_path) -> str:
+    def gs_config(self, gs_config_path) -> Dict[str, Any]:
         gs_config = YAMLConfigLoader.load(gs_config_path)
         return gs_config
 
@@ -50,7 +50,7 @@ class ValidationFixtures:
         return gs_nested_cv_path
 
     @pytest.fixture
-    def gs_nested_cv_config(self, gs_nested_cv_path) -> str:
+    def gs_nested_cv_config(self, gs_nested_cv_path) -> Dict[str, Any]:
         gs_nested_cv_config = YAMLConfigLoader.load(gs_nested_cv_path)
         return gs_nested_cv_config
 
@@ -63,7 +63,7 @@ class ValidationFixtures:
         return nested_cv_path
 
     @pytest.fixture
-    def nested_cv_config(self, nested_cv_path) -> str:
+    def nested_cv_config(self, nested_cv_path) -> Dict[str, Any]:
         nested_cv_config = YAMLConfigLoader.load(nested_cv_path)
         return nested_cv_config
 
