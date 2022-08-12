@@ -10,7 +10,7 @@ from pytests.test_env.linear_net_blueprint import LinearBluePrint
 class ValidationFixtures:
 
     @pytest.fixture
-    def gs_cv_config_path(self) -> str:
+    def gs_cv_config_path(cls) -> str:
         # gs_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/gs_config_cv.yml")
         gs_cv_path = "pytests/test_env/cross_validation/gs_config_cv.yml"
         return gs_cv_path
@@ -21,7 +21,7 @@ class ValidationFixtures:
         return gs_cv_config
 
     @pytest.fixture
-    def cv_config_path(self) -> str:
+    def cv_config_path(cls) -> str:
         # cv_path = os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/cv_config.yml")
         cv_path = "pytests/test_env/cross_validation/cv_config.yml"
         return cv_path
@@ -32,7 +32,7 @@ class ValidationFixtures:
         return cv_config
 
     @pytest.fixture
-    def gs_config_path(self) -> str:
+    def gs_config_path(cls) -> str:
         # gs_path = os.path.join(os.path.abspath('.'), "..", "test_env", "grid_search/gs_config.yml")
         gs_path = "pytests/test_env/grid_search/gs_config.yml"
         return gs_path
@@ -43,7 +43,7 @@ class ValidationFixtures:
         return gs_config
 
     @pytest.fixture
-    def gs_nested_cv_path(self) -> str:
+    def gs_nested_cv_path(cls) -> str:
         # gs_nested_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env",
         #                                  "nested_cross_validation/gs_config_nested_cv.yml")
         gs_nested_cv_path = "pytests/test_env/nested_cross_validation/gs_config_nested_cv.yml"
@@ -55,7 +55,7 @@ class ValidationFixtures:
         return gs_nested_cv_config
 
     @pytest.fixture
-    def nested_cv_path(self) -> str:
+    def nested_cv_path(cls) -> str:
         # nested_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env",
         #                               "nested_cross_validation/nested_cv_config.yml")
         nested_cv_path = "pytests/test_env/nested_cross_validation/nested_cv_config.yml"
