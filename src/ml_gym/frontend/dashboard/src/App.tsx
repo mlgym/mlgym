@@ -16,7 +16,7 @@ import { modelEvaluationAdded } from "./features/modelEvaluations/modelEvaluatio
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 
-const socket = io("http://localhost:7000");
+const socket = io("http://127.0.0.1:5000");
 
 
 export default function App() {
@@ -83,7 +83,7 @@ export default function App() {
 
     socket.on('mlgym_event', (msg) => {
       addMsgTs(new Date().getTime())
-      const msgRep = JSON.parse(msg)
+      const msgRep = msg // JSON.parse(msg)
       const eventType: string = msgRep["data"]["event_type"]
       if (eventType in eventTypeToActionCreator) {
         const actionCreator = eventTypeToActionCreator[eventType]
