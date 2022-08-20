@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
     log_file_path = "/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_gym/backend/streaming/log.txt"
 
-    message_delay = 0.005  # in seconds
+    message_delay = 0.1  # in seconds
 
     ws = WebSocketServer(host=host, port=port, message_delay=message_delay, log_file_path=log_file_path, async_mode=async_mode, app=app)
 

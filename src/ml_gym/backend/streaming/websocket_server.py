@@ -24,7 +24,7 @@ class WebSocketServer:
                               the best option based on installed packages.
         """
         self._port = port
-        self._socketio = SocketIO(app, async_mode=async_mode)
+        self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=["http://localhost:3000", "http://localhost:7000"])
         self._client_sids = []
         self._room_id_to_event_storage: Dict[str, EventStorageIF] = {"mlgym_event_subscribers": EventStorageFactory.get_list_event_storage()}
         self._init_call_backs()
