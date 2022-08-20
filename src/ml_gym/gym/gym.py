@@ -1,13 +1,12 @@
 from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
 import torch
-from dashify.logging.dashify_logging import ExperimentTracking
-from typing import List
+from typing import Dict, List
 from ml_gym.multiprocessing.pool import Pool, Job
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.jobs import AbstractGymJob
-from functools import partial
 from ml_gym.util.devices import get_devices
 import tqdm
+
 
 torch.multiprocessing.set_start_method('spawn', force=True)
 
@@ -34,20 +33,25 @@ class Gym:
         else:
             self.work(self.devices[0])
 
-    def add_blue_print(self, blue_print: BluePrint):
+    def add_blue_print(self, blue_print: BluePrint) -> int:
         job = Job(job_id=len(self.jobs), fun=Gym._run_job, blue_print=blue_print, param_dict={"log_std_to_file": self.log_std_to_file})
         self.jobs.append(job)
+        return job.job_id
 
     def add_blue_prints(self, blue_prints: List[BluePrint]):
+        job_id_to_blueprint: Dict[int, BluePrint] = {}
         for blue_print in blue_prints:
-            self.add_blue_print(blue_print)
+            job_id = self.add_blue_print(blue_print)
+            job_id_to_blueprint[job_id] = blue_print
+        # TODO @PriyaTomar
+        # send blueprints (i.e., job_id -> config)
 
     @staticmethod
     def _run_job(blue_print: BluePrint, device: torch.device, log_std_to_file: bool) -> AbstractGymJob:
         gym_job = AbstractGymJob.from_blue_print(blue_print)
-        decorated_runner = ExperimentTracking(gym_job.experiment_info, log_to_file=log_std_to_file)(partial(gym_job.execute, device=device))
-        decorated_runner(device=device)
-        return gym_job
+        # decorated_runner = ExperimentTracking(gym_job.experiment_info, log_to_file=log_std_to_file)(partial(gym_job.execute, device=device))
+        # decorated_runner(device=device)
+        return gym_job.execute(device=device)
 
     def work(self, device: torch.device):
         for job in tqdm.tqdm(self.jobs, desc="Models trained"):

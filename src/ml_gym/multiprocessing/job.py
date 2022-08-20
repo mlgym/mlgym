@@ -28,7 +28,14 @@ class Job:
     @property
     def experiment_id(self) -> str:
         if self.blue_print is not None:
-            return self.blue_print.get_experiment_id()
+            return self.blue_print.run_id
+        else:
+            return None
+
+    @property
+    def grid_search_id(self) -> str:
+        if self.blue_print is not None:
+            return self.blue_print.grid_search_id
         else:
             return None
 

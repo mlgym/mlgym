@@ -1,6 +1,5 @@
 from abc import abstractmethod
 from ml_gym.models.nn.net import NNModel
-from dashify.logging.dashify_logging import ExperimentInfo
 from ml_gym.gym.evaluator import Evaluator
 from ml_gym.gym.trainer import Trainer
 from ml_gym.modes import RunMode
@@ -9,9 +8,8 @@ import torch
 from ml_gym.gym.stateful_components import StatefulComponent
 from ml_gym.persistency.io import DashifyReader
 from ml_gym.persistency.io import DashifyWriter
-from enum import Enum
 from typing import List, Dict, Any
-from ml_gym.util.logger import ConsoleLogger
+from ml_gym.util.logger import ConsoleLogger, LogLevel
 from ml_gym.batching.batch import EvaluationBatchResult
 from ml_gym.persistency.logging import ExperimentStatusLogger
 from functools import partial
@@ -19,21 +17,13 @@ from functools import partial
 
 class AbstractGymJob(StatefulComponent):
 
-    class Type(Enum):
-        STANDARD = "standard"
-        LITE = "lite"
-
-    def __init__(self, experiment_info: ExperimentInfo):
+    def __init__(self, experiment_status_logger: ExperimentStatusLogger):
         super().__init__()
-        self._experiment_info = experiment_info
+        self._experiment_status_logger = experiment_status_logger
         # TODO: This is only a console logger that does not store on disk.
         # Since GymJob is a StatefulComponent we would have to implement serialization
         # for the queue in the QLogger. Solving this issue is left for the future
         self.logger = ConsoleLogger("logger_gym_job")
-
-    @property
-    def experiment_info(self) -> ExperimentInfo:
-        return self._experiment_info
 
     @abstractmethod
     def execute(self, device: torch.device):
@@ -56,9 +46,10 @@ class AbstractGymJob(StatefulComponent):
         state = DashifyReader.load_state(experiment_info=self.experiment_info, measurement_id=measurement_id)
         self.set_state(state)
 
-    def batch_processed_callback(experiment_status_logger: ExperimentStatusLogger, num_batches: int,
+    @staticmethod
+    def batch_processed_callback(status: str, experiment_status_logger: ExperimentStatusLogger, num_batches: int,
                                  current_batch: int, splits: List[str], current_split: str, num_epochs: int, current_epoch: int):
-        experiment_status_logger.log_experiment_status(status="evaluation",
+        experiment_status_logger.log_experiment_status(status=status,
                                                        num_epochs=num_epochs,
                                                        current_epoch=current_epoch,
                                                        splits=splits,
@@ -66,6 +57,7 @@ class AbstractGymJob(StatefulComponent):
                                                        num_batches=num_batches,
                                                        current_batch=current_batch)
 
+    @staticmethod
     def epoch_result_callback(experiment_status_logger: ExperimentStatusLogger, evaluation_result: EvaluationBatchResult,
                               current_epoch: int):
         experiment_status_logger.log_evaluation_results(evaluation_result, current_epoch)
@@ -74,11 +66,13 @@ class AbstractGymJob(StatefulComponent):
 class GymJob(AbstractGymJob):
 
     def __init__(self, run_mode: RunMode, model: NNModel, optimizer: OptimizerAdapter, trainer: Trainer,
-                 evaluator: Evaluator, experiment_info: ExperimentInfo, epochs: List[int], current_epoch: int = 0):
-        super().__init__(experiment_info)
+                 evaluator: Evaluator, epochs: List[int], current_epoch: int = 0,
+                 experiment_status_logger: ExperimentStatusLogger = None):
+        super().__init__(experiment_status_logger)
         self.run_mode = run_mode
         self.model = model
         self.optimizer = optimizer
+        self.optimizer.register_model_params(dict(self.model.named_parameters()))
         self.epochs = epochs
         self.current_epoch = current_epoch if current_epoch is not None else 0
         self.evaluator = evaluator
@@ -86,24 +80,33 @@ class GymJob(AbstractGymJob):
         self._execution_method = self._execute_eval if run_mode == RunMode.RE_EVAL else self._execute_train
 
     def _train_step(self, device: torch.device, epoch: int) -> NNModel:
-        self.restore_state_in_stateful_components(epoch - 1)
+        # self.restore_state_in_stateful_components(epoch - 1)
         # load model and optimizer
-        model_state = DashifyReader.load_model_state(self._experiment_info, epoch - 1)
-        self.model.load_state_dict(model_state)
-        self.model.to(device)
-        optimizer_state = DashifyReader.load_optimizer_state(self._experiment_info, epoch - 1)
-        self.optimizer.load_state_dict(optimizer_state)
+        # model_state = DashifyReader.load_model_state(self._experiment_info, epoch - 1)
+        # self.model.load_state_dict(model_state)
+        # self.model.to(device)
+        # optimizer_state = DashifyReader.load_optimizer_state(self._experiment_info, epoch - 1)
+        # self.optimizer.load_state_dict(optimizer_state)
         # train
-        model = self.trainer.train_epoch(self.model, self.optimizer, device)
+        partial_batch_processed_callback = partial(self.batch_processed_callback, num_epochs=self.epochs, current_epoch=epoch,
+                                                   experiment_status_logger=self._experiment_status_logger)
+        model = self.trainer.train_epoch(self.model, self.optimizer, device,
+                                         batch_processed_callback_fun=partial_batch_processed_callback)
         return model
 
     def _evaluation_step(self, device: torch.device, epoch: int):
         self.model.to(device)
-        partial_batch_processed_callback = partial(self.batch_processed_callback, num_epochs=self.epochs, current_epoch=epoch)
-        partial_epoch_result_callback = partial(self.epoch_result_callback, current_epoch=epoch)
+        partial_batch_processed_callback = partial(self.batch_processed_callback, num_epochs=self.epochs, current_epoch=epoch,
+                                                   experiment_status_logger=self._experiment_status_logger)
+        partial_epoch_result_callback = partial(self.epoch_result_callback, current_epoch=epoch,
+                                                experiment_status_logger=self._experiment_status_logger)
 
-        evaluation_result = self.evaluator.evaluate(self.model, device, batch_processed_callback=partial_batch_processed_callback,
-                                                    epoch_result_callback=partial_epoch_result_callback)
+        evaluation_result = self.evaluator.evaluate(model=self.model,
+                                                    device=device,
+                                                    current_epoch=epoch,
+                                                    num_epochs=self.epochs,
+                                                    batch_processed_callback_fun=partial_batch_processed_callback,
+                                                    epoch_result_callback_fun=partial_epoch_result_callback)
 
         # save model and optimizer
         # TODO PriyaTomar
@@ -145,81 +148,21 @@ class GymJob(AbstractGymJob):
             self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
 
         self._evaluation_step(device, epoch=self.current_epoch)
-        self.self.current_epoch += 1
+        self.current_epoch += 1
         self.trainer.set_current_epoch(self.current_epoch)
         while not self.trainer.is_done():
-            self._train_step(device, epoch=self.self.current_epoch)
-            self._evaluation_step(device, epoch=self.self.current_epoch)
-            self.self.current_epoch += 1
+            self.logger.log(LogLevel.INFO,  f"epoch: {self.current_epoch}")
+            self._train_step(device, epoch=self.current_epoch)
+            self._evaluation_step(device, epoch=self.current_epoch)
+            self.current_epoch += 1
 
     def _execute_eval(self, device: torch.device):
         for epoch in self.epochs:
             self._evaluation_step(device, measurement_id=epoch)
 
 
-# class GymJobLite(AbstractGymJob):
-
-#     def __init__(self, run_mode: RunMode, model: NNModel, optimizer: OptimizerAdapter, trainer: Trainer,
-#                  evaluator: Evaluator, experiment_info: ExperimentInfo, epochs: List[int]):
-#         super().__init__(experiment_info)
-#         self.run_mode = run_mode
-#         self.model = model
-#         self.optimizer = optimizer
-#         self.optimizer.register_model_params(dict(self.model.named_parameters()))
-#         self.epochs = epochs
-#         self.evaluator = evaluator
-#         self.trainer = trainer
-#         self._execution_method = self._execute_eval if run_mode == RunMode.RE_EVAL else self._execute_train
-
-#     def _train_step(self, device: torch.device, epoch: int) -> NNModel:
-#         # self.restore_state_in_stateful_components(measurement_id - 1)
-#         # load model and optimizer
-#         # model_state = DashifyReader.load_model_state(self._experiment_info, measurement_id - 1)
-#         self.model.to(device)
-#         # train
-#         self.model = self.trainer.train_epoch(self.model, self.optimizer, device)
-#         return self.model
-
-#     def _evaluation_step(self, device: torch.device, epoch: int, num_epochs: int):
-#         self.model.to(device)
-#         evaluation_result = self.evaluator.evaluate(self.model, device, epoch, num_epochs)
-#         DashifyWriter.log_measurement_result(evaluation_result, self._experiment_info, measurement_id=epoch)
-
-#     def execute(self, device: torch.device):
-#         """ Executes the job
-
-#         Args:
-#             device: torch device either CPUs or a specified GPU
-#         """
-#         self._execution_method(device)
-
-#     def _execute_train(self, device: torch.device):
-#         trained_epochs = max(DashifyReader.get_last_epoch(self.experiment_info), 0)
-#         self.trainer.set_num_epochs(num_epochs=self.epochs)
-#         self.evaluator.set_num_epochs(num_epochs=self.epochs)
-#         self.trainer.set_current_epoch(trained_epochs+1)
-#         while not self.trainer.is_done():
-#             current_epoch = self.trainer.current_epoch
-#             # self.logger.log(LogLevel.DEBUG, "Executing evaluation step")
-#             self._evaluation_step(device, current_epoch-1, self.epochs)
-#             # self.logger.log(LogLevel.DEBUG, "Executing training step")
-#             model = self._train_step(device, epoch=current_epoch)
-#         self._evaluation_step(device, current_epoch, self.epochs)
-
-#         # log the final model / training state
-#         DashifyWriter.save_binary_state("model", model.state_dict(), self._experiment_info, current_epoch)
-#         DashifyWriter.save_binary_state("optimizer", self.optimizer.state_dict(), self._experiment_info, current_epoch)
-#         self.save_state_of_stateful_components(measurement_id=current_epoch)
-
-#     def _execute_eval(self, device: torch.device):
-#         for epoch in self.epochs:
-#             self._evaluation_step(device, measurement_id=epoch)
-
-
 class GymJobFactory:
     @staticmethod
-    def get_gym_job(run_mode: RunMode, experiment_info: ExperimentInfo, epochs: List[int],
-                    job_type: AbstractGymJob.Type = AbstractGymJob.Type.STANDARD, **components: Dict[str, Any]) -> AbstractGymJob:
-        # TODO @PriyaTomar
-        # We can get rid of this here AbstractGymJob.Type.LITE
-        return GymJob(run_mode=run_mode, experiment_info=experiment_info, epochs=epochs, **components)
+    def get_gym_job(run_mode: RunMode, epochs: List[int], experiment_status_logger: ExperimentStatusLogger = None,
+                    **components: Dict[str, Any]) -> AbstractGymJob:
+        return GymJob(run_mode=run_mode, epochs=epochs, experiment_status_logger=experiment_status_logger, **components)
