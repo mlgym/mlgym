@@ -29,9 +29,6 @@ class Evaluator(AbstractEvaluator):
         self.eval_component = eval_component
         self.current_epoch = -1
         self.num_epochs = -1
-        self.experiment_status_logger: ExperimentStatusLogger = None
-        self.eval_component.set_callbacks(batch_processed_callback_fun=self.batch_processed_callback,
-                                          epoch_result_callback_fun=self.epoch_result_callback)
 
     def set_num_epochs(self, num_epochs: int):
         self.num_epochs = num_epochs
@@ -45,9 +42,6 @@ class Evaluator(AbstractEvaluator):
         evaluation_batch_results = self.eval_component.evaluate(model, device, epoch_result_callback_fun=epoch_result_callback_fun,
                                                                 batch_processed_callback_fun=batch_processed_callback_fun)
         return evaluation_batch_results
-
-    def set_experiment_status_logger(self, experiment_status_logger: ExperimentStatusLogger):
-        self.experiment_status_logger = experiment_status_logger
 
 
 class EvalComponentIF(StatefulComponent):
@@ -120,7 +114,11 @@ class EvalComponent(EvalComponentIF):
             processed_batches += 1
             if batch_processed_callback_fun is not None and (processed_batches % update_lag == 0 or processed_batches == num_batches):
                 splits = [d.dataset_tag for _, d in self.dataset_loaders.items()]
-                batch_processed_callback_fun(num_batches, processed_batches, splits, dataset_loader.dataset_tag)
+                batch_processed_callback_fun(status="evaluation",
+                                             num_batches=num_batches,
+                                             current_batch=processed_batches,
+                                             splits=splits,
+                                             current_split=dataset_loader.dataset_tag)
 
         # calc metrics
         try:
@@ -146,7 +144,7 @@ class EvalComponent(EvalComponentIF):
                                                   dataset_name=dataset_loader.dataset_name,
                                                   split_name=split_name)
         if epoch_result_callback_fun is not None:
-            epoch_result_callback_fun(evaluation_result)
+            epoch_result_callback_fun(evaluation_result=evaluation_result)
         return evaluation_result
 
     def _get_metric_fun(self, identifier: str, target_subscription: Enum, prediction_subscription: Enum,
