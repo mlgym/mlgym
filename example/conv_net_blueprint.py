@@ -43,13 +43,10 @@ class MyModelRegistryConstructable(ModelRegistryConstructable):
 
 
 class ConvNetBluePrint(BluePrint):
-    def __init__(self, run_mode: RunMode, job_type: AbstractGymJob.Type, config: Dict, epochs: int,
-                 dashify_logging_dir: str, grid_search_id: str,
+    def __init__(self, run_mode: RunMode, config: Dict, epochs: int, grid_search_id: str,
                  run_id: str, external_injection: Dict[str, Any] = None,
                  logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None):
-        model_name = "conv_net"
-        dataset_name = ""
-        super().__init__(run_mode, job_type, model_name, dataset_name, epochs, config, dashify_logging_dir, grid_search_id,
+        super().__init__(run_mode, epochs, config, grid_search_id,
                          run_id, external_injection, logger_collection_constructable)
 
     @staticmethod
@@ -68,16 +65,13 @@ class ConvNetBluePrint(BluePrint):
         return components
 
     def construct(self) -> AbstractGymJob:
-        experiment_info = self.get_experiment_info()
         component_names = ["model", "trainer", "optimizer", "evaluator"]
         components = ConvNetBluePrint.construct_components(self.config, component_names, self.external_injection)
 
         logger_collection = self.logger_collection_constructable.construct()
-        experiment_status_logger = ExperimentStatusLogger(logger=logger_collection, experiment_id=self.get_experiment_id())
+        experiment_status_logger = ExperimentStatusLogger(logger=logger_collection, grid_search_id=self.grid_search_id,
+                                                          experiment_id=self.run_id)
 
-        components["trainer"].set_experiment_status_logger(experiment_status_logger)
-        components["evaluator"].set_experiment_status_logger(experiment_status_logger)
-
-        gym_job = GymJobFactory.get_gym_job(self.run_mode, job_type=self.job_type, experiment_info=experiment_info,
-                                            epochs=self.epochs, **components)
+        gym_job = GymJobFactory.get_gym_job(self.run_mode, epochs=self.epochs,
+                                            experiment_status_logger=experiment_status_logger, **components)
         return gym_job
