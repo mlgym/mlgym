@@ -92,7 +92,7 @@ class WebSocketServer:
     #     # received and it is safe to disconnect
     #     emit('my_response',
     #          {'data': 'Disconnected!', 'count': session['receive_count']},
-    #          callback=can_disconnect)
+    #          callback=can_disconnect)-
 
         @self._socketio.on("ping")
         def on_ping():
