@@ -55,7 +55,8 @@ class TestGymStarter(LoggingFixture, DeviceFixture, ValidationFixtures):
 
         for model_path in model_paths:
             file_name = os.path.basename(model_path)
-            suffix = int(re.findall(r"\d+", file_name)[0])
+            matches = re.findall(r"\d+", file_name)
+            suffix = max([int(match) for match in matches])
             assert suffix == num_epochs
         starter._stop_logging_environment()
 
@@ -88,8 +89,11 @@ class TestGymStarter(LoggingFixture, DeviceFixture, ValidationFixtures):
         model_paths = glob.glob(os.path.join(dashify_logging_path, grid_search_id, "**/**/**/model_*.pt"))
         assert len(model_paths) != 0
 
+
+
         for model_path in model_paths:
             file_name = os.path.basename(model_path)
-            suffix = int(re.findall(r"\d+", file_name)[0])
+            matches = re.findall(r"\d+", file_name)
+            suffix = max([int(match) for match in matches])
             assert suffix == num_epochs
         starter._stop_logging_environment()
