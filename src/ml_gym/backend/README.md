@@ -1,10 +1,77 @@
 # MLgym Backend
 
+## General structure
+
+The central backend server based on a HTTP API and a websocket API acts as a hub between MLgym message publishers (log training progress, evaluations and job statuses) and message subscribers (e.g., frontend). 
+
+The backend server uses event sourcing meaning, the history of all messages describing the system at any point in time are being recorded and can be played back to the subscribers. This way, a newly connected client can consume all the training progress messages, even if the training has already started. 
+
+## Getting started
+
+To run the websocket server run 
+
+```sh
+cd src/ml_gym/backend/streaming
+python websocket_server.py
+```
+
+To run the frontend 
+
+```sh
+cd src/ml_gym/frontend/dashboard
+yarn start
+```
+
+Now we can run model training that is being streamed live to the frontend
+
+```sh
+cd example/
+sh train_gs_mnist_conv_net_websocket.sh
+```
+
+The messages received by the websocket server can be analyzed in `event_storage/`
+
 ## Template Endpoints
 
 
 ## RESTful API
 
+
+**Grid search config**
+
+*GET /grid_searches/<grid_search_id>/gs_config*
+
+
+*PUT /grid_searches/<grid_search_id>/gs_config*
+
+payload:
+```json
+{
+    <YAML grid search definition casted to JSON>
+}
+```
+
+
+**Validation config**
+
+*GET /grid_searches/<grid_search_id>/validation_config*
+
+
+*PUT /grid_searches/<grid_search_id>/validation_config*
+
+```json
+{
+    <YAML validation definition casted to JSON>
+}
+```
+
+**Checkpoints**
+
+*GET /grid_searches/<grid_search_id>/<checkpoint_id>/model*
+
+*GET /grid_searches/<grid_search_id>/<checkpoint_id>/optimizer*
+
+*GET /grid_searches/<grid_search_id>/<checkpoint_id>/stateful_component*
 
 
 ## Websocket API
@@ -16,7 +83,7 @@ Every event message has the following structure:
 
 ```
 
-** Job scheduled:**
+**Job scheduled:**
 
 Dispatched when a job is scheduled within the gym
 
@@ -119,6 +186,7 @@ After each epoch and if condition is fulfilled (based on strategy), the model is
     "payload": {
         "grid_search_id": <timestamp>, 
         "experiment_id": <int>,
+        "checkpoint_id": <str>,
         "model": <model as binary stream>,
         "optimizer": <optimizer as binary stream>,
         "stateful_components": <stateful components as byte stream>
@@ -126,7 +194,12 @@ After each epoch and if condition is fulfilled (based on strategy), the model is
 }
 ```
 
-Implementation idea: 
+The files received by the websocket server are stored in 
+`event_storage/mlgym_event_subscribers/<grid_search_id/event_storage_id><experiment_id>/checkpointing/<checkpoint_id>` as `model.pt`, `optimizer.pt` and `stateful_components.pt`. These files are available via the RESTful API to the clients and are not streamed.
+
+
+
+# Implementation idea: 
 
 Add subscribers to trainer, evaluator and gymjob. We need to inject them via 
 For trainer and evaluator we add the subscribers within the blueprints. E.g., trainer.add_subscriber(subscriber)
@@ -134,8 +207,5 @@ For trainer and evaluator we add the subscribers within the blueprints. E.g., tr
 We add the subscriber constructable to the blueprint via the GridSearchValidator.create_blueprints().
 
 Subscriber constructable that we parameterize within the Gym and then pass down to trainer, evaluator via gymjob. The idea is that the constructable has a unique interface for construction and the constructed object always has the same interface for logging. Due to that we can implement various types of loggers (local, websocket etc.)
-
-
-## Persistency on the backend
 
 
