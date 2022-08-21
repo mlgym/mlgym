@@ -5,14 +5,34 @@ import torch
 from typing import Callable, Dict, List
 
 
-class Job:
+class JobIF:
+    @property
+    def device(self) -> torch.device:
+        raise NotImplementedError
+
+    @property
+    def experiment_id(self) -> str:
+        raise NotImplementedError
+
+    @property
+    def grid_search_id(self) -> str:
+        raise NotImplementedError
+
+    @device.setter
+    def device(self, value: torch.device):
+        raise NotImplementedError
+
+    def execute(self):
+        raise NotImplementedError
+
+
+class Job(JobIF):
     def __init__(self, job_id: int, fun: Callable, blue_print: BluePrint, param_dict: Dict, job_type: JobType = JobType.CALC):
         self.job_id = job_id
         self.job_type = job_type
         self.fun = fun
         self.blue_print = blue_print
         self.param_dict = param_dict
-
         self.status = JobStatus.INIT
         self.starting_time = -1
         self.finishing_time = -1
@@ -63,7 +83,8 @@ class JobCollection:
 
     def add_or_update_job(self, job: Job):
         self.job_dict[job.job_id] = job
-        self.update_subscribers(job)
+        if job.job_type == JobType.CALC:
+            self.update_subscribers(job)
 
     def add_subscriber(self, subscriber: JobStatusSubscriberIF):
         self.subscribers.append(subscriber)
@@ -73,16 +94,16 @@ class JobCollection:
             s.callback_job_event(job)
 
     def __len__(self) -> int:
-        return len(self.job_dict)
+        return len([1 for job in self.job_dict.values() if job.job_type == JobType.CALC])
 
     @property
     def done(self) -> bool:
-        return all([job.status == JobStatus.DONE for job in self.job_dict.values()])
+        return all([job.status == JobStatus.DONE for job in self.job_dict.values() if job.job_type == JobType.CALC])
 
     @property
     def done_count(self) -> bool:
-        return sum([job.status == JobStatus.DONE for job in self.job_dict.values()])
+        return sum([job.status == JobStatus.DONE for job in self.job_dict.values() if job.job_type == JobType.CALC])
 
     @property
     def job_count(self) -> int:
-        return len(self.job_dict)
+        return len([1 for job in self.job_dict.values() if job.job_type == JobType.CALC])
