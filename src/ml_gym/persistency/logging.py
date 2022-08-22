@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-# from ml_gym.gym.evaluator import EvaluationBatchResult
-from typing import List, Dict
+from typing import Any, List, Dict
 from ml_gym.multiprocessing.states import JobStatus, JobType
-# from ml_gym.persistency.io import DashifyWriter
 from ml_gym.backend.streaming.client import ClientFactory, BufferedClient
 import time
 import torch
@@ -91,6 +89,12 @@ class JobStatusLogger:
         payload = {"job_id": job_id, "job_type": job_type.value, "status": status.value, "grid_search_id": grid_search_id, "experiment_id": experiment_id,
                    "starting_time": starting_time, "finishing_time": finishing_time, "device": str(device), "error": error,
                    "stacktrace": stacktrace}
+        message["payload"] = payload
+        self._logger.log_raw_message(raw_log_message=message)
+
+    def log_experiment_config(self, grid_search_id: str, experiment_id: str, job_id: int, config: Dict[str, Any]):
+        message = {"event_type": "job_status", "creation_ts": get_timestamp()}
+        payload = {"grid_search_id": grid_search_id, "experiment_id": experiment_id, "job_id": job_id, "config": config}
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
 
