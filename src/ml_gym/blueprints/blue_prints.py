@@ -10,14 +10,14 @@ class BluePrint(ABC):
     """
 
     def __init__(self, run_mode: RunMode, epochs: int,
-                 config: Dict[str, Any], grid_search_id: str, run_id: str,
+                 config: Dict[str, Any], grid_search_id: str, experiment_id: str,
                  external_injection: Dict[str, Any] = None,
                  logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None):
 
         self.run_mode = run_mode
         self.config = config
         self.grid_search_id = grid_search_id
-        self.run_id = run_id
+        self.experiment_id = experiment_id
         self.epochs = epochs
         self.external_injection = external_injection if external_injection is not None else {}
         self.logger_collection_constructable = logger_collection_constructable
@@ -35,14 +35,14 @@ class BluePrint(ABC):
     def create_blueprint(blue_print_class: Type["BluePrint"],
                          run_mode: RunMode,
                          experiment_config: Dict[str, Any],
-                         experiment_id: int,
+                         experiment_id: str,
                          num_epochs: int,
                          grid_search_id: str,
                          external_injection: Dict[str, Any] = None,
                          logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List["BluePrint"]:
 
         blue_print = blue_print_class(grid_search_id=grid_search_id,
-                                      run_id=str(experiment_id),
+                                      experiment_id=experiment_id,
                                       epochs=num_epochs,
                                       run_mode=run_mode,
                                       config=experiment_config,
