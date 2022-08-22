@@ -35,9 +35,10 @@ class BufferedClient:
         sio_client.on("mlgym_event", BufferedClient.on_mlgym_event_message)
 
     def connect(self):
-        self._sio_client.connect(f"{self._host}:{self._port}")
+        print(f"=== {self._sio_client.connected}")
+        self._sio_client.connect(f"{self._host}:{self._port}", wait=True, wait_timeout=20)
         BufferedClient._register_callback_funs(self._sio_client)
-        time.sleep(1)
+        print(self._sio_client.connected)
         self.emit("join", {"client_id": self._client_id, "rooms": [*self.rooms, self._client_id]})
 
     def leave(self):
@@ -53,5 +54,5 @@ class BufferedClient:
 
     def emit(self, message_key: str,  message: Dict):
         self._sio_client.emit(message_key, message)
-        print(f"Sent message {message_key}: {message}")
+        # print(f"Sent message {message_key}: {message}")
 
