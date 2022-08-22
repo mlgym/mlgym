@@ -125,6 +125,18 @@ class ExperimentStatusLogger:
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
 
+    def log_checkpoint(self, epoch: int, model_binary_stream, optimizer_binary_stream, stateful_components_binary_stream):
+        message = {"event_type": "evaluation_result", "creation_ts": get_timestamp()}
+        payload = {
+            "grid_search_id": self._grid_search_id,
+            "experiment_id": self._experiment_id,
+            "checkpoint_id": epoch,
+            "model": model_binary_stream,
+            "optimizer": optimizer_binary_stream,
+            "stateful_components": stateful_components_binary_stream}
+        message["payload"] = payload
+        self._logger.log_raw_message(raw_log_message=message)
+
 
 class MLgymStatusLoggerTypes(Enum):
     DISC_LOGGER = DiscLogger

@@ -55,15 +55,3 @@ class BufferedClient:
         self._sio_client.emit(message_key, message)
         print(f"Sent message {message_key}: {message}")
 
-
-if __name__ == "__main__":
-    host = "http://127.0.0.1"
-    port = 7000
-    client_id = "worker_3"
-    bc = ClientFactory.get_buffered_client(client_id=client_id, host=host, port=port, disconnect_buffer_size=0,
-                                           rooms=["mlgym_event_subscribers"])
-    count = 0
-    while True:
-        # bc.emit(message_key="mlgym_event", message=f"Message {count}")
-        # count += 1
-        time.sleep(10)
