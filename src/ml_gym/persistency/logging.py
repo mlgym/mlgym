@@ -93,7 +93,7 @@ class JobStatusLogger:
         self._logger.log_raw_message(raw_log_message=message)
 
     def log_experiment_config(self, grid_search_id: str, experiment_id: str, job_id: int, config: Dict[str, Any]):
-        message = {"event_type": "job_status", "creation_ts": get_timestamp()}
+        message = {"event_type": "experiment_config", "creation_ts": get_timestamp()}
         payload = {"grid_search_id": grid_search_id, "experiment_id": experiment_id, "job_id": job_id, "config": config}
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
