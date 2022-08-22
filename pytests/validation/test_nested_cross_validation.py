@@ -6,12 +6,15 @@ import torch
 import pytest
 from collections import Counter
 
+from pytests.test_env.fixtures import LoggingFixture, DeviceFixture
+from pytests.test_env.validation_fixtures import ValidationFixtures
 
-class TestNestedCV:
+
+class TestNestedCV(LoggingFixture, DeviceFixture, ValidationFixtures):
 
     @pytest.fixture
     def iterator(self) -> str:
-        targets = [1]*100 + [2]*200 + [3]*300
+        targets = [1] * 100 + [2] * 200 + [3] * 300
         sequence_targets = torch.Tensor(targets)
         sequence_samples = torch.ones_like(sequence_targets)
 
@@ -60,7 +63,7 @@ class TestNestedCV:
 
         # check that every indice in an inner fold is existing in the outer fold and vice versa
         for outer_fold_id, outer_fold in enumerate(outer_folds_indices):
-            assert len(outer_fold)*4 == sum([len(fold) for fold in inner_folds_indices[outer_fold_id]])
+            assert len(outer_fold) * 4 == sum([len(fold) for fold in inner_folds_indices[outer_fold_id]])
             assert set(outer_fold).isdisjoint(set([i for fold in inner_folds_indices[outer_fold_id] for i in fold]))
 
     def test__create_outer_folds_splits(self, iterator: DatasetIteratorIF):
@@ -76,7 +79,7 @@ class TestNestedCV:
         outer_folds_indices, _ = nested_cv._get_fold_indices()
         splits = NestedCV._create_outer_folds_splits(outer_folds_indices)
         for split in splits:
-            assert len(split["id_split_indices"]["train"]) == len(split["id_split_indices"]["test"])*4
+            assert len(split["id_split_indices"]["train"]) == len(split["id_split_indices"]["test"]) * 4
             assert len(split["id_split_indices"]["train"]) == len(set(split["id_split_indices"]["train"]))
             assert len(split["id_split_indices"]["test"]) == len(set(split["id_split_indices"]["test"]))
             assert set(split["id_split_indices"]["test"]).isdisjoint(set(split["id_split_indices"]["train"]))
@@ -96,10 +99,13 @@ class TestNestedCV:
         outer_splits = NestedCV._create_outer_folds_splits(outer_folds_indices)
         inner_splits = NestedCV._create_inner_folds_splits(inner_folds_indices)
         for inner_split in inner_splits:
-            assert len(inner_split["id_split_indices"]["train"]) == len(inner_split["id_split_indices"]["test"])*(num_inner_loop_folds-1)
+            assert len(inner_split["id_split_indices"]["train"]) == len(inner_split["id_split_indices"]["test"]) * (
+                    num_inner_loop_folds - 1)
             assert len(inner_split["id_split_indices"]["train"]) == len(set(inner_split["id_split_indices"]["train"]))
             assert len(inner_split["id_split_indices"]["test"]) == len(set(inner_split["id_split_indices"]["test"]))
-            assert set(inner_split["id_split_indices"]["test"]).isdisjoint(set(inner_split["id_split_indices"]["train"]))
+            assert set(inner_split["id_split_indices"]["test"]).isdisjoint(
+                set(inner_split["id_split_indices"]["train"]))
             outer_split = outer_splits[inner_split["id_outer_test_fold_id"]]
             outer_split_indices = outer_split["id_split_indices"]["train"]
-            assert len(outer_split_indices) == len(inner_split["id_split_indices"]["train"]) + len(inner_split["id_split_indices"]["test"])
+            assert len(outer_split_indices) == len(inner_split["id_split_indices"]["train"]) + len(
+                inner_split["id_split_indices"]["test"])

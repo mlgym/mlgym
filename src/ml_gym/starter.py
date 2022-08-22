@@ -42,8 +42,9 @@ class MLGymStarter:
 
     @staticmethod
     def _setup_logging_environment(log_dir_path: str):
-        queue = Queue()
-        QueuedLogging.start_logging(queue, log_dir_path)
+        if QueuedLogging._instance is None:
+            queue = Queue()
+            QueuedLogging.start_logging(queue, log_dir_path)
 
     @staticmethod
     def _stop_logging_environment():
