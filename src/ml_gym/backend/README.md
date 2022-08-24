@@ -204,9 +204,11 @@ After each epoch and if condition is fulfilled (based on strategy), the model is
         "grid_search_id": <timestamp>, 
         "experiment_id": <int>,
         "checkpoint_id": <str>,
-        "model": <model as binary stream>,
-        "optimizer": <optimizer as binary stream>,
-        "stateful_components": <stateful components as byte stream>
+        "checkpoint_streams":{
+            "model": <model as binary stream>,
+            "optimizer": <optimizer as binary stream>,
+            "stateful_components": <stateful components as byte stream>
+        }
     }
 }
 ```
