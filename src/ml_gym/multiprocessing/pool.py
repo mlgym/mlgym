@@ -1,5 +1,4 @@
 from torch.multiprocessing import Queue
-import time
 import tqdm
 import torch
 from typing import List
@@ -17,7 +16,7 @@ class JobStatusLoggingSubscriber(JobStatusSubscriberIF):
         self._logger = logger
 
     def callback_job_event(self, job: Job):
-        representation = {"job_id": job.job_id, "job_type": job.job_type, "experiment_id": job.experiment_id, "status": job.status,
+        representation = {"job_id": job.job_id, "job_type": job.job_type, "grid_search_id": job.grid_search_id, "experiment_id": job.experiment_id, "status": job.status,
                           "starting_time": job.starting_time, "finishing_time": job.finishing_time, "error": job.error,
                           "stacktrace": job.stacktrace, "device": job.device}
         self._logger.log_job_status(**representation)
@@ -93,12 +92,3 @@ class Pool:
         else:
             raise Exception("There is something wrong with the process id!")
 
-    if __name__ == "__main__":
-        def do_sleep(seconds: int, device: torch.device):
-            time.sleep(seconds)
-            # print("Device: " + device)
-            # raise Exception("bla")
-
-        # pool = Pool(3, max_jobs_per_process=1)
-        # pool.add_jobs(jobs)
-        # pool.run()

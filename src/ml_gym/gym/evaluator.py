@@ -29,39 +29,26 @@ class Evaluator(AbstractEvaluator):
         self.eval_component = eval_component
         self.current_epoch = -1
         self.num_epochs = -1
-        self.eval_component.set_callbacks(batch_processed_callback_fun=self.batch_processed_callback,
-                                          epoch_result_callback_fun=self.epoch_result_callback)
 
     def set_num_epochs(self, num_epochs: int):
         self.num_epochs = num_epochs
 
-    def evaluate(self, model: NNModel, device: torch.device, epoch: int, num_epochs: int) -> List[EvaluationBatchResult]:
-        self.current_epoch = epoch
+    def evaluate(self, model: NNModel, device: torch.device, current_epoch: int, num_epochs: int,
+                 epoch_result_callback_fun: Callable = None,
+                 batch_processed_callback_fun: Callable = None) -> List[EvaluationBatchResult]:
+        self.current_epoch = current_epoch
         self.num_epochs = num_epochs
-        return self.eval_component.evaluate(model, device)  # returns a EvaluationBatchResult for each split
-
-    def set_experiment_status_logger(self, experiment_status_logger: ExperimentStatusLogger):
-        self.experiment_status_logger = experiment_status_logger
-
-    def batch_processed_callback(self, num_batches: int, current_batch: int, splits: List[str], current_split: str):
-        if self.experiment_status_logger is not None:
-            self.experiment_status_logger.log_experiment_status(status="evaluation",
-                                                                num_epochs=self.num_epochs,
-                                                                current_epoch=self.current_epoch,
-                                                                splits=splits,
-                                                                current_split=current_split,
-                                                                num_batches=num_batches,
-                                                                current_batch=current_batch)
-
-    def epoch_result_callback(self, evaluation_result: EvaluationBatchResult):
-        if self.experiment_status_logger is not None:
-            self.experiment_status_logger.log_evaluation_results(evaluation_result, self.current_epoch)
+        # returns a EvaluationBatchResult for each split
+        evaluation_batch_results = self.eval_component.evaluate(model, device, epoch_result_callback_fun=epoch_result_callback_fun,
+                                                                batch_processed_callback_fun=batch_processed_callback_fun)
+        return evaluation_batch_results
 
 
 class EvalComponentIF(StatefulComponent):
 
     @abstractmethod
-    def evaluate(self, model: NNModel, device: torch.device) -> List[EvaluationBatchResult]:
+    def evaluate(self, model: NNModel, device: torch.device, epoch_result_callback_fun: Callable = None,
+                 batch_processed_callback_fun: Callable = None) -> List[EvaluationBatchResult]:
         raise NotImplementedError
 
 
@@ -90,18 +77,14 @@ class EvalComponent(EvalComponentIF):
         self.loss_computation_config = None if loss_computation_config is None else {
             m["loss_tag"]: m["applicable_splits"] for m in loss_computation_config}
         self.experiment_status_logger: ExperimentStatusLogger = None
-        self.batch_processed_callback_fun: Callable = None
-        self.epoch_result_callback_fun: Callable = None
 
-    def set_callbacks(self, batch_processed_callback_fun: Callable, epoch_result_callback_fun: Callable):
-        self.batch_processed_callback_fun = batch_processed_callback_fun
-        self.epoch_result_callback_fun = epoch_result_callback_fun
-
-    def evaluate(self, model: NNModel, device: torch.device) -> List[EvaluationBatchResult]:
-        return [self.evaluate_dataset_split(model, device, split_name, loader) for split_name, loader in self.dataset_loaders.items()]
+    def evaluate(self, model: NNModel, device: torch.device, epoch_result_callback_fun: Callable = None,
+                 batch_processed_callback_fun: Callable = None) -> List[EvaluationBatchResult]:
+        return [self.evaluate_dataset_split(model, device, split_name, loader, epoch_result_callback_fun, batch_processed_callback_fun) for split_name, loader in self.dataset_loaders.items()]
 
     def evaluate_dataset_split(self, model: NNModel, device: torch.device, split_name: str,
-                               dataset_loader: DatasetLoader) -> EvaluationBatchResult:
+                               dataset_loader: DatasetLoader, epoch_result_callback_fun: Callable = None,
+                               batch_processed_callback_fun: Callable = None) -> EvaluationBatchResult:
         dataset_loader.device = device
         dataset_loader_iterator = tqdm.tqdm(
             dataset_loader, desc=f"Evaluating {dataset_loader.dataset_name} - {split_name}") if self.show_progress else dataset_loader
@@ -129,9 +112,13 @@ class EvalComponent(EvalComponentIF):
                                                                 device=torch.device("cpu"))
             inference_result_batches_cpu.append(irb_filtered)
             processed_batches += 1
-            if self.batch_processed_callback_fun is not None and (processed_batches % update_lag == 0 or processed_batches == num_batches):
+            if batch_processed_callback_fun is not None and (processed_batches % update_lag == 0 or processed_batches == num_batches):
                 splits = [d.dataset_tag for _, d in self.dataset_loaders.items()]
-                self.batch_processed_callback_fun(num_batches, processed_batches, splits, dataset_loader.dataset_tag)
+                batch_processed_callback_fun(status="evaluation",
+                                             num_batches=num_batches,
+                                             current_batch=processed_batches,
+                                             splits=splits,
+                                             current_split=dataset_loader.dataset_tag)
 
         # calc metrics
         try:
@@ -156,7 +143,8 @@ class EvalComponent(EvalComponentIF):
                                                   metrics=metric_scores,
                                                   dataset_name=dataset_loader.dataset_name,
                                                   split_name=split_name)
-        self.epoch_result_callback_fun(evaluation_result)
+        if epoch_result_callback_fun is not None:
+            epoch_result_callback_fun(evaluation_result=evaluation_result)
         return evaluation_result
 
     def _get_metric_fun(self, identifier: str, target_subscription: Enum, prediction_subscription: Enum,

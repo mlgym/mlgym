@@ -1,6 +1,5 @@
 import socketio
 from typing import Dict, List
-import json
 import time
 
 
@@ -36,9 +35,8 @@ class BufferedClient:
         sio_client.on("mlgym_event", BufferedClient.on_mlgym_event_message)
 
     def connect(self):
-        self._sio_client.connect(f"{self._host}:{self._port}")
+        self._sio_client.connect(f"{self._host}:{self._port}", wait=True, wait_timeout=20)
         BufferedClient._register_callback_funs(self._sio_client)
-        time.sleep(1)
         self.emit("join", {"client_id": self._client_id, "rooms": [*self.rooms, self._client_id]})
 
     def leave(self):
@@ -54,17 +52,5 @@ class BufferedClient:
 
     def emit(self, message_key: str,  message: Dict):
         self._sio_client.emit(message_key, message)
-        print(f"Sent message {message_key}: {message}")
+        # print(f"Sent message {message_key}: {message}")
 
-
-if __name__ == "__main__":
-    host = "http://127.0.0.1"
-    port = 7000
-    client_id = "worker_3"
-    bc = ClientFactory.get_buffered_client(client_id=client_id, host=host, port=port, disconnect_buffer_size=0,
-                                           rooms=["mlgym_event_subscribers"])
-    count = 0
-    while True:
-        # bc.emit(message_key="mlgym_event", message=f"Message {count}")
-        # count += 1
-        time.sleep(10)

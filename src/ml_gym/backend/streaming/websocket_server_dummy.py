@@ -1,8 +1,7 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, copy_current_request_context
 from flask_socketio import SocketIO, emit, join_room, rooms, disconnect
-from typing import List, Dict
+from typing import List
 from collections import defaultdict
-import time
 
 
 class EventSubscriberIF:
@@ -17,12 +16,12 @@ class WebSocketServer:
         self._host = host
         self._port = port
         self._message_delay = message_delay
-        self._socketio = SocketIO(app, async_mode=async_mode)
+        self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=["http://localhost:3000", "http://localhost:7000"])
         self._client_sids = []
         self._init_call_backs()
 
         # load the log file
-        with open(log_file_path, "r") as fp:
+        with open(log_file_path, encoding="utf-8") as fp:
             self.log_list = fp.readlines()
 
     def run(self, app: Flask):
@@ -35,15 +34,17 @@ class WebSocketServer:
     def client_sids(self) -> List[str]:
         return self._client_sids
 
-    def _send_event_history_to_client(self):
-        for msg in self.log_list:
-            emit('mlgym_event', msg)
-            time.sleep(1)
-
     def _init_call_backs(self):
 
         @self._socketio.on("join")
         def on_join(data):
+
+            @copy_current_request_context
+            def _send_event_history_to_client(log_list):
+                for msg in log_list:
+                    emit('mlgym_event', msg)
+                    self._socketio.sleep(self._message_delay)
+
             # save the sids of the new client
             client_sid = request.sid
             self._client_sids.append(client_sid)
@@ -60,7 +61,7 @@ class WebSocketServer:
 
             # send the history of log messages to the client
             if "mlgym_event_subscribers" in rooms_to_join:
-                self._send_event_history_to_client()
+                self._socketio.start_background_task(lambda: _send_event_history_to_client(self.log_list))
 
         @self._socketio.on("leave")
         def on_leave():
@@ -97,7 +98,7 @@ if __name__ == '__main__':
 
     log_file_path = "/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_gym/backend/streaming/log.txt"
 
-    message_delay = 0.5  # in seconds
+    message_delay = 0.1  # in seconds
 
     ws = WebSocketServer(host=host, port=port, message_delay=message_delay, log_file_path=log_file_path, async_mode=async_mode, app=app)
 

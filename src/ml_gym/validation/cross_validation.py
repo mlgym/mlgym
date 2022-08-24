@@ -1,7 +1,6 @@
 from typing import Dict, Any, List, Type
 from data_stack.dataset.iterator import DatasetIteratorIF
 from ml_gym.blueprints.blue_prints import BluePrint
-from ml_gym.gym.jobs import AbstractGymJob
 from data_stack.dataset.splitter import SplitterFactory
 from ml_gym.modes import RunMode
 from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
@@ -12,8 +11,7 @@ from ml_gym.util.grid_search import GridSearch
 
 class CrossValidation(ValidatorIF):
     def __init__(self, dataset_iterator: DatasetIteratorIF, num_folds: int, stratification: bool,
-                 target_pos: int, shuffle: bool, grid_search_id: str, seed: int, run_mode: RunMode,
-                 keep_interim_results: bool = True):
+                 target_pos: int, shuffle: bool, grid_search_id: str, seed: int, run_mode: RunMode):
         self.num_folds = num_folds
         self.stratification = stratification
         self.dataset_iterator = dataset_iterator
@@ -22,7 +20,6 @@ class CrossValidation(ValidatorIF):
         self.target_pos = target_pos
         self.shuffle = shuffle
         self.run_mode = run_mode
-        self.keep_interim_results = keep_interim_results
 
     def _get_fold_indices(self) -> List[List[int]]:
         splitter = SplitterFactory.get_cv_splitter(num_folds=self.num_folds,
@@ -55,8 +52,8 @@ class CrossValidation(ValidatorIF):
             splits.append(split)
         return splits
 
-    def create_blue_prints(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type, gs_config: Dict[str, Any],
-                           num_epochs: int, dashify_logging_path: str,
+    def create_blue_prints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any],
+                           num_epochs: int,
                            logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List[Type[BluePrint]]:
 
         run_id_to_config_dict = {run_id: config for run_id, config in enumerate(GridSearch.create_gs_from_config_dict(gs_config))}
@@ -76,9 +73,7 @@ class CrossValidation(ValidatorIF):
                 experiment_config_injected = injector.inject_pass(component_parameters=experiment_config)
                 bp = BluePrint.create_blueprint(blue_print_class=blue_print_type,
                                                 run_mode=self.run_mode,
-                                                job_type=job_type,
                                                 experiment_config=experiment_config_injected,
-                                                dashify_logging_path=dashify_logging_path,
                                                 num_epochs=num_epochs,
                                                 grid_search_id=self.grid_search_id,
                                                 experiment_id=experiment_id,
@@ -87,13 +82,10 @@ class CrossValidation(ValidatorIF):
                 experiment_id = experiment_id + 1
         return blueprints
 
-    def create_blueprints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str,
+    def create_blueprints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any], num_epochs: int,
                           logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List[BluePrint]:
-        job_type = AbstractGymJob.Type.STANDARD if self.keep_interim_results else AbstractGymJob.Type.LITE
         blueprints = self.create_blue_prints(blue_print_type=blue_print_type,
                                              gs_config=gs_config,
-                                             dashify_logging_path=dashify_logging_path,
                                              num_epochs=num_epochs,
-                                             job_type=job_type,
                                              logger_collection_constructable=logger_collection_constructable)
         return blueprints
