@@ -1,7 +1,9 @@
+from curses.panel import top_panel
+import os
 from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, rooms, disconnect
 from ml_gym.backend.messaging.event_storage import EventStorageIF, EventStorageFactory
-from typing import List, Dict
+from typing import Any, List, Dict
 from collections import defaultdict
 from engineio.payload import Payload
 
@@ -16,20 +18,16 @@ class EventSubscriberIF:
 
 class WebSocketServer:
 
-    def __init__(self, port: int, async_mode: str, app: Flask):
-        """[summary]
-
-        Args:
-            port (int): [description]
-            async_mode (str): Set this variable to "threading", "eventlet" or "gevent" to test the
-                              different async modes, or leave it set to None for the application to choose
-                              the best option based on installed packages.
-        """
+    def __init__(self, port: int, async_mode: str, app: Flask, top_level_logging_path: str):
         self._port = port
-        self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=["http://localhost:3000", "http://localhost:7000"])
+        self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=["http://localhost:3000", "http://localhost:7000"],
+                                  max_http_buffer_size=100000000000)
         self._client_sids = []
-        self._room_id_to_event_storage: Dict[str, EventStorageIF] = {"mlgym_event_subscribers": EventStorageFactory.get_disc_event_storage(
-            logging_path="/home/mluebberin/repositories/github/private_workspace/mlgym/event_storage/mlgym_event_subscribers")}
+        self._top_level_logging_path = top_level_logging_path
+        self.mlgym_event_logging_path = os.path.join(self._top_level_logging_path, "logs")
+        self._room_id_to_event_storage: Dict[str, EventStorageIF] = {
+            "mlgym_event_subscribers": EventStorageFactory.get_disc_event_storage(logging_path=self.mlgym_event_logging_path)
+        }
         self._init_call_backs()
 
     def emit_server_log_message(self, data):
@@ -84,7 +82,7 @@ class WebSocketServer:
                 event_id = self._room_id_to_event_storage["mlgym_event_subscribers"].add_event(grid_search_id, data)
                 emit('mlgym_event', {'event_id': event_id, 'data': data}, to="mlgym_event_subscribers")
             elif data["event_type"] == "checkpoint":
-                print("received checkpoint")
+                self.save_checkpoint(checkpoint=data["payload"], path=self.mlgym_event_logging_path)
             else:
                 print(f"Unsupported event_type {data['event_type']}")
 
@@ -119,8 +117,20 @@ class WebSocketServer:
     def run(self, app: Flask):
         self._socketio.run(app)
 
+    def save_checkpoint(self, checkpoint: Dict[str, Any], path: str):
+        grid_search_id = checkpoint["grid_search_id"]
+        experiment_id = checkpoint["experiment_id"]
+        checkpoint_id = checkpoint["checkpoint_id"]
+
+        full_path = os.path.join(path, grid_search_id, str(experiment_id), str(checkpoint_id))
+        os.makedirs(full_path, exist_ok=True)
+        for key, stream in checkpoint["checkpoint_streams"].items():
+            with open(os.path.join(full_path, key + ".bin"), "wb") as fd:
+                fd.write(stream)
+
 
 if __name__ == '__main__':
+    top_level_logging_path = "event_storage/"
     app = Flask(__name__, template_folder="template")
     app.config['SECRET_KEY'] = 'secret!'
 
@@ -128,7 +138,7 @@ if __name__ == '__main__':
     port = 5000
     async_mode = None
 
-    ws = WebSocketServer(port=port, async_mode=async_mode, app=app)
+    ws = WebSocketServer(port=port, async_mode=async_mode, app=app, top_level_logging_path=top_level_logging_path)
 
     @app.route('/')
     def index():
