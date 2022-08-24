@@ -1,4 +1,4 @@
-from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
+from ml_gym.persistency.logging import JobStatusLogger, MLgymStatusLoggerCollectionConstructable
 import torch
 from typing import Dict, List
 from ml_gym.multiprocessing.pool import Pool, Job
@@ -16,6 +16,7 @@ class Gym:
                  logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None):
         self.devices = get_devices(device_ids)
         self.logger_collection_constructable = logger_collection_constructable
+        self.job_status_logger = JobStatusLogger(self.logger_collection_constructable.construct())
         self.log_std_to_file = log_std_to_file
         self.pool = Pool(num_processes=process_count, devices=self.devices, logger_collection_constructable=logger_collection_constructable)
         self.jobs: List[Job] = []
@@ -43,14 +44,14 @@ class Gym:
         for blue_print in blue_prints:
             job_id = self.add_blue_print(blue_print)
             job_id_to_blueprint[job_id] = blue_print
-        # TODO @PriyaTomar
-        # send blueprints (i.e., job_id -> config)
+            self.job_status_logger.log_experiment_config(grid_search_id=blue_print.grid_search_id,
+                                                         experiment_id=blue_print.experiment_id,
+                                                         job_id=job_id,
+                                                         config=blue_print.config)
 
     @staticmethod
     def _run_job(blue_print: BluePrint, device: torch.device, log_std_to_file: bool) -> AbstractGymJob:
         gym_job = AbstractGymJob.from_blue_print(blue_print)
-        # decorated_runner = ExperimentTracking(gym_job.experiment_info, log_to_file=log_std_to_file)(partial(gym_job.execute, device=device))
-        # decorated_runner(device=device)
         return gym_job.execute(device=device)
 
     def work(self, device: torch.device):

@@ -3,6 +3,9 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, ro
 from ml_gym.backend.messaging.event_storage import EventStorageIF, EventStorageFactory
 from typing import List, Dict
 from collections import defaultdict
+from engineio.payload import Payload
+
+Payload.max_decode_packets = 10000
 
 
 class EventSubscriberIF:
@@ -75,10 +78,15 @@ class WebSocketServer:
 
         @self._socketio.on("mlgym_event")
         def on_mlgym_event(data):
-            print("mlgym_event: " + str(data))
             grid_search_id = data["payload"]["grid_search_id"]
-            event_id = self._room_id_to_event_storage["mlgym_event_subscribers"].add_event(grid_search_id, data)
-            emit('mlgym_event', {'event_id': event_id, 'data': data}, to="mlgym_event_subscribers")
+            if data["event_type"] in set(["experiment_status", "job_status", "experiment_config", "evaluation_result"]):
+                print("mlgym_event: " + str(data))
+                event_id = self._room_id_to_event_storage["mlgym_event_subscribers"].add_event(grid_search_id, data)
+                emit('mlgym_event', {'event_id': event_id, 'data': data}, to="mlgym_event_subscribers")
+            elif data["event_type"] == "checkpoint":
+                print("received checkpoint")
+            else:
+                print(f"Unsupported event_type {data['event_type']}")
 
     # @socketio.event
     # def disconnect_request():

@@ -12,6 +12,7 @@ import { useAppDispatch } from "./app/hooks"
 import { IOStatsType, FilterConfigType } from "./app/datatypes"
 import { jobStatusAdded } from "./features/jobsStatus/jobsStatusSlice"
 import { modelStatusAdded } from "./features/modelsStatus/modelsStatusSlice"
+import { experimentConfigAdded } from "./features/experimentConfig/experimentConfigSlice"
 import { modelEvaluationAdded } from "./features/modelEvaluations/modelEvaluationsSlice"
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -67,7 +68,8 @@ export default function App() {
   const eventTypeToActionCreator: any = {
     "job_status": jobStatusAdded,
     "experiment_status": modelStatusAdded,
-    "evaluation_result": modelEvaluationAdded
+    "evaluation_result": modelEvaluationAdded,
+    "experiment_config": experimentConfigAdded
   }
 
   useEffect(() => {

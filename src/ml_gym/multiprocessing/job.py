@@ -48,7 +48,7 @@ class Job(JobIF):
     @property
     def experiment_id(self) -> str:
         if self.blue_print is not None:
-            return self.blue_print.run_id
+            return self.blue_print.experiment_id
         else:
             return None
 

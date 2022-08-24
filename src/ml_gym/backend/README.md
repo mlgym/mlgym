@@ -143,6 +143,23 @@ tracks the model training status from within GymJob.
 }
 ```
 
+**Experiment config**:
+
+specifies the configuration of a single experiment
+
+```json
+{
+    "event_type": "experiment_config",
+    "creation_ts": "1",
+    "payload": { 
+        "grid_search_id": <timestamp>, 
+        "experiment_id": <int>,
+        "job_id": <int>,
+        "config": {<YAML config casted to JSON>},
+    }
+}
+```
+
 **Model Evaluation**:
 
 metric scores of a model at a specific epoch.
