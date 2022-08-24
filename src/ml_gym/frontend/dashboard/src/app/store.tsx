@@ -2,13 +2,15 @@ import { configureStore, ThunkAction, Action, } from '@reduxjs/toolkit'
 import jobStatusReducer from '../features/jobsStatus/jobsStatusSlice'
 import modelStatusReducer from '../features/modelsStatus/modelsStatusSlice'
 import modelEvaluationReducer from '../features/modelEvaluations/modelEvaluationsSlice'
+import experimentConfigReducer from '../features/experimentConfig/experimentConfigSlice';
 
 
 export const store = configureStore({
   reducer: {
     jobsStatus: jobStatusReducer,
     modelsStatus: modelStatusReducer,
-    modelsEvaluation: modelEvaluationReducer
+    modelsEvaluation: modelEvaluationReducer,
+    experimentConfig: experimentConfigReducer
   }
 });
 

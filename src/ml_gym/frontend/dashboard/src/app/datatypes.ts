@@ -35,7 +35,7 @@ export type JobStatusType = { data: JobStatusInnerType, } & BaseMessageType
 // Model status
 
 export type ModelStatusPayloadType = {
-    experiment_id: number;
+    experiment_id: string;
     status: string; // <TRAINING, EVALUATING>,,
     num_epochs: number; //<CALC, TERMINATE>
     current_epoch: number;
@@ -51,6 +51,21 @@ export type ModelStatusInnerType = {
 } & EventInfoType
 
 export type ModelStatusType = { data: ModelStatusInnerType, } & BaseMessageType
+
+// EXPERIMENT CONFIG
+
+export type ExperimentConfigPayloadType = {
+    grid_search_id: string;
+    experiment_id: string;
+    job_id: number; 
+    config: any; 
+}
+
+export type ExperimentConfigInnerType = {
+    payload: ExperimentConfigPayloadType
+} & EventInfoType
+
+export type ExperimentConfigType = { data: ExperimentConfigInnerType, } & BaseMessageType
 
 // MODEL EVALUATION
 export type MetricScoreType = {
@@ -93,7 +108,7 @@ export type JobStatusRowType = {
 }
 
 export type ModelStatusRowType = {
-    experiment_id: number;
+    experiment_id: string;
     model_status: string; // <TRAINING, EVALUATING>,,
     num_epochs: number; //<CALC, TERMINATE>
     current_epoch: number;
@@ -115,6 +130,11 @@ export type JobStatusMessageCollectionType = {
 export type ModelStatusMessageCollectionType = {
     messages: Array<ModelStatusType>;
     experiment_id_to_latest_message_index: { [id: string]: number; }
+}
+
+export type ExperimentConfigMessageCollectionType = {
+    messages: Array<ModelStatusType>;
+    experiment_id_to_message_index: { [id: string]: number; }
 }
 
 export type ModelEvaluationMessageCollectionType = {

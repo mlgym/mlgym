@@ -1,13 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-# from ml_gym.gym.evaluator import EvaluationBatchResult
-from typing import List, Dict
+from typing import Any, List, Dict
 from ml_gym.multiprocessing.states import JobStatus, JobType
-# from ml_gym.persistency.io import DashifyWriter
 from ml_gym.backend.streaming.client import ClientFactory, BufferedClient
 import time
 import torch
+import pickle
 
 
 def get_timestamp() -> int:
@@ -94,6 +93,12 @@ class JobStatusLogger:
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
 
+    def log_experiment_config(self, grid_search_id: str, experiment_id: str, job_id: int, config: Dict[str, Any]):
+        message = {"event_type": "experiment_config", "creation_ts": get_timestamp()}
+        payload = {"grid_search_id": grid_search_id, "experiment_id": experiment_id, "job_id": job_id, "config": config}
+        message["payload"] = payload
+        self._logger.log_raw_message(raw_log_message=message)
+
 
 class ExperimentStatusLogger:
     def __init__(self, logger: MLgymStatusLoggerIF, experiment_id: str, grid_search_id: str) -> None:
@@ -119,6 +124,20 @@ class ExperimentStatusLogger:
         payload["metric_scores"] = metric_scores
         payload["loss_scores"] = loss_scores
         message["payload"] = payload
+        self._logger.log_raw_message(raw_log_message=message)
+
+    def log_checkpoint(self, epoch: int, model_binary_stream, optimizer_binary_stream, stateful_components_binary_stream):
+        message = {"event_type": "checkpoint", "creation_ts": get_timestamp()}
+        payload = {
+            "grid_search_id": self._grid_search_id,
+            "experiment_id": self._experiment_id,
+            "checkpoint_id": epoch,
+            "model": pickle.dumps(model_binary_stream),
+            "optimizer": pickle.dumps(optimizer_binary_stream),
+            "stateful_components": pickle.dumps(stateful_components_binary_stream)
+        }
+        message["payload"] = payload
+        # for i in range(1000):
         self._logger.log_raw_message(raw_log_message=message)
 
 
