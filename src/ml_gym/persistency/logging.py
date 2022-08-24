@@ -132,9 +132,11 @@ class ExperimentStatusLogger:
             "grid_search_id": self._grid_search_id,
             "experiment_id": self._experiment_id,
             "checkpoint_id": epoch,
-            "model": pickle.dumps(model_binary_stream),
-            "optimizer": pickle.dumps(optimizer_binary_stream),
-            "stateful_components": pickle.dumps(stateful_components_binary_stream)
+            "checkpoint_streams": {
+                "model": pickle.dumps(model_binary_stream),
+                "optimizer": pickle.dumps(optimizer_binary_stream),
+                "stateful_components": pickle.dumps(stateful_components_binary_stream)
+            }
         }
         message["payload"] = payload
         # for i in range(1000):
