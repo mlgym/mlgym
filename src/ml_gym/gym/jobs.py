@@ -31,16 +31,7 @@ class AbstractGymJob(StatefulComponent):
     def from_blue_print(blue_print) -> 'AbstractGymJob':
         return blue_print.construct()
 
-    # def save_state_of_stateful_components(self, measurement_id: int):
-    #     # save model and optimizer
-    #     # TODO PriyaTomar
-    #     # we need to send checkpoint to the backend server
-    #     # Strategy object requires evaluation_result and based on that we decide if we want to store or not
-    #     # Strategy object is being passed from possibly outside of MLgym
-    #     state = self.get_state()
-    #     DashifyWriter.save_state(experiment_info=self.experiment_info, data_dict=state, measurement_id=measurement_id)
-
-    # def restore_state_in_stateful_components(self, measurement_id: int):
+   # def restore_state_in_stateful_components(self, measurement_id: int):
     #     state = DashifyReader.load_state(experiment_info=self.experiment_info, measurement_id=measurement_id)
     #     self.set_state(state)
 
@@ -117,6 +108,10 @@ class GymJob(AbstractGymJob):
         # self.save_state_of_stateful_components(measurement_id=epoch)
 
         # DashifyWriter.log_measurement_result(evaluation_result, self._experiment_info, measurement_id=epoch)
+        self._experiment_status_logger.log_checkpoint(epoch=self.current_epoch,
+                                                      model_binary_stream=self.model.state_dict(),
+                                                      optimizer_binary_stream=self.optimizer.state_dict(),
+                                                      stateful_components_binary_stream=self.get_state())
 
     def execute(self, device: torch.device):
         """ Executes the job
