@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from ml_gym.gym.jobs import GymJob
-from dashify.logging.dashify_logging import DashifyLogger, ExperimentInfo
-from ml_gym.gym.jobs import AbstractGymJob
 from typing import List, Type, Dict, Any
+from ml_gym.modes import RunMode
+from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
 
 import torch
 
@@ -11,34 +11,22 @@ class BluePrint(ABC):
     """ Abstract class that provides a blueprint for creating `AbstractGymJob`
     """
 
-    def __init__(self, run_mode: AbstractGymJob.Mode, job_type: AbstractGymJob.Type, model_name: str, dataset_name: str,  epochs: int,
-                 config: Dict[str, Any], dashify_logging_dir: str,
-                 grid_search_id: str, run_id: str, external_injection: Dict[str, Any] = None):
+    def __init__(self, run_mode: RunMode, epochs: int,
+                 config: Dict[str, Any], grid_search_id: str, experiment_id: str,
+                 external_injection: Dict[str, Any] = None,
+                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None):
 
         self.run_mode = run_mode
-        self.job_type = job_type
         self.config = config
-        self.dashify_logging_dir = dashify_logging_dir
         self.grid_search_id = grid_search_id
-        self.run_id = run_id
+        self.experiment_id = experiment_id
         self.epochs = epochs
-        self.model_name = model_name
-        self.dataset_name = dataset_name
         self.external_injection = external_injection if external_injection is not None else {}
+        self.logger_collection_constructable = logger_collection_constructable
 
     @abstractmethod
     def construct(self, device: torch.device = None) -> GymJob:
         raise NotImplementedError
-
-    def get_experiment_info(self) -> ExperimentInfo:
-        experiment_info = DashifyLogger.get_experiment_info(log_dir=self.dashify_logging_dir,
-                                                            subfolder_id=str(self.grid_search_id),
-                                                            model_name=self.model_name,
-                                                            dataset_name=self.dataset_name,
-                                                            run_id=str(self.run_id))
-        DashifyLogger.save_experiment_info(experiment_info)
-        DashifyLogger.save_config(config=self.config, experiment_info=experiment_info)
-        return experiment_info
 
     @staticmethod
     @abstractmethod
@@ -46,23 +34,21 @@ class BluePrint(ABC):
                              external_injection: Dict[str, Any] = None) -> List[Any]:
         return NotImplementedError
 
+    @staticmethod
+    def create_blueprint(blue_print_class: Type["BluePrint"],
+                         run_mode: RunMode,
+                         experiment_config: Dict[str, Any],
+                         experiment_id: str,
+                         num_epochs: int,
+                         grid_search_id: str,
+                         external_injection: Dict[str, Any] = None,
+                         logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List["BluePrint"]:
 
-def create_blueprint(blue_print_class: Type[BluePrint],
-                     run_mode: AbstractGymJob.Mode,
-                     job_type: AbstractGymJob.Type,
-                     experiment_config: Dict[str, Any],
-                     experiment_id: int,
-                     dashify_logging_path: str,
-                     num_epochs: int,
-                     grid_search_id: str,
-                     external_injection: Dict[str, Any] = None) -> List[BluePrint]:
-
-    blue_print = blue_print_class(grid_search_id=grid_search_id,
-                                  run_id=str(experiment_id),
-                                  epochs=num_epochs,
-                                  run_mode=run_mode,
-                                  config=experiment_config,
-                                  dashify_logging_dir=dashify_logging_path,
-                                  external_injection=external_injection,
-                                  job_type=job_type)
-    return blue_print
+        blue_print = blue_print_class(grid_search_id=grid_search_id,
+                                      experiment_id=experiment_id,
+                                      epochs=num_epochs,
+                                      run_mode=run_mode,
+                                      config=experiment_config,
+                                      external_injection=external_injection,
+                                      logger_collection_constructable=logger_collection_constructable)
+        return blue_print

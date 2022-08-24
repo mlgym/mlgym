@@ -108,7 +108,7 @@ class CrossEntropyLoss(Loss):
         # For the CrossEntropyLoss API we need them to be squeezed torch.Tensor([1, 2, ..., 1])
         t = inference_result_batch.get_targets(self.target_subscription_key).long()
         p = inference_result_batch.get_predictions(self.prediction_subscription_key)
-        loss_values = nn.CrossEntropyLoss(reduction="none")(p, t)
+        loss_values = nn.CrossEntropyLoss(reduction="none")(p, t.flatten())
         if self.average_batch_loss:
             loss_values = torch.sum(loss_values)/len(loss_values)
         return loss_values

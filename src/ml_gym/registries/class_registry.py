@@ -1,9 +1,10 @@
 from typing import Any, Type
 from collections.abc import Mapping
+from ml_gym.error_handling.exception import ClassRegistryKeyNotFoundError
 
 
 class ClassRegistry(Mapping):
-    """A decorated dictionary to act as a model registry"""
+    """A decorated dictionary to act as a registry for models, loss functions etc."""
 
     def __init__(self):
         '''Use the object dict'''
@@ -36,7 +37,11 @@ class ClassRegistry(Mapping):
         self._store[key] = element
 
     def get_instance(self, key: str, **params) -> Any:
-        return self._store[key](**params)
-
-
+        if key not in self._store:
+            raise ClassRegistryKeyNotFoundError(f"Key {key} not present in class registry!")
+        try:
+            obj = self._store[key](**params)
+        except Exception as e:
+            raise Exception(f"Error building {self._store[key]}") from e
+        return obj
 

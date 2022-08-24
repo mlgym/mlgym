@@ -1,7 +1,8 @@
 from abc import abstractmethod
 from enum import Enum
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Union
 from ml_gym.gym.post_processing import PredictPostProcessingIF
+from ml_gym.persistency.logging import ExperimentStatusLogger
 import torch
 from ml_gym.batching.batch import DatasetBatch, EvaluationBatchResult, InferenceResultBatch
 from ml_gym.data_handling.dataset_loader import DatasetLoader
@@ -9,41 +10,45 @@ from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.gym.stateful_components import StatefulComponent
 from ml_gym.metrics.metrics import Metric
 from ml_gym.models.nn.net import NNModel
-from ml_gym.loss_functions.loss_functions import Loss, LossWarmupMixin
+from ml_gym.loss_functions.loss_functions import Loss
 import tqdm
 from ml_gym.util.logger import ConsoleLogger
 import numpy as np
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent
+from ml_gym.error_handling.exception import BatchStateError, EvaluationError, MetricCalculationError, LossCalculationError
 
 
 class AbstractEvaluator(StatefulComponent):
     @abstractmethod
-    def evaluate(self, model: NNModel, device: torch.device) -> List[EvaluationBatchResult]:
+    def evaluate(self, model: NNModel, device: torch.device, epoch: int) -> List[EvaluationBatchResult]:
         raise NotImplementedError
-
-    # @abstractmethod
-    # def warm_up(self, model: NNModel, device: torch.device):
-    #     raise NotImplementedError
 
 
 class Evaluator(AbstractEvaluator):
     def __init__(self, eval_component: 'EvalComponentIF'):
         self.eval_component = eval_component
+        self.current_epoch = -1
+        self.num_epochs = -1
 
-    def evaluate(self, model: NNModel, device: torch.device) -> List[EvaluationBatchResult]:
-        return self.eval_component.evaluate(model, device)
+    def set_num_epochs(self, num_epochs: int):
+        self.num_epochs = num_epochs
 
-    # def warm_up(self, model: NNModel, device: torch.device):
-    #     self.eval_component.warm_up(model, device)
+    def evaluate(self, model: NNModel, device: torch.device, current_epoch: int, num_epochs: int,
+                 epoch_result_callback_fun: Callable = None,
+                 batch_processed_callback_fun: Callable = None) -> List[EvaluationBatchResult]:
+        self.current_epoch = current_epoch
+        self.num_epochs = num_epochs
+        # returns a EvaluationBatchResult for each split
+        evaluation_batch_results = self.eval_component.evaluate(model, device, epoch_result_callback_fun=epoch_result_callback_fun,
+                                                                batch_processed_callback_fun=batch_processed_callback_fun)
+        return evaluation_batch_results
 
 
 class EvalComponentIF(StatefulComponent):
-    # @abstractmethod
-    # def warm_up(self, model: NNModel, device: torch.device):
-    #     raise NotImplementedError
 
     @abstractmethod
-    def evaluate(self, model: NNModel, device: torch.device) -> List[EvaluationBatchResult]:
+    def evaluate(self, model: NNModel, device: torch.device, epoch_result_callback_fun: Callable = None,
+                 batch_processed_callback_fun: Callable = None) -> List[EvaluationBatchResult]:
         raise NotImplementedError
 
 
@@ -52,7 +57,7 @@ class EvalComponent(EvalComponentIF):
 
     def __init__(self, inference_component: InferenceComponent, post_processors: Dict[str, PredictPostprocessingComponent], metrics: List[Metric],
                  loss_funs: Dict[str, Loss], dataset_loaders: Dict[str, DatasetLoader], train_split_name: str, show_progress: bool = False,
-                 cpu_target_subscription_keys: List[str] = None, cpu_prediction_subscription_keys: List[str] = None,
+                 cpu_target_subscription_keys: List[str] = None, cpu_prediction_subscription_keys: List[Union[str, List]] = None,
                  metrics_computation_config: List[Dict] = None, loss_computation_config: List[Dict] = None):
         self.loss_funs = loss_funs
         self.inference_component = inference_component
@@ -66,46 +71,38 @@ class EvalComponent(EvalComponentIF):
         self.cpu_prediction_subscription_keys = cpu_prediction_subscription_keys
         self.logger = ConsoleLogger("logger_eval_component")
         # determines which metrics are applied to which splits (metric_key to split list)
-        self.metrics_computation_config = None if metrics_computation_config is None else {m["metric_tag"]: m["applicable_splits"] for m in metrics_computation_config}
+        self.metrics_computation_config = None if metrics_computation_config is None else {
+            m["metric_tag"]: m["applicable_splits"] for m in metrics_computation_config}
         # determines which losses are applied to which splits (loss_key to split list)
-        self.loss_computation_config = None if loss_computation_config is None else {m["loss_tag"]: m["applicable_splits"] for m in loss_computation_config}
+        self.loss_computation_config = None if loss_computation_config is None else {
+            m["loss_tag"]: m["applicable_splits"] for m in loss_computation_config}
+        self.experiment_status_logger: ExperimentStatusLogger = None
 
-    # def warm_up(self, model: NNModel, device: torch.device):
-    #     def init_loss_funs(batch: InferenceResultBatch):
-    #         for _, loss_fun in self.loss_funs.items():
-    #             if isinstance(loss_fun, LossWarmupMixin):
-    #                 loss_fun.warm_up(batch)
-    #                 loss_fun.finish_warmup()
+    def evaluate(self, model: NNModel, device: torch.device, epoch_result_callback_fun: Callable = None,
+                 batch_processed_callback_fun: Callable = None) -> List[EvaluationBatchResult]:
+        return [self.evaluate_dataset_split(model, device, split_name, loader, epoch_result_callback_fun, batch_processed_callback_fun) for split_name, loader in self.dataset_loaders.items()]
 
-    #     if any([isinstance(loss_fun, LossWarmupMixin) for _, loss_fun in self.loss_funs.items()]):
-    #         self.logger.log(LogLevel.INFO, "Running warmup...")
-    #         prediction_batches = self.map_batches(fun=self.forward_batch,
-    #                                               fun_params={"calculation_device": device, "model": model,
-    #                                                           "result_device": torch.device("cpu")},
-    #                                               loader=self.dataset_loaders[self.train_split_name],
-    #                                               show_progress=self.show_progress)
-    #         prediction_batch = InferenceResultBatch.combine(prediction_batches)
-    #         init_loss_funs(prediction_batch)
-    #     else:
-    #         self.logger.log(LogLevel.INFO, "Skipping evaluation warmup. No special loss functions to be initialized.")
-
-    def evaluate(self, model: NNModel, device: torch.device) -> List[EvaluationBatchResult]:
-        return [self.evaluate_dataset_split(model, device, split_name, loader) for split_name, loader in self.dataset_loaders.items()]
-
-    def evaluate_dataset_split(self, model: NNModel, device: torch.device, split_name: str, dataset_loader: DatasetLoader) -> EvaluationBatchResult:
+    def evaluate_dataset_split(self, model: NNModel, device: torch.device, split_name: str,
+                               dataset_loader: DatasetLoader, epoch_result_callback_fun: Callable = None,
+                               batch_processed_callback_fun: Callable = None) -> EvaluationBatchResult:
         dataset_loader.device = device
-        dataset_loader_iterator = tqdm.tqdm(dataset_loader, desc=f"Evaluating {dataset_loader.dataset_name} - {split_name}") if self.show_progress else dataset_loader
+        dataset_loader_iterator = tqdm.tqdm(
+            dataset_loader, desc=f"Evaluating {dataset_loader.dataset_name} - {split_name}") if self.show_progress else dataset_loader
         post_processors = self.post_processors[split_name] + self.post_processors["default"]
 
         # calc losses
         if self.loss_computation_config is not None:
-            loss_tags = [loss_tag for loss_tag, applicable_splits in self.loss_computation_config.items() if split_name in applicable_splits]
+            loss_tags = [loss_tag for loss_tag, applicable_splits in self.loss_computation_config.items()
+                         if split_name in applicable_splits]
             split_loss_funs = {tag: loss_fun for tag, loss_fun in self.loss_funs.items() if tag in loss_tags}
         else:
             split_loss_funs = self.loss_funs
 
         batch_losses = []
         inference_result_batches_cpu = []
+        num_batches = len(dataset_loader_iterator)
+        processed_batches = 0
+        update_lag = int(num_batches/100)
         for batch in dataset_loader_iterator:
             inference_result_batch = self.forward_batch(dataset_batch=batch, model=model, device=device, postprocessors=post_processors)
             batch_loss = self._calculate_loss_scores(inference_result_batch, split_loss_funs)
@@ -114,12 +111,25 @@ class EvalComponent(EvalComponentIF):
                                                                 target_keys=self.cpu_target_subscription_keys,
                                                                 device=torch.device("cpu"))
             inference_result_batches_cpu.append(irb_filtered)
+            processed_batches += 1
+            if batch_processed_callback_fun is not None and (processed_batches % update_lag == 0 or processed_batches == num_batches):
+                splits = [d.dataset_tag for _, d in self.dataset_loaders.items()]
+                batch_processed_callback_fun(status="evaluation",
+                                             num_batches=num_batches,
+                                             current_batch=processed_batches,
+                                             splits=splits,
+                                             current_split=dataset_loader.dataset_tag)
 
         # calc metrics
-        prediction_batch = InferenceResultBatch.combine(inference_result_batches_cpu)
+        try:
+            prediction_batch = InferenceResultBatch.combine(inference_result_batches_cpu)
+        except BatchStateError as e:
+            raise EvaluationError(f"Error combining inference result batch on split {split_name}.") from e
+
         # select metrics for split
         if self.metrics_computation_config is not None:
-            metric_tags = [metric_tag for metric_tag, applicable_splits in self.metrics_computation_config.items() if split_name in applicable_splits]
+            metric_tags = [metric_tag for metric_tag, applicable_splits in self.metrics_computation_config.items()
+                           if split_name in applicable_splits]
             split_metrics = [metric for metric in self.metrics if metric.tag in metric_tags]
         else:
             split_metrics = self.metrics
@@ -133,6 +143,8 @@ class EvalComponent(EvalComponentIF):
                                                   metrics=metric_scores,
                                                   dataset_name=dataset_loader.dataset_name,
                                                   split_name=split_name)
+        if epoch_result_callback_fun is not None:
+            epoch_result_callback_fun(evaluation_result=evaluation_result)
         return evaluation_result
 
     def _get_metric_fun(self, identifier: str, target_subscription: Enum, prediction_subscription: Enum,
@@ -146,12 +158,25 @@ class EvalComponent(EvalComponentIF):
         return inference_result_batch
 
     def _calculate_metric_scores(self, inference_batch: InferenceResultBatch, split_metrics: List[Metric]) -> Dict[str, List[float]]:
-        return {metric.tag: [metric(inference_batch)] for metric in split_metrics}
+        metric_scores = {}
+        for metric in split_metrics:
+            try:
+                metric_scores[metric.tag] = [metric(inference_batch)]
+            except Exception as e:
+                raise MetricCalculationError(f"Error during calculation of metric {metric.tag}") from e
+        return metric_scores
 
     def _calculate_loss_scores(self, forward_batch: InferenceResultBatch, split_loss_funs: Dict[str, Loss]) -> Dict[str, List[float]]:
-        return {loss_key: self._get_batch_loss(loss_fun, forward_batch) for loss_key, loss_fun in split_loss_funs.items()}
+        loss_scores = {}
+        for loss_key, loss_fun in split_loss_funs.items():
+            try:
+                loss_scores[loss_key] = self._get_batch_loss(loss_fun, forward_batch)
+            except Exception as e:
+                raise LossCalculationError("Error during calculation of loss {loss_key}") from e
+
+        return loss_scores
 
     def _get_batch_loss(self, loss_fun: Loss, forward_batch: InferenceResultBatch) -> List[float]:
         loss = loss_fun(forward_batch)
-        loss = [loss.detach().item()]
+        loss = [loss.sum().detach().item()]
         return loss

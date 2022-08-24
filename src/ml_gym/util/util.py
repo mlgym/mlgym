@@ -76,7 +76,8 @@ class ExportedModel:
         return InferenceResultBatch.combine(result_batches)
 
     @staticmethod
-    def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str, device: torch.device = None) -> "ExportedModel":
+    def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str, 
+                                     device: torch.device = None) -> "ExportedModel":
         return ExportedModel(model, post_processors, model_path, device=device)
 
 
@@ -127,7 +128,6 @@ class ComponentLoader:
         # load model
         model_state = torch.load(model_state_dict_path, map_location=device)
         model.load_state_dict(model_state)
-        model = model.to(device)
         return model
 
     @staticmethod

@@ -66,7 +66,11 @@ class Batch(ABC):
                 sub_tensor_dicts = [d[key] for d in tensor_dicts]
                 combined_tensor_dict[key] = Batch._combine_tensor_dicts(sub_tensor_dicts)
             else:
-                combined_tensor_dict[key] = torch.cat([d[key] for d in tensor_dicts])
+                try:
+                    combined_tensor_dict[key] = torch.cat([d[key] for d in tensor_dicts])
+                except Exception as e:
+                    raise BatchStateError(f"Error concatenating list of tensors for key {key}.") from e
+
         return combined_tensor_dict
 
     @staticmethod
@@ -242,9 +246,9 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
         filtered_targets = {key: self._targets[key].to(device) for key in target_keys if key in self._targets}
 
         filtered_predictions = {}
-        for p_keys in predictions_keys_list: 
+        for p_keys in predictions_keys_list:
             _filter_predictions(p_keys, self.predictions, filtered_predictions)
- 
+
         filtered_predictions = TorchDeviceMixin._dict_tensor_to_device(filtered_predictions, device)
         tags = self.tags.to(device)
         return InferenceResultBatch(targets=filtered_targets, predictions=filtered_predictions, tags=tags)

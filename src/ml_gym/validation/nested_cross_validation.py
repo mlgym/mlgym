@@ -1,11 +1,10 @@
 from typing import Dict, Any, Tuple, List, Type
 from data_stack.dataset.iterator import DatasetIteratorIF
-from ml_gym.blueprints.blue_prints import create_blueprint
-from ml_gym.gym.gym import Gym
-from ml_gym.gym.jobs import AbstractGymJob
-from data_stack.dataset.splitter import SplitterFactory
-from ml_gym.validation.validator import ValidatorIF
 from ml_gym.blueprints.blue_prints import BluePrint
+from data_stack.dataset.splitter import SplitterFactory
+from ml_gym.modes import RunMode
+from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
+from ml_gym.validation.validator import ValidatorIF
 from ml_gym.blueprints.component_factory import Injector
 from ml_gym.util.grid_search import GridSearch
 
@@ -13,8 +12,7 @@ from ml_gym.util.grid_search import GridSearch
 class NestedCV(ValidatorIF):
     def __init__(self, dataset_iterator: DatasetIteratorIF, num_outer_loop_folds: int,
                  num_inner_loop_folds: int, inner_stratification: bool, outer_stratification: bool,
-                 target_pos: int, shuffle: bool, grid_search_id: str, seed: int, re_eval: bool = False,
-                 keep_interim_results: bool = True):
+                 target_pos: int, shuffle: bool, grid_search_id: str, seed: int, run_mode: RunMode):
         self.num_outer_loop_folds = num_outer_loop_folds
         self.num_inner_loop_folds = num_inner_loop_folds
         self.inner_stratification = inner_stratification
@@ -24,8 +22,7 @@ class NestedCV(ValidatorIF):
         self.grid_search_id = grid_search_id
         self.target_pos = target_pos
         self.shuffle = shuffle
-        self.re_eval = re_eval
-        self.keep_interim_results = keep_interim_results
+        self.run_mode = run_mode
 
     def _get_fold_indices(self) -> Tuple[List[int]]:
         splitter = SplitterFactory.get_nested_cv_splitter(num_inner_loop_folds=self.num_inner_loop_folds,
@@ -84,8 +81,8 @@ class NestedCV(ValidatorIF):
                 splits.append(split)
         return splits
 
-    def create_blue_prints(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type, gs_config: Dict[str, Any], num_epochs: int,
-                           dashify_logging_path: str) -> List[Type[BluePrint]]:
+    def _get_blue_prints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any], num_epochs: int,
+                         logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List[Type[BluePrint]]:
 
         run_id_to_config_dict = {run_id: config for run_id, config in enumerate(GridSearch.create_gs_from_config_dict(gs_config))}
 
@@ -104,24 +101,21 @@ class NestedCV(ValidatorIF):
                                       **split}
                 injector = Injector(mapping=external_injection)
                 experiment_config_injected = injector.inject_pass(component_parameters=experiment_config)
-                bp = create_blueprint(blue_print_class=blue_print_type,
-                                      run_mode=AbstractGymJob.Mode.TRAIN if not self.re_eval else AbstractGymJob.Mode.EVAL,
-                                      job_type=job_type,
-                                      experiment_config=experiment_config_injected,
-                                      dashify_logging_path=dashify_logging_path,
-                                      num_epochs=num_epochs,
-                                      grid_search_id=self.grid_search_id,
-                                      experiment_id=experiment_id)
+                bp = BluePrint.create_blueprint(blue_print_class=blue_print_type,
+                                                run_mode=self.run_mode,
+                                                experiment_config=experiment_config_injected,
+                                                num_epochs=num_epochs,
+                                                grid_search_id=self.grid_search_id,
+                                                experiment_id=experiment_id,
+                                                logger_collection_constructable=logger_collection_constructable)
                 blueprints.append(bp)
                 experiment_id = experiment_id + 1
         return blueprints
 
-    def run(self, blue_print_type: Type[BluePrint], gym: Gym, gs_config: Dict[str, Any], num_epochs: int, dashify_logging_path: str):
-        job_type = AbstractGymJob.Type.STANDARD if self.keep_interim_results else AbstractGymJob.Type.LITE
-        blueprints = self.create_blue_prints(blue_print_type=blue_print_type,
-                                             gs_config=gs_config,
-                                             dashify_logging_path=dashify_logging_path,
-                                             num_epochs=num_epochs,
-                                             job_type=job_type)
-        gym.add_blue_prints(blueprints)
-        gym.run(parallel=True)
+    def create_blueprints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any], num_epochs: int,
+                          logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List[BluePrint]:
+        blueprints = self._get_blue_prints(blue_print_type=blue_print_type,
+                                           gs_config=gs_config,
+                                           num_epochs=num_epochs,
+                                           logger_collection_constructable=logger_collection_constructable)
+        return blueprints

@@ -77,7 +77,6 @@ class SamplerFactory:
         # Returns:
         #     [WeightedRandomSampler]: Instance of WeightedRandomSampler.
         # """
-
         rnd_generator = torch.Generator().manual_seed(seed) if seed is not None else None
         # get the class weights
         target_counts = Counter([int(sample[label_pos]) for sample in dataset])  # uses generator expression
@@ -105,6 +104,10 @@ class DatasetLoader(DataLoader):
     @property
     def dataset_name(self) -> str:
         return self.dataset.dataset_meta.dataset_name
+
+    @property
+    def dataset_tag(self) -> str:
+        return self.dataset.dataset_meta.dataset_tag
 
     @property
     def device(self) -> torch.device:

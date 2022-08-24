@@ -22,6 +22,7 @@ setup(
         "scipy",
         "dashifyML",
         "scikit-learn"
+        "python-socketio[client]"
     ],
     python_requires=">=3.7",
     url="https://github.com/mlgym/mlgym"

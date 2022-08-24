@@ -37,6 +37,11 @@ class BatchStateError(Exception):
     pass
 
 
+class EvaluationError(Exception):
+    """Exception raised when somthing goes wrong within the evaluation."""
+    pass
+
+
 class ExperimentInfoMissing(Exception):
     """Exception raised when experiment info object is missing"""
     pass
@@ -49,6 +54,16 @@ class ComponentConstructionError(Exception):
 
 class DependentComponentNotFoundError(Exception):
     """Exception raised when a component required by a parent component could not be found"""
+    pass
+
+
+class ClassRegistryKeyNotFoundError(Exception):
+    """Exception raised when requested key is not present in the class registry"""
+    pass
+
+
+class ClassRegistryItemInstantiationError(Exception):
+    """Raised when an item in the class registry could not be built"""
     pass
 
 
@@ -74,6 +89,20 @@ class InvalidTensorFormatError(Exception):
 class OptimizerNotInitializedError(Exception):
     """Raised when we want to run an operation on an optimizer, which was not instantiated, yet."""
     pass
+
+
+class MetricCalculationError(Exception):
+    """Raised when there was an error during metric calculation"""
+    pass
+
+
+class LossCalculationError(Exception):
+    """Raised when there was an error during loss calculation"""
+    pass
+
+
+class EventStorageInvalidIndexingError(Exception):
+    """Raised when an event is tried to indexed within the event storage but the index is not present."""
 
 
 class SamplerNotFoundError(Exception):

@@ -31,38 +31,16 @@ class TrainComponent(StatefulComponent):
         optimizer.step()
 
     def train_epoch(self, model: NNModel, optimizer: OptimizerAdapter, data_loader: DatasetLoader,
-                    device: torch.device, epoch: int) -> NNModel:
+                    device: torch.device, epoch: int, batch_processed_callback_fun: Callable = None) -> NNModel:
         data_loader.device = device
         self.map_batches(fun=self.train_batch,
                          loader=data_loader,
                          fun_params={"device": device,
                                      "model": model,
                                      "optimizer": optimizer},
-                         progress_info=f"Training {data_loader.dataset_name}  @epoch {epoch}")
+                         progress_info=f"Training {data_loader.dataset_name}  @epoch {epoch}",
+                         callback_fun=batch_processed_callback_fun)
         return model
-
-    # def warm_up(self, model: NNModel, data_loader: DatasetLoader, device: torch.device):
-    #     def init_loss(loss_fun: Loss, batch: InferenceResultBatch):
-    #         if isinstance(loss_fun, LossWarmupMixin):
-    #             loss_fun.warm_up(batch)
-    #             loss_fun.finish_warmup()
-
-    #     def check_if_initiable_component(loss_fun: Loss):
-    #         return isinstance(loss_fun, LossWarmupMixin)
-
-    #     if check_if_initiable_component(self.loss_fun):
-    #         self.logger.log(LogLevel.INFO, "Running warmup...")
-    #         with torch.no_grad():
-    #             prediction_batches = self.map_batches(fun=self.forward_batch,
-    #                                                   fun_params={"calculation_device": device, "model": model,
-    #                                                               "result_device": torch.device("cpu")},
-    #                                                   loader=data_loader,
-    #                                                   show_progress=self.show_progress)
-    #         # problem
-    #         prediction_batch = InferenceResultBatch.combine(prediction_batches)
-    #         init_loss(self.loss_fun, prediction_batch)
-    #     else:
-    #         self.logger.log(LogLevel.INFO, "Skipping training warmup. No special loss functions to be initialized.")
 
     def forward_batch(self, dataset_batch: DatasetBatch, model: NNModel, device: torch.device,) -> InferenceResultBatch:
         model = model.to(device)
@@ -77,15 +55,37 @@ class TrainComponent(StatefulComponent):
 
     @staticmethod
     def map_batches(fun: Callable[[DatasetBatch, NNModel], Any], loader: DatasetLoader,
-                    fun_params: Dict[str, Any] = None, progress_info: str = None) -> List[InferenceResultBatch]:
+                    fun_params: Dict[str, Any] = None, progress_info: str = None,
+                    callback_fun: Callable = None) -> List[InferenceResultBatch]:
         """
         Applies a function to each dataset_batch within a DatasetLoader
         """
+        num_batches = len(loader)
+        processed_batches = 0
+        update_lag = int(num_batches/100)
         fun_params = fun_params if fun_params is not None else dict()
+        result = []
         if progress_info is not None:
-            return [fun(dataset_batch, **fun_params) for dataset_batch in tqdm.tqdm(loader, desc=progress_info)]
+            for dataset_batch in tqdm.tqdm(loader, desc=progress_info):
+                result.append(fun(dataset_batch, **fun_params))
+                processed_batches += 1
+                if callback_fun is not None and (processed_batches % update_lag == 0 or processed_batches == num_batches):
+                    callback_fun(status="train",
+                                 num_batches=num_batches,
+                                 current_batch=processed_batches,
+                                 splits=[loader.dataset_tag],
+                                 current_split=loader.dataset_tag)
         else:
-            return [fun(dataset_batch, **fun_params) for dataset_batch in loader]
+            for dataset_batch in loader:
+                result.append(fun(dataset_batch, **fun_params))
+                processed_batches += 1
+                if callback_fun is not None and (processed_batches % update_lag == 0 or processed_batches == num_batches):
+                    callback_fun(status="train",
+                                 num_batches=num_batches,
+                                 current_batch=processed_batches,
+                                 splits=[loader.dataset_tag],
+                                 current_split=loader.dataset_tag)
+        return result
 
 
 class TrainerIF(StatefulComponent):
@@ -120,12 +120,12 @@ class Trainer(TrainerIF):
     def set_current_epoch(self, epoch: int):
         self.current_epoch = epoch
 
-    # def warm_up(self, model: NNModel, device: torch.device):
-    #     self.train_component.warm_up(model, self.train_loader, device)
-
-    def train_epoch(self, model: NNModel, optimizer: OptimizerAdapter, device: torch.device) -> NNModel:
+    def train_epoch(self, model: NNModel, optimizer: OptimizerAdapter, device: torch.device,
+                    batch_processed_callback_fun: Callable = None) -> NNModel:
         if self.current_epoch > self.num_epochs:
             raise ModelAlreadyFullyTrainedError(f"Model has been already trained for {self.current_epoch}/{self.num_epochs} epochs.")
-        model = self.train_component.train_epoch(model, optimizer, self.train_loader, device, self.current_epoch)
+        self.train_loader.device = device
+        model = self.train_component.train_epoch(model, optimizer, self.train_loader, device, self.current_epoch,
+                                                 batch_processed_callback_fun)
         self.current_epoch += 1
         return model
