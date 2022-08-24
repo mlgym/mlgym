@@ -196,6 +196,8 @@ metric scores of a model at a specific epoch.
 
 After each epoch and if condition is fulfilled (based on strategy), the model is binarized and sent to the server as a checkpoint.
 
+Create checkpoint:
+
 ```json
 {
     "event_type": "checkpoint",
@@ -216,6 +218,24 @@ After each epoch and if condition is fulfilled (based on strategy), the model is
 The files received by the websocket server are stored in 
 `event_storage/mlgym_event_subscribers/<grid_search_id/event_storage_id><experiment_id>/checkpointing/<checkpoint_id>` as `model.pt`, `optimizer.pt` and `stateful_components.pt`. These files are available via the RESTful API to the clients and are not streamed.
 
+Delete checkpoint:
+
+```json
+{
+    "event_type": "checkpoint",
+    "creation_ts": "1",
+    "payload": {
+        "grid_search_id": <timestamp>, 
+        "experiment_id": <int>,
+        "checkpoint_id": <str>,
+        "checkpoint_streams":{
+            "model": None,
+            "optimizer": None,
+            "stateful_components": None
+        }
+    }
+}
+```
 
 
 # Implementation idea: 

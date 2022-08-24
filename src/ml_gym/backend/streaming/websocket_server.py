@@ -1,4 +1,3 @@
-from curses.panel import top_panel
 import os
 from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, rooms, disconnect
@@ -6,6 +5,7 @@ from ml_gym.backend.messaging.event_storage import EventStorageIF, EventStorageF
 from typing import Any, List, Dict
 from collections import defaultdict
 from engineio.payload import Payload
+from pathlib import Path
 
 Payload.max_decode_packets = 10000
 
@@ -125,8 +125,15 @@ class WebSocketServer:
         full_path = os.path.join(path, grid_search_id, str(experiment_id), str(checkpoint_id))
         os.makedirs(full_path, exist_ok=True)
         for key, stream in checkpoint["checkpoint_streams"].items():
-            with open(os.path.join(full_path, key + ".bin"), "wb") as fd:
-                fd.write(stream)
+            checkpoint_element_path = os.path.join(full_path, key + ".bin")
+            if os.path.exists(checkpoint_element_path):
+                os.remove(checkpoint_element_path)
+                parent_dir = Path(checkpoint_element_path).parent
+                if not any(Path(parent_dir).iterdir()):  # if the directory is empty we can also just remove the folder
+                    os.rmdir(parent_dir)
+            else:
+                with open(checkpoint_element_path, "wb") as fd:
+                    fd.write(stream)
 
 
 if __name__ == '__main__':
