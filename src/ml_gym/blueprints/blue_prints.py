@@ -4,6 +4,8 @@ from typing import List, Type, Dict, Any
 from ml_gym.modes import RunMode
 from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
 
+import torch
+
 
 class BluePrint(ABC):
     """ Abstract class that provides a blueprint for creating `AbstractGymJob`
@@ -23,12 +25,13 @@ class BluePrint(ABC):
         self.logger_collection_constructable = logger_collection_constructable
 
     @abstractmethod
-    def construct(self) -> GymJob:
+    def construct(self, device: torch.device = None) -> GymJob:
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def construct_components(config: Dict, component_names: List[str], external_injection: Dict[str, Any] = None) -> List[Any]:
+    def construct_components(config: Dict, component_names: List[str], device: torch.device,
+                             external_injection: Dict[str, Any] = None) -> List[Any]:
         return NotImplementedError
 
     @staticmethod

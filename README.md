@@ -1,7 +1,8 @@
-![mlGym_logo](https://user-images.githubusercontent.com/47029859/148430747-eecca494-47b9-4ad0-9272-78da091a85f2.png)
+<div align="center">
+<img src="https://raw.githubusercontent.com/mlgym/mlgym/master/mlGym.svg" width="400px">
+</div>
 
-
-# MLgym 
+---
 
 a python framework for distributed machine learning model training in research.
 
@@ -46,6 +47,6 @@ For usage see this [example](https://github.com/le1nux/mlgym/tree/master/example
 
 ## Copyright
 
-Copyright (c) 2020 Max Lübbering, Rajkumar Ramamurthy
+Copyright (c) 2020 Max Lübbering
 
-For license see: https://github.com/le1nux/mlgym/blob/master/LICENSE
+For license see: https://github.com/mlgym/mlgym/blob/master/LICENSE

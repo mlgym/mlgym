@@ -32,11 +32,12 @@ class LossFactory:
 
     @staticmethod
     def get_bce_with_logits_loss(target_subscription_key: str, prediction_subscription_key: str, tag: str = "",
-                                 average_batch_loss: bool = True) -> Loss:
+                                 average_batch_loss: bool = True, flatten_predictions: bool = False) -> Loss:
         return BCEWithLogitsLoss(target_subscription_key=target_subscription_key,
                                  prediction_subscription_key=prediction_subscription_key,
                                  average_batch_loss=average_batch_loss,
-                                 tag=tag)
+                                 tag=tag,
+                                 flatten_predictions=flatten_predictions)
 
     @staticmethod
     def get_bce_loss(target_subscription_key: str, prediction_subscription_key: str, tag: str = "",

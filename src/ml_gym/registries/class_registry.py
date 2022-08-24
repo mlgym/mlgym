@@ -45,12 +45,3 @@ class ClassRegistry(Mapping):
             raise Exception(f"Error building {self._store[key]}") from e
         return obj
 
-
-if __name__ == "__main__":
-    class Example:
-        def __init__(self, val: int):
-            self.val = val
-
-    registry = ClassRegistry()
-    registry.add("example_key", Example)
-    example = registry.get(key="example_key", configs={"val": 10})  # TODO make this a test

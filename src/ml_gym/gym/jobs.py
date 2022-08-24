@@ -28,8 +28,8 @@ class AbstractGymJob(StatefulComponent):
         raise NotImplementedError
 
     @staticmethod
-    def from_blue_print(blue_print) -> 'AbstractGymJob':
-        return blue_print.construct()
+    def from_blue_print(blue_print, device: torch.device) -> 'AbstractGymJob':
+        return blue_print.construct(device)
 
    # def restore_state_in_stateful_components(self, measurement_id: int):
     #     state = DashifyReader.load_state(experiment_info=self.experiment_info, measurement_id=measurement_id)

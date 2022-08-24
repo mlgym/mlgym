@@ -1,5 +1,5 @@
+from typing import Dict, Any, List, Type
 from torch.optim.optimizer import Optimizer
-from typing import Dict, Any, Type
 from copy import deepcopy
 from ml_gym.error_handling.exception import OptimizerNotInitializedError
 
@@ -14,7 +14,6 @@ class OptimizerAdapter(object):
         self._state_dict = None
 
     def register_model_params(self, model_params: Dict, restore_state: bool = True):
-
         model_params_list = model_params.values()
         if not restore_state:
             self._optimizer = self._optimizer_class(**self._optimizer_params, params=model_params_list)
@@ -89,3 +88,56 @@ class OptimizerAdapter(object):
         for k, v in self.__dict__.items():
             setattr(result, k, deepcopy(v, memo))
         return result
+
+
+class OptimizerBundle(OptimizerAdapter):
+
+    def __init__(self, optimizers: Dict[str, OptimizerAdapter], optimizer_key_to_param_key_filters: Dict[str, List[str]]):
+        self.optimizers = optimizers
+        self.optimizer_key_to_param_key_filters = optimizer_key_to_param_key_filters
+
+    def register_model_params(self, model_params: Dict, restore_state: bool = True):
+        for optimizer_key in self.optimizers.keys():
+            parameter_key_filters = self.optimizer_key_to_param_key_filters[optimizer_key]
+            model_params_filtered = {model_param_key: model_params[model_param_key]
+                                     for key_filter in parameter_key_filters
+                                     for model_param_key in model_params.keys()
+                                     if key_filter in model_param_key}
+            self.optimizers[optimizer_key].register_model_params(model_params=model_params_filtered, restore_state=restore_state)
+
+    def __getstate__(self):
+        return {i: optimizer.__getstate__() for i, optimizer in self.optimizers.items()}
+
+    def __setstate__(self, state):
+        for i, state_i in state.items():
+            self.optimizers[i].__setstate__(state_i)
+
+    def __repr__(self):
+        return "\n\n".join([self.optimizer.__repr__()])
+
+    def _hook_for_profile(self):
+        raise NotImplementedError
+
+    def state_dict(self) -> Dict[str, Any]:
+        return {i: optimizer.state_dict() for i, optimizer in self.optimizers.items()}
+
+    def load_state_dict(self, state_dict):
+        for i, state_dict_i in state_dict.items():
+            self.optimizers[i].load_state_dict(state_dict_i)
+
+    def zero_grad(self, set_to_none: bool = False, optimizer_id: int = None):
+        if optimizer_id is None:
+            for _, optimizer in self.optimizers.items():
+                optimizer.zero_grad(set_to_none)
+        else:
+            self.optimizers[optimizer_id].zero_grad(set_to_none)
+
+    def step(self, closure=None, optimizer_id: int = None):
+        if optimizer_id is None:
+            for _, optimizer in self.optimizers.items():
+                optimizer.step(closure)
+        else:
+            self.optimizers[optimizer_id].step(closure)
+
+    def add_param_group(self, param_group):
+        raise NotImplementedError

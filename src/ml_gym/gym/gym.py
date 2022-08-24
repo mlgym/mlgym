@@ -54,6 +54,7 @@ class Gym:
         gym_job = AbstractGymJob.from_blue_print(blue_print)
         return gym_job.execute(device=device)
 
+
     def work(self, device: torch.device):
         for job in tqdm.tqdm(self.jobs, desc="Models trained"):
             job.device = device

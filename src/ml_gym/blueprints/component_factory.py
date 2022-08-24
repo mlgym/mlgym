@@ -1,10 +1,10 @@
 import copy
-from typing import Dict, Any, List, Optional, Type, Union
+from typing import Dict, Any, List, Type, Union
 from collections import namedtuple
 from dataclasses import dataclass, field
 from ml_gym.error_handling.exception import ComponentConstructionError, InjectMappingNotFoundError, DependentComponentNotFoundError
 from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIteratorConstructable, \
-    DatasetIteratorSplitsConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
+    DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, OptimizerBundleConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
     OptimizerConstructable, ModelRegistryConstructable, ModelConstructable, LossFunctionRegistryConstructable, \
     MetricFunctionRegistryConstructable, TrainerConstructable, EvaluatorConstructable, MappedLabelsIteratorConstructable, \
     FilteredLabelsIteratorConstructable, FeatureEncodedIteratorConstructable, CombinedDatasetIteratorConstructable, \
@@ -58,7 +58,6 @@ class ComponentRepresentation:
             f"component_type_key='{self.component_type_key}'," \
             f"variant_key='{self.variant_key}'," \
             f"config={str(self.config)}," \
-            f"hash='{self.hash}'," \
             f"requirements={self.requirements}])"
 
     def __repr__(self):
@@ -89,10 +88,12 @@ class ComponentFactory:
         def construct(self, variant_key: str, component_name: str, config: Dict[str, Any] = None, requirements: List[Any] = None):
             if config is None:
                 config = {}
-
+            constructable = None
             try:
                 constructable = self.constructables[variant_key]
-                component = constructable(component_identifier=component_name, requirements=requirements, **config).construct()
+                component = constructable(component_identifier=component_name, requirements=requirements, **copy.deepcopy(config)).construct()
+            except KeyError as e:
+                raise ComponentConstructionError(f"Error: Could not find {variant_key}. Forgot to register?") from e
             except Exception as e:
                 raise ComponentConstructionError(f"Error during component creation from {constructable}") from e
             return component
@@ -119,8 +120,10 @@ class ComponentFactory:
             ComponentVariant("MAPPED_LABELS_ITERATOR", "DEFAULT", MappedLabelsIteratorConstructable),
             ComponentVariant("DATA_COLLATOR", "DEFAULT", DataCollatorConstructable),
             ComponentVariant("FEATURE_ENCODED_ITERATORS", "DEFAULT", FeatureEncodedIteratorConstructable),
-            ComponentVariant("DATA_LOADER", "DEFAULT", DataLoadersConstructable),
+            ComponentVariant("DATA_LOADER", "DEFAULT", DeprecatedDataLoadersConstructable),
+            ComponentVariant("DATA_LOADER", "FUTURE", DataLoadersConstructable),
             ComponentVariant("OPTIMIZER", "DEFAULT", OptimizerConstructable),
+            ComponentVariant("OPTIMIZER", "BUNDLE", OptimizerBundleConstructable),
             ComponentVariant("MODEL_REGISTRY", "DEFAULT", ModelRegistryConstructable),
             ComponentVariant("LOSS_FUNCTION_REGISTRY", "DEFAULT", LossFunctionRegistryConstructable),
             ComponentVariant("METRIC_REGISTRY", "DEFAULT", MetricFunctionRegistryConstructable),
@@ -207,7 +210,10 @@ class ComponentFactory:
                             for name, requirement in component_representation.requirements.items()}
             # build the requested component
             component_variants_registry = self.component_factory_registry[component_representation.component_type_key]
-            component = component_variants_registry.construct(component_representation.variant_key, component_representation.name, component_representation.config, requirements)
+            try:
+                component = component_variants_registry.construct(component_representation.variant_key, component_representation.name, component_representation.config, requirements)
+            except ComponentConstructionError as cc_error:
+                raise ComponentConstructionError(f"Error constructing {component_representation}") from cc_error
             return component
 
         # calculate the dependency graph of components

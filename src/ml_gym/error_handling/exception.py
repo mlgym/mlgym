@@ -90,9 +90,11 @@ class OptimizerNotInitializedError(Exception):
     """Raised when we want to run an operation on an optimizer, which was not instantiated, yet."""
     pass
 
+
 class MetricCalculationError(Exception):
     """Raised when there was an error during metric calculation"""
     pass
+
 
 class LossCalculationError(Exception):
     """Raised when there was an error during loss calculation"""
@@ -101,4 +103,8 @@ class LossCalculationError(Exception):
 
 class EventStorageInvalidIndexingError(Exception):
     """Raised when an event is tried to indexed within the event storage but the index is not present."""
+
+
+class SamplerNotFoundError(Exception):
+    """Raised when the sampler implemenation for a given datsetloader was not found."""
     pass

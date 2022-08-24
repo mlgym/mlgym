@@ -2,7 +2,6 @@ from typing import Dict, List, Any
 from ml_gym.modes import RunMode
 from ml_gym.persistency.logging import ExperimentStatusLogger, MLgymStatusLoggerCollectionConstructable
 import torch
-from conv_net import ConvNet
 from ml_gym.blueprints.constructables import ModelRegistryConstructable
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.jobs import AbstractGymJob, GymJobFactory
@@ -10,6 +9,8 @@ from ml_gym.batching.batch import DatasetBatch
 from dataclasses import dataclass
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector
 from ml_gym.data_handling.postprocessors.collator import Collator
+
+from conv_net import ConvNet
 
 
 @dataclass
@@ -50,9 +51,11 @@ class ConvNetBluePrint(BluePrint):
                          experiment_id, external_injection, logger_collection_constructable)
 
     @staticmethod
-    def construct_components(config: Dict, component_names: List[str], external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
+    def construct_components(config: Dict, component_names: List[str], device: torch.device, external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
         if external_injection is not None:
-            injection_mapping = {"id_conv_mnist_standard_collator": MNISTCollator, **external_injection}
+            injection_mapping = {"id_conv_mnist_standard_collator": MNISTCollator,
+                                 "id_computation_device": device,
+                                 **external_injection}
             injector = Injector(injection_mapping, raise_mapping_not_found=True)
 
         else:
@@ -61,12 +64,13 @@ class ConvNetBluePrint(BluePrint):
 
         component_factory = ComponentFactory(injector)
         component_factory.register_component_type("MODEL_REGISTRY", "DEFAULT", MyModelRegistryConstructable)
+
         components = component_factory.build_components_from_config(config, component_names)
         return components
 
-    def construct(self) -> AbstractGymJob:
+    def construct(self, device: torch.device = None) -> AbstractGymJob:
         component_names = ["model", "trainer", "optimizer", "evaluator"]
-        components = ConvNetBluePrint.construct_components(self.config, component_names, self.external_injection)
+        components = ConvNetBluePrint.construct_components(self.config, component_names, device, self.external_injection)
 
         logger_collection = self.logger_collection_constructable.construct()
         experiment_status_logger = ExperimentStatusLogger(logger=logger_collection, grid_search_id=self.grid_search_id,
