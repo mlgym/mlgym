@@ -21,7 +21,7 @@ setup(
         "datastack",
         "scipy",
         "dashifyML",
-        "scikit-learn"
+        "scikit-learn",
         "python-socketio"
     ],
     python_requires=">=3.7",
