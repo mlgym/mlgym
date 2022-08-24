@@ -1,9 +1,11 @@
-from threading import Lock
-from flask import Flask, render_template, session, request, copy_current_request_context
+from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, rooms, disconnect
 from ml_gym.backend.messaging.event_storage import EventStorageIF, EventStorageFactory
 from typing import List, Dict
 from collections import defaultdict
+from engineio.payload import Payload
+
+Payload.max_decode_packets = 10000
 
 
 class EventSubscriberIF:
@@ -24,9 +26,10 @@ class WebSocketServer:
                               the best option based on installed packages.
         """
         self._port = port
-        self._socketio = SocketIO(app, async_mode=async_mode)
+        self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=["http://localhost:3000", "http://localhost:7000"])
         self._client_sids = []
-        self._room_id_to_event_storage: Dict[str, EventStorageIF] = {"mlgym_event_subscribers": EventStorageFactory.get_list_event_storage()}
+        self._room_id_to_event_storage: Dict[str, EventStorageIF] = {"mlgym_event_subscribers": EventStorageFactory.get_disc_event_storage(
+            logging_path="/home/mluebberin/repositories/github/private_workspace/mlgym/event_storage/mlgym_event_subscribers")}
         self._init_call_backs()
 
     def emit_server_log_message(self, data):
@@ -38,9 +41,12 @@ class WebSocketServer:
 
     def _send_event_history_to_client(self, client_id: str, room_id: str):
         event_storage = self._room_id_to_event_storage[room_id]
-        print(f"=== WEBSOCKET SERVER LOG ===: Sending {len(event_storage)} old messages from room {room_id} to client {client_id}")
-        for event_id, event in event_storage:
-            emit('mlgym_event', {'event_id': event_id, 'data': event}, room=client_id)
+        event_storage_ids = event_storage.event_storage_ids
+        if event_storage_ids:
+            event_storage_id = event_storage_ids[-1]
+            print(f"=== WEBSOCKET SERVER LOG ===: Sending {event_storage.length(event_storage_id)} old messages from room {room_id} to client {client_id}")
+            for event_id, event in event_storage.iter_generator(event_storage_id):  # TODO make grid search id selectable
+                emit('mlgym_event', {'event_id': event_id, 'data': event}, room=client_id)
 
     def _init_call_backs(self):
 
@@ -55,7 +61,7 @@ class WebSocketServer:
             rooms_to_join = data['rooms']
             for room in rooms_to_join:
                 if room not in self._room_id_to_event_storage:
-                    self._room_id_to_event_storage[room] = EventStorageFactory.get_list_event_storage()
+                    self._room_id_to_event_storage[room] = EventStorageFactory.get_disc_event_storage(logging_path=f"/home/mluebberin/repositories/github/private_workspace/mlgym/event_storage/{room}")
                 join_room(room)
             print(f"Client {client_id} joined rooms: {rooms()}")
             self.emit_server_log_message(f"Client {client_id} joined rooms: {rooms()}")
@@ -72,9 +78,15 @@ class WebSocketServer:
 
         @self._socketio.on("mlgym_event")
         def on_mlgym_event(data):
-            print("mlgym_event: " + str(data))
-            event_id = self._room_id_to_event_storage["mlgym_event_subscribers"].add_event(data)
-            emit('mlgym_event', {'event_id': event_id, 'data': data}, to="mlgym_event_subscribers")
+            grid_search_id = data["payload"]["grid_search_id"]
+            if data["event_type"] in set(["experiment_status", "job_status", "experiment_config", "evaluation_result"]):
+                print("mlgym_event: " + str(data))
+                event_id = self._room_id_to_event_storage["mlgym_event_subscribers"].add_event(grid_search_id, data)
+                emit('mlgym_event', {'event_id': event_id, 'data': data}, to="mlgym_event_subscribers")
+            elif data["event_type"] == "checkpoint":
+                print("received checkpoint")
+            else:
+                print(f"Unsupported event_type {data['event_type']}")
 
     # @socketio.event
     # def disconnect_request():
@@ -88,7 +100,7 @@ class WebSocketServer:
     #     # received and it is safe to disconnect
     #     emit('my_response',
     #          {'data': 'Disconnected!', 'count': session['receive_count']},
-    #          callback=can_disconnect)
+    #          callback=can_disconnect)-
 
         @self._socketio.on("ping")
         def on_ping():
@@ -109,8 +121,6 @@ class WebSocketServer:
 
 
 if __name__ == '__main__':
-    async_mode = None
-
     app = Flask(__name__, template_folder="template")
     app.config['SECRET_KEY'] = 'secret!'
 
@@ -138,5 +148,5 @@ if __name__ == '__main__':
                 room_key_to_sid[room_key].append(client_sid)
 
         return {"clients": client_sids, "rooms": room_key_to_sid}
-
+    print(ws._socketio.async_mode)
     ws.run(app)

@@ -19,7 +19,7 @@ const statusRowsSelector = (state: RootState) => {
 
     const fullRows = jobStatusRows.map((jobStatusRow: JobStatusRowType) => {
         const latest_message_index = state.modelsStatus.experiment_id_to_latest_message_index[jobStatusRow.experiment_id]
-        if (latest_message_index) {
+        if (!(latest_message_index === undefined)) {
             const modelStatusMessage = state.modelsStatus.messages[latest_message_index]
             const modelStatusRow = {
                 experiment_id: modelStatusMessage.data.payload.experiment_id,

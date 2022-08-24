@@ -12,11 +12,12 @@ import { useAppDispatch } from "./app/hooks"
 import { IOStatsType, FilterConfigType } from "./app/datatypes"
 import { jobStatusAdded } from "./features/jobsStatus/jobsStatusSlice"
 import { modelStatusAdded } from "./features/modelsStatus/modelsStatusSlice"
+import { experimentConfigAdded } from "./features/experimentConfig/experimentConfigSlice"
 import { modelEvaluationAdded } from "./features/modelEvaluations/modelEvaluationsSlice"
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 
-const socket = io("http://localhost:7000");
+const socket = io("http://127.0.0.1:5000");
 
 
 export default function App() {
@@ -67,7 +68,8 @@ export default function App() {
   const eventTypeToActionCreator: any = {
     "job_status": jobStatusAdded,
     "experiment_status": modelStatusAdded,
-    "evaluation_result": modelEvaluationAdded
+    "evaluation_result": modelEvaluationAdded,
+    "experiment_config": experimentConfigAdded
   }
 
   useEffect(() => {
@@ -83,7 +85,7 @@ export default function App() {
 
     socket.on('mlgym_event', (msg) => {
       addMsgTs(new Date().getTime())
-      const msgRep = JSON.parse(msg)
+      const msgRep = msg // JSON.parse(msg)
       const eventType: string = msgRep["data"]["event_type"]
       if (eventType in eventTypeToActionCreator) {
         const actionCreator = eventTypeToActionCreator[eventType]
