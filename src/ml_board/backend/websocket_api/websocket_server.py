@@ -1,11 +1,10 @@
-from curses.panel import top_panel
 import os
-from flask import Flask, render_template, session, request
+from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, rooms, disconnect
-from ml_gym.backend.messaging.event_storage import EventStorageIF, EventStorageFactory
+from ml_board.backend.messaging.event_storage import EventStorageIF, EventStorageFactory
 from typing import Any, List, Dict
-from collections import defaultdict
 from engineio.payload import Payload
+from pathlib import Path
 
 Payload.max_decode_packets = 10000
 
@@ -125,38 +124,30 @@ class WebSocketServer:
         full_path = os.path.join(path, grid_search_id, str(experiment_id), str(checkpoint_id))
         os.makedirs(full_path, exist_ok=True)
         for key, stream in checkpoint["checkpoint_streams"].items():
-            with open(os.path.join(full_path, key + ".bin"), "wb") as fd:
-                fd.write(stream)
+            checkpoint_element_path = os.path.join(full_path, key + ".bin")
+            if os.path.exists(checkpoint_element_path):
+                if stream is None:
+                    os.remove(checkpoint_element_path)
+                    parent_dir = Path(checkpoint_element_path).parent
+                    if not any(Path(parent_dir).iterdir()):  # if the directory is empty we can also just remove the folder
+                        os.rmdir(parent_dir)
+                else:   # if the path exists but the stream is not none, we want to replace the model
+                    with open(checkpoint_element_path, "wb") as fd:
+                        fd.write(stream)
+            else:
+                with open(checkpoint_element_path, "wb") as fd:
+                    fd.write(stream)
 
 
 if __name__ == '__main__':
+    port = 5000
+    async_mode = None
     top_level_logging_path = "event_storage/"
     app = Flask(__name__, template_folder="template")
     app.config['SECRET_KEY'] = 'secret!'
 
     # thread = socketio.start_background_task(background_thread, )
-    port = 5000
-    async_mode = None
 
     ws = WebSocketServer(port=port, async_mode=async_mode, app=app, top_level_logging_path=top_level_logging_path)
 
-    @app.route('/')
-    def index():
-        return render_template('index.html', async_mode=ws._socketio.async_mode)
-
-    @app.route('/status')
-    def status():
-        return render_template('status.html', async_mode=ws._socketio.async_mode)
-
-    @app.route('/api/status')
-    def api_status():
-        client_sids = ws.client_sids
-        room_key_to_sid = defaultdict(list)
-        for client_sid in client_sids:
-            room_keys = rooms(client_sid, "/")
-            for room_key in room_keys:
-                room_key_to_sid[room_key].append(client_sid)
-
-        return {"clients": client_sids, "rooms": room_key_to_sid}
-    print(ws._socketio.async_mode)
     ws.run(app)

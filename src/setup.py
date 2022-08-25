@@ -22,7 +22,9 @@ setup(
         "scipy",
         "dashifyML",
         "scikit-learn",
-        "python-socketio"
+        "python-socketio",
+        "fastapi",
+        "uvicorn"
     ],
     python_requires=">=3.7",
     url="https://github.com/mlgym/mlgym"

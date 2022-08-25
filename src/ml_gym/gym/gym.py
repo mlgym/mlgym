@@ -51,9 +51,8 @@ class Gym:
 
     @staticmethod
     def _run_job(blue_print: BluePrint, device: torch.device, log_std_to_file: bool) -> AbstractGymJob:
-        gym_job = AbstractGymJob.from_blue_print(blue_print)
+        gym_job = AbstractGymJob.from_blue_print(blue_print, device=device)
         return gym_job.execute(device=device)
-
 
     def work(self, device: torch.device):
         for job in tqdm.tqdm(self.jobs, desc="Models trained"):

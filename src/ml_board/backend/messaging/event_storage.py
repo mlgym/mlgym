@@ -1,8 +1,7 @@
-from genericpath import isdir
-from ml_gym.backend.messaging.events import Event
+from ml_board.backend.messaging.events import Event
 from abc import ABC
 from typing import List, Tuple, Dict, Generator
-from ml_gym.error_handling.exception import EventStorageInvalidIndexingError
+from ml_board.backend.error_handling.exception import EventStorageInvalidIndexingError
 from collections import defaultdict
 import os
 import json

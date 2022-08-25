@@ -1,8 +1,8 @@
 from multiprocessing import Queue, Process
-from ml_gym.backend.messaging.events import Event
+from ml_board.backend.messaging.events import Event
 from abc import ABC
 from typing import List, Dict
-from ml_gym.backend.messaging.event_storage import EventStorageIF
+from ml_board.backend.messaging.event_storage import EventStorageIF
 
 
 class PublishingIF(ABC):
