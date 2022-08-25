@@ -127,10 +127,14 @@ class WebSocketServer:
         for key, stream in checkpoint["checkpoint_streams"].items():
             checkpoint_element_path = os.path.join(full_path, key + ".bin")
             if os.path.exists(checkpoint_element_path):
-                os.remove(checkpoint_element_path)
-                parent_dir = Path(checkpoint_element_path).parent
-                if not any(Path(parent_dir).iterdir()):  # if the directory is empty we can also just remove the folder
-                    os.rmdir(parent_dir)
+                if stream is None:
+                    os.remove(checkpoint_element_path)
+                    parent_dir = Path(checkpoint_element_path).parent
+                    if not any(Path(parent_dir).iterdir()):  # if the directory is empty we can also just remove the folder
+                        os.rmdir(parent_dir)
+                else:   # if the path exists but the stream is not none, we want to replace the model
+                    with open(checkpoint_element_path, "wb") as fd:
+                        fd.write(stream)
             else:
                 with open(checkpoint_element_path, "wb") as fd:
                     fd.write(stream)
