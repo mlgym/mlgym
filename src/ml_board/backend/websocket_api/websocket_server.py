@@ -1,7 +1,7 @@
 import os
 from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, rooms, disconnect
-from ml_gym.backend.messaging.event_storage import EventStorageIF, EventStorageFactory
+from ml_board.backend.messaging.event_storage import EventStorageIF, EventStorageFactory
 from typing import Any, List, Dict
 from engineio.payload import Payload
 from pathlib import Path

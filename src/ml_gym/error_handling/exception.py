@@ -101,10 +101,6 @@ class LossCalculationError(Exception):
     pass
 
 
-class EventStorageInvalidIndexingError(Exception):
-    """Raised when an event is tried to indexed within the event storage but the index is not present."""
-
-
 class SamplerNotFoundError(Exception):
     """Raised when the sampler implemenation for a given datsetloader was not found."""
     pass

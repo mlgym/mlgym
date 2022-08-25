@@ -1,6 +1,5 @@
 import socketio
 from typing import Dict, List
-import time
 
 
 class ClientFactory:
