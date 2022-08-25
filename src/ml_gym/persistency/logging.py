@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, List, Dict
 from ml_gym.multiprocessing.states import JobStatus, JobType
-from ml_gym.backend.streaming.client import ClientFactory, BufferedClient
+from ml_gym.backend.websocket_api.client import ClientFactory, BufferedClient
 import time
 import torch
 import pickle
