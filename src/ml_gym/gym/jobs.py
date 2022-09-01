@@ -11,6 +11,7 @@ from ml_gym.util.logger import ConsoleLogger, LogLevel
 from ml_gym.batching.batch import EvaluationBatchResult
 from ml_gym.persistency.logging import ExperimentStatusLogger
 from functools import partial
+from ml_gym.checkpoint.checkpoint import Checkpoint
 
 
 class AbstractGymJob(StatefulComponent):
@@ -55,7 +56,7 @@ class AbstractGymJob(StatefulComponent):
 class GymJob(AbstractGymJob):
 
     def __init__(self, run_mode: RunMode, model: NNModel, optimizer: OptimizerAdapter, trainer: Trainer,
-                 evaluator: Evaluator, epochs: List[int], current_epoch: int = 0,
+                 evaluator: Evaluator, epochs: List[int], checkpoint_strategy: Checkpoint, current_epoch: int = 0,
                  experiment_status_logger: ExperimentStatusLogger = None):
         super().__init__(experiment_status_logger)
         self.run_mode = run_mode
@@ -67,6 +68,7 @@ class GymJob(AbstractGymJob):
         self.evaluator = evaluator
         self.trainer = trainer
         self._execution_method = self._execute_eval if run_mode == RunMode.RE_EVAL else self._execute_train
+        self.checkpoint_strategy = checkpoint_strategy
 
     def _train_step(self, device: torch.device, epoch: int) -> NNModel:
         # self.restore_state_in_stateful_components(epoch - 1)
@@ -90,12 +92,13 @@ class GymJob(AbstractGymJob):
         partial_epoch_result_callback = partial(self.epoch_result_callback, current_epoch=epoch,
                                                 experiment_status_logger=self._experiment_status_logger)
 
-        evaluation_result = self.evaluator.evaluate(model=self.model,
-                                                    device=device,
-                                                    current_epoch=epoch,
-                                                    num_epochs=self.epochs,
-                                                    batch_processed_callback_fun=partial_batch_processed_callback,
-                                                    epoch_result_callback_fun=partial_epoch_result_callback)
+        evaluation_result = self.evaluator.evaluate(model= self.model,
+                                                    device = device,
+                                                    current_epoch = epoch,
+                                                    num_epochs = self.epochs,
+                                                    batch_processed_callback_fun = partial_batch_processed_callback,
+                                                    epoch_result_callback_fun = partial_epoch_result_callback)        
+        
 
         # save model and optimizer
         # TODO PriyaTomar
@@ -108,10 +111,22 @@ class GymJob(AbstractGymJob):
         # self.save_state_of_stateful_components(measurement_id=epoch)
 
         # DashifyWriter.log_measurement_result(evaluation_result, self._experiment_info, measurement_id=epoch)
-        self._experiment_status_logger.log_checkpoint(epoch=self.current_epoch,
-                                                      model_binary_stream=self.model.state_dict(),
-                                                      optimizer_binary_stream=self.optimizer.state_dict(),
-                                                      stateful_components_binary_stream=self.get_state())
+
+        checkpoint_result = self.checkpoint_strategy.model_checkpoint(
+                                                  current_epoch = epoch,
+                                                  num_epochs = self.epochs,
+                                                  evaluation_result = evaluation_result
+                                                  )
+        
+        self.execute_checkpointing(checkpoint_result)
+            
+    def execute_checkpointing(self, checkpoint_result: Dict):
+        if checkpoint_result["checkpoint_save"] == self.current_epoch :
+            # TODO: @priyatomar check save_weights only
+            self._experiment_status_logger.log_checkpoint(self.current_epoch, self.model.state_dict(), self.optimizer.state_dict(), self.get_state())
+        if checkpoint_result["checkpoint_delete"]:
+            self._experiment_status_logger.log_checkpoint(epoch = checkpoint_result["checkpoint_delete"])
+                                                      
 
     def execute(self, device: torch.device):
         """ Executes the job

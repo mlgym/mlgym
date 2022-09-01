@@ -1,6 +1,8 @@
 from collections import defaultdict
+from unittest.mock import DEFAULT
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Union, Type
+from matplotlib.pyplot import cla
 from data_stack.dataset.iterator import DatasetIteratorIF
 from data_stack.repository.repository import DatasetRepository
 from abc import abstractmethod, ABC
@@ -17,6 +19,8 @@ from ml_gym.loss_functions.loss_functions import Loss
 from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score, balanced_accuracy_score
 from ml_gym.metrics.metrics import Metric, binary_aupr_score, binary_auroc_score
 from ml_gym.metrics.metric_factory import MetricFactory
+from ml_gym.checkpoint.checkpoint import Checkpoint
+from ml_gym.checkpoint.checkpoint_factory import CheckpointFactory
 from ml_gym.gym.evaluator import Evaluator, EvalComponent
 from ml_gym.data_handling.postprocessors.factory import ModelGymInformedIteratorFactory
 from ml_gym.data_handling.postprocessors.collator import Collator
@@ -330,6 +334,31 @@ class LossFunctionRegistryConstructable(ComponentConstructable):
 
         return loss_fun_registry
 
+@dataclass
+class CheckpointFunctionsRegistryConstructable(ComponentConstructable):
+    class CheckpointKeys:
+        DEFAULT = "DEFAULT"
+        REGULAR_INTERVAL =  "REGULAR_INTERVAL"
+        LAST = "LAST"
+        BEST_METRIC = "BEST_METRIC"
+
+    def _construct_impl(self):
+        checkpoint_fun_registry = ClassRegistry()
+        default_mapping: Dict[str: Checkpoint] = {
+            CheckpointFunctionsRegistryConstructable.CheckpointKeys.DEFAULT: 
+                CheckpointFactory.get_default_checkpoint,
+            CheckpointFunctionsRegistryConstructable.CheckpointKeys.REGULAR_INTERVAL:
+                CheckpointFactory.get_regular_interval_checkpoint,
+            CheckpointFunctionsRegistryConstructable.CheckpointKeys.LAST:
+                CheckpointFactory.get_last_checkpoint,
+            CheckpointFunctionsRegistryConstructable.CheckpointKeys.BEST_METRIC:
+                CheckpointFactory.get_best_metric_checkpoint
+        }
+
+        for key, checkpoint_type in default_mapping.items():
+            checkpoint_fun_registry.add_class(key = key, element = checkpoint_type)
+        return checkpoint_fun_registry
+
 
 @dataclass
 class MetricFunctionRegistryConstructable(ComponentConstructable):
@@ -458,18 +487,22 @@ class EvalComponentConstructable(ComponentConstructable):
     train_split_name: str = ""
     metrics_config: List = field(default_factory=list)
     loss_funs_config: List = field(default_factory=list)
+    checkpoint_config: List = field(default_factory=list)
     post_processors_config: List[Dict] = field(default_factory=list)
     show_progress: bool = False
     cpu_target_subscription_keys: List[str] = field(default_factory=list)
     cpu_prediction_subscription_keys: List[str] = field(default_factory=list)
     metrics_computation_config: List[Dict] = None
     loss_computation_config: List[Dict] = None
+    checkpoint_computation_config: List[Dict] = None
 
     def _construct_impl(self) -> Evaluator:
         dataset_loaders: Dict[str, DatasetLoader] = self.get_requirement("data_loaders")
         loss_function_registry: ClassRegistry = self.get_requirement("loss_function_registry")
         metric_registry: ClassRegistry = self.get_requirement("metric_registry")
+        checkpoint_registry: ClassRegistry = self.get_requirement("checkpoint_registry")
         prediction_post_processing_registry: ClassRegistry = self.get_requirement("prediction_postprocessing_registry")
+
 
         loss_funs = {conf["tag"]: loss_function_registry.get_instance(**conf) for conf in self.loss_funs_config}
         metric_funs = [metric_registry.get_instance(**conf) for conf in self.metrics_config]
