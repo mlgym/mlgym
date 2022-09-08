@@ -42,13 +42,13 @@ class LastKEpochsImprovementStrategy(EarlyStoppingIF):
 
     def _evaluate_history(self, current_epoch: int) -> bool:
         def monitoring_diff_fun(i, current_epoch):
-            return self.monitoring_values[(i + current_epoch) % self.epochs_window] - self.monitoring_values[(i + current_epoch) % self.epochs_window]
+            return self.monitoring_values[(i + current_epoch) % self.epochs_window] - self.monitoring_values[(i-1 + current_epoch) % self.epochs_window]
         diffs = [monitoring_diff_fun(i, current_epoch) for i in range(self.epochs_window-1)]
         return abs(self.diff_filter_fun(diffs)) < self.min_percentage_improvement
 
     def is_stopping_criterion_fulfilled(self, evaluation_results: List[EvaluationBatchResult], current_epoch: int) -> bool:
         monitoring_value = self._get_monitoring_value(evaluation_results)
-        self.monitoring_values[current_epoch % self.epochs_window] = monitoring_value
+        self.monitoring_values[current_epoch-1 % self.epochs_window] = monitoring_value
 
         perform_stop = self._evaluate_history(current_epoch)
         return perform_stop
