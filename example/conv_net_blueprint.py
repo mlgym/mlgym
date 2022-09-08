@@ -69,13 +69,15 @@ class ConvNetBluePrint(BluePrint):
         return components
 
     def construct(self, device: torch.device = None) -> AbstractGymJob:
-        component_names = ["model", "trainer", "optimizer", "evaluator"]
+        component_names = ["model", "trainer", "optimizer", "evaluator", "early_stopping_strategy"]
         components = ConvNetBluePrint.construct_components(self.config, component_names, device, self.external_injection)
 
         logger_collection = self.logger_collection_constructable.construct()
         experiment_status_logger = ExperimentStatusLogger(logger=logger_collection, grid_search_id=self.grid_search_id,
                                                           experiment_id=self.experiment_id)
 
-        gym_job = GymJobFactory.get_gym_job(self.run_mode, epochs=self.epochs,
-                                            experiment_status_logger=experiment_status_logger, **components)
+        gym_job = GymJobFactory.get_gym_job(self.run_mode,
+                                            epochs=self.epochs,
+                                            experiment_status_logger=experiment_status_logger,
+                                            **components)
         return gym_job

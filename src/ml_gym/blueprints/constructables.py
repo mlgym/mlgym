@@ -7,6 +7,7 @@ from abc import abstractmethod, ABC
 from data_stack.io.storage_connectors import StorageConnectorFactory
 from data_stack.mnist.factory import MNISTFactory
 from ml_gym.data_handling.dataset_loader import DatasetLoader, DatasetLoaderFactory
+from ml_gym.early_stopping.early_stopping_strategies import EarlyStoppingIF, EarlyStoppingStrategyFactory
 from ml_gym.optimizers.optimizer import OptimizerAdapter, OptimizerBundle
 from ml_gym.optimizers.optimizer_factory import OptimizerFactory
 from ml_gym.models.nn.net import NNModel
@@ -501,3 +502,31 @@ class EvaluatorConstructable(ComponentConstructable):
         eval_component: EvalComponent = self.get_requirement("eval_component")
         evaluator = Evaluator(eval_component)
         return evaluator
+
+
+@dataclass
+class EarlyStoppinRegistryConstructable(ComponentConstructable):
+    class StrategyKeys:
+        LAST_K_EPOCHS_IMPROVEMENT_STRATEGY = "LAST_K_EPOCHS_IMPROVEMENT_STRATEGY"
+
+    def _construct_impl(self):
+        strategy_registry = ClassRegistry()
+        default_mapping: Dict[str, Metric] = {
+            EarlyStoppinRegistryConstructable.StrategyKeys.LAST_K_EPOCHS_IMPROVEMENT_STRATEGY:
+                EarlyStoppingStrategyFactory.get_last_k_epochs_improvement_strategy
+        }
+        for key, metric_type in default_mapping.items():
+            strategy_registry.add_class(key, metric_type)
+
+        return strategy_registry
+
+
+@dataclass
+class EarlyStoppingStrategyConstructable(ComponentConstructable):
+    early_stopping_config: Dict = field(default_factory=dict)
+    early_stopping_key: str = ""
+
+    def _construct_impl(self) -> EarlyStoppingIF:
+        early_stopping_registry: ClassRegistry = self.get_requirement("early_stopping_strategy_registry")
+        early_stopping_strategy = early_stopping_registry.get_instance(key=self.early_stopping_key, **self.early_stopping_config)
+        return early_stopping_strategy
