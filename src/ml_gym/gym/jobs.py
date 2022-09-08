@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from ml_gym.early_stopping.early_stopping_strategies import EarlyStoppingIF
 from ml_gym.models.nn.net import NNModel
 from ml_gym.gym.evaluator import Evaluator
 from ml_gym.gym.trainer import Trainer
@@ -56,7 +57,8 @@ class GymJob(AbstractGymJob):
 
     def __init__(self, run_mode: RunMode, model: NNModel, optimizer: OptimizerAdapter, trainer: Trainer,
                  evaluator: Evaluator, epochs: List[int], current_epoch: int = 0,
-                 experiment_status_logger: ExperimentStatusLogger = None):
+                 experiment_status_logger: ExperimentStatusLogger = None,
+                 early_stopping_strategy: EarlyStoppingIF = None):
         super().__init__(experiment_status_logger)
         self.run_mode = run_mode
         self.model = model
@@ -66,6 +68,7 @@ class GymJob(AbstractGymJob):
         self.current_epoch = current_epoch if current_epoch is not None else 0
         self.evaluator = evaluator
         self.trainer = trainer
+        self.early_stopping_strategy = early_stopping_strategy
         self._execution_method = self._execute_eval if run_mode == RunMode.RE_EVAL else self._execute_train
 
     def _train_step(self, device: torch.device, epoch: int) -> NNModel:
@@ -83,19 +86,19 @@ class GymJob(AbstractGymJob):
                                          batch_processed_callback_fun=partial_batch_processed_callback)
         return model
 
-    def _evaluation_step(self, device: torch.device, epoch: int):
+    def _evaluation_step(self, device: torch.device, epoch: int) -> List[EvaluationBatchResult]:
         self.model.to(device)
         partial_batch_processed_callback = partial(self.batch_processed_callback, num_epochs=self.epochs, current_epoch=epoch,
                                                    experiment_status_logger=self._experiment_status_logger)
         partial_epoch_result_callback = partial(self.epoch_result_callback, current_epoch=epoch,
                                                 experiment_status_logger=self._experiment_status_logger)
 
-        evaluation_result = self.evaluator.evaluate(model=self.model,
-                                                    device=device,
-                                                    current_epoch=epoch,
-                                                    num_epochs=self.epochs,
-                                                    batch_processed_callback_fun=partial_batch_processed_callback,
-                                                    epoch_result_callback_fun=partial_epoch_result_callback)
+        evaluation_results = self.evaluator.evaluate(model=self.model,
+                                                     device=device,
+                                                     current_epoch=epoch,
+                                                     num_epochs=self.epochs,
+                                                     batch_processed_callback_fun=partial_batch_processed_callback,
+                                                     epoch_result_callback_fun=partial_epoch_result_callback)
 
         # save model and optimizer
         # TODO PriyaTomar
@@ -112,6 +115,8 @@ class GymJob(AbstractGymJob):
                                                       model_binary_stream=self.model.state_dict(),
                                                       optimizer_binary_stream=self.optimizer.state_dict(),
                                                       stateful_components_binary_stream=self.get_state())
+
+        return evaluation_results
 
     def execute(self, device: torch.device):
         """ Executes the job
@@ -149,7 +154,11 @@ class GymJob(AbstractGymJob):
         while not self.trainer.is_done():
             self.logger.log(LogLevel.INFO,  f"epoch: {self.current_epoch}")
             self._train_step(device, epoch=self.current_epoch)
-            self._evaluation_step(device, epoch=self.current_epoch)
+            evaluation_results = self._evaluation_step(device, epoch=self.current_epoch)
+            if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=self.current_epoch,
+                                                                            evaluation_results=evaluation_results):
+                # TODO send finish message to server
+                break
             self.current_epoch += 1
 
     def _execute_eval(self, device: torch.device):
