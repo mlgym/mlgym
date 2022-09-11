@@ -148,18 +148,22 @@ class GymJob(AbstractGymJob):
         elif self.run_mode == RunMode.WARM_START:
             self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
 
-        self._evaluation_step(device, epoch=self.current_epoch)
-        self.current_epoch += 1
-        self.trainer.set_current_epoch(self.current_epoch)
-        while not self.trainer.is_done():
-            self.logger.log(LogLevel.INFO,  f"epoch: {self.current_epoch}")
-            self._train_step(device, epoch=self.current_epoch)
-            evaluation_results = self._evaluation_step(device, epoch=self.current_epoch)
-            if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=self.current_epoch,
-                                                                            evaluation_results=evaluation_results):
-                # TODO send finish message to server
-                break
+        evaluation_results = self._evaluation_step(device, epoch=self.current_epoch)
+        if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=self.current_epoch,
+                                                                        evaluation_results=evaluation_results):
+            return
+        else:
             self.current_epoch += 1
+            self.trainer.set_current_epoch(self.current_epoch)
+            while not self.trainer.is_done():
+                self.logger.log(LogLevel.INFO,  f"epoch: {self.current_epoch}")
+                self._train_step(device, epoch=self.current_epoch)
+                evaluation_results = self._evaluation_step(device, epoch=self.current_epoch)
+                if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=self.current_epoch,
+                                                                                evaluation_results=evaluation_results):
+                    # TODO send finish message to server
+                    break
+                self.current_epoch += 1
 
     def _execute_eval(self, device: torch.device):
         for epoch in self.epochs:
