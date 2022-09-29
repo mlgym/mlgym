@@ -84,7 +84,7 @@ class JobStatusLogger:
     def __init__(self, logger: MLgymStatusLoggerIF) -> None:
         self._logger = logger
 
-    def log_job_status(self, job_id: int, job_type: JobType, status: JobStatus, grid_search_id: str, experiment_id: str, starting_time: int, finishing_time: int,
+    def log_job_status(self, job_id: str, job_type: JobType, status: JobStatus, grid_search_id: str, experiment_id: str, starting_time: int, finishing_time: int,
                        device: torch.device, error: str = "", stacktrace: str = ""):
         message = {"event_type": "job_status", "creation_ts": get_timestamp()}
         payload = {"job_id": job_id, "job_type": job_type.value, "status": status.value, "grid_search_id": grid_search_id, "experiment_id": experiment_id,
@@ -93,7 +93,7 @@ class JobStatusLogger:
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
 
-    def log_experiment_config(self, grid_search_id: str, experiment_id: str, job_id: int, config: Dict[str, Any]):
+    def log_experiment_config(self, grid_search_id: str, experiment_id: str, job_id: str, config: Dict[str, Any]):
         message = {"event_type": "experiment_config", "creation_ts": get_timestamp()}
         payload = {"grid_search_id": grid_search_id, "experiment_id": experiment_id, "job_id": job_id, "config": config}
         message["payload"] = payload

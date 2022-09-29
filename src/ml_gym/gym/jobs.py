@@ -32,7 +32,7 @@ class AbstractGymJob(StatefulComponent):
     def from_blue_print(blue_print, device: torch.device) -> 'AbstractGymJob':
         return blue_print.construct(device)
 
-   # def restore_state_in_stateful_components(self, measurement_id: int):
+    # def restore_state_in_stateful_components(self, measurement_id: int):
     #     state = DashifyReader.load_state(experiment_info=self.experiment_info, measurement_id=measurement_id)
     #     self.set_state(state)
 
@@ -56,20 +56,26 @@ class AbstractGymJob(StatefulComponent):
 class GymJob(AbstractGymJob):
 
     def __init__(self, run_mode: RunMode, model: NNModel, optimizer: OptimizerAdapter, trainer: Trainer,
-                 evaluator: Evaluator, epochs: List[int], current_epoch: int = 0,
+                 evaluator: Evaluator, num_epochs: int, current_epoch: int = 0,
                  experiment_status_logger: ExperimentStatusLogger = None,
-                 early_stopping_strategy: EarlyStoppingIF = None):
+                 early_stopping_strategy: EarlyStoppingIF = None,
+                 warm_start_epoch: int = 0):
         super().__init__(experiment_status_logger)
         self.run_mode = run_mode
         self.model = model
         self.optimizer = optimizer
         self.optimizer.register_model_params(dict(self.model.named_parameters()))
-        self.epochs = epochs
+        self.num_epochs = num_epochs
         self.current_epoch = current_epoch if current_epoch is not None else 0
         self.evaluator = evaluator
         self.trainer = trainer
         self.early_stopping_strategy = early_stopping_strategy
-        self._execution_method = self._execute_eval if run_mode == RunMode.RE_EVAL else self._execute_train
+        if run_mode == RunMode.TRAIN:
+            self._execution_method = self._execute_train
+        elif run_mode == RunMode.WARM_START:
+            self._execution_method = self._execute_warm_start
+        else:
+            raise NotImplementedError
 
     def _train_step(self, device: torch.device, epoch: int) -> NNModel:
         # self.restore_state_in_stateful_components(epoch - 1)
@@ -80,7 +86,7 @@ class GymJob(AbstractGymJob):
         # optimizer_state = DashifyReader.load_optimizer_state(self._experiment_info, epoch - 1)
         # self.optimizer.load_state_dict(optimizer_state)
         # train
-        partial_batch_processed_callback = partial(self.batch_processed_callback, num_epochs=self.epochs, current_epoch=epoch,
+        partial_batch_processed_callback = partial(self.batch_processed_callback, num_epochs=self.num_epochs, current_epoch=epoch,
                                                    experiment_status_logger=self._experiment_status_logger)
         model = self.trainer.train_epoch(self.model, self.optimizer, device,
                                          batch_processed_callback_fun=partial_batch_processed_callback)
@@ -88,7 +94,7 @@ class GymJob(AbstractGymJob):
 
     def _evaluation_step(self, device: torch.device, epoch: int) -> List[EvaluationBatchResult]:
         self.model.to(device)
-        partial_batch_processed_callback = partial(self.batch_processed_callback, num_epochs=self.epochs, current_epoch=epoch,
+        partial_batch_processed_callback = partial(self.batch_processed_callback, num_epochs=self.num_epochs, current_epoch=epoch,
                                                    experiment_status_logger=self._experiment_status_logger)
         partial_epoch_result_callback = partial(self.epoch_result_callback, current_epoch=epoch,
                                                 experiment_status_logger=self._experiment_status_logger)
@@ -96,7 +102,7 @@ class GymJob(AbstractGymJob):
         evaluation_results = self.evaluator.evaluate(model=self.model,
                                                      device=device,
                                                      current_epoch=epoch,
-                                                     num_epochs=self.epochs,
+                                                     num_epochs=self.num_epochs,
                                                      batch_processed_callback_fun=partial_batch_processed_callback,
                                                      epoch_result_callback_fun=partial_epoch_result_callback)
 
@@ -127,7 +133,7 @@ class GymJob(AbstractGymJob):
         self._execution_method(device)
 
     def _execute_train(self, device: torch.device):
-        self.trainer.set_num_epochs(num_epochs=self.epochs)
+        self.trainer.set_num_epochs(num_epochs=self.num_epochs)
 
         if self.run_mode == RunMode.TRAIN:
             # save model and optimizer
@@ -166,12 +172,14 @@ class GymJob(AbstractGymJob):
                 self.current_epoch += 1
 
     def _execute_eval(self, device: torch.device):
-        for epoch in self.epochs:
-            self._evaluation_step(device, measurement_id=epoch)
+        for epoch in self.num_epochs:
+            # TODO need to load model + stateful components for the respective epoch here
+            self._evaluation_step(device, epoch=epoch)
 
 
 class GymJobFactory:
     @staticmethod
-    def get_gym_job(run_mode: RunMode, epochs: List[int], experiment_status_logger: ExperimentStatusLogger = None,
+    def get_gym_job(run_mode: RunMode, num_epochs: int, experiment_status_logger: ExperimentStatusLogger = None, warm_start_epoch: int = 0,
                     **components: Dict[str, Any]) -> AbstractGymJob:
-        return GymJob(run_mode=run_mode, epochs=epochs, experiment_status_logger=experiment_status_logger, **components)
+        return GymJob(run_mode=run_mode, num_epochs=num_epochs, experiment_status_logger=experiment_status_logger,
+                      warm_start_epoch=warm_start_epoch, **components)

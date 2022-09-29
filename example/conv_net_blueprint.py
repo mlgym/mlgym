@@ -44,11 +44,12 @@ class MyModelRegistryConstructable(ModelRegistryConstructable):
 
 
 class ConvNetBluePrint(BluePrint):
-    def __init__(self, run_mode: RunMode, config: Dict, epochs: int, grid_search_id: str,
+    def __init__(self, run_mode: RunMode, config: Dict, num_epochs: int, grid_search_id: str,
                  experiment_id: str, external_injection: Dict[str, Any] = None,
-                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None):
-        super().__init__(run_mode, epochs, config, grid_search_id,
-                         experiment_id, external_injection, logger_collection_constructable)
+                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None,
+                 warm_start_epoch: int = 0):
+        super().__init__(run_mode, num_epochs, config, grid_search_id,
+                         experiment_id, external_injection, logger_collection_constructable, warm_start_epoch)
 
     @staticmethod
     def construct_components(config: Dict, component_names: List[str], device: torch.device, external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -77,7 +78,8 @@ class ConvNetBluePrint(BluePrint):
                                                           experiment_id=self.experiment_id)
 
         gym_job = GymJobFactory.get_gym_job(self.run_mode,
-                                            epochs=self.epochs,
+                                            num_epochs=self.num_epochs,
+                                            warm_start_epoch=self.warm_start_epoch,
                                             experiment_status_logger=experiment_status_logger,
                                             **components)
         return gym_job

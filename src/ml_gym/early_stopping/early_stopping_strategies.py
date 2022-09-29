@@ -1,10 +1,11 @@
-from typing import List
+from typing import Any, List, Dict
 from ml_gym.batching.batch import EvaluationBatchResult
 from ml_gym.error_handling.exception import BatchStateError
+from ml_gym.gym.stateful_components import StatefulComponent
 import numpy as np
 
 
-class EarlyStoppingIF:
+class EarlyStoppingIF(StatefulComponent):
 
     def is_stopping_criterion_fulfilled(self, evaluation_results: List[EvaluationBatchResult], current_epoch: int) -> bool:
         raise NotImplementedError
@@ -16,6 +17,13 @@ class EarlyStopping(EarlyStoppingIF):
 
     def is_stopping_criterion_fulfilled(self, evaluation_results: List[EvaluationBatchResult], current_epoch: int) -> bool:
         return self.strategy.is_stopping_criterion_fulfilled(evaluation_results=evaluation_results, current_epoch=current_epoch)
+
+    def get_state(self) -> Dict[str, Any]:
+        state = self.strategy.get_state()
+        return state
+
+    def set_state(self, state: Dict[str, Any]):
+        self.strategy.set_state(state)
 
 
 class LastKEpochsImprovementStrategy(EarlyStoppingIF):
@@ -66,6 +74,13 @@ class LastKEpochsImprovementStrategy(EarlyStoppingIF):
 
         perform_stop = self._evaluate_history(current_epoch)
         return perform_stop
+
+    def get_state(self) -> Dict[str, Any]:
+        state = {"monitoring_values": self.monitoring_values.tolist()}
+        return state
+
+    def set_state(self, state: Dict[str, Any]):
+        self.monitoring_values = np.array(state["monitoring_values"])
 
 
 class EarlyStoppingStrategyFactory:

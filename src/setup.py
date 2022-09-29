@@ -24,7 +24,9 @@ setup(
         "scikit-learn",
         "python-socketio",
         "fastapi",
-        "uvicorn"
+        "uvicorn",
+        "requests",
+        "python-multipart"
     ],
     python_requires=">=3.7",
     url="https://github.com/mlgym/mlgym"
