@@ -4,6 +4,7 @@ from typing import List, Type, Dict, Any
 from ml_gym.modes import RunMode
 from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
 import torch
+from ml_gym.persistency.io import GridSearchAPIClientConstructableIF
 
 
 class BluePrint(ABC):
@@ -11,7 +12,9 @@ class BluePrint(ABC):
     """
 
     def __init__(self, run_mode: RunMode, num_epochs: int,
-                 config: Dict[str, Any], grid_search_id: str, experiment_id: str,
+                 config: Dict[str, Any], grid_search_id: str,
+                 gs_api_client_constructable: GridSearchAPIClientConstructableIF,
+                 experiment_id: str,
                  external_injection: Dict[str, Any] = None,
                  logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None,
                  warm_start_epoch: int = 0):
@@ -24,6 +27,7 @@ class BluePrint(ABC):
         self.external_injection = external_injection if external_injection is not None else {}
         self.logger_collection_constructable = logger_collection_constructable
         self.warm_start_epoch = warm_start_epoch
+        self.gs_api_client_constructable = gs_api_client_constructable
 
     @abstractmethod
     def construct(self, device: torch.device = None) -> GymJob:
@@ -42,6 +46,7 @@ class BluePrint(ABC):
                          experiment_id: str,
                          num_epochs: int,
                          grid_search_id: str,
+                         gs_api_client_constructable: GridSearchAPIClientConstructableIF,
                          external_injection: Dict[str, Any] = None,
                          logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None,
                          warm_start_epoch: int = 0) -> List["BluePrint"]:
@@ -53,5 +58,6 @@ class BluePrint(ABC):
                                       run_mode=run_mode,
                                       config=experiment_config,
                                       external_injection=external_injection,
-                                      logger_collection_constructable=logger_collection_constructable)
+                                      logger_collection_constructable=logger_collection_constructable,
+                                      gs_api_client_constructable=gs_api_client_constructable)
         return blue_print
