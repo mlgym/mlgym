@@ -1,14 +1,12 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict
+from typing import Dict, List
 import requests
 from http import HTTPStatus
 from ml_gym.error_handling.exception import NetworkError, DataIntegrityError
 from abc import ABC
-
-from ml_board.backend.restful_api.restful_api_server import RawTextFile, FileFormat
-import json
+from ml_board.backend.restful_api.restful_api_server import RawTextFile, FileFormat, ExperimentStatus, CheckpointResource
 
 
 class GridSearchAPIClientIF(ABC):
@@ -22,10 +20,17 @@ class GridSearchAPIClientIF(ABC):
     def get_validation_config(self, grid_search_id: str):
         raise NotImplementedError
 
-    def get_last_checkpoint_id(self, grid_search_id: str, checkpoint_id: int):
+    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int,
+                                checkpoint_resource: CheckpointResource):
+        raise NotImplementedError
+
+    def get_full_checkpoint(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int):
         raise NotImplementedError
 
     def get_unfinished_experiments(self, grid_search_id: str):
+        raise NotImplementedError
+
+    def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
         raise NotImplementedError
 
 
@@ -44,6 +49,13 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
             except ValueError as e:
                 raise DataIntegrityError(f"Could not cast response from {url} to json.") from e
             return grid_search_config
+
+    def _get_binary_resource(url) -> bytes:
+        response = requests.get(url)
+        if response.status_code != HTTPStatus.OK:
+            raise NetworkError(f"Server responded with error code {response.status_code}")
+        else:
+            return response.content
 
     def _set_raw_text_file_resource(url: str, payload: Dict) -> Dict:
         response = requests.put(url=url, json=payload)
@@ -77,8 +89,19 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         return GridSearchRestfulAPIClient._get_json_resource(url)
 
     def get_full_checkpoint(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int):
-        url = f"{self.endpoint}:/checkpoints/{grid_search_id}/{experiment_id}/{checkpoint_id}"
+        url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{checkpoint_id}"
         return GridSearchRestfulAPIClient._get_json_resource(url)
+
+    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int,
+                                checkpoint_resource: CheckpointResource):
+        url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{checkpoint_id}/{checkpoint_resource}"
+        return GridSearchRestfulAPIClient._get_binary_resource(url)
+
+    def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
+        url = f"{self.endpoint}/grid_searches/{grid_search_id}/experiments"
+        response = GridSearchRestfulAPIClient._get_json_resource(url)
+        experiment_statuses = [ExperimentStatus(**r) for r in response]
+        return experiment_statuses
 
 
 class GridSearchAPIClientConstructableIF(ABC):
