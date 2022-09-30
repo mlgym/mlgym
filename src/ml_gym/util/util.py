@@ -76,7 +76,7 @@ class ExportedModel:
         return InferenceResultBatch.combine(result_batches)
 
     @staticmethod
-    def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str, 
+    def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str,
                                      device: torch.device = None) -> "ExportedModel":
         return ExportedModel(model, post_processors, model_path, device=device)
 
@@ -114,7 +114,6 @@ class ComponentLoader:
         cv_config = YAMLConfigLoader.load(cv_path)
         nested_cv = ValidatorFactory.get_nested_cv(gs_config=gs_config,
                                                    cv_config=cv_config,
-                                                   grid_search_id="bla",
                                                    blue_print_type=blueprint_type)
         blue_print = nested_cv.create_blue_prints(blueprint_type, AbstractGymJob.Type.STANDARD, gs_config, 1, dashify_logging_path="")[0]
         components = blueprint_type.construct_components(
