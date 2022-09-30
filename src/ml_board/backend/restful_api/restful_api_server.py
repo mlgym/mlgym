@@ -5,13 +5,26 @@ import glob
 from fastapi import status, HTTPException
 from fastapi.responses import StreamingResponse
 import uvicorn
-from ml_gym.util.util import YAMLConfigLoader
+# from ml_gym.util.util import YAMLConfigLoader
 from pydantic import BaseModel
+import re
+from typing import Dict
+import json
 
 
 class FileFormat(str, Enum):
     YAML = "YAML"
     JSON = "JSON"
+
+
+# [{"experiment_id": experiment_id,
+#                      "last_checkpoint_id": last_checkpoint_id,
+#                      "experiment_config": load_experiment_config(top_level_logging_path, grid_search_id, experiment_id)}
+
+class ExperimentStatus(BaseModel):
+    experiment_id: int
+    last_checkpoint_id: int
+    experiment_config: Dict
 
 
 class RawTextFile(BaseModel):
@@ -25,7 +38,7 @@ app = FastAPI(port=8080)
 class CheckpointResource(str, Enum):
     model = "model"
     optimizer = "optimizer"
-    stateful_component = "stateful_component"
+    stateful_components = "stateful_components"
 
 
 def is_safe_path(base_dir, requested_path, follow_symlinks=True):
@@ -47,16 +60,63 @@ def iterfile(file_path: str):
         yield from file_like
 
 
-@app.get('/grid_searches/{grid_search_id}/gs_config')
-def get_grid_search_config(grid_search_id: str):
-    requested_full_path = os.path.realpath(os.path.join(top_level_logging_path, str(grid_search_id), "gs_config.yml"))
+@app.get('/grid_searches/{grid_search_id}/experiments')
+def get_experiment_statuses(grid_search_id: str):
+    def get_last_checkpoint_ids(top_level_logging_path: str, grid_search_id: str) -> Dict:
+        paths = glob.glob(os.path.join(top_level_logging_path, grid_search_id, '**/*'), recursive=True)
+        regex_checkpoints = r".*-\d\d\/(\d)\/(\d)$"
+        regex_experiments = r".*-\d\d\/(\d)$"
+
+        experiment_id_to_checkpoint_ids = {}
+        for path in paths:
+            # experiment match
+            match = re.match(regex_experiments, path)
+            if match is not None:
+                experiment_id = int(match.groups()[0])
+                if experiment_id not in experiment_id_to_checkpoint_ids:
+                    experiment_id_to_checkpoint_ids[experiment_id] = [-1]
+
+            # checkpoint match
+            match = re.match(regex_checkpoints, path)
+            if match is not None:
+                experiment_id, checkpoint_id = int(match.groups()[0]), int(match.groups()[1])
+                if experiment_id not in experiment_id_to_checkpoint_ids:
+                    experiment_id_to_checkpoint_ids[experiment_id] = []
+                experiment_id_to_checkpoint_ids[experiment_id].append(checkpoint_id)
+        epxeriment_id_to_last_checkpoint = {k: max(v) for k, v in experiment_id_to_checkpoint_ids.items()}
+        return epxeriment_id_to_last_checkpoint
+
+    def load_experiment_config(top_level_logging_path: str, grid_search_id: str, experiment_id: int) -> Dict:
+        full_path = os.path.join(top_level_logging_path, grid_search_id, str(experiment_id), "experiment_config.json")
+        with open(full_path, "r") as fp:
+            experiment_config = json.load(fp)
+        return experiment_config
+
+    requested_full_path = os.path.realpath(os.path.join(top_level_logging_path, grid_search_id))
 
     if is_safe_path(base_dir=top_level_logging_path, requested_path=requested_full_path):
-        return YAMLConfigLoader.load(requested_full_path)
+        epxeriment_id_to_last_checkpoint_id = get_last_checkpoint_ids(top_level_logging_path, grid_search_id)
+        response = [ExperimentStatus(**{"experiment_id": experiment_id,
+                                        "last_checkpoint_id": last_checkpoint_id,
+                                        "experiment_config": load_experiment_config(top_level_logging_path, grid_search_id, experiment_id)})
+                    for experiment_id, last_checkpoint_id in epxeriment_id_to_last_checkpoint_id.items()]
+        return response
 
     else:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f'Provided unsafe filepath {requested_full_path}')
+
+
+# @app.get('/grid_searches/{grid_search_id}/gs_config')
+# def get_grid_search_config(grid_search_id: str):
+#     requested_full_path = os.path.realpath(os.path.join(top_level_logging_path, str(grid_search_id), "gs_config.yml"))
+
+#     if is_safe_path(base_dir=top_level_logging_path, requested_path=requested_full_path):
+#         return YAMLConfigLoader.load(requested_full_path)
+
+#     else:
+#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+#                             detail=f'Provided unsafe filepath {requested_full_path}')
 
 
 @app.put('/grid_searches/{grid_search_id}/{config_name}')
@@ -88,11 +148,14 @@ def add_config_to_experiment(grid_search_id: str, experiment_id: str, config_nam
 
 
 @app.get('/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource}')
-def get_checkpoint(grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+def get_checkpoint_resource(grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
     requested_full_path = os.path.realpath(os.path.join(top_level_logging_path, str(grid_search_id), str(experiment_id),
                                                         str(epoch), f"{checkpoint_resource}.bin"))
 
     if is_safe_path(base_dir=top_level_logging_path, requested_path=requested_full_path):
+        if not os.path.isfile(requested_full_path):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail=f'Resource {requested_full_path} does not exist')
         return StreamingResponse(iterfile(requested_full_path), media_type="application/octet-stream")
 
     else:
