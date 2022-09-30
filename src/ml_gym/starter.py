@@ -1,8 +1,9 @@
 import json
 from typing import List, Type, Dict
-from ml_board.backend.restful_api.restful_api_server import FileFormat
+from ml_board.backend.restful_api.restful_api_server import FileFormat, ExperimentStatus
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.gym import Gym
+from ml_gym.modes import RunMode
 from ml_gym.persistency.io import GridSearchAPIClientConstructableIF, GridSearchAPIClientIF
 from ml_gym.persistency.logging import LoggerConstructableIF, MLgymStatusLoggerCollectionConstructable
 from ml_gym.util.logger import QueuedLogging
@@ -30,70 +31,49 @@ class MLGymStarter:
     def _stop_logging_environment():
         QueuedLogging.stop_listener()
 
-    @staticmethod
-    def _save_gs_config(gs_config_path: str, grid_search_id: str):
-        # gs_logging_path = os.path.join(dashify_logging_path, grid_search_id)
-        # os.makedirs(gs_logging_path, exist_ok=True)
-        # copyfile(gs_config_path, os.path.join(gs_logging_path, os.path.basename(gs_config_path)))
-        pass
 
-    @staticmethod
-    def _save_evaluation_config(evaluation_config_path: str, grid_search_id: str):
-        # gs_logging_path = os.path.join(dashify_logging_path, grid_search_id)
-        # os.makedirs(gs_logging_path, exist_ok=True)
-        # copyfile(evaluation_config_path, os.path.join(gs_logging_path, os.path.basename(evaluation_config_path)))
-        pass
+# class MLGymTrainWarmStarter(MLGymStarter):
 
-    @staticmethod
-    def _save_environment_config(environment_config_path: str, grid_search_id: str):
-        pass
+#     def __init__(self, grid_search_id: str, blue_print_class: Type[BluePrint], num_epochs: int, text_logging_path: str, process_count: int,
+#                  gpus: List[int], log_std_to_file: bool, gs_api_client_constructable: GridSearchAPIClientConstructableIF,
+#                  logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> None:
+#         self.blue_print_class = blue_print_class
+#         self.num_epochs = num_epochs
+#         self.text_logging_path = text_logging_path
+#         self.process_count = process_count
+#         self.log_std_to_file = log_std_to_file
+#         self.gpus = gpus
+#         self.grid_search_id = grid_search_id
+#         self.gs_api_client_constructable = gs_api_client_constructable
+#         self.gs_api_client = gs_api_client_constructable.construct()
+#         self.logger_collection_constructable = logger_collection_constructable
 
+#     def start(self):
+#         self._setup_logging_environment(self.text_logging_path)
+#         gym = MLGymStarter._create_gym(process_count=self.process_count, device_ids=self.gpus, log_std_to_file=self.log_std_to_file,
+#                                        logger_collection_constructable=self.logger_collection_constructable)
 
-class MLGymTrainWarmStarter(MLGymStarter):
+#         blueprints = self.validator.create_blueprints(blue_print_type=self.blue_print_class,
+#                                                       gs_config=self.gs_config,
+#                                                       num_epochs=self.num_epochs,
+#                                                       logger_collection_constructable=self.logger_collection_constructable)
 
-    def __init__(self, grid_search_id: str, blue_print_class: Type[BluePrint], num_epochs: int, text_logging_path: str, process_count: int,
-                 gpus: List[int], log_std_to_file: bool, gs_api_client_constructable: GridSearchAPIClientConstructableIF,
-                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> None:
-        self.blue_print_class = blue_print_class
-        self.num_epochs = num_epochs
-        self.text_logging_path = text_logging_path
-        self.process_count = process_count
-        self.log_std_to_file = log_std_to_file
-        self.gpus = gpus
-        self.grid_search_id = grid_search_id
-        self.gs_api_client_constructable = gs_api_client_constructable
-        self.gs_api_client = gs_api_client_constructable.construct()
-        self.logger_collection_constructable = logger_collection_constructable
+#         gym.add_blue_prints(blueprints)
+#         gym.run(parallel=True)
 
-    def start(self):
-        self._setup_logging_environment(self.text_logging_path)
-        gym = MLGymStarter._create_gym(process_count=self.process_count, device_ids=self.gpus, log_std_to_file=self.log_std_to_file,
-                                       logger_collection_constructable=self.logger_collection_constructable)
-
-        blueprints = self.validator.create_blueprints(blue_print_type=self.blue_print_class,
-                                                      gs_config=self.gs_config,
-                                                      num_epochs=self.num_epochs,
-                                                      logger_collection_constructable=self.logger_collection_constructable)
-
-        gym.add_blue_prints(blueprints)
-        gym.run(parallel=True)
-
-        self._stop_logging_environment()
+#         self._stop_logging_environment()
 
 
 class MLGymTrainStarter(MLGymStarter):
 
     def __init__(self, text_logging_path: str, process_count: int,
                  gpus: List[int], log_std_to_file: bool, blueprints: List[BluePrint],
-                 gs_api_client_constructable: GridSearchAPIClientConstructableIF,
                  logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> None:
         self.text_logging_path = text_logging_path
         self.process_count = process_count
         self.log_std_to_file = log_std_to_file
         self.gpus = gpus
         self.blueprints = blueprints
-        self.gs_api_client_constructable = gs_api_client_constructable
-        self.gs_api_client = gs_api_client_constructable.construct()
         self.logger_collection_constructable = logger_collection_constructable
 
     def start(self):
@@ -110,7 +90,7 @@ class MLGymTrainStarter(MLGymStarter):
 
 
 def save_blueprint_config(blueprint: BluePrint, gs_api_client: GridSearchAPIClientIF):
-    gs_api_client.add_config_string(grid_search_id=blueprint.grid_search_id, config_name="experiment.json",
+    gs_api_client.add_config_string(grid_search_id=blueprint.grid_search_id, config_name="experiment_config.json",
                                     config=json.dumps(blueprint.config), experiment_id=blueprint.experiment_id,
                                     file_format=FileFormat.JSON)
 
@@ -154,6 +134,37 @@ def mlgym_entry_train(blueprint_class: Type[BluePrint],
                                 gpus=gpus,
                                 log_std_to_file=log_std_to_file,
                                 blueprints=blueprints,
-                                logger_collection_constructable=logger_collection_constructable,
-                                gs_api_client_constructable=gs_api_client_constructable)
+                                logger_collection_constructable=logger_collection_constructable)
+    starter.start()
+
+
+def mlgym_entry_warm_start(blueprint_class: Type[BluePrint],
+                           grid_search_id: str,
+                           logger_collection_constructable: LoggerConstructableIF,
+                           gs_api_client_constructable: GridSearchAPIClientConstructableIF,
+                           text_logging_path: str,
+                           process_count: int,
+                           gpus: int,
+                           log_std_to_file: bool,
+                           num_epochs: int):
+    gs_api_client = gs_api_client_constructable.construct()
+    experiment_statuses = gs_api_client.get_experiment_statuses(grid_search_id)
+
+    blueprints = [BluePrint.create_blueprint(blue_print_class=blueprint_class,
+                                             run_mode=RunMode.WARM_START,
+                                             experiment_config=experiment_status.experiment_config,
+                                             num_epochs=num_epochs,
+                                             warm_start_epoch=experiment_status.last_checkpoint_id,
+                                             grid_search_id=grid_search_id,
+                                             experiment_id=experiment_status.experiment_id,
+                                             logger_collection_constructable=logger_collection_constructable,
+                                             gs_api_client_constructable=gs_api_client_constructable)
+                  for experiment_status in experiment_statuses if experiment_status.last_checkpoint_id < num_epochs]
+
+    starter = MLGymTrainStarter(text_logging_path=text_logging_path,
+                                process_count=process_count,
+                                gpus=gpus,
+                                log_std_to_file=log_std_to_file,
+                                blueprints=blueprints,
+                                logger_collection_constructable=logger_collection_constructable)
     starter.start()

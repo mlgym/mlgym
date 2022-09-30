@@ -3,7 +3,7 @@ from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable,
     MLgymStatusLoggerTypes
 from ml_gym.modes import RunMode, ValidationMode
 from conv_net_blueprint import ConvNetBluePrint
-from ml_gym.starter import mlgym_entry_train
+from ml_gym.starter import mlgym_entry_train, mlgym_entry_warm_start
 from ml_gym.validation.validator_factory import get_validator
 from ml_gym.io.config_parser import YAMLConfigLoader
 from typing import List, Dict, Type
@@ -63,9 +63,18 @@ def entry_train(args):
 
 def entry_warm_start(args):
     blueprint_class = ConvNetBluePrint
-    grid_search_id = args.grid_search_id
     logger_collection_constructable = get_logger_constructable(args.websocket_logging_servers)
     gs_restful_api_client_constructable = get_grid_search_restful_api_client_constructable(endpoint=args.gs_rest_api_endpoint)
+
+    mlgym_entry_warm_start(blueprint_class=blueprint_class,
+                           grid_search_id=args.grid_search_id,
+                           logger_collection_constructable=logger_collection_constructable,
+                           gs_api_client_constructable=gs_restful_api_client_constructable,
+                           text_logging_path=args.text_logging_path,
+                           process_count=args.process_count,
+                           gpus=args.gpus,
+                           log_std_to_file=args.log_std_to_file,
+                           num_epochs=args.num_epochs)
 
     # starter = MLGymTrainWarmStarter(grid_search_id=grid_search_id, blueprint_class=blueprint_class, validation_mode=)
 
