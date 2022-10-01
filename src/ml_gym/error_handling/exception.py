@@ -104,3 +104,13 @@ class LossCalculationError(Exception):
 class SamplerNotFoundError(Exception):
     """Raised when the sampler implemenation for a given datsetloader was not found."""
     pass
+
+
+class NetworkError(Exception):
+    """Raised when there is a network or connetion error."""
+    pass
+
+
+class DataIntegrityError(Exception):
+    """Raised when the data is not in the expected format."""
+    pass

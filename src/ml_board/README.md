@@ -1,4 +1,6 @@
-# MLgym Backend
+# MLboard
+
+MLboard is a solution for tracking model training progress, logging evaluations and respective models. The package comes with a frontend to visualize these different aspects.   
 
 ## General structure
 
@@ -37,41 +39,60 @@ The messages received by the websocket server can be analyzed in `event_storage/
 ## RESTful API
 
 
-**Grid search config**
+**Raw Configuration Files**
 
-*GET /grid_searches/<grid_search_id>/gs_config*
+e.g., grid search or evaluation YAML config
+
+*GET /grid_searches/<grid_search_id>/<config_file_name>*
 
 
-*PUT /grid_searches/<grid_search_id>/gs_config*
+*PUT /grid_searches/<grid_search_id>/<config_file_name>*
 
 payload:
 ```json
-{
-    <YAML grid search definition casted to JSON>
+{   
+    file_format: <e.g., YAML>
+    content: <YAML file as string>
 }
 ```
 
+**Experiments**
 
-**Validation config**
-
-*GET /grid_searches/<grid_search_id>/validation_config*
-
-
-*PUT /grid_searches/<grid_search_id>/validation_config*
+*GET /grid_searches/<grid_search_id>/experiments*
 
 ```json
-{
-    <YAML validation definition casted to JSON>
-}
+[
+    {
+        "experiment_id": <int>,
+        "last_checkpoint_id": <int>,
+        "experiment_config": <config_dict>
+    },
+    {
+        ...
+    }
+]
 ```
 
 **Checkpoints**
 
-*GET /grid_searches/<grid_search_id>/<checkpoint_id>/model*
+*GET /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>*
 
-*GET /grid_searches/<grid_search_id>/<checkpoint_id>/optimizer*
 
-*GET /grid_searches/<grid_search_id>/<checkpoint_id>/stateful_component*
+```json
+{
+        "model": <binary stream>,
+        "optimizer": <binary stream>,
+        "stateful_components": <binary stream>
+}
+
+```
+
+*GET /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>/model*
+
+
+*GET /checkpoints/<grid_search_id>/<experiment_id><checkpoint_id>/optimizer*
+
+*GET /checkpoints/<grid_search_id>/<experiment_id><checkpoint_id>/stateful_component*
 
 
 ## Websocket API

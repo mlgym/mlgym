@@ -7,12 +7,10 @@ from ml_gym.util.grid_search import GridSearch
 
 
 class GridSearchValidator(ValidatorIF):
-    def __init__(self, grid_search_id: str, run_mode: RunMode):
-        self.grid_search_id = grid_search_id
+    def __init__(self, run_mode: RunMode):
         self.run_mode = run_mode
 
-    def create_blueprints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any],
-                          num_epochs: int,
+    def create_blueprints(self, grid_search_id: str, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any], num_epochs: int,
                           logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List[BluePrint]:
         run_id_to_config_dict = {run_id: config for run_id, config in enumerate(GridSearch.create_gs_from_config_dict(gs_config))}
 
@@ -22,7 +20,7 @@ class GridSearchValidator(ValidatorIF):
                                                    run_mode=self.run_mode,
                                                    experiment_config=experiment_config,
                                                    num_epochs=num_epochs,
-                                                   grid_search_id=self.grid_search_id,
+                                                   grid_search_id=grid_search_id,
                                                    experiment_id=config_id,
                                                    logger_collection_constructable=logger_collection_constructable)
             blueprints.append(blueprint)

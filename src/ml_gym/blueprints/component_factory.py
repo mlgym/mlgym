@@ -4,7 +4,7 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from ml_gym.error_handling.exception import ComponentConstructionError, InjectMappingNotFoundError, DependentComponentNotFoundError
 from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIteratorConstructable, \
-    DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, OptimizerBundleConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
+    DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, EarlyStoppinRegistryConstructable, EarlyStoppingStrategyConstructable, OptimizerBundleConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
     OptimizerConstructable, ModelRegistryConstructable, ModelConstructable, LossFunctionRegistryConstructable, \
     MetricFunctionRegistryConstructable, TrainerConstructable, EvaluatorConstructable, MappedLabelsIteratorConstructable, \
     FilteredLabelsIteratorConstructable, FeatureEncodedIteratorConstructable, CombinedDatasetIteratorConstructable, \
@@ -132,7 +132,9 @@ class ComponentFactory:
             ComponentVariant("TRAIN_COMPONENT", "DEFAULT", TrainComponentConstructable),
             ComponentVariant("TRAINER", "DEFAULT", TrainerConstructable),
             ComponentVariant("EVAL_COMPONENT", "DEFAULT", EvalComponentConstructable),
-            ComponentVariant("EVALUATOR", "DEFAULT", EvaluatorConstructable)
+            ComponentVariant("EVALUATOR", "DEFAULT", EvaluatorConstructable),
+            ComponentVariant("EARLY_STOPPING_STRATEGY_REGISTRY", "DEFAULT", EarlyStoppinRegistryConstructable),
+            ComponentVariant("EARLY_STOPPING_STRATEGY", "DEFAULT", EarlyStoppingStrategyConstructable)
         ]
         self.component_factory_registry: Dict[str, Any] = {}
         for variant in default_component_variants:
@@ -201,7 +203,7 @@ class ComponentFactory:
             # build the requirements
             try:
                 requirement_components = {name: build_component(requirement.component_name, component_representation_graph, {})
-                                        for name, requirement in component_representation.requirements.items()}
+                                          for name, requirement in component_representation.requirements.items()}
             except DependentComponentNotFoundError as dcnf_error:
                 raise ComponentConstructionError(f"Error building requirements for component {component_name}.") from dcnf_error
 
