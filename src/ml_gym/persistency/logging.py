@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Any, List, Dict
 from ml_gym.multiprocessing.states import JobStatus, JobType
 from ml_gym.io.websocket_client import ClientFactory, BufferedClient
+#from ml_gym.gym.model_checkpointing import ModelCheckpointComponent
 import time
 import torch
 import pickle
@@ -84,7 +85,7 @@ class JobStatusLogger:
     def __init__(self, logger: MLgymStatusLoggerIF) -> None:
         self._logger = logger
 
-    def log_job_status(self, job_id: int, job_type: JobType, status: JobStatus, grid_search_id: str, experiment_id: str, starting_time: int, finishing_time: int,
+    def log_job_status(self, job_id: str, job_type: JobType, status: JobStatus, grid_search_id: str, experiment_id: str, starting_time: int, finishing_time: int,
                        device: torch.device, error: str = "", stacktrace: str = ""):
         message = {"event_type": "job_status", "creation_ts": get_timestamp()}
         payload = {"job_id": job_id, "job_type": job_type.value, "status": status.value, "grid_search_id": grid_search_id, "experiment_id": experiment_id,
@@ -93,7 +94,7 @@ class JobStatusLogger:
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
 
-    def log_experiment_config(self, grid_search_id: str, experiment_id: str, job_id: int, config: Dict[str, Any]):
+    def log_experiment_config(self, grid_search_id: str, experiment_id: str, job_id: str, config: Dict[str, Any]):
         message = {"event_type": "experiment_config", "creation_ts": get_timestamp()}
         payload = {"grid_search_id": grid_search_id, "experiment_id": experiment_id, "job_id": job_id, "config": config}
         message["payload"] = payload
@@ -126,16 +127,16 @@ class ExperimentStatusLogger:
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
 
-    def log_checkpoint(self, epoch: int, model_binary_stream, optimizer_binary_stream, stateful_components_binary_stream):
+    def log_checkpoint(self, epoch: int, model_binary_stream=None, optimizer_binary_stream=None, stateful_components_binary_stream=None):
         message = {"event_type": "checkpoint", "creation_ts": get_timestamp()}
         payload = {
             "grid_search_id": self._grid_search_id,
             "experiment_id": self._experiment_id,
             "checkpoint_id": epoch,
             "checkpoint_streams": {
-                "model": pickle.dumps(model_binary_stream),
-                "optimizer": pickle.dumps(optimizer_binary_stream),
-                "stateful_components": pickle.dumps(stateful_components_binary_stream)
+                "model": pickle.dumps(model_binary_stream) if model_binary_stream is not None else None,
+                "optimizer": pickle.dumps(optimizer_binary_stream) if optimizer_binary_stream is not None else None,
+                "stateful_components": pickle.dumps(stateful_components_binary_stream) if stateful_components_binary_stream is not None else None
             }
         }
         message["payload"] = payload

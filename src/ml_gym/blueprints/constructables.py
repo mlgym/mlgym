@@ -1,12 +1,15 @@
 from collections import defaultdict
+from unittest.mock import DEFAULT
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Union, Type
+from matplotlib.pyplot import cla
 from data_stack.dataset.iterator import DatasetIteratorIF
 from data_stack.repository.repository import DatasetRepository
 from abc import abstractmethod, ABC
 from data_stack.io.storage_connectors import StorageConnectorFactory
 from data_stack.mnist.factory import MNISTFactory
 from ml_gym.data_handling.dataset_loader import DatasetLoader, DatasetLoaderFactory
+from ml_gym.early_stopping.early_stopping_strategies import EarlyStoppingIF, EarlyStoppingStrategyFactory
 from ml_gym.optimizers.optimizer import OptimizerAdapter, OptimizerBundle
 from ml_gym.optimizers.optimizer_factory import OptimizerFactory
 from ml_gym.models.nn.net import NNModel
@@ -28,6 +31,8 @@ from data_stack.dataset.iterator import InformedDatasetIteratorIF
 from functools import partial
 from ml_gym.loss_functions.loss_factory import LossFactory
 import warnings
+from ml_gym.checkpointing.checkpoint_factory import CheckpointingStrategyFactory
+from ml_gym.checkpointing.checkpointing import CheckpointingIF
 
 
 @dataclass
@@ -501,3 +506,62 @@ class EvaluatorConstructable(ComponentConstructable):
         eval_component: EvalComponent = self.get_requirement("eval_component")
         evaluator = Evaluator(eval_component)
         return evaluator
+
+
+@dataclass
+class EarlyStoppingRegistryConstructable(ComponentConstructable):
+    class StrategyKeys:
+        LAST_K_EPOCHS_IMPROVEMENT_STRATEGY = "LAST_K_EPOCHS_IMPROVEMENT_STRATEGY"
+
+    def _construct_impl(self):
+        strategy_registry = ClassRegistry()
+        default_mapping: Dict[str, Metric] = {
+            EarlyStoppingRegistryConstructable.StrategyKeys.LAST_K_EPOCHS_IMPROVEMENT_STRATEGY:
+                EarlyStoppingStrategyFactory.get_last_k_epochs_improvement_strategy
+        }
+        for key, metric_type in default_mapping.items():
+            strategy_registry.add_class(key, metric_type)
+
+        return strategy_registry
+
+
+@dataclass
+class EarlyStoppingStrategyConstructable(ComponentConstructable):
+    early_stopping_config: Dict = field(default_factory=dict)
+    early_stopping_key: str = ""
+
+    def _construct_impl(self) -> EarlyStoppingIF:
+        early_stopping_registry: ClassRegistry = self.get_requirement("early_stopping_strategy_registry")
+        early_stopping_strategy = early_stopping_registry.get_instance(key=self.early_stopping_key, **self.early_stopping_config)
+        return early_stopping_strategy
+
+
+@dataclass
+class CheckpointingRegistryConstructable(ComponentConstructable):
+    class StrategyKeys:
+        SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY = "SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY"
+        SAVE_ALL_CHECKPOINTING_STRATEGY = "SAVE_ALL_CHECKPOINTING_STRATEGY"
+
+    def _construct_impl(self) -> ClassRegistry:
+        strategy_registry = ClassRegistry()
+        default_mapping: Dict[str, Metric] = {
+            CheckpointingRegistryConstructable.StrategyKeys.SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY:
+            CheckpointingStrategyFactory.get_save_last_epoch_only_checkpointing_strategy,
+            CheckpointingRegistryConstructable.StrategyKeys.SAVE_ALL_CHECKPOINTING_STRATEGY:
+            CheckpointingStrategyFactory.get_save_all_checkpointing_strategy
+        }
+        for key, metric_type in default_mapping.items():
+            strategy_registry.add_class(key, metric_type)
+
+        return strategy_registry
+
+
+@dataclass
+class CheckpointingStrategyConstructable(ComponentConstructable):
+    checkpointing_config: Dict = field(default_factory=dict)
+    checkpointing_key: str = ""
+
+    def _construct_impl(self) -> CheckpointingIF:
+        checkpointing_registry: ClassRegistry = self.get_requirement("checkpointing_strategy_registry")
+        checkpointing_strategy = checkpointing_registry.get_instance(key=self.checkpointing_key, **self.checkpointing_config)
+        return checkpointing_strategy

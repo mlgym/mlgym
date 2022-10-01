@@ -27,11 +27,11 @@ class JobIF:
 
 
 class Job(JobIF):
-    def __init__(self, job_id: int, fun: Callable, blue_print: BluePrint, param_dict: Dict, job_type: JobType = JobType.CALC):
+    def __init__(self, job_id: str, fun: Callable, blueprint: BluePrint, param_dict: Dict, job_type: JobType = JobType.CALC):
         self.job_id = job_id
         self.job_type = job_type
         self.fun = fun
-        self.blue_print = blue_print
+        self.blueprint = blueprint
         self.param_dict = param_dict
         self.status = JobStatus.INIT
         self.starting_time = -1
@@ -47,15 +47,15 @@ class Job(JobIF):
 
     @property
     def experiment_id(self) -> str:
-        if self.blue_print is not None:
-            return self.blue_print.experiment_id
+        if self.blueprint is not None:
+            return self.blueprint.experiment_id
         else:
             return None
 
     @property
     def grid_search_id(self) -> str:
-        if self.blue_print is not None:
-            return self.blue_print.grid_search_id
+        if self.blueprint is not None:
+            return self.blueprint.grid_search_id
         else:
             return None
 
@@ -65,7 +65,7 @@ class Job(JobIF):
 
     def execute(self):
         self.param_dict["device"] = self._device
-        return self.fun(blue_print=self.blue_print, **self.param_dict)
+        return self.fun(blueprint=self.blueprint, **self.param_dict)
 
 
 class JobStatusSubscriberIF:

@@ -127,6 +127,7 @@ class WebSocketServer:
             checkpoint_element_path = os.path.join(full_path, key + ".bin")
             if os.path.exists(checkpoint_element_path):
                 if stream is None:
+                    print(f"Removing {checkpoint_element_path}")
                     os.remove(checkpoint_element_path)
                     parent_dir = Path(checkpoint_element_path).parent
                     if not any(Path(parent_dir).iterdir()):  # if the directory is empty we can also just remove the folder
@@ -135,8 +136,9 @@ class WebSocketServer:
                     with open(checkpoint_element_path, "wb") as fd:
                         fd.write(stream)
             else:
-                with open(checkpoint_element_path, "wb") as fd:
-                    fd.write(stream)
+                if stream is not None:
+                    with open(checkpoint_element_path, "wb") as fd:
+                        fd.write(stream)
 
 
 if __name__ == '__main__':
