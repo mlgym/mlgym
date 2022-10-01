@@ -235,10 +235,10 @@ checkpointing_strategy_registry:
   variant_key: DEFAULT
 
 checkpointing_strategy:
-  component_type_key: CHECKPOINTING_STRATEGY_REGISTRY
+  component_type_key: CHECKPOINTING_STRATEGY
   variant_key: DEFAULT
   requirements:
     - name: checkpointing_strategy_registry
       component_name: checkpointing_strategy_registry
   config:
-    early_stopping_key: SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY
+    checkpointing_key: SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY
