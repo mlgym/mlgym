@@ -12,6 +12,7 @@ from ml_gym.util.logger import ConsoleLogger, LogLevel
 from ml_gym.batching.batch import EvaluationBatchResult
 from ml_gym.persistency.logging import ExperimentStatusLogger
 from functools import partial
+from ml_gym.checkpoint.checkpoint import Checkpoint
 from ml_gym.persistency.io import GridSearchAPIClientIF, CheckpointResource
 import pickle
 
@@ -58,7 +59,7 @@ class AbstractGymJob(StatefulComponent):
 class GymJob(AbstractGymJob):
 
     def __init__(self, grid_search_id: str, experiment_id: int,  run_mode: RunMode, model: NNModel, optimizer: OptimizerAdapter,
-                 trainer: Trainer, evaluator: Evaluator, num_epochs: int, gs_api_client: GridSearchAPIClientIF,
+                 trainer: Trainer, evaluator: Evaluator, num_epochs: int, checkpoint_strategy: Checkpoint, gs_api_client: GridSearchAPIClientIF,
                  experiment_status_logger: ExperimentStatusLogger = None,
                  early_stopping_strategy: EarlyStoppingIF = None,
                  warm_start_epoch: int = 0):
@@ -73,6 +74,9 @@ class GymJob(AbstractGymJob):
         self.current_epoch = warm_start_epoch
         self.evaluator = evaluator
         self.trainer = trainer
+
+        self.checkpoint_strategy = checkpoint_strategy
+
         self.early_stopping_strategy = early_stopping_strategy
         self.gs_api_client = gs_api_client
         if run_mode == RunMode.TRAIN:
@@ -106,6 +110,7 @@ class GymJob(AbstractGymJob):
         partial_epoch_result_callback = partial(self.epoch_result_callback, current_epoch=self.current_epoch,
                                                 experiment_status_logger=self._experiment_status_logger)
 
+
         evaluation_results = self.evaluator.evaluate(model=self.model,
                                                      device=device,
                                                      current_epoch=self.current_epoch,
@@ -124,10 +129,22 @@ class GymJob(AbstractGymJob):
         # self.save_state_of_stateful_components(measurement_id=epoch)
 
         # DashifyWriter.log_measurement_result(evaluation_result, self._experiment_info, measurement_id=epoch)
-        self._experiment_status_logger.log_checkpoint(epoch=self.current_epoch,
-                                                      model_binary_stream=self.model.state_dict(),
-                                                      optimizer_binary_stream=self.optimizer.state_dict(),
-                                                      stateful_components_binary_stream=self.get_state())
+
+        checkpoint_result = self.checkpoint_strategy.model_checkpoint(
+                                                  current_epoch = epoch,
+                                                  num_epochs = self.epochs,
+                                                  evaluation_result = evaluation_result
+                                                  )
+        
+        self.execute_checkpointing(checkpoint_result)
+            
+    def execute_checkpointing(self, checkpoint_result: Dict):
+        if checkpoint_result["checkpoint_save"] == self.current_epoch :
+            # TODO: @priyatomar check save_weights only
+            self._experiment_status_logger.log_checkpoint(self.current_epoch, self.model.state_dict(), self.optimizer.state_dict(), self.get_state())
+        if checkpoint_result["checkpoint_delete"]:
+            self._experiment_status_logger.log_checkpoint(epoch = checkpoint_result["checkpoint_delete"])
+                                                      
 
         return evaluation_results
 

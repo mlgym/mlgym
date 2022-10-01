@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Any, List, Dict
 from ml_gym.multiprocessing.states import JobStatus, JobType
 from ml_gym.io.websocket_client import ClientFactory, BufferedClient
+#from ml_gym.gym.model_checkpointing import ModelCheckpointComponent
 import time
 import torch
 import pickle
@@ -126,7 +127,7 @@ class ExperimentStatusLogger:
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
 
-    def log_checkpoint(self, epoch: int, model_binary_stream, optimizer_binary_stream, stateful_components_binary_stream):
+    def log_checkpoint(self, epoch: int, model_binary_stream = None, optimizer_binary_stream = None, stateful_components_binary_stream = None):
         message = {"event_type": "checkpoint", "creation_ts": get_timestamp()}
         payload = {
             "grid_search_id": self._grid_search_id,
