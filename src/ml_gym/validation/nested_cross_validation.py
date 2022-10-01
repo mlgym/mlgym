@@ -7,6 +7,7 @@ from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
 from ml_gym.validation.validator import ValidatorIF
 from ml_gym.blueprints.component_factory import Injector
 from ml_gym.util.grid_search import GridSearch
+from ml_gym.persistency.io import GridSearchAPIClientConstructableIF
 
 
 class NestedCV(ValidatorIF):
@@ -112,10 +113,12 @@ class NestedCV(ValidatorIF):
         return blueprints
 
     def create_blueprints(self, grid_search_id: str, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any], num_epochs: int,
+                          gs_api_client_constructable: GridSearchAPIClientConstructableIF,
                           logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List[BluePrint]:
         blueprints = self._get_blue_prints(grid_search_id=grid_search_id,
                                            blue_print_type=blue_print_type,
                                            gs_config=gs_config,
                                            num_epochs=num_epochs,
-                                           logger_collection_constructable=logger_collection_constructable)
+                                           logger_collection_constructable=logger_collection_constructable,
+                                           gs_api_client_constructable=gs_api_client_constructable)
         return blueprints

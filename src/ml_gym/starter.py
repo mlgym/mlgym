@@ -124,6 +124,7 @@ def mlgym_entry_train(blueprint_class: Type[BluePrint],
                                              blue_print_type=blueprint_class,
                                              gs_config=gs_config,
                                              num_epochs=num_epochs,
+                                             gs_api_client_constructable=gs_api_client_constructable,
                                              logger_collection_constructable=logger_collection_constructable)
 
     for blueprint in blueprints:
