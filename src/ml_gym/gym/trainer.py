@@ -62,7 +62,7 @@ class TrainComponent(StatefulComponent):
         """
         num_batches = len(loader)
         processed_batches = 0
-        update_lag = int(num_batches/100)
+        update_lag = int(num_batches/1)
         fun_params = fun_params if fun_params is not None else dict()
         result = []
         if progress_info is not None:

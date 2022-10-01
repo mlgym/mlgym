@@ -20,8 +20,6 @@ from ml_gym.loss_functions.loss_functions import Loss
 from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score, balanced_accuracy_score
 from ml_gym.metrics.metrics import Metric, binary_aupr_score, binary_auroc_score
 from ml_gym.metrics.metric_factory import MetricFactory
-from ml_gym.checkpoint.checkpoint import Checkpoint
-from ml_gym.checkpoint.checkpoint_factory import CheckpointFactory
 from ml_gym.gym.evaluator import Evaluator, EvalComponent
 from ml_gym.data_handling.postprocessors.factory import ModelGymInformedIteratorFactory
 from ml_gym.data_handling.postprocessors.collator import Collator
@@ -33,6 +31,8 @@ from data_stack.dataset.iterator import InformedDatasetIteratorIF
 from functools import partial
 from ml_gym.loss_functions.loss_factory import LossFactory
 import warnings
+from ml_gym.checkpointing.checkpoint_factory import CheckpointingStrategyFactory
+from ml_gym.checkpointing.checkpointing import CheckpointingIF
 
 
 @dataclass
@@ -335,31 +335,6 @@ class LossFunctionRegistryConstructable(ComponentConstructable):
 
         return loss_fun_registry
 
-@dataclass
-class CheckpointFunctionsRegistryConstructable(ComponentConstructable):
-    class CheckpointKeys:
-        DEFAULT = "DEFAULT"
-        REGULAR_INTERVAL =  "REGULAR_INTERVAL"
-        LAST = "LAST"
-        BEST_METRIC = "BEST_METRIC"
-
-    def _construct_impl(self):
-        checkpoint_fun_registry = ClassRegistry()
-        default_mapping: Dict[str: Checkpoint] = {
-            CheckpointFunctionsRegistryConstructable.CheckpointKeys.DEFAULT: 
-                CheckpointFactory.get_default_checkpoint,
-            CheckpointFunctionsRegistryConstructable.CheckpointKeys.REGULAR_INTERVAL:
-                CheckpointFactory.get_regular_interval_checkpoint,
-            CheckpointFunctionsRegistryConstructable.CheckpointKeys.LAST:
-                CheckpointFactory.get_last_checkpoint,
-            CheckpointFunctionsRegistryConstructable.CheckpointKeys.BEST_METRIC:
-                CheckpointFactory.get_best_metric_checkpoint
-        }
-
-        for key, checkpoint_type in default_mapping.items():
-            checkpoint_fun_registry.add_class(key = key, element = checkpoint_type)
-        return checkpoint_fun_registry
-
 
 @dataclass
 class MetricFunctionRegistryConstructable(ComponentConstructable):
@@ -488,22 +463,18 @@ class EvalComponentConstructable(ComponentConstructable):
     train_split_name: str = ""
     metrics_config: List = field(default_factory=list)
     loss_funs_config: List = field(default_factory=list)
-    checkpoint_config: List = field(default_factory=list)
     post_processors_config: List[Dict] = field(default_factory=list)
     show_progress: bool = False
     cpu_target_subscription_keys: List[str] = field(default_factory=list)
     cpu_prediction_subscription_keys: List[str] = field(default_factory=list)
     metrics_computation_config: List[Dict] = None
     loss_computation_config: List[Dict] = None
-    checkpoint_computation_config: List[Dict] = None
 
     def _construct_impl(self) -> Evaluator:
         dataset_loaders: Dict[str, DatasetLoader] = self.get_requirement("data_loaders")
         loss_function_registry: ClassRegistry = self.get_requirement("loss_function_registry")
         metric_registry: ClassRegistry = self.get_requirement("metric_registry")
-        checkpoint_registry: ClassRegistry = self.get_requirement("checkpoint_registry")
         prediction_post_processing_registry: ClassRegistry = self.get_requirement("prediction_postprocessing_registry")
-
 
         loss_funs = {conf["tag"]: loss_function_registry.get_instance(**conf) for conf in self.loss_funs_config}
         metric_funs = [metric_registry.get_instance(**conf) for conf in self.metrics_config]
@@ -538,14 +509,14 @@ class EvaluatorConstructable(ComponentConstructable):
 
 
 @dataclass
-class EarlyStoppinRegistryConstructable(ComponentConstructable):
+class EarlyStoppingRegistryConstructable(ComponentConstructable):
     class StrategyKeys:
         LAST_K_EPOCHS_IMPROVEMENT_STRATEGY = "LAST_K_EPOCHS_IMPROVEMENT_STRATEGY"
 
     def _construct_impl(self):
         strategy_registry = ClassRegistry()
         default_mapping: Dict[str, Metric] = {
-            EarlyStoppinRegistryConstructable.StrategyKeys.LAST_K_EPOCHS_IMPROVEMENT_STRATEGY:
+            EarlyStoppingRegistryConstructable.StrategyKeys.LAST_K_EPOCHS_IMPROVEMENT_STRATEGY:
                 EarlyStoppingStrategyFactory.get_last_k_epochs_improvement_strategy
         }
         for key, metric_type in default_mapping.items():
@@ -563,3 +534,34 @@ class EarlyStoppingStrategyConstructable(ComponentConstructable):
         early_stopping_registry: ClassRegistry = self.get_requirement("early_stopping_strategy_registry")
         early_stopping_strategy = early_stopping_registry.get_instance(key=self.early_stopping_key, **self.early_stopping_config)
         return early_stopping_strategy
+
+
+@dataclass
+class CheckpointingRegistryConstructable(ComponentConstructable):
+    class StrategyKeys:
+        SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY = "SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY"
+        SAVE_ALL_CHECKPOINTING_STRATEGY = "SAVE_ALL_CHECKPOINTING_STRATEGY"
+
+    def _construct_impl(self) -> ClassRegistry:
+        strategy_registry = ClassRegistry()
+        default_mapping: Dict[str, Metric] = {
+            CheckpointingRegistryConstructable.StrategyKeys.SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY:
+            CheckpointingStrategyFactory.get_save_last_epoch_only_checkpointing_strategy,
+            CheckpointingRegistryConstructable.StrategyKeys.SAVE_ALL_CHECKPOINTING_STRATEGY:
+            CheckpointingStrategyFactory.get_save_all_checkpointing_strategy
+        }
+        for key, metric_type in default_mapping.items():
+            strategy_registry.add_class(key, metric_type)
+
+        return strategy_registry
+
+
+@dataclass
+class CheckpointingStrategyConstructable(ComponentConstructable):
+    checkpointing_config: Dict = field(default_factory=dict)
+    checkpointing_key: str = ""
+
+    def _construct_impl(self) -> CheckpointingIF:
+        checkpointing_registry: ClassRegistry = self.get_requirement("checkpointing_strategy_registry")
+        checkpointing_strategy = checkpointing_registry.get_instance(key=self.checkpointing_key, **self.checkpointing_config)
+        return checkpointing_strategy

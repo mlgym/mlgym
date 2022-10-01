@@ -4,12 +4,13 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from ml_gym.error_handling.exception import ComponentConstructionError, InjectMappingNotFoundError, DependentComponentNotFoundError
 from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIteratorConstructable, \
-    DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, EarlyStoppinRegistryConstructable, EarlyStoppingStrategyConstructable, OptimizerBundleConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
+    DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, EarlyStoppingRegistryConstructable, EarlyStoppingStrategyConstructable, OptimizerBundleConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
     OptimizerConstructable, ModelRegistryConstructable, ModelConstructable, LossFunctionRegistryConstructable, \
     MetricFunctionRegistryConstructable, TrainerConstructable, EvaluatorConstructable, MappedLabelsIteratorConstructable, \
     FilteredLabelsIteratorConstructable, FeatureEncodedIteratorConstructable, CombinedDatasetIteratorConstructable, \
     DataCollatorConstructable, PredictionPostProcessingRegistryConstructable, TrainComponentConstructable, EvalComponentConstructable, \
-    IteratorViewConstructable, OneHotEncodedTargetsIteratorConstructable, InMemoryDatasetIteratorConstructable, ShuffledDatasetIteratorConstructable
+    IteratorViewConstructable, OneHotEncodedTargetsIteratorConstructable, InMemoryDatasetIteratorConstructable, \
+    ShuffledDatasetIteratorConstructable, CheckpointingStrategyConstructable, CheckpointingRegistryConstructable
 # from ml_gym.util.logger import LogLevel, ConsoleLogger
 
 
@@ -133,8 +134,10 @@ class ComponentFactory:
             ComponentVariant("TRAINER", "DEFAULT", TrainerConstructable),
             ComponentVariant("EVAL_COMPONENT", "DEFAULT", EvalComponentConstructable),
             ComponentVariant("EVALUATOR", "DEFAULT", EvaluatorConstructable),
-            ComponentVariant("EARLY_STOPPING_STRATEGY_REGISTRY", "DEFAULT", EarlyStoppinRegistryConstructable),
-            ComponentVariant("EARLY_STOPPING_STRATEGY", "DEFAULT", EarlyStoppingStrategyConstructable)
+            ComponentVariant("EARLY_STOPPING_STRATEGY_REGISTRY", "DEFAULT", EarlyStoppingRegistryConstructable),
+            ComponentVariant("EARLY_STOPPING_STRATEGY", "DEFAULT", EarlyStoppingStrategyConstructable),
+            ComponentVariant("CHECKPOINTING_STRATEGY_REGISTRY", "DEFAULT", CheckpointingRegistryConstructable),
+            ComponentVariant("CHECKPOINTING_STRATEGY", "DEFAULT", CheckpointingStrategyConstructable)
         ]
         self.component_factory_registry: Dict[str, Any] = {}
         for variant in default_component_variants:
