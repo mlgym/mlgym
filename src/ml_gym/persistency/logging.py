@@ -127,7 +127,7 @@ class ExperimentStatusLogger:
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
 
-    def log_checkpoint(self, epoch: int, model_binary_stream = None, optimizer_binary_stream = None, stateful_components_binary_stream = None):
+    def log_checkpoint(self, epoch: int, model_binary_stream=None, optimizer_binary_stream=None, stateful_components_binary_stream=None):
         message = {"event_type": "checkpoint", "creation_ts": get_timestamp()}
         payload = {
             "grid_search_id": self._grid_search_id,
