@@ -59,7 +59,7 @@ class AbstractGymJob(StatefulComponent):
 class GymJob(AbstractGymJob):
 
     def __init__(self, grid_search_id: str, experiment_id: int,  run_mode: RunMode, model: NNModel, optimizer: OptimizerAdapter,
-                 trainer: Trainer, evaluator: Evaluator, num_epochs: int, checkpoint_strategy: CheckpointingIF,
+                 trainer: Trainer, evaluator: Evaluator, num_epochs: int, checkpointing_strategy: CheckpointingIF,
                  gs_api_client: GridSearchAPIClientIF, experiment_status_logger: ExperimentStatusLogger = None,
                  early_stopping_strategy: EarlyStoppingIF = None, warm_start_epoch: int = 0):
         super().__init__(experiment_status_logger)
@@ -73,7 +73,7 @@ class GymJob(AbstractGymJob):
         self.current_epoch = warm_start_epoch
         self.evaluator = evaluator
         self.trainer = trainer
-        self.checkpoint_strategy = checkpoint_strategy
+        self.checkpointing_strategy = checkpointing_strategy
         self.early_stopping_strategy = early_stopping_strategy
         self.gs_api_client = gs_api_client
         if run_mode == RunMode.TRAIN:
@@ -114,23 +114,7 @@ class GymJob(AbstractGymJob):
                                                      batch_processed_callback_fun=partial_batch_processed_callback,
                                                      epoch_result_callback_fun=partial_epoch_result_callback)
 
-        # save model and optimizer
-        # TODO PriyaTomar
-        # we need to send checkpoint to the backend server
-        # Strategy object requires evaluation_result and based on that we decide if we want to store or not
-        # Strategy object is being passed from possibly outside of MLgym
-
-        # DashifyWriter.save_binary_state("model", self.model.state_dict(), self._experiment_info, epoch)
-        # DashifyWriter.save_binary_state("optimizer", self.optimizer.state_dict(), self._experiment_info, epoch)
-        # self.save_state_of_stateful_components(measurement_id=epoch)
-
-        # DashifyWriter.log_measurement_result(evaluation_result, self._experiment_info, measurement_id=epoch)
-
-        checkpoint_result = self.checkpoint_strategy.model_checkpoint(current_epoch=epoch,
-                                                                      num_epochs=self.epochs,
-                                                                      evaluation_result=evaluation_result)
-
-        self.execute_checkpointing(checkpoint_result)
+        return evaluation_results
 
     def run_checkpointing(self, checkpoint_instruction: CheckpointingInstruction):
         if checkpoint_instruction.save_current:
@@ -157,7 +141,9 @@ class GymJob(AbstractGymJob):
         evaluation_results = self._evaluation_step(device)
 
         # we store the initial model / last warmup model again
-        checkpointing_instruction = self.checkpoint_strategy.get_model_checkpoint_instruction()
+        checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=self.num_epochs,
+                                                                                                 current_epoch=self.current_epoch,
+                                                                                                 evaluation_result=evaluation_results)
         self.run_checkpointing(checkpointing_instruction)
 
         # if early stopping criterion is fulfilled we can stop the training progress
@@ -179,7 +165,9 @@ class GymJob(AbstractGymJob):
                                                               optimizer_binary_stream=self.optimizer.state_dict(),
                                                               stateful_components_binary_stream=self.get_state())
                 break
-            checkpointing_instruction = self.checkpoint_strategy.get_model_checkpoint_instruction()
+            checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=self.num_epochs,
+                                                                                                     current_epoch=self.current_epoch,
+                                                                                                     evaluation_result=evaluation_results)
             self.run_checkpointing(checkpointing_instruction)
             self.current_epoch += 1
 

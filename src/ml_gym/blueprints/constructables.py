@@ -539,7 +539,7 @@ class EarlyStoppingStrategyConstructable(ComponentConstructable):
 @dataclass
 class CheckpointingRegistryConstructable(ComponentConstructable):
     class StrategyKeys:
-        SAVE_LAST_EPÖCH_ONLY_CHECKPOINTING_STRATEGY = "SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY"
+        SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY = "SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY"
         SAVE_ALL_CHECKPOINTING_STRATEGY = "SAVE_ALL_CHECKPOINTING_STRATEGY"
 
     def _construct_impl(self) -> ClassRegistry:
