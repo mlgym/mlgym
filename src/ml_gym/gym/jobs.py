@@ -158,17 +158,14 @@ class GymJob(AbstractGymJob):
             self.logger.log(LogLevel.INFO,  f"epoch: {self.current_epoch}")
             self._train_step(device)
             evaluation_results = self._evaluation_step(device)
-            if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=self.current_epoch,
-                                                                            evaluation_results=evaluation_results):
-                self._experiment_status_logger.log_checkpoint(epoch=self.current_epoch,
-                                                              model_binary_stream=self.model.state_dict(),
-                                                              optimizer_binary_stream=self.optimizer.state_dict(),
-                                                              stateful_components_binary_stream=self.get_state())
-                break
             checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=self.num_epochs,
                                                                                                      current_epoch=self.current_epoch,
                                                                                                      evaluation_result=evaluation_results)
             self.run_checkpointing(checkpointing_instruction)
+            if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=self.current_epoch,
+                                                                            evaluation_results=evaluation_results):
+                break
+
             self.current_epoch += 1
 
     def _execute_warm_start(self, device: torch.device):
