@@ -108,7 +108,6 @@ optimizer:
     optimizer_key: ADAM
     params:
       lr: 0.0001
-      # weight_decay: 0.0001
 
 loss_function_registry:
   component_type_key: LOSS_FUNCTION_REGISTRY
