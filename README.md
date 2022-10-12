@@ -7,7 +7,7 @@
 a python framework for distributed and reprocucible machine learning model training in research.
 
 
-**NOTE: Since DashifyML had various limitations, we refactored the entire logging architecture by implementing an event sourcing / storage solution. Unfortunaely, that's why currently this README is out of date. We are working towards a README that includes a *gettting started* section and concrete examples and push it within the next few weeks. Please stand by. ** 
+**NOTE: Since DashifyML had various limitations, we refactored the entire logging architecture by implementing an event sourcing / storage solution. Unfortunaely, that's why currently this README is out of date. We are working towards a README that includes a *gettting started* section and concrete examples and push it within the next few weeks. Please stand by.** 
 
 
 
