@@ -130,8 +130,9 @@ class WebSocketServer:
                 if os.path.exists(checkpoint_element_path):
                     os.remove(checkpoint_element_path)
                 parent_dir = Path(checkpoint_element_path).parent
-                if not any(Path(parent_dir).iterdir()):  # if the directory is empty we can also just remove the folder
-                    os.rmdir(parent_dir)
+                if os.path.exists(parent_dir):
+                    if not any(Path(parent_dir).iterdir()):  # if the directory is empty we can also just remove the folder
+                        os.rmdir(parent_dir)
 
             else:  # add new checkpoint or replace checkpoint
                 os.makedirs(full_path, exist_ok=True)
