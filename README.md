@@ -4,7 +4,12 @@
 
 ---
 
-a python framework for distributed machine learning model training in research.
+a python framework for distributed and reprocucible machine learning model training in research.
+
+
+**NOTE: Since DashifyML had various limitations, we refactored the entire logging architecture by implementing an event sourcing / storage solution. Unfortunaely, that's why currently this README is out of date. We are working towards a README that includes a *gettting started* section and concrete examples and push it within the next few weeks. Please stand by. ** 
+
+
 
 [![CircleCI](https://circleci.com/gh/mlgym/mlgym/tree/master.svg?style=svg)](https://circleci.com/gh/mlgym/mlgym/tree/master)
 
