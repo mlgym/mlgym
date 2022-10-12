@@ -103,8 +103,11 @@ class DiscEventStorage(EventStorageIF):
 
     def _add_event_storage(self, logging_path: str, event_storage_id: str):
         full_path = os.path.join(logging_path, event_storage_id)
-        os.mkdir(full_path)
-        self._event_storage_ids.append(event_storage_id)
+        try:
+            os.mkdir(full_path)
+            self._event_storage_ids.append(event_storage_id)
+        except FileExistsError:
+            pass
         return full_path
 
     @property
