@@ -1,14 +1,14 @@
 from setuptools import find_packages, setup
 
-with open("../README.md", "r") as fh:
-    long_description = fh.read()
+# with open("README.md", "r") as fh:
+#     long_description = fh.read()
 
 setup(
     name='mlgym',
     version='0.0.62',
-    author='Max Luebbering, Rajkumar Ramamurthy',
-    description="MLgym, a python framework for distributed machine learning model training in research.",
-    long_description=long_description,
+    author='Max Luebbering',
+    description="MLgym, a python framework for distributeda and reproducible machine learning model training in research.",
+    long_description="long_description",
     long_description_content_type='text/markdown',
     packages=find_packages(),
     install_requires=[
@@ -20,14 +20,21 @@ setup(
         "pyyaml",
         "datastack",
         "scipy",
-        "dashifyML",
         "scikit-learn",
         "python-socketio",
         "fastapi",
         "uvicorn",
         "requests",
-        "python-multipart"
+        "python-multipart",
+        "flask",
+        "Flask-SocketIO",
+        "eventlet"
     ],
     python_requires=">=3.7",
+    package_dir={'ml_board': 'ml_board'},
+    package_data={
+        'ml_board': ['frontend/dashboard/build/**/*'],
+    },
+    scripts=['ml_board/backend/starter_scripts/ml_board_ws_endpoint', 'ml_board/backend/starter_scripts/ml_board_rest_endpoint'],
     url="https://github.com/mlgym/mlgym"
 )
