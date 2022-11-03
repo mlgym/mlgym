@@ -114,3 +114,8 @@ class NetworkError(Exception):
 class DataIntegrityError(Exception):
     """Raised when the data is not in the expected format."""
     pass
+
+
+class InvalidPathError(Exception):
+    """Raised when the path to a file or directory is invalid/corrupt."""
+    pass
