@@ -17,9 +17,11 @@ class EventSubscriberIF:
 
 class WebSocketServer:
 
-    def __init__(self, port: int, async_mode: str, app: Flask, top_level_logging_path: str):
+    def __init__(self, host: str, port: int, async_mode: str, app: Flask, top_level_logging_path: str, cors_allowed_origins: List[str]):
         self._port = port
-        self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=["http://localhost:3000", "http://localhost:7000"],
+        self._host = host
+        self.app = app
+        self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=cors_allowed_origins,
                                   max_http_buffer_size=100000000000)
         self._client_sids = []
         self._top_level_logging_path = top_level_logging_path
@@ -113,8 +115,8 @@ class WebSocketServer:
             print('Client disconnected', request.sid)
             self._client_sids.remove(request.sid)
 
-    def run(self, app: Flask):
-        self._socketio.run(app)
+    def run(self):
+        self._socketio.run(self.app, host=self._host, port=self._port)
 
     def save_checkpoint(self, checkpoint: Dict[str, Any], path: str):
         grid_search_id = checkpoint["grid_search_id"]
