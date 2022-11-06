@@ -1,6 +1,6 @@
 import json
-from typing import List, Type, Dict
-from ml_board.backend.restful_api.restful_api_server import FileFormat, ExperimentStatus
+from typing import List, Type
+from ml_board.backend.restful_api.data_models import FileFormat
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.gym import Gym
 from ml_gym.modes import RunMode
