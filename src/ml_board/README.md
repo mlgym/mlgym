@@ -4,7 +4,7 @@ MLboard is a solution for tracking model training progress, logging evaluations 
 
 ## General structure
 
-The central backend server based on a HTTP API and a websocket API acts as a hub between MLgym message publishers (log training progress, evaluations and job statuses) and message subscribers (e.g., frontend). 
+The central backend server based on a REST API and a websocket API acts as a hub between MLgym message publishers (log training progress, evaluations and job statuses) and message subscribers (e.g., frontend). 
 
 The backend server uses event sourcing meaning, the history of all messages describing the system at any point in time are being recorded and can be played back to the subscribers. This way, a newly connected client can consume all the training progress messages, even if the training has already started. 
 
@@ -88,7 +88,6 @@ payload:
 ```
 
 *GET /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>/model*
-
 
 *GET /checkpoints/<grid_search_id>/<experiment_id><checkpoint_id>/optimizer*
 
