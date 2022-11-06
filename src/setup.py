@@ -1,14 +1,14 @@
 from setuptools import find_packages, setup
 
-# with open("README.md", "r") as fh:
-#     long_description = fh.read()
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 setup(
     name='mlgym',
-    version='0.0.63',
+    version='0.0.64',
     author='Max Luebbering',
     description="MLgym, a python framework for distributeda and reproducible machine learning model training in research.",
-    long_description="long_description",
+    long_description=long_description,
     long_description_content_type='text/markdown',
     packages=find_packages(),
     install_requires=[
