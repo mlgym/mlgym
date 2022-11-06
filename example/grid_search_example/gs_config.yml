@@ -20,8 +20,8 @@ dataset_iterators:
   config:
     dataset_identifier: mnist
     split_configs:
-        - split: train 
-        - split: test
+      - split: train
+      - split: test
 
 splitted_dataset_iterators:
   component_type_key: SPLITTED_DATASET_ITERATORS
@@ -51,7 +51,7 @@ data_collator:
 
 data_loaders:
   component_type_key: DATA_LOADER
-  variant_key: FUTURE
+  variant_key: DEFAULT
   requirements:
     - name: iterators
       component_name: splitted_dataset_iterators
@@ -60,16 +60,8 @@ data_loaders:
       component_name: data_collator
   config:
     batch_size: 50
-    sampling_strategies:
-      train: 
-        strategy: WEIGHTED_RANDOM
-        seed: 10
-      val: 
-        strategy: IN_ORDER
-        seed: 10
-      test: 
-        strategy: RANDOM
-        seed: 10
+    weigthed_sampling_split_name: train
+    seeds: [0, 1, 2]
 
 model_registry:
   component_type_key: MODEL_REGISTRY
@@ -117,8 +109,7 @@ optimizer:
     params:
       lr:
         sweep: absolute
-        values: [0.01] # [0.01, 0.001, 0.0001]
-      # weight_decay: 0.0001
+        values: [0.1]
 
 loss_function_registry:
   component_type_key: LOSS_FUNCTION_REGISTRY
@@ -126,10 +117,6 @@ loss_function_registry:
 
 metric_registry:
   component_type_key: METRIC_REGISTRY
-  variant_key: DEFAULT
-
-checkpoint_registry:
-  component_type_key: CHECKPOINT_REGISTRY
   variant_key: DEFAULT
 
 prediction_postprocessing_registry:
@@ -145,6 +132,7 @@ train_component:
     - name: prediction_postprocessing_registry
       component_name: prediction_postprocessing_registry
   config:
+    show_progress: true
     loss_fun_config:
       prediction_subscription_key: *model_prediction_key_anchor
       target_subscription_key: *target_key_anchor
@@ -180,12 +168,10 @@ eval_component:
       component_name: metric_registry
     - name: prediction_postprocessing_registry
       component_name: prediction_postprocessing_registry
-    - name: checkpoint_registry
-      component_name: checkpoint_registry
   config:
     cpu_target_subscription_keys:
       - *target_key_anchor
-    cpu_prediction_subscription_keys: 
+    cpu_prediction_subscription_keys:
       - *postprocessing_argmax_key_anchor
       - *model_prediction_key_anchor
     post_processors_config:
@@ -217,10 +203,7 @@ eval_component:
         target_subscription_key: *target_key_anchor
         key: CrossEntropyLoss
         tag: cross_entropy_loss
-    checkpoint_config:
-      - save_weights_only:
-        key: DEFAULT
-        tag: DEFAULT
+    show_progress: true
 
 evaluator:
   component_type_key: EVALUATOR
@@ -229,3 +212,34 @@ evaluator:
     - name: eval_component
       component_name: eval_component
 
+early_stopping_strategy_registry:
+  component_type_key: EARLY_STOPPING_STRATEGY_REGISTRY
+  variant_key: DEFAULT
+
+early_stopping_strategy:
+  component_type_key: EARLY_STOPPING_STRATEGY
+  variant_key: DEFAULT
+  requirements:
+    - name: early_stopping_strategy_registry
+      component_name: early_stopping_strategy_registry
+  config:
+    early_stopping_key: LAST_K_EPOCHS_IMPROVEMENT_STRATEGY
+    early_stopping_config:
+      min_relative_improvement: 0.01
+      epochs_window: 5
+      split_name: val
+      monitoring_key: "F1_SCORE_macro"
+      is_increase_task: true
+
+checkpointing_strategy_registry:
+  component_type_key: CHECKPOINTING_STRATEGY_REGISTRY
+  variant_key: DEFAULT
+
+checkpointing_strategy:
+  component_type_key: CHECKPOINTING_STRATEGY
+  variant_key: DEFAULT
+  requirements:
+    - name: checkpointing_strategy_registry
+      component_name: checkpointing_strategy_registry
+  config:
+    checkpointing_key: SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY

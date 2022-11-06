@@ -39,26 +39,37 @@ export const modelEvaluationSelector = (state: RootState) => state.modelsEvaluat
     for (const metricScore of metricScores) {
         const fullMetricName = metricScore.split + "/" + metricScore.metric
         if (!results[fullMetricName]) {
-            results[fullMetricName] = [{ name: epoch }]
+            results[fullMetricName] = []
         }
         results[fullMetricName][epoch] = { ...results[fullMetricName][epoch], [eId]: metricScore.score }
     }
 
+    for (const lossScore of lossScores) {
+        const fullLossName = lossScore.split + "/" + lossScore.loss
+        if (!results[fullLossName]) {
+            results[fullLossName] = []
+        }
+        results[fullLossName][epoch] = { ...results[fullLossName][epoch], [eId]: lossScore.score }
+    }
+
+    // format : {metric_key_1: [{experiment_id_1: score_x, experiment_id_2: score_y, ... }, {}, ...]}
     return results
 }, {});
 
-export const filteredModelEvaluationSelector = (state: RootState, metricFilter: string) => {
+export const filteredModelEvaluationSelector = (state: RootState, metricFilterRegex: string) => {
     // results: {experiment_id_1: [0.9, 0.3, ...]}
     const results = modelEvaluationSelector(state)
-    if (results[metricFilter]) {
-        return results[metricFilter]
-    } else {
-        return []
-    }
+
+    var regex = new RegExp(metricFilterRegex);
+    var filteredResults = Object.keys(results).filter(scoreKey => regex.test(scoreKey)).reduce((obj: any, key) => {
+        return { ...obj, [key]: results[key] }
+    }, {})
+    return filteredResults;
 };
 
 type EvaluationLineChartPropsType = {
-    metricFilter: string
+    scoreKey: string
+    scoreResult: any;
     experimentIds: Array<string>;
 }
 
@@ -67,9 +78,7 @@ type EvaluationChartLinePropsType = {
     lineColor: string;
 }
 
-const EvaluationChart: React.FC<EvaluationLineChartPropsType> = ({ metricFilter, experimentIds }) => {
-
-    const metricSelector = useAppSelector((state: RootState) => filteredModelEvaluationSelector(state, metricFilter))
+const EvaluationChart: React.FC<EvaluationLineChartPropsType> = ({ scoreKey, scoreResult, experimentIds }) => {
 
     const lines = experimentIds.map((eID, index) => <Line
         dataKey={eID}
@@ -78,11 +87,11 @@ const EvaluationChart: React.FC<EvaluationLineChartPropsType> = ({ metricFilter,
 
     return (
         <div id="analysis-board-container">
-            <div>{metricFilter}</div>
+            <div>{scoreKey}</div>
             <LineChart
                 width={500}
                 height={300}
-                data={metricSelector}
+                data={scoreResult}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
                 <CartesianGrid strokeDasharray="3 3" />
@@ -100,20 +109,17 @@ const EvaluationChart: React.FC<EvaluationLineChartPropsType> = ({ metricFilter,
 
 const AnalysisBoard: React.FC<AnalysisBoardProps> = ({ filterConfig }) => {
 
-    const metricFilters = ["train/F1_SCORE_macro", "val/F1_SCORE_macro", "test/F1_SCORE_macro",
-        "train/PRECISION_macro", "val/PRECISION_macro", "test/PRECISION_macro",
-        "train/RECALL_macro", "val/RECALL_macro", "test/RECALL_macro"]
+    // const metricFilters = ["train/F1_SCORE_macro", "val/F1_SCORE_macro", "test/F1_SCORE_macro",
+    //     "train/PRECISION_macro", "val/PRECISION_macro", "test/PRECISION_macro",
+    //     "train/RECALL_macro", "val/RECALL_macro", "test/RECALL_macro"]
 
-    const experimentIds = ["2022-04-29--22-25-49/conv_net/0", "2022-04-29--22-25-49/conv_net/1"]
+    // const experimentIds = ["0", "1"]
 
-    var regex = new RegExp(filterConfig.metricFilterRegex);
-    const selectedMetricFilters = metricFilters.reduce((selected: Array<string>, metricFilter: string) => {
-        if (regex.test(metricFilter))
-            selected.push(metricFilter)
-        return (selected)
-    }, []);
+    const scoreResults = useAppSelector((state: RootState) => filteredModelEvaluationSelector(state, filterConfig.metricFilterRegex))
+    const scoreKeys: any = Object.keys(scoreResults)
+    const experimentIds = Object.keys(scoreResults[scoreKeys[0]][0])
 
-    const charts = selectedMetricFilters.map((metricFilter: string) => <div className="diagram-cell"><EvaluationChart metricFilter={metricFilter} experimentIds={experimentIds} /></div>)
+    const charts = scoreKeys.map((scoreKey: any) => <div className="diagram-cell"><EvaluationChart scoreKey={scoreKey} scoreResult={scoreResults[scoreKey]} experimentIds={experimentIds} /></div>)
 
     return (
         <>

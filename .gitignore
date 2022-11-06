@@ -124,3 +124,5 @@ src/ml_gym/frontend/node_modules
 .DS_Store
 
 src/ml_gym/backend/websocket_api/event_storage
+event_storage
+*.whl

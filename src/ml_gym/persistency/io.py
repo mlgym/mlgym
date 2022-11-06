@@ -6,7 +6,7 @@ import requests
 from http import HTTPStatus
 from ml_gym.error_handling.exception import NetworkError, DataIntegrityError
 from abc import ABC
-from ml_board.backend.restful_api.restful_api_server import RawTextFile, FileFormat, ExperimentStatus, CheckpointResource
+from ml_board.backend.restful_api.data_models import RawTextFile, FileFormat, ExperimentStatus, CheckpointResource
 
 
 class GridSearchAPIClientIF(ABC):

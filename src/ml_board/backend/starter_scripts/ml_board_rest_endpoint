@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+import argparse
+from os.path import abspath
+import uvicorn
+from functools import partial
+from ml_board.backend.restful_api.data_access import FileDataAccess
+from ml_board.backend.restful_api.restful_api_server import RestfulAPIServer
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Websocket server')
+    parser.add_argument('--event_storage_path', type=str, help='Path to the event storage', required=True)
+    parser.add_argument('--port', type=int, help='Port on which the websocket server runs', required=True)
+    args = parser.parse_args()
+    port = args.port
+    event_storage_path = abspath(args.event_storage_path)
+    return port, event_storage_path
+
+
+def run_restful_api_server(port: int, event_storage_path: str):
+    data_access = FileDataAccess(top_level_logging_path=event_storage_path)
+    api_server = RestfulAPIServer(data_access=data_access)
+    server_partial = partial(uvicorn.run, host="0.0.0.0", port=port)
+    api_server.run_server(server_partial)
+
+
+port, event_storage_path = parse_args()
+
+run_restful_api_server(port=port, event_storage_path=event_storage_path)
