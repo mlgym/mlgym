@@ -35,6 +35,6 @@ setup(
     package_data={
         'ml_board': ['frontend/dashboard/build/**/*'],
     },
-    scripts=['ml_board/backend/starter_scripts/ml_board_ws_endpoint', 'ml_board/backend/starter_scripts/ml_board_rest_endpoint'],
+    scripts=['ml_board/backend/starter_scripts/ml_board', 'ml_board/backend/starter_scripts/ml_board_ws_endpoint', 'ml_board/backend/starter_scripts/ml_board_rest_endpoint'],
     url="https://github.com/mlgym/mlgym"
 )

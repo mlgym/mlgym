@@ -5,7 +5,7 @@ from ml_board.backend.restful_api.data_access import DataAccessIF
 from ml_gym.error_handling.exception import InvalidPathError
 from ml_board.backend.restful_api.data_models import RawTextFile, CheckpointResource
 from typing import Callable
-from fastapi.staticfiles import StaticFiles
+# from fastapi.staticfiles import StaticFiles
 
 
 class RestfulAPIServer:
@@ -23,7 +23,7 @@ class RestfulAPIServer:
         self.app.add_api_route(path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}",
                                methods=["GET"], endpoint=self.get_checkpoint_dict_epoch)
 
-        self.app.mount("/", StaticFiles(directory="/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_board/frontend/dashboard/build/", html=True), name="static")
+        # self.app.mount("/", StaticFiles(directory="/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_board/frontend/dashboard/build/", html=True), name="static")
 
     def get_experiment_statuses(self, grid_search_id: str):
         try:
