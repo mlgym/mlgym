@@ -1,8 +1,6 @@
 from collections import defaultdict
-from unittest.mock import DEFAULT
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Union, Type
-from matplotlib.pyplot import cla
 from data_stack.dataset.iterator import DatasetIteratorIF
 from data_stack.repository.repository import DatasetRepository
 from abc import abstractmethod, ABC
