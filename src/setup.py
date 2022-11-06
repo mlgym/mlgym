@@ -5,7 +5,8 @@ with open("README.md", "r") as fh:
 
 setup(
     name='mlgym',
-    version='0.0.63',
+    version='0.0.65',
+
     author='Max Luebbering',
     description="MLgym, a python framework for distributeda and reproducible machine learning model training in research.",
     long_description=long_description,
