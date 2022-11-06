@@ -21,13 +21,14 @@ class WebSocketServer:
         self._port = port
         self._host = host
         self.app = app
-        self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=cors_allowed_origins,
+        self._socketio = SocketIO(app,
+                                  async_mode=async_mode,
+                                  cors_allowed_origins=cors_allowed_origins,
                                   max_http_buffer_size=100000000000)
         self._client_sids = []
         self._top_level_logging_path = top_level_logging_path
-        self.mlgym_event_logging_path = os.path.join(self._top_level_logging_path, "logs")
         self._room_id_to_event_storage: Dict[str, EventStorageIF] = {
-            "mlgym_event_subscribers": EventStorageFactory.get_disc_event_storage(logging_path=self.mlgym_event_logging_path)
+            # "mlgym_event_subscribers": EventStorageFactory.get_disc_event_storage(parent_dir=self.mlgym_event_logging_path)
         }
         self._init_call_backs()
 
@@ -40,12 +41,9 @@ class WebSocketServer:
 
     def _send_event_history_to_client(self, client_id: str, room_id: str):
         event_storage = self._room_id_to_event_storage[room_id]
-        event_storage_ids = event_storage.event_storage_ids
-        if event_storage_ids:
-            event_storage_id = event_storage_ids[-1]
-            print(f"=== WEBSOCKET SERVER LOG ===: Sending {event_storage.length(event_storage_id)} old messages from room {room_id} to client {client_id}")
-            for event_id, event in event_storage.iter_generator(event_storage_id):  # TODO make grid search id selectable
-                emit('mlgym_event', {'event_id': event_id, 'data': event}, room=client_id)
+        print(f"=== WEBSOCKET SERVER LOG ===: Sending {event_storage.length()} old messages from room {room_id} to client {client_id}")
+        for event_id, event in event_storage.iter_generator():  # TODO make grid search id selectable
+            emit('mlgym_event', {'event_id': event_id, 'data': event}, room=client_id)
 
     def _init_call_backs(self):
 
@@ -60,9 +58,10 @@ class WebSocketServer:
             rooms_to_join = data['rooms']
             for room in rooms_to_join:
                 if room not in self._room_id_to_event_storage:
-                    self._room_id_to_event_storage[room] = EventStorageFactory.get_disc_event_storage(logging_path=f"/home/mluebberin/repositories/github/private_workspace/mlgym/event_storage/{room}")
+                    self._room_id_to_event_storage[room] = EventStorageFactory.get_disc_event_storage(parent_dir=self._top_level_logging_path, event_storage_id=room)
                 join_room(room)
             print(f"Client {client_id} joined rooms: {rooms()}")
+            print(rooms_to_join)
             self.emit_server_log_message(f"Client {client_id} joined rooms: {rooms()}")
             for room in rooms_to_join:
                 self._send_event_history_to_client(client_sid, room)
@@ -80,10 +79,13 @@ class WebSocketServer:
             grid_search_id = data["payload"]["grid_search_id"]
             if data["event_type"] in set(["experiment_status", "job_status", "experiment_config", "evaluation_result"]):
                 print("mlgym_event: " + str(data))
-                event_id = self._room_id_to_event_storage["mlgym_event_subscribers"].add_event(grid_search_id, data)
-                emit('mlgym_event', {'event_id': event_id, 'data': data}, to="mlgym_event_subscribers")
+                if grid_search_id not in self._room_id_to_event_storage:
+                    self._room_id_to_event_storage[grid_search_id] = EventStorageFactory.get_disc_event_storage(parent_dir=self._top_level_logging_path,
+                                                                                                                event_storage_id=grid_search_id)
+                event_id = self._room_id_to_event_storage[grid_search_id].add_event(data)
+                emit('mlgym_event', {'event_id': event_id, 'data': data}, to=grid_search_id)
             elif data["event_type"] == "checkpoint":
-                self.save_checkpoint(checkpoint=data["payload"], path=self.mlgym_event_logging_path)
+                self.save_checkpoint(checkpoint=data["payload"], path=self._top_level_logging_path)
             else:
                 print(f"Unsupported event_type {data['event_type']}")
 

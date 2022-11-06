@@ -41,7 +41,7 @@ class Gym:
                 self.work(job, self.devices[0])
 
     def add_blueprint(self, blueprint: BluePrint) -> int:
-        job = Job(job_id=f"{self.job_status_logger}-{self.job_counter}", fun=Gym._run_job, blueprint=blueprint, param_dict={"log_std_to_file": self.log_std_to_file})
+        job = Job(job_id=f"{blueprint.grid_search_id}-{self.job_counter}", fun=Gym._run_job, blueprint=blueprint, param_dict={"log_std_to_file": self.log_std_to_file})
         self.job_counter += 1
         self.jobs.append(job)
         return job.job_id

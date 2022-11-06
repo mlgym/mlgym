@@ -38,9 +38,10 @@ class DataAccessIF(ABC):
 class FileDataAccess(DataAccessIF):
 
     def __init__(self, top_level_logging_path: str):
+        print(top_level_logging_path)
         self.top_level_logging_path = top_level_logging_path
 
-    @classmethod
+    @staticmethod
     def is_safe_path(base_dir, requested_path, follow_symlinks=True):
         # resolves symbolic links
         if follow_symlinks:
@@ -49,12 +50,12 @@ class FileDataAccess(DataAccessIF):
             matchpath = os.path.abspath(requested_path)
         return base_dir == os.path.commonpath((base_dir, matchpath))
 
-    @classmethod
+    @staticmethod
     def get_checkpoint_files(path: str, base_path: str):
         full_paths = glob.glob(os.path.join(path, "**", "*.bin"), recursive=True)
         return [os.path.relpath(full_path, base_path) for full_path in full_paths]
 
-    @classmethod
+    @staticmethod
     def iterfile(file_path: str):
         with open(file_path, mode="rb") as file_like:
             yield from file_like
