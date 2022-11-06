@@ -25,7 +25,7 @@ jobs:
         run: python -m pip install setuptools wheel
       
       - name: Build static MLboard react app
-        run: cd src/ml_board/frontend/dashboard && npm run build
+        run: cd src/ml_board/frontend/dashboard && npm install && npm run build
 
       - name: Build package
         run: cd src && python setup.py sdist bdist_wheel
