@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='mlgym',
-    version='0.0.62',
+    version='0.0.63',
     author='Max Luebbering',
     description="MLgym, a python framework for distributeda and reproducible machine learning model training in research.",
     long_description="long_description",
