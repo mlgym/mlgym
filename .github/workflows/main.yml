@@ -27,7 +27,7 @@ jobs:
       - name: Build package
         env:
           CI: false
-        run: cd src/ml_board/frontend/dashboard && npm install && npm run build && cd ~/src && python setup.py sdist bdist_wheel
+        run: cd src/ml_board/frontend/dashboard && npm install && npm run build && cd ../../../ && python setup.py sdist bdist_wheel
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@master
