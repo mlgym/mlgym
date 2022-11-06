@@ -30,13 +30,11 @@ setup(
         "flask",
         "Flask-SocketIO",
         "eventlet",
-        "python-socketio[client]"
+        "python-socketio[client]",
+        "gunicorn"
     ],
     python_requires=">=3.7",
-    package_dir={'ml_board': 'ml_board'},
-    package_data={
-        'ml_board': ['frontend/dashboard/build/**/*'],
-    },
+    include_package_data=True,
     scripts=['ml_board/backend/starter_scripts/ml_board', 'ml_board/backend/starter_scripts/ml_board_ws_endpoint', 'ml_board/backend/starter_scripts/ml_board_rest_endpoint'],
     url="https://github.com/mlgym/mlgym"
 )
