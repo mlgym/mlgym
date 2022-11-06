@@ -8,10 +8,12 @@ from typing import List
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Websocket server')
-    parser.add_argument('--event_storage_path', type=str, help='Path to the event storage')
-    parser.add_argument('--host', type=str, help='The hostname or IP address for the server to listen on', default="127.0.0.1")
-    parser.add_argument('--port', type=int, help='Port on which the websocket server runs', default=5000)
-    parser.add_argument('--cors_allowed_origins', nargs='+', type=str, help='List of origins allowed to connnect to the server')
+    parser.add_argument('--event_storage_path', type=str, help='Path to the event storage', required=True)
+    parser.add_argument('--host', type=str, help='The hostname or IP address for the server to listen on',
+                        default="127.0.0.1", required=True)
+    parser.add_argument('--port', type=int, help='Port on which the websocket server runs', default=5000, required=True)
+    parser.add_argument('--cors_allowed_origins', nargs='+', type=str, help='List of origins allowed to connnect to the server',
+                        required=True)
 
     args = parser.parse_args()
     host = args.host

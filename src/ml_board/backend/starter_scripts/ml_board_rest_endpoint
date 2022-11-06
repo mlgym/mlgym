@@ -9,8 +9,8 @@ from ml_board.backend.restful_api.restful_api_server import RestfulAPIServer
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Websocket server')
-    parser.add_argument('--event_storage_path', type=str, help='Path to the event storage')
-    parser.add_argument('--port', type=int, help='Port on which the websocket server runs', default=5001)
+    parser.add_argument('--event_storage_path', type=str, help='Path to the event storage', required=True)
+    parser.add_argument('--port', type=int, help='Port on which the websocket server runs', required=True)
     args = parser.parse_args()
     port = args.port
     event_storage_path = abspath(args.event_storage_path)
