@@ -52,7 +52,9 @@ class DiscEventStorage(EventStorageIF):
     def __init__(self, parent_dir: str, event_storage_id: str):
         self._event_storage_id = event_storage_id
         # create even_storage log if it does not exist yet
+        self.log_dir_path = os.path.join(parent_dir, event_storage_id)
         self.log_path = os.path.join(parent_dir, event_storage_id, "event_storage.log")
+        Path(self.log_dir_path).mkdir(parents=True, exist_ok=True)
         Path(self.log_path).touch(exist_ok=True)
 
     def add_event(self, event: Event) -> int:

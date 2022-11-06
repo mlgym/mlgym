@@ -29,7 +29,8 @@ setup(
         "python-multipart",
         "flask",
         "Flask-SocketIO",
-        "eventlet"
+        "eventlet",
+        "python-socketio[client]"
     ],
     python_requires=">=3.7",
     package_dir={'ml_board': 'ml_board'},
