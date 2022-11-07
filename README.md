@@ -117,6 +117,9 @@ tail -f event_storage.log
 
 Since MLboard is still under heavy development, we would like to give you a sneak peek about what is going to come in the foreseeable future.
 
+<div align="center">
+<img src="assets/ml_board_analysis.gif" width="70%" />
+</div>
 
 
 ## Copyright
