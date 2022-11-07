@@ -39,26 +39,45 @@ export const modelEvaluationSelector = (state: RootState) => state.modelsEvaluat
     for (const metricScore of metricScores) {
         const fullMetricName = metricScore.split + "/" + metricScore.metric
         if (!results[fullMetricName]) {
-            results[fullMetricName] = []
+            results[fullMetricName] = {}
         }
+        if (!results[fullMetricName][epoch])
+            results[fullMetricName][epoch] = { name: epoch }
         results[fullMetricName][epoch] = { ...results[fullMetricName][epoch], [eId]: metricScore.score }
     }
 
     for (const lossScore of lossScores) {
         const fullLossName = lossScore.split + "/" + lossScore.loss
         if (!results[fullLossName]) {
-            results[fullLossName] = []
+            results[fullLossName] = {}
         }
+        if (!results[fullLossName][epoch])
+            results[fullLossName][epoch] = { name: epoch }
         results[fullLossName][epoch] = { ...results[fullLossName][epoch], [eId]: lossScore.score }
     }
 
     // format : {metric_key_1: [{experiment_id_1: score_x, experiment_id_2: score_y, ... }, {}, ...]}
+
+
+
     return results
 }, {});
 
+export const sortedModelEvaluationSelector = (state: RootState) => { // sorts the scores by epoch so that they are plotted in the correct order within the line charts
+    const results: any = modelEvaluationSelector(state)
+
+    var resultsSorted = Object.keys(results).reduce((tmpResult, scoreKey) => {
+        return { ...tmpResult, [scoreKey]: Object.keys(results[scoreKey]).sort(function(a, b) {return parseInt(a) - parseInt(b);}).reduce((scoreResult: any, epochKey) => {
+            return [...scoreResult, results[scoreKey][epochKey]]
+        }, [])};
+    }, {})
+
+    return resultsSorted;
+}
+
 export const filteredModelEvaluationSelector = (state: RootState, metricFilterRegex: string) => {
     // results: {experiment_id_1: [0.9, 0.3, ...]}
-    const results = modelEvaluationSelector(state)
+    const results: any = sortedModelEvaluationSelector(state);
 
     var regex = new RegExp(metricFilterRegex);
     var filteredResults = Object.keys(results).filter(scoreKey => regex.test(scoreKey)).reduce((obj: any, key) => {
@@ -117,9 +136,9 @@ const AnalysisBoard: React.FC<AnalysisBoardProps> = ({ filterConfig }) => {
 
     const scoreResults = useAppSelector((state: RootState) => filteredModelEvaluationSelector(state, filterConfig.metricFilterRegex))
     const scoreKeys: any = Object.keys(scoreResults)
-    const experimentIds = Object.keys(scoreResults[scoreKeys[0]][0])
+    const experimentIds = Object.keys(scoreResults[scoreKeys[0]][0]).filter(function (item) { return item !== "name" })
 
-    const charts = scoreKeys.map((scoreKey: any) => <div className="diagram-cell"><EvaluationChart scoreKey={scoreKey} scoreResult={scoreResults[scoreKey]} experimentIds={experimentIds} /></div>)
+    const charts = scoreKeys.map((scoreKey: any) => <div className="diagram-cell"><EvaluationChart key={scoreKey} scoreKey={scoreKey} scoreResult={scoreResults[scoreKey]} experimentIds={experimentIds} /></div>)
 
     return (
         <>
