@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 import argparse
-from flask import Flask
-from gunicorn.app.base import BaseApplication
-import os
-import urllib.parse
+from ml_board.backend.frontend_service.server import run_ml_board
 
 
 def parse_args():
@@ -20,45 +17,6 @@ def parse_args():
     ws_endpoint = args.ws_endpoint
     run_id = args.run_id
     return ml_board_host, ml_board_port, rest_endpoint, ws_endpoint, run_id
-
-
-class StandaloneApplication(BaseApplication):
-
-    def __init__(self, app, options=None):
-        self.options = options or {}
-        self.application = app
-        super().__init__()
-
-    def load_config(self):
-        config = {key: value for key, value in self.options.items()
-                  if key in self.cfg.settings and value is not None}
-        for key, value in config.items():
-            self.cfg.set(key.lower(), value)
-
-    def load(self):
-        return self.application
-
-
-def run_ml_board(ml_board_host: str, ml_board_port: str, rest_endpoint: str, ws_endpoint: str, run_id: str):
-    static_folder_path = os.path.abspath(os.path.join(__file__, "../../../frontend/dashboard/build"))
-    app = Flask(__name__, static_folder=static_folder_path, static_url_path='/')
-
-    @app.route('/')
-    def index():
-        return app.send_static_file('index.html')
-
-    # app.run(host=f"{ml_board_host}", port=ml_board_port)
-
-    options = {
-        'bind': f"{ml_board_host}:{ml_board_port}",
-        'workers': 1
-    }
-    rest_endpoint_encoded = urllib.parse.quote(rest_endpoint)
-    ws_endpoint_encoded = urllib.parse.quote(ws_endpoint)
-    run_id_encoded = urllib.parse.quote(run_id)
-    url = f"http://{ml_board_host}:{ml_board_port}?rest_endpoint={rest_endpoint_encoded}&ws_endpoint={ws_endpoint_encoded}&run_id={run_id_encoded}"
-    print(f"====> ACCESS MLBOARD VIA {url}")
-    StandaloneApplication(app, options).run()
 
 
 ml_board_host, ml_board_port, rest_endpoint, ws_endpoint, run_id = parse_args()
