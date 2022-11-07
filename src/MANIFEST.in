@@ -1,1 +1,1 @@
-include ml_board/frontend/dashboard/build/**/*
+recursive-include ml_board/frontend/dashboard/build/**/*
