@@ -1,1 +1,1 @@
-include frontend/dashboard/build/**/*
+include ml_board/frontend/dashboard/build/**/*
