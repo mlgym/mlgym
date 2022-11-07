@@ -1,1 +1,1 @@
-recursive-include ml_board *
+recursive-include ml_board/frontend/dashboard/build *
