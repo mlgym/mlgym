@@ -29,9 +29,9 @@ jobs:
           CI: false
         run: pwd && cd src/ml_board/frontend/dashboard && npm install && npm run build && pwd && ls -lah && cd build && pwd &&  ls -lah && cd ../../../../ && pwd && python -m build --sdist --wheel
 
- #     - name: Publish package
- #       uses: pypa/gh-action-pypi-publish@master
- #       with:
- #         user: __token__
- #         password: ${{ secrets.pypi_password }}
- #         packages_dir: src/dist
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__ 
+          password: ${{ secrets.pypi_password }}
+          packages_dir: src/dist
