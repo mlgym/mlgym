@@ -27,11 +27,11 @@ jobs:
       - name: Build package
         env:
           CI: false
-        run: cd src/ml_board/frontend/dashboard && npm install && npm run build && cd ../../../ && python -m build --sdist --wheel
+        run: cd src/ml_board/frontend/dashboard && npm install && npm run build && ls -lah && cd build && ls -lah && cd ../../../../ && python -m build --sdist --wheel
 
-      - name: Publish package
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.pypi_password }}
-          packages_dir: src/dist
+ #     - name: Publish package
+ #       uses: pypa/gh-action-pypi-publish@master
+ #       with:
+ #         user: __token__
+ #         password: ${{ secrets.pypi_password }}
+ #         packages_dir: src/dist
