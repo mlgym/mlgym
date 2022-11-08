@@ -84,7 +84,7 @@ python run.py --process_count 3 \
               --gs_config_path gs_config.yml
 ```
 
-To visualize the live updates, we run the MLboard frontend. We specify the server host and port that delivers the frontend and the endpoints of the REST webservice and the websocket service. The parameter `run_id` refers to the experiment run that we want to analyze and differs in your case. Each experiment runs is stored in separate folders within the `event_storage` path. The folder names refer to the respective experiment run ids. 
+To visualize the live updates, we run the [MLboard](https://github.com/mlgym/mlgym#mlboard) frontend. We specify the server host and port that delivers the frontend and the endpoints of the REST webservice and the websocket service. The parameter `run_id` refers to the experiment run that we want to analyze and differs in your case. Each experiment runs is stored in separate folders within the `event_storage` path. The folder names refer to the respective experiment run ids. 
 
 ```sh
 ml_board --ml_board_host 127.0.0.1 --ml_board_port 8080 --rest_endpoint http://127.0.0.1:5001 --ws_endpoint http://127.0.0.1:5002 --run_id 2022-11-06--17-59-10
@@ -104,7 +104,7 @@ cd mlgym/src/ml_board/frontend/dashboard
 yarn start
 ```
 
-To this day, the MLboard frontend is still under development and not all features have been implemented, yet. Therefore, it is possible analyze the log files directly in the event storage. All messages are logged as specified within the [websocket API](https://github.com/le1nux/mlgym/tree/master/src/ml_board/README.md)
+To this day, the MLboard frontend is still under development and not all features have been implemented, yet. For a brief overview of its current state, checkout the [MLboard section](https://github.com/mlgym/mlgym#mlboard). Generally, it is possible analyze the log files directly in the event storage. All messages are logged as specified within the [websocket API](https://github.com/le1nux/mlgym/tree/master/src/ml_board/README.md)
 
 To see the messages live `cd` into the event storage directory and `tail` the `event_storage.log` file. 
 
@@ -115,12 +115,42 @@ tail -f event_storage.log
 
 ## MLboard 
 
-Since MLboard is still under heavy development, we would like to give you a sneak peek about what is going to come in the foreseeable future.
+Since MLboard frontend is still under heavy development, we would like to give you an overview of its current state and a sneak peek about what is going to come in the foreseeable future.
+
+In the GIF image below, we showcase the experiment run of the getting started tutorial above, which is a sweep over different learning rates. We replaced the experiment run id from a previous run with the current one in the browser and clicked on the throughput board menu button to check if we are successfully connected and receive messages. We then headed over to the analysis board by clicking on the analysis board menu button, providing us with a live feed of the metric and loss developments via the line charts. In the filter form at the buttom, we specified a regex expression filtering for F1 score metric and cross-entropy loss, to limit the scope to the most relevant information. 
+
+Over the course of the training, the line charts are populated with the respective scores for each epoch. The legend in the charts refers to the experiment ids. From an analysis point of view, we see that experiments 0, 1, and 2 fail to converge and are stopped after three epochs due to the early stopping criterion specified within the configuration file. In contrast, experiments 3, 4 and 5 learn the, illustrating the significance of learning rate choice anecdotically.  
 
 <div align="center">
 <img src="ml_board_analysis.gif" width="100%" />
 </div>
 
+The technical progress of the experiment run can be tracked from the flowboard, as presented below. The flowboard summarizes the state of all experiments  within a table including the job status (init, running, done), starting and finishing time. The overall progress is tracked via column `epoch_progress`. Within an epoch we different between two model states, namely training and evaluating, as tracked by column `model_status` and the current split and its progress are captures by `current_split` and `batch_progress`, respectively. The devicde column indicates the computation device that the model is sitting on. 
+
+<div align="center">
+<img src="ml_board_flow_board.gif" width="100%" />
+</div>
+
+**Future work**
+
+Currently, we collected a lot of exciting ideas forthe frontend in our backlog.
+
+Analogously to the idea of experiment reproducibility, we think about aiming in the direction of analysis reproducibility. To this end, we consider defining the entire analysis setup within the text input. The analysis setup could be exported or version controlled and shared with fellow researchers. 
+
+Additionally,  we consider the following features/ideas for the flowbord page:
+
+* Right now, flowboard only shows the epoch and batch progress. Additional information such as the experiment's hyperparameter combination and the current metric/loss scores would be benificial.
+* Clicking on one of the experiments should visualize the experiment's entire training and evaluation pipeline configuration (e.g., pop up window) 
+* A download/export functionality for the trained model
+* Higher level functionality for model selection, e.g., by defining the selection strategy within the text input.
+
+
+Similarly, for the analysis board we consider:
+* Visualizing the influence of  hyperparamter choice on the metrics and losses
+* Model selection routines
+
+
+ Implementing these features will require some time. On the plus side, we already collect and store all the necessary information on the client-side,  ... so stay tuned! ;-)
 
 ## Copyright
 
