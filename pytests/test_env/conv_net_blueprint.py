@@ -6,9 +6,7 @@ from ml_gym.batching.batch import DatasetBatch
 from dataclasses import dataclass
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector
 from ml_gym.data_handling.postprocessors.collator import Collator
-
 from ml_gym.models.nn.net import NNModel
-from typing import Dict
 from torch import nn
 import torch
 import torch.nn.functional as F

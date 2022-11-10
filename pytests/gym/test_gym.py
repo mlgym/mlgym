@@ -1,13 +1,10 @@
 from typing import List, Type, Dict, Any
-
 import pytest
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.gym import Gym
 import torch
-from ml_gym.gym.jobs import AbstractGymJob
 from ml_gym.util.logger import QueuedLogging
 from ml_gym.validation.validator_factory import ValidatorFactory
-
 from pytests.test_env.fixtures import DeviceFixture, LoggingFixture
 from pytests.test_env.validation_fixtures import ValidationFixtures
 
@@ -22,12 +19,8 @@ class TestGym(LoggingFixture, DeviceFixture, ValidationFixtures):
         return gym
 
     @pytest.fixture
-    def job_type(self):
-        return AbstractGymJob.Type.STANDARD
-
-    @pytest.fixture
     def blueprints(self, blue_print_type: Type[BluePrint],
-                   job_type: AbstractGymJob.Type, gs_cv_config: Dict[str, Any], cv_config: Dict[str, Any],
+                   gs_cv_config: Dict[str, Any], cv_config: Dict[str, Any],
                    grid_search_id: str, num_epochs: int,
                    dashify_logging_path: str,
                    keep_interim_results: bool) -> List[Type[BluePrint]]:
@@ -40,8 +33,7 @@ class TestGym(LoggingFixture, DeviceFixture, ValidationFixtures):
         blueprints = cross_validator.create_blue_prints(blue_print_type=blue_print_type,
                                                         gs_config=gs_cv_config,
                                                         dashify_logging_path=dashify_logging_path,
-                                                        num_epochs=num_epochs,
-                                                        job_type=job_type)
+                                                        num_epochs=num_epochs)
         return blueprints
 
     def test_add_blueprints(self, gym: Gym, blueprints: List[Type[BluePrint]]):
@@ -62,4 +54,3 @@ class TestGym(LoggingFixture, DeviceFixture, ValidationFixtures):
             assert gym.pool._job_count == 0
 
         QueuedLogging.stop_listener()
-

@@ -20,7 +20,6 @@ from ml_gym.validation.validator_factory import ValidatorFactory
 
 from pytests.test_env.fixtures import LoggingFixture, DeviceFixture
 import pytest
-
 from pytests.test_env.validation_fixtures import ValidationFixtures
 
 
@@ -76,9 +75,9 @@ class TestCrossValidation(LoggingFixture, DeviceFixture, ValidationFixtures):
             assert len(split["id_split_indices"]["val"]) == len(set(split["id_split_indices"]["val"]))
             assert set(split["id_split_indices"]["val"]).isdisjoint(set(split["id_split_indices"]["train"]))
 
-    @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD, AbstractGymJob.Type.LITE])
+    # @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD, AbstractGymJob.Type.LITE])
     def test_create_blue_prints(self, blue_print_type: Type[BluePrint],
-                                job_type: AbstractGymJob.Type, gs_cv_config: Dict[str, Any], cv_config: Dict[str, Any],
+                                gs_cv_config: Dict[str, Any], cv_config: Dict[str, Any],
                                 grid_search_id: str, num_epochs: int,
                                 dashify_logging_path: str,
                                 keep_interim_results: bool):
@@ -91,19 +90,17 @@ class TestCrossValidation(LoggingFixture, DeviceFixture, ValidationFixtures):
         blueprints = cross_validator.create_blue_prints(blue_print_type=blue_print_type,
                                                         gs_config=gs_cv_config,
                                                         dashify_logging_path=dashify_logging_path,
-                                                        num_epochs=num_epochs,
-                                                        job_type=job_type)
+                                                        num_epochs=num_epochs)
         gs_config = GridSearch.create_gs_from_config_dict(gs_cv_config)
         assert len(blueprints) == len(gs_config) * len(cross_validator._get_fold_indices())
         for i, blueprint in enumerate(blueprints):
             assert blueprint.config['cv_experiment_information']["config"]['experiment_id'] == i
             assert blueprint.config['cv_experiment_information']["config"]['val_fold_id'] == i
-            assert blueprint.job_type == job_type
             assert blueprint.run_id == str(i)
             assert blueprint.epochs == num_epochs
 
-    @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD])
-    def test_run(self, blue_print_type: Type[BluePrint], job_type: AbstractGymJob.Type,
+    # @pytest.mark.parametrize("job_type", [AbstractGymJob.Type.STANDARD])
+    def test_run(self, blue_print_type: Type[BluePrint],
                  gs_cv_config: Dict[str, Any], cv_config: Dict[str, Any], grid_search_id: str, num_epochs: int,
                  dashify_logging_path: str, process_count: int, device_ids: List[int], log_std_to_file: bool,
                  log_dir_path: str, keep_interim_results: bool, start_logging):

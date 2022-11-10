@@ -19,6 +19,7 @@ from typing import Dict
 from torch import nn
 import torch
 import torch.nn.functional as F
+from ml_gym.modes import RunMode
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
@@ -152,12 +153,12 @@ class MyDatasetIteratorConstructable(ComponentConstructable):
 
 
 class LinearBluePrint(BluePrint):
-    def __init__(self, run_mode: AbstractGymJob.Mode, job_type: AbstractGymJob.Type, config: Dict, epochs: int,
+    def __init__(self, run_mode: RunMode, config: Dict, epochs: int,
                  dashify_logging_dir: str, grid_search_id: str,
                  run_id: str, external_injection: Dict[str, Any] = None):
         model_name = "linear_net"
         dataset_name = ""
-        super().__init__(run_mode, job_type, model_name, dataset_name, epochs, config, dashify_logging_dir,
+        super().__init__(run_mode, model_name, dataset_name, epochs, config, dashify_logging_dir,
                          grid_search_id,
                          run_id, external_injection)
 
@@ -189,6 +190,6 @@ class LinearBluePrint(BluePrint):
         components = LinearBluePrint.construct_components(self.config, component_names, device,
                                                           self.external_injection)
 
-        gym_job = GymJobFactory.get_gym_job(self.run_mode, job_type=self.job_type,
+        gym_job = GymJobFactory.get_gym_job(self.run_mode,
                                             experiment_info=experiment_info, epochs=self.epochs, **components)
         return gym_job
