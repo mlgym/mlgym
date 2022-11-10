@@ -1,7 +1,7 @@
 <div align="center">
 <img src="https://raw.githubusercontent.com/mlgym/mlgym/master/mlGym.svg" width="400px">
 </div>
-
+ 
 ---
 
 a feature-rich deep learning framework providing full reproducibility of experiments. 
