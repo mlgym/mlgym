@@ -2,17 +2,12 @@ import "./analysis_board.css";
 
 import React from "react";
 import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend
+    CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis,
+    YAxis
 } from "recharts";
+import { FilterConfigType, ModelEvaluationPayloadType, ModelEvaluationType } from "../app/datatypes";
+import { useAppSelector } from "../app/hooks";
 import type { RootState } from '../app/store';
-import { ModelEvaluationType, ModelEvaluationPayloadType, FilterConfigType } from "../app/datatypes"
-import { useAppSelector } from "../app/hooks"
 
 
 function selectColor(index: number) {
@@ -31,10 +26,11 @@ export const modelEvaluationSelector = (state: RootState) => state.modelsEvaluat
 
     const modelEvaluationPayload: ModelEvaluationPayloadType = s.data.payload
 
-    const epoch = modelEvaluationPayload.epoch
-    const eId = modelEvaluationPayload.experiment_id
-    const lossScores = modelEvaluationPayload.loss_scores
-    const metricScores = modelEvaluationPayload.metric_scores
+    const { epoch, experiment_id: eId, loss_scores: lossScores, metric_scores: metricScores } = modelEvaluationPayload
+    // const epoch = modelEvaluationPayload.epoch
+    // const eId = modelEvaluationPayload.experiment_id
+    // const lossScores = modelEvaluationPayload.loss_scores
+    // const metricScores = modelEvaluationPayload.metric_scores
 
     for (const metricScore of metricScores) {
         const fullMetricName = metricScore.split + "/" + metricScore.metric
@@ -71,9 +67,10 @@ const EvaluationChart: React.FC<EvaluationLineChartPropsType> = ({ metricFilter,
 
     const metricSelector = useAppSelector((state: RootState) => filteredModelEvaluationSelector(state, metricFilter))
 
-    const lines = experimentIds.map((eID, index) => <Line
+    const lines = experimentIds.map((eID: string, index: number) => <Line
         dataKey={eID}
         stroke={selectColor(index)}
+        key={"line#" + index}
     />)
 
     return (
@@ -106,14 +103,15 @@ const AnalysisBoard: React.FC<AnalysisBoardProps> = ({ filterConfig }) => {
 
     const experimentIds = ["2022-04-29--22-25-49/conv_net/0", "2022-04-29--22-25-49/conv_net/1"]
 
-    var regex = new RegExp(filterConfig.metricFilterRegex);
-    const selectedMetricFilters = metricFilters.reduce((selected: Array<string>, metricFilter: string) => {
-        if (regex.test(metricFilter))
-            selected.push(metricFilter)
-        return (selected)
-    }, []);
-
-    const charts = selectedMetricFilters.map((metricFilter: string) => <div className="diagram-cell"><EvaluationChart metricFilter={metricFilter} experimentIds={experimentIds} /></div>)
+    const re = new RegExp(useAppSelector((state: RootState) => state.RegEx.value))
+    
+    const charts = metricFilters.filter((metricFilter: string) => re.test(metricFilter.toLowerCase())).map(
+        (metricFilter: string, index: number) => (
+            <div className="diagram-cell" key={"ec#" + index}>
+                <EvaluationChart metricFilter={metricFilter} experimentIds={experimentIds} />
+            </div>
+        )
+    )
 
     return (
         <>

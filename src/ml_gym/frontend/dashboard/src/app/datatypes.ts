@@ -57,8 +57,8 @@ export type ModelStatusType = { data: ModelStatusInnerType, } & BaseMessageType
 export type ExperimentConfigPayloadType = {
     grid_search_id: string;
     experiment_id: string;
-    job_id: number; 
-    config: any; 
+    job_id: number;
+    config: any;
 }
 
 export type ExperimentConfigInnerType = {
@@ -82,7 +82,7 @@ export type LossScoreType = {
 
 export type ModelEvaluationPayloadType = {
     epoch: number;
-    experiment_id: string; 
+    experiment_id: string;
     metric_scores: Array<MetricScoreType>;
     loss_scores: Array<LossScoreType>;
 }
@@ -118,6 +118,12 @@ export type ModelStatusRowType = {
     batch_progress: number
 }
 
+export type ModelEvaluationRowType = {
+    f1_score_macro: number;
+    precision_macro: number;
+    recall_macro: number;
+}
+
 
 
 // REDUX STORE
@@ -139,6 +145,7 @@ export type ExperimentConfigMessageCollectionType = {
 
 export type ModelEvaluationMessageCollectionType = {
     messages: Array<ModelEvaluationType>;
+    experiment_id_to_latest_message_index: { [id: string]: number; }
 };
 
 

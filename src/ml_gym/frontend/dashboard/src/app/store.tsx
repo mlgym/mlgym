@@ -1,8 +1,9 @@
-import { configureStore, ThunkAction, Action, } from '@reduxjs/toolkit'
-import jobStatusReducer from '../features/jobsStatus/jobsStatusSlice'
-import modelStatusReducer from '../features/modelsStatus/modelsStatusSlice'
-import modelEvaluationReducer from '../features/modelEvaluations/modelEvaluationsSlice'
+import { Action, configureStore, ThunkAction } from '@reduxjs/toolkit';
 import experimentConfigReducer from '../features/experimentConfig/experimentConfigSlice';
+import RegExReducer from '../features/globalConfig/RegExSlice';
+import jobStatusReducer from '../features/jobsStatus/jobsStatusSlice';
+import modelEvaluationReducer from '../features/modelEvaluations/modelEvaluationsSlice';
+import modelStatusReducer from '../features/modelsStatus/modelsStatusSlice';
 
 
 export const store = configureStore({
@@ -10,7 +11,8 @@ export const store = configureStore({
     jobsStatus: jobStatusReducer,
     modelsStatus: modelStatusReducer,
     modelsEvaluation: modelEvaluationReducer,
-    experimentConfig: experimentConfigReducer
+    experimentConfig: experimentConfigReducer,
+    RegEx : RegExReducer
   }
 });
 
