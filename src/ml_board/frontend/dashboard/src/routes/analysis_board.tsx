@@ -63,9 +63,11 @@ export const sortedModelEvaluationSelector = (state: RootState) => { // sorts th
     const results: any = modelEvaluationSelector(state)
 
     var resultsSorted = Object.keys(results).reduce((tmpResult, scoreKey) => {
-        return { ...tmpResult, [scoreKey]: Object.keys(results[scoreKey]).sort(function(a, b) {return parseInt(a) - parseInt(b);}).reduce((scoreResult: any, epochKey) => {
-            return [...scoreResult, results[scoreKey][epochKey]]
-        }, [])};
+        return {
+            ...tmpResult, [scoreKey]: Object.keys(results[scoreKey]).sort(function (a, b) { return parseInt(a) - parseInt(b); }).reduce((scoreResult: any, epochKey) => {
+                return [...scoreResult, results[scoreKey][epochKey]]
+            }, [])
+        };
     }, {})
 
     return resultsSorted;
@@ -128,7 +130,10 @@ const AnalysisBoard: React.FC<AnalysisBoardProps> = ({ filterConfig }) => {
     const scoreKeys: any = Object.keys(scoreResults)
     const experimentIds = Object.keys(scoreResults[scoreKeys[0]][0]).filter(function (item) { return item !== "name" })
 
-    const charts = scoreKeys.map((scoreKey: any) => <div className="diagram-cell"><EvaluationChart key={scoreKey} scoreKey={scoreKey} scoreResult={scoreResults[scoreKey]} experimentIds={experimentIds} /></div>)
+    const charts = scoreKeys.map((scoreKey: any) =>
+        <div className="diagram-cell">
+            <EvaluationChart key={scoreKey} scoreKey={scoreKey} scoreResult={scoreResults[scoreKey]} experimentIds={experimentIds} />
+            </div>)
 
 
     return (
