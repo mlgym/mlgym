@@ -4,7 +4,6 @@ from enum import Enum
 from typing import Any, List, Dict
 from ml_gym.multiprocessing.states import JobStatus, JobType
 from ml_gym.io.websocket_client import ClientFactory, BufferedClient
-#from ml_gym.gym.model_checkpointing import ModelCheckpointComponent
 import time
 import torch
 import pickle
@@ -81,7 +80,27 @@ class StreamedLogger(MLgymStatusLoggerIF):
         self._sio_client.emit(message_key="mlgym_event", message=raw_log_message)
 
 
-class JobStatusLogger:
+class JobStatusLoggerIF(ABC):
+
+    def log_job_status(self, job_id: str, job_type: JobType, status: JobStatus, grid_search_id: str, experiment_id: str, starting_time: int, finishing_time: int,
+                       device: torch.device, error: str = "", stacktrace: str = ""):
+        raise NotImplementedError
+
+    def log_experiment_config(self, grid_search_id: str, experiment_id: str, job_id: str, config: Dict[str, Any]):
+        raise NotImplementedError
+
+
+class DummyJobStatusLogger(JobStatusLoggerIF):
+
+    def log_job_status(self, job_id: str, job_type: JobType, status: JobStatus, grid_search_id: str, experiment_id: str, starting_time: int, finishing_time: int,
+                       device: torch.device, error: str = "", stacktrace: str = ""):
+        return
+
+    def log_experiment_config(self, grid_search_id: str, experiment_id: str, job_id: str, config: Dict[str, Any]):
+        return
+
+
+class JobStatusLogger(JobStatusLoggerIF):
     def __init__(self, logger: MLgymStatusLoggerIF) -> None:
         self._logger = logger
 
