@@ -5,7 +5,6 @@ from data_stack.dataset.meta import MetaFactory
 import torch
 import pytest
 from collections import Counter
-
 from pytests.test_env.fixtures import LoggingFixture, DeviceFixture
 from pytests.test_env.validation_fixtures import ValidationFixtures
 

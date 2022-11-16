@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-from typing import List, Dict
-
 import pytest
 from ml_gym.blueprints.constructables import Requirement, EvalComponentConstructable, EvaluatorConstructable
 from ml_gym.gym.evaluator import Evaluator
-
-from test_eval_component_constructable import EvalConfigFixture
-from test_train_component_constructable import RegistryFixture, DataLoaderFixture
+from pytests.blueprints.constructables.test_eval_component_constructable import EvalConfigFixture
+from pytests.blueprints.constructables.test_train_component_constructable import RegistryFixture, DataLoaderFixture
 
 
 class EvalComponentFixture(RegistryFixture, DataLoaderFixture, EvalConfigFixture):

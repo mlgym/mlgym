@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-from typing import List, Dict
-
 import pytest
 from ml_gym.gym.trainer import Trainer
-
-from test_train_component_constructable import RegistryFixture, DataLoaderFixture, TrainConfigFixture
-from ml_gym.blueprints.constructables import Requirement, TrainerConstructable, EvalComponentConstructable, \
-    TrainComponentConstructable, EvaluatorConstructable
+from pytests.blueprints.constructables.test_train_component_constructable import RegistryFixture, DataLoaderFixture, TrainConfigFixture
+from ml_gym.blueprints.constructables import Requirement, TrainerConstructable,  \
+    TrainComponentConstructable
 
 
 class TrainComponentFixture(RegistryFixture, TrainConfigFixture):

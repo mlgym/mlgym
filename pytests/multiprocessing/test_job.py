@@ -17,7 +17,7 @@ class JobFixture:
 
     @pytest.fixture
     def job(self, arr: np.array) -> Job:
-        job = Job(job_id=0, fun=mocked_sum, param_dict={"arr": arr})
+        job = Job(job_id=0, fun=mocked_sum, param_dict={"arr": arr}, blueprint=None)
         return job
 
     @pytest.fixture
@@ -36,7 +36,7 @@ class JobFixture:
     def jobs(self, num_jobs: int, arrays: List[np.array]) -> List[Job]:
         jobs = []
         for i in range(num_jobs):
-            job = Job(job_id=i, fun=mocked_sum, param_dict={"arr": arrays[i]})
+            job = Job(job_id=i, fun=mocked_sum, param_dict={"arr": arrays[i]}, blueprint=None)
             jobs.append(job)
         return jobs
 
@@ -46,8 +46,3 @@ class TestJob(JobFixture, DeviceFixture):
     def test_execute(self, job: Job, arr: np.array):
         s = job.execute()
         assert s == np.sum(arr)
-
-    def test_device(self, job: Job, device: torch.device):
-        assert job.device is None
-        job.device = device
-        assert job._device == device

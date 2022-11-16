@@ -31,7 +31,7 @@ class TestWorkerProcess(JobFixture, DeviceFixture, LoggingFixture):
         job_q = Queue()
         for job in jobs:
             job_q.put(job)
-        termination_job = Job(job_id=-1, fun=None, param_dict=None, job_type=JobType.TERMINATE)
+        termination_job = Job(job_id=-1, fun=None, param_dict=None, job_type=JobType.TERMINATE, blueprint=None)
         job_q.put(termination_job)
         return job_q
 

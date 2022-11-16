@@ -1,6 +1,5 @@
 from copy import deepcopy
 from typing import List
-
 import pytest
 import torch
 from ml_gym.batching.batch import DatasetBatch
@@ -13,7 +12,6 @@ from ml_gym.models.nn.net import NNModel
 from ml_gym.optimizers.optimizer import OptimizerAdapter
 from ml_gym.util.devices import get_devices
 from torch.optim.sgd import SGD
-from torch.utils.data import DataLoader
 
 from pytests.test_env.component_fixtures import ModelFixture, LossFixture, Postprocessors, DataLoaderFixture, \
     MockedDataCollatorFixture

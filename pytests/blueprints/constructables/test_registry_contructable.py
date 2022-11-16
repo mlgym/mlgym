@@ -3,12 +3,8 @@
 import pytest
 from ml_gym.blueprints.constructables import ModelRegistryConstructable, LossFunctionRegistryConstructable, \
     MetricFunctionRegistryConstructable, PredictionPostProcessingRegistryConstructable, Requirement, ModelConstructable
-from typing import Dict
-import torch
-from ml_gym.models.nn.net import NNModel
 from ml_gym.registries.class_registry import ClassRegistry
-
-from mocked_classes import MockedNNModel
+from pytests.blueprints.constructables.mocked_classes import MockedNNModel
 
 
 class ModelFixtures:

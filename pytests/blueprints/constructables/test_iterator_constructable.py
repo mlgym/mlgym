@@ -5,7 +5,7 @@ import shutil
 from data_stack.repository.repository import DatasetRepository
 from typing import Dict
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
-from mocked_classes import MockedMNISTFactory
+from pytests.blueprints.constructables.mocked_classes import MockedMNISTFactory
 
 
 class TestDatasetIteratorConstructable:

@@ -1,6 +1,4 @@
-import os
 from typing import List, Tuple, Any, Dict
-
 import pytest
 from ml_gym.util.grid_search import GridSearch
 
@@ -55,7 +53,7 @@ class TestGridSearch:
 
     @pytest.fixture
     def config_path(self) -> str:
-        return "example/grid_search/gs_config.yml"
+        return "pytests/example_configs/grid_search/gs_config.yml"
 
     def test_get_dict_obj(self, keys: List[str], values: Tuple[Any]):
         d = GridSearch._get_dict_obj(keys, values)
@@ -84,6 +82,9 @@ class TestGridSearch:
 
     def test_create_gs_configs_from_path(self, config_path):
         configs = GridSearch.create_gs_configs_from_path(config_path)
-        assert configs[0]['optimizer']['config']['params']['lr'] == 0.01
-        assert configs[1]['optimizer']['config']['params']['lr'] == 0.001
-        assert configs[2]['optimizer']['config']['params']['lr'] == 0.0001
+        assert len(configs) == 4
+        assert configs[0]['optimizer']['config']['params']['lr'] == 1
+        assert configs[1]['optimizer']['config']['params']['lr'] == 0.1
+        assert configs[2]['optimizer']['config']['params']['lr'] == 0.01
+        assert configs[3]['optimizer']['config']['params']['lr'] == 0.001
+

@@ -5,26 +5,11 @@ global_config:
   model_prediction_key: &model_prediction_key_anchor model_prediction_key
   postprocessing_argmax_key: &postprocessing_argmax_key_anchor postprocessing_argmax_key
 
-nested_cv_experiment_information:
-  component_type_key: DATASET_ITERATORS
-  variant_key: DEFAULT
-  config:
-    experiment_id:
-      injectable:
-        id: id_experiment_id
-    hyper_paramater_combination_id:
-      injectable:
-        id: id_hyper_paramater_combination_id 
-    outer_test_fold_id:
-      injectable:
-        id: id_outer_test_fold_id
-    inner_test_fold_id:
-      injectable:
-        id: id_inner_test_fold_id
-
 dataset_repository:
   component_type_key: DATASET_REPOSITORY
   variant_key: DEFAULT
+  config:
+    storage_connector_path: *storage_path_anchor
 
 dataset_iterators:
   component_type_key: DATASET_ITERATORS
@@ -33,10 +18,10 @@ dataset_iterators:
     - name: repository
       component_name: dataset_repository
   config:
-    dataset_identifier: mocked_dataset
+    dataset_identifier: mnist
     split_configs:
-        - split: train 
-        - split: test
+      - split: train
+      - split: test
 
 splitted_dataset_iterators:
   component_type_key: SPLITTED_DATASET_ITERATORS
@@ -50,39 +35,9 @@ splitted_dataset_iterators:
   config:
     split_configs:
       train:
-        train: 0.01
-        train_: 0.99
-      test: 
-        test: 0.01
-        test_: 0.99
-    seed: *seed_value
-
-combined_dataset_iterators: 
-  component_type_key: COMBINED_DATASET_ITERATORS
-  variant_key: DEFAULT
-  requirements:
-    - name: splitted_dataset_iterators
-      component_name: splitted_dataset_iterators
-      subscription: [train, test]
-  config:
-    combine_configs:
-      - new_split: full
-        old_splits: 
-          - iterators_name: splitted_dataset_iterators
-            splits: [train, test]
-
-iterator_folds:
-  component_type_key: ITERATOR_VIEW
-  variant_key: DEFAULT
-  requirements:
-    - name: iterators
-      component_name: combined_dataset_iterators
-      subscription: [full]
-  config:
-    applicable_split: full
-    split_indices:
-      injectable:
-          id: id_split_indices
+        train: 0.7
+        val: 0.3
+    seed: 2
 
 data_collator:
   component_type_key: DATA_COLLATOR
@@ -99,13 +54,14 @@ data_loaders:
   variant_key: DEFAULT
   requirements:
     - name: iterators
-      component_name: iterator_folds
-      subscription: [train, test]
+      component_name: splitted_dataset_iterators
+      subscription: [train, val, test]
     - name: data_collator
       component_name: data_collator
   config:
     batch_size: 50
-    weigthed_sampling_split_name: null
+    weigthed_sampling_split_name: train
+    seeds: [0, 1, 2]
 
 model_registry:
   component_type_key: MODEL_REGISTRY
@@ -117,17 +73,29 @@ model:
   requirements:
     - name: model_registry
       component_name: model_registry
-      subscription: linear_net
+      subscription: conv_net
   config:
     model_definition:
       layer_config:
         - params:
-            in_features: 1
+            in_channels: 1
+            kernel_size: 3
+            out_channels: 32
+            stride: 1
+          type: conv
+        - params:
+            in_channels: 32
+            kernel_size: 3
+            out_channels: 64
+            stride: 1
+          type: conv
+        - params:
+            in_features: 9216
             out_features: 128
           type: fc
         - params:
             in_features: 128
-            out_features: 1
+            out_features: 10
           type: fc
     prediction_publication_keys:
       prediction_publication_key: *model_prediction_key_anchor
@@ -141,8 +109,7 @@ optimizer:
     params:
       lr:
         sweep: absolute
-        values: [0.01]
-      # weight_decay: 0.0001
+        values: [1, 0.1, 0.01, 0.001]
 
 loss_function_registry:
   component_type_key: LOSS_FUNCTION_REGISTRY
@@ -165,11 +132,12 @@ train_component:
     - name: prediction_postprocessing_registry
       component_name: prediction_postprocessing_registry
   config:
+    show_progress: true
     loss_fun_config:
       prediction_subscription_key: *model_prediction_key_anchor
       target_subscription_key: *target_key_anchor
-      key: LPLoss
-      tag: lp_loss
+      key: CrossEntropyLoss
+      tag: cross_entropy_loss
 
 trainer:
   component_type_key: TRAINER
@@ -193,7 +161,7 @@ eval_component:
       subscription: null
     - name: data_loaders
       component_name: data_loaders
-      subscription: [train, test]
+      subscription: [train, val, test]
     - name: loss_function_registry
       component_name: loss_function_registry
     - name: metric_registry
@@ -203,7 +171,7 @@ eval_component:
   config:
     cpu_target_subscription_keys:
       - *target_key_anchor
-    cpu_prediction_subscription_keys: 
+    cpu_prediction_subscription_keys:
       - *postprocessing_argmax_key_anchor
       - *model_prediction_key_anchor
     post_processors_config:
@@ -233,8 +201,9 @@ eval_component:
     loss_funs_config:
       - prediction_subscription_key: *model_prediction_key_anchor
         target_subscription_key: *target_key_anchor
-        key: LPLoss
-        tag: lp_loss
+        key: CrossEntropyLoss
+        tag: cross_entropy_loss
+    show_progress: true
 
 evaluator:
   component_type_key: EVALUATOR
@@ -242,3 +211,35 @@ evaluator:
   requirements:
     - name: eval_component
       component_name: eval_component
+
+early_stopping_strategy_registry:
+  component_type_key: EARLY_STOPPING_STRATEGY_REGISTRY
+  variant_key: DEFAULT
+
+early_stopping_strategy:
+  component_type_key: EARLY_STOPPING_STRATEGY
+  variant_key: DEFAULT
+  requirements:
+    - name: early_stopping_strategy_registry
+      component_name: early_stopping_strategy_registry
+  config:
+    early_stopping_key: LAST_K_EPOCHS_IMPROVEMENT_STRATEGY
+    early_stopping_config:
+      min_relative_improvement: 0.01
+      epochs_window: 5
+      split_name: val
+      monitoring_key: "F1_SCORE_macro"
+      is_increase_task: true
+
+checkpointing_strategy_registry:
+  component_type_key: CHECKPOINTING_STRATEGY_REGISTRY
+  variant_key: DEFAULT
+
+checkpointing_strategy:
+  component_type_key: CHECKPOINTING_STRATEGY
+  variant_key: DEFAULT
+  requirements:
+    - name: checkpointing_strategy_registry
+      component_name: checkpointing_strategy_registry
+  config:
+    checkpointing_key: SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY
