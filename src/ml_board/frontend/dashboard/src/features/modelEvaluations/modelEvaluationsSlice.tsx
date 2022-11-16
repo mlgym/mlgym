@@ -14,17 +14,18 @@ const modelEvaluationsSlice = createSlice({
     initialState,
     reducers: {
         modelEvaluationAdded(state, action) {
-            const experiment_id: number = action.payload.data.payload.experiment_id
-            if (experiment_id in state.experiment_id_to_latest_message_index) {
-                const row_id = state.experiment_id_to_latest_message_index[experiment_id]
-                // prevents possible race condition
-                if (state.messages[row_id].event_id < action.payload.event_id) {
-                    state.messages[row_id] = action.payload
-                }
-            } else {
-                state.messages.push(action.payload)
-                state.experiment_id_to_latest_message_index[experiment_id] = state.messages.length - 1
-            }
+            // const experiment_id: number = action.payload.data.payload.experiment_id
+            // if (experiment_id in state.experiment_id_to_latest_message_index) {
+            //     const row_id = state.experiment_id_to_latest_message_index[experiment_id]
+            //     // prevents possible race condition
+            //     if (state.messages[row_id].event_id < action.payload.event_id) {
+            //         state.messages[row_id] = action.payload
+            //     }
+            // } else {
+            //     state.messages.push(action.payload)
+            //     state.experiment_id_to_latest_message_index[experiment_id] = state.messages.length - 1
+            // }
+            state.messages.push(action.payload)
         }
     }
 })
