@@ -76,7 +76,7 @@ export const sortedModelEvaluationSelector = (state: RootState) => { // sorts th
 export const filteredModelEvaluationSelector = (state: RootState) => {
     // results: {experiment_id_1: [0.9, 0.3, ...]}
     const results: any = sortedModelEvaluationSelector(state);
-    const re = new RegExp(useAppSelector((state: RootState) => state.RegEx.value))
+    const re = new RegExp(state.RegEx.value)
     var filteredResults = Object.keys(results).filter(scoreKey => re.test(scoreKey)).reduce((obj: any, key) => {
         return { ...obj, [key]: results[key] }
     }, {})

@@ -49,6 +49,8 @@ class LastKEpochsImprovementStrategy(EarlyStoppingIF):
             if e.split_name == self.split_name:
                 evaluation_result = e
                 break
+        if evaluation_result is None:
+            raise BatchStateError(f"EvaluationBatchResults do not contain split_name {self.split_name}. Check the configuration file. ")
         try:
             value = evaluation_result.metrics[self.monitoring_key][-1] if self.monitoring_key in evaluation_result.metrics else evaluation_result.losses[self.monitoring_key][-1]
         except KeyError as e:

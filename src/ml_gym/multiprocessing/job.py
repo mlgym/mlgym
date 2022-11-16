@@ -39,7 +39,7 @@ class Job(JobIF):
         self.executing_process_id = -1
         self.error = None
         self.stacktrace = None
-        self._device: torch.device = ""
+        self._device: torch.device = torch.device("cpu")
 
     @property
     def device(self) -> torch.device:

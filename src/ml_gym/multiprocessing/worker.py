@@ -43,7 +43,7 @@ class WorkerProcess(Process):
 
 class WorkerProcessWrapper:
     def __init__(self, process_id: int, num_jobs_to_perform: int, device: torch.device, job_q: Queue, job_update_q: Queue):
-        self.logger = QueuedLogging.get_qlogger(f"logger_process_{process_id}", )
+        self.logger = QueuedLogging.get_qlogger(f"logger_process_{process_id}")
         self.jobs_done_count = 0
         self.device = device
         self.num_jobs_to_perform = num_jobs_to_perform
@@ -58,9 +58,9 @@ class WorkerProcessWrapper:
             self.logger.log(LogLevel.DEBUG, f"Recreating process {self.process_id}.")
             self.process = WorkerProcess(self.process_id, self.num_jobs_to_perform,
                                          self.job_q, self.job_update_q, self.device, self.logger)
+            self.jobs_done_count = 0
             self.process.start()
             self.logger.log(LogLevel.DEBUG, f"Recreated process {self.process_id}.")
-            self.jobs_done_count = 0
 
     def get_process_id(self) -> int:
         return self.process.process_id

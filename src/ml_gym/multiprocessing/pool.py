@@ -54,6 +54,7 @@ class Pool:
         # we have to add the termination jobs at the end of the queue such that the processes stop working and don't get stuck in jobs_q.get()
         termination_jobs = [Job(job_id=i+len(self.job_collection), fun=None, blueprint=None, param_dict=None,
                                 job_type=JobType.TERMINATE) for i in range(self.num_processes)]
+        print(f"num_processes: {self.num_processes}")
         self.add_jobs(termination_jobs)
         # create and start worker processes
         self.logger.log(LogLevel.INFO, f"Creating {self.num_processes} worker processes...")

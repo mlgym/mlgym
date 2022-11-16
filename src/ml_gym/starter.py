@@ -7,10 +7,10 @@ from ml_gym.modes import RunMode
 from ml_gym.persistency.io import GridSearchAPIClientConstructableIF, GridSearchAPIClientIF
 from ml_gym.persistency.logging import LoggerConstructableIF, MLgymStatusLoggerCollectionConstructable
 from ml_gym.util.logger import QueuedLogging
-from multiprocessing import Queue
 from ml_gym.validation.validator import ValidatorIF
 from datetime import datetime
 from ml_gym.io.config_parser import YAMLConfigLoader
+from ml_gym.error_handling.exception import SingletonAlreadyInstantiatedError
 
 
 class MLGymStarter:
@@ -23,9 +23,10 @@ class MLGymStarter:
 
     @staticmethod
     def _setup_logging_environment(log_dir_path: str):
-        if QueuedLogging._instance is None:
-            queue = Queue()
-            QueuedLogging.start_logging(queue, log_dir_path)
+        try:
+            QueuedLogging.start_logging(log_dir_path)
+        except SingletonAlreadyInstantiatedError:
+            pass
 
     @staticmethod
     def _stop_logging_environment():

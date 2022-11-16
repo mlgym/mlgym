@@ -102,7 +102,7 @@ class EvalComponent(EvalComponentIF):
         inference_result_batches_cpu = []
         num_batches = len(dataset_loader_iterator)
         processed_batches = 0
-        update_lag = int(num_batches/10)
+        update_lag = max(1, int(num_batches/10))
         for batch in dataset_loader_iterator:
             inference_result_batch = self.forward_batch(dataset_batch=batch, model=model, device=device, postprocessors=post_processors)
             batch_loss = self._calculate_loss_scores(inference_result_batch, split_loss_funs)
