@@ -87,20 +87,21 @@ class QueuedLogging:
     _instance: "QueuedLogging" = None
 
     @classmethod
-    def start_logging(cls, log_msg_queue: Queue, log_dir_path: str):
+    def start_logging(cls, log_dir_path: str):
         if cls._instance is None:
+            log_msg_queue = Queue()
             cls._instance = QueuedLogging(log_msg_queue, log_dir_path)
             cls._instance._start_listening()
         else:
-            raise SingletonAlreadyInstantiatedError()
+            raise SingletonAlreadyInstantiatedError
 
-    @staticmethod
-    def get_qlogger(logger_id: str) -> QLogger:
+    @classmethod
+    def get_qlogger(cls, logger_id: str) -> QLogger:
         return QLogger(logger_id, QueuedLogging._instance.log_msg_queue)
 
     def __init__(self, log_msg_queue: Queue, log_dir_path: str):
         if self._instance is not None:
-            raise SingletonAlreadyInstantiatedError()
+            raise SingletonAlreadyInstantiatedError
         self.log_msg_queue = log_msg_queue
         self.log_dir_path = log_dir_path
         self.listener_process = None
@@ -141,7 +142,9 @@ class QueuedLogging:
             try:
                 message: Message = queue.get()
                 if message is None:  # We send this as a sentinel to tell the listener to quit.
+                    print("Logging listener process stopped.")
                     break
+
                 if message.logger_id not in loggers:
                     loggers[message.logger_id] = QueuedLogging._get_logger(log_dir_path, message.logger_id)
                 loggers[message.logger_id].log(level=message.level.value, msg=message.message_string)

@@ -73,10 +73,10 @@ class CrossValidation(ValidatorIF):
                 experiment_config_injected = injector.inject_pass(component_parameters=experiment_config)
                 bp = BluePrint.create_blueprint(blue_print_class=blue_print_type,
                                                 run_mode=self.run_mode,
+                                                experiment_id=experiment_id,
                                                 experiment_config=experiment_config_injected,
                                                 num_epochs=num_epochs,
                                                 grid_search_id=grid_search_id,
-                                                experiment_id=experiment_id,
                                                 logger_collection_constructable=logger_collection_constructable,
                                                 gs_api_client_constructable=gs_api_client_constructable)
                 blueprints.append(bp)

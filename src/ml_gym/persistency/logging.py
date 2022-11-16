@@ -90,16 +90,6 @@ class JobStatusLoggerIF(ABC):
         raise NotImplementedError
 
 
-class DummyJobStatusLogger(JobStatusLoggerIF):
-
-    def log_job_status(self, job_id: str, job_type: JobType, status: JobStatus, grid_search_id: str, experiment_id: str, starting_time: int, finishing_time: int,
-                       device: torch.device, error: str = "", stacktrace: str = ""):
-        return
-
-    def log_experiment_config(self, grid_search_id: str, experiment_id: str, job_id: str, config: Dict[str, Any]):
-        return
-
-
 class JobStatusLogger(JobStatusLoggerIF):
     def __init__(self, logger: MLgymStatusLoggerIF) -> None:
         self._logger = logger
