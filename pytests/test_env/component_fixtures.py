@@ -1,5 +1,4 @@
 from typing import Dict, List
-
 import pytest
 import torch
 from data_stack.dataset.factory import InformedDatasetFactory
@@ -11,8 +10,7 @@ from ml_gym.gym.post_processing import PredictPostProcessingIF
 from ml_gym.loss_functions.loss_factory import LossFactory
 from ml_gym.loss_functions.loss_functions import Loss
 from ml_gym.models.nn.net import NNModel
-from torch.utils.data import DataLoader, Sampler
-
+from torch.utils.data import Sampler
 from pytests.test_env.linear_net_blueprint import LinearNet, MockedDatasetFactory, MockedDataCollator
 
 
@@ -117,4 +115,3 @@ class MockedDataCollatorFixture(Keys):
     def collator(self, target_publication_key) -> Collator:
         collator = MockedDataCollator(target_publication_key=target_publication_key)
         return collator
-

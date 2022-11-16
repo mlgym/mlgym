@@ -1,7 +1,6 @@
 import pytest
 import torch
 from ml_gym.batching.batch import InferenceResultBatch
-
 from pytests.test_env.component_fixtures import Keys
 
 

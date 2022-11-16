@@ -1,11 +1,11 @@
-from multiprocessing import Queue
-
+import os
+import tempfile
 import pytest
 import torch
 from typing import List
-
 from ml_gym.util.devices import get_devices
 from ml_gym.util.logger import QueuedLogging
+from ml_gym.error_handling.exception import SingletonAlreadyInstantiatedError
 
 
 class DeviceFixture:
@@ -26,12 +26,12 @@ class DeviceFixture:
 
 
 class LoggingFixture:
-    @pytest.fixture
-    def log_dir_path(self) -> str:
-        return "general_logging"
 
     @pytest.fixture
-    def start_logging(self, log_dir_path: str):
-        if QueuedLogging._instance is None:
-            queue = Queue()
-            QueuedLogging.start_logging(queue, log_dir_path)
+    def start_logging(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            log_dir_path = os.path.join(tmp, 'mlgym_logging')
+            try:
+                QueuedLogging.start_logging(log_dir_path)
+            except SingletonAlreadyInstantiatedError:
+                pass

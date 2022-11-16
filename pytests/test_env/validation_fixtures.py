@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Type, Dict, Any
-
 import pytest
 from ml_gym.io.config_parser import YAMLConfigLoader
 from pytests.test_env.linear_net_blueprint import LinearBluePrint
@@ -11,7 +10,7 @@ class ValidationFixtures:
     @pytest.fixture
     def gs_cv_config_path(cls) -> str:
         # gs_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/gs_config_cv.yml")
-        gs_cv_path = "pytests/test_env/cross_validation/gs_config_cv.yml"
+        gs_cv_path = "pytests/example_configs/cross_validation/gs_config_cv.yml"
         return gs_cv_path
 
     @pytest.fixture
@@ -22,7 +21,7 @@ class ValidationFixtures:
     @pytest.fixture
     def cv_config_path(self) -> str:
         # cv_path = os.path.join(os.path.abspath('.'), "..", "test_env", "cross_validation/cv_config.yml")
-        cv_path = "pytests/test_env/cross_validation/cv_config.yml"
+        cv_path = "pytests/example_configs/cross_validation/cv_config.yml"
         return cv_path
 
     @pytest.fixture
@@ -33,7 +32,7 @@ class ValidationFixtures:
     @pytest.fixture
     def gs_config_path(self) -> str:
         # gs_path = os.path.join(os.path.abspath('.'), "..", "test_env", "grid_search/gs_config.yml")
-        gs_path = "pytests/test_env/grid_search/gs_config.yml"
+        gs_path = "pytests/example_configs/grid_search/gs_config.yml"
         return gs_path
 
     @pytest.fixture
@@ -45,7 +44,7 @@ class ValidationFixtures:
     def gs_nested_cv_path(self) -> str:
         # gs_nested_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env",
         #                                  "nested_cross_validation/gs_config_nested_cv.yml")
-        gs_nested_cv_path = "pytests/test_env/nested_cross_validation/gs_config_nested_cv.yml"
+        gs_nested_cv_path = "pytests/example_configs/nested_cross_validation/gs_config_nested_cv.yml"
         return gs_nested_cv_path
 
     @pytest.fixture
@@ -57,7 +56,7 @@ class ValidationFixtures:
     def nested_cv_path(self) -> str:
         # nested_cv_path = os.path.join(os.path.abspath('.'), "..", "test_env",
         #                               "nested_cross_validation/nested_cv_config.yml")
-        nested_cv_path = "pytests/test_env/nested_cross_validation/nested_cv_config.yml"
+        nested_cv_path = "pytests/example_configs/nested_cross_validation/nested_cv_config.yml"
 
         return nested_cv_path
 

@@ -13,15 +13,14 @@ from ml_gym.batching.batch import DatasetBatch
 from dataclasses import dataclass, field
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector
 from ml_gym.data_handling.postprocessors.collator import Collator
-
 from ml_gym.models.nn.net import NNModel
 from typing import Dict
+from ml_gym.persistency.logging import ExperimentStatusLogger, MLgymStatusLoggerCollectionConstructable
 from torch import nn
 import torch
 import torch.nn.functional as F
 from ml_gym.modes import RunMode
-
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+from ml_gym.persistency.io import GridSearchAPIClientConstructableIF
 
 
 class LinearNet(NNModel):
@@ -153,18 +152,16 @@ class MyDatasetIteratorConstructable(ComponentConstructable):
 
 
 class LinearBluePrint(BluePrint):
-    def __init__(self, run_mode: RunMode, config: Dict, epochs: int,
-                 dashify_logging_dir: str, grid_search_id: str,
-                 run_id: str, external_injection: Dict[str, Any] = None):
-        model_name = "linear_net"
-        dataset_name = ""
-        super().__init__(run_mode, model_name, dataset_name, epochs, config, dashify_logging_dir,
-                         grid_search_id,
-                         run_id, external_injection)
+    def __init__(self, run_mode: RunMode, config: Dict, num_epochs: int,
+                 grid_search_id: str, gs_api_client_constructable: GridSearchAPIClientConstructableIF,
+                 experiment_id: str, external_injection: Dict[str, Any] = None,
+                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None,
+                 warm_start_epoch: int = 0):
+        super().__init__(run_mode, num_epochs, config, grid_search_id, gs_api_client_constructable,
+                         experiment_id, external_injection, logger_collection_constructable, warm_start_epoch)
 
     @staticmethod
-    def construct_components(config: Dict, component_names: List[str], device: torch.device = None,
-                             external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
+    def construct_components(config: Dict, component_names: List[str], device: torch.device, external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
         if external_injection is not None:
             injection_mapping = {"id_conv_mnist_standard_collator": MockedDataCollator,
                                  "id_computation_device": device,
@@ -176,7 +173,6 @@ class LinearBluePrint(BluePrint):
             injector = Injector(injection_mapping, raise_mapping_not_found=False)
 
         component_factory = ComponentFactory(injector)
-
         component_factory.register_component_type("MODEL_REGISTRY", "DEFAULT", MyModelRegistryConstructable)
         component_factory.register_component_type("DATASET_REPOSITORY", "DEFAULT", MyDatasetRepositoryConstructable)
         component_factory.register_component_type("DATASET_ITERATORS", "DEFAULT", MyDatasetIteratorConstructable)
@@ -184,12 +180,20 @@ class LinearBluePrint(BluePrint):
         components = component_factory.build_components_from_config(config, component_names)
         return components
 
-    def construct(self, device: torch.device = None) -> 'AbstractGymJob':
-        experiment_info = self.get_experiment_info()
-        component_names = ["model", "trainer", "optimizer", "evaluator"]
-        components = LinearBluePrint.construct_components(self.config, component_names, device,
-                                                          self.external_injection)
+    def construct(self, device: torch.device = None) -> AbstractGymJob:
+        component_names = ["model", "trainer", "optimizer", "evaluator", "early_stopping_strategy", "checkpointing_strategy"]
+        components = LinearBluePrint.construct_components(self.config, component_names, device, self.external_injection)
 
-        gym_job = GymJobFactory.get_gym_job(self.run_mode,
-                                            experiment_info=experiment_info, epochs=self.epochs, **components)
+        logger_collection = self.logger_collection_constructable.construct()
+        experiment_status_logger = ExperimentStatusLogger(logger=logger_collection, grid_search_id=self.grid_search_id,
+                                                          experiment_id=self.experiment_id)
+
+        gym_job = GymJobFactory.get_gym_job(run_mode=self.run_mode,
+                                            grid_search_id=self.grid_search_id,
+                                            experiment_id=self.experiment_id,
+                                            num_epochs=self.num_epochs,
+                                            warm_start_epoch=self.warm_start_epoch,
+                                            experiment_status_logger=experiment_status_logger,
+                                            gs_api_client=self.gs_api_client_constructable.construct(),
+                                            **components)
         return gym_job
