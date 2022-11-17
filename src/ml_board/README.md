@@ -99,33 +99,26 @@ payload:
 Every event message has the following structure:
 
 ```json
-{"event_type": <event type>, "creation_ts": <unix timestamp (ms)>, "payload": <payload dict>}
+{"event_type": <event_type>, "creation_ts": <unix timestamp (ms)>, "payload": <payload dict>}
 
 ```
 
-**Job scheduled:**
+The `event_type` is set to one of {`job_status`, `experiment_status`, `experiment_config`, `evaluation_result`, `checkpoint`}. A `job_status` event describe the current state of a processing job that is associated with an experiment. `experiment_status` describes the progress of the experiment training and evaluation in terms of epoch progress and batch progress on a given dataset split. `experiment_config` contains the specification of a single experiment, i.e., a single hyperparamter configuration out of the grid search. `evaluation_result` contains the metric and loss scores for a single experiment at a given epoch. A `checkpoint` message comprises the model and optimizer state at a given epoch. 
 
-Dispatched when a job is scheduled within the gym
+The `creation_ts` determines the unix timestamp when this message was created in the MLgym backend. Note, that this timestamps deviates from the time the message was actually sent via the websocket.
 
-```json
-{
-    "event_type": "job_scheduled",
-    "creation_ts": "1",
-    "payload": { 
-        "job_id": 1,
-        "config": <YAML config as JSON for a single model, i.e., one single instance of the grid search>
-    }
-}
-```
+The `payload` key points to the data specific to the `event_type`, which is introduced next. 
+
 
 **Job status:**
 
 tracks the job status from within Pool.
 
-```json
+```python
 {
     "event_type": "job_status",
     "creation_ts": "1",
+    "event_id": 1,
     "payload": { 
         "job_id":1,
         "job_type": <CALC, TERMINATE>
@@ -141,14 +134,17 @@ tracks the job status from within Pool.
 }
 ```
 
-**Model status**:
+Each experiment is associated with a job as a one-to-one relationship. The `job_id` uniquely identifies the job. A job can be either of `job_type` `CALC` or `TERMINATE`. A `CALC` job always trains a concrete model, whereas a `TERMINATE` is an empty job telling a process from the pool to exit. A job can be in one of the three `status`es `INIT`, `RUNNING`, and `DONE`. Before the training, a job is initialized in state `INIT`, switches to `RUNNING` once the training starts and switches to `DONE` when the job finishes either due to an error or a successfully executed experiment. Each grid_search comprises a set of experiments. The set of experiments is defined by the different hyperparameter combinations within the grid search specification. Via the tuple (`grid_search_id`, `experiment_id`) we can uniquely identify an experiment across different grid search runs. The `starting_time` and `finishing_time` store the time when the `state` switches from `INIT` to `RUNNING` and from `RUNNING` to `DONE`, respectively. Errors and their stacktrace are stored within `error` and `stacktrace`, respectively. `device` indicates the computation device (e.g., CPU or GPU 1) the job is being executed on.   
+
+**Experiment status**:
 
 tracks the model training status from within GymJob.
 
-```json
+```python
 {
     "event_type": "experiment_status",
     "creation_ts": "1",
+    "event_id": 1,
     "payload": { 
         "grid_search_id": <timestamp>, 
         "experiment_id": <int>,
@@ -162,15 +158,21 @@ tracks the model training status from within GymJob.
     }
 }
 ```
+The `experiment_status` message provides udpates regarding the progress of the training/evaluation in terms on epoch and bath progress. The `status` field indicates whether the model is currently training or evaluating. The `num_epochs` and `current_epjoch` field specify the total number of epochs to be run and the currently running epoch, respectively. The `splits` field contains a list dataset splits that we run on. This field depends on the current `status`. During training, we usually only train on the `train` split, in which case the `splits` list only a single element. In contrast, during evaluation, we usually evaluate on all the splits that are available, in which case the splits list would comprise all the different splits, e.g., train, val and test. `num_batches` and `current_batch` determine the number of batches and the currently executed batch within the respective `current_split`, respectively.
+
+
+
+
 
 **Experiment config**:
 
 specifies the configuration of a single experiment
 
-```json
+```python
 {
     "event_type": "experiment_config",
     "creation_ts": "1",
+    "event_id": 1,
     "payload": { 
         "grid_search_id": <timestamp>, 
         "experiment_id": <int>,
@@ -179,15 +181,18 @@ specifies the configuration of a single experiment
     }
 }
 ```
+The `experiment_config` message provides the entire experiment setup for a single hyperparamter configuration from the grid search. For an exemplary grid search configuration, see [here](https://github.com/mlgym/mlgym/blob/master/example/grid_search_example/gs_config.yml).
+
 
 **Model Evaluation**:
 
 metric scores of a model at a specific epoch.
 
-```json
+```python
 {
     "event_type": "evaluation_result",
     "creation_ts": "1",
+    "event_id": 1,
     "payload": {
         "epoch": 100,
         "grid_search_id": <timestamp>, 
@@ -212,20 +217,23 @@ metric scores of a model at a specific epoch.
 }
 ```
 
+The `evaluation_result` message contains the metric and loss scores for a single experiment at a given `epoch`. `metric_scores` contains metric scores for different `metric`s and `split`s. In practic though, the message always only comprises the results w.r.t. a specific split. An evaluation on a different split is ther fore sent within a different message. 
+
 **Checkpointing**:
 
 After each epoch and if condition is fulfilled (based on strategy), the model is binarized and sent to the server as a checkpoint.
 
 Create checkpoint:
 
-```json
+```python
 {
     "event_type": "checkpoint",
     "creation_ts": "1",
+    "event_id": 1,
     "payload": {
         "grid_search_id": <timestamp>, 
         "experiment_id": <int>,
-        "checkpoint_id": <str>,
+        "checkpoint_id": <str>, # the respective epoch
         "checkpoint_streams":{
             "model": <model as binary stream>,
             "optimizer": <optimizer as binary stream>,
@@ -234,6 +242,10 @@ Create checkpoint:
     }
 }
 ```
+
+The `checkpoint` message comprises the `model`, `optimizer`, and `stateful_components` state at a given epoch, as indicated by the `checkpoint_id`. The state is sent as a base64 converted binary stream. Since the different states can become rather large, we will implement chunking in the future.  
+
+
 
 The files received by the websocket server are stored in 
 `event_storage/mlgym_event_subscribers/<grid_search_id/event_storage_id><experiment_id>/checkpointing/<checkpoint_id>` as `model.pt`, `optimizer.pt` and `stateful_components.pt`. These files are available via the RESTful API to the clients and are not streamed.
