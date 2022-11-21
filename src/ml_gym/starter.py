@@ -17,7 +17,7 @@ class MLGymStarter:
     @staticmethod
     def _create_gym(job_id_prefix: str, process_count: int, device_ids, log_std_to_file: bool,
                     logger_collection_constructable: MLgymStatusLoggerCollectionConstructable) -> Gym:
-        gym = Gym(job_id_prefix, process_count, device_ids=device_ids, log_std_to_file=log_std_to_file,
+        gym = Gym(job_id_prefix=job_id_prefix, process_count=process_count, device_ids=device_ids, log_std_to_file=log_std_to_file,
                   logger_collection_constructable=logger_collection_constructable)
         return gym
 
