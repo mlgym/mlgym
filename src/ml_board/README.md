@@ -225,12 +225,11 @@ Create checkpoint:
     "payload": {
         "grid_search_id": <timestamp>, 
         "experiment_id": <int>,
-        "checkpoint_id": <str>,
-        "checkpoint_streams":{
-            "model": <model as binary stream>,
-            "optimizer": <optimizer as binary stream>,
-            "stateful_components": <stateful components as byte stream>
-        }
+        "checkpoint_id": <int>, # epoch
+        "entity_id": <str> # <model, optimizer, stateful_components>
+        "chunk_data": <chunk of binary stream>,
+        "chunk_id": <int> # id identifying the chunk,
+        "final_num_chunks": <int> # 
     }
 }
 ```
@@ -247,12 +246,11 @@ Delete checkpoint:
     "payload": {
         "grid_search_id": <timestamp>, 
         "experiment_id": <int>,
-        "checkpoint_id": <str>,
-        "checkpoint_streams":{
-            "model": None,
-            "optimizer": None,
-            "stateful_components": None
-        }
+        "checkpoint_id": <int>, # epoch
+        "entity_id": <str> # <model, optimizer, stateful_components>
+        "chunk_data": None,
+        "chunk_id": -1,
+        "final_num_chunks": 0 
     }
 }
 ```
