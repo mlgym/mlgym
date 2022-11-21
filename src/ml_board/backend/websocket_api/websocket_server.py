@@ -5,8 +5,10 @@ from ml_board.backend.messaging.event_storage import EventStorageIF, EventStorag
 from typing import Any, List, Dict
 from engineio.payload import Payload
 from pathlib import Path
+from ml_board.backend.websocket_api.checkpoint_cache import CheckpointCache, CheckpointEntity, CheckpointEntityTransferStatus
+from ml_gym.error_handling.exception import CheckpointEntityError
 
-Payload.max_decode_packets = 10000
+Payload.max_decode_packets = 1000000000
 
 
 class EventSubscriberIF:
@@ -17,7 +19,8 @@ class EventSubscriberIF:
 
 class WebSocketServer:
 
-    def __init__(self, host: str, port: int, async_mode: str, app: Flask, top_level_logging_path: str, cors_allowed_origins: List[str]):
+    def __init__(self, host: str, port: int, async_mode: str, app: Flask,
+                 top_level_logging_path: str, cors_allowed_origins: List[str]):
         self._port = port
         self._host = host
         self.app = app
@@ -31,6 +34,7 @@ class WebSocketServer:
             # "mlgym_event_subscribers": EventStorageFactory.get_disc_event_storage(parent_dir=self.mlgym_event_logging_path)
         }
         self._init_call_backs()
+        self._checkpoint_cache = CheckpointCache()
 
     def emit_server_log_message(self, data):
         emit("server_log_message", data)
@@ -85,7 +89,7 @@ class WebSocketServer:
                 event_id = self._room_id_to_event_storage[grid_search_id].add_event(data)
                 emit('mlgym_event', {'event_id': event_id, 'data': data}, to=grid_search_id)
             elif data["event_type"] == "checkpoint":
-                self.save_checkpoint(checkpoint=data["payload"], path=self._top_level_logging_path)
+                self.save_checkpoint_entity(checkpoint=data["payload"], path=self._top_level_logging_path)
             else:
                 print(f"Unsupported event_type {data['event_type']}")
 
@@ -120,32 +124,49 @@ class WebSocketServer:
     def run(self):
         self._socketio.run(self.app, host=self._host, port=self._port)
 
-    def save_checkpoint(self, checkpoint: Dict[str, Any], path: str):
-        grid_search_id = checkpoint["grid_search_id"]
-        experiment_id = checkpoint["experiment_id"]
-        checkpoint_id = checkpoint["checkpoint_id"]
+    def save_checkpoint_entity(self, checkpoint: Dict[str, Any], path: str):
 
-        full_path = os.path.join(path, grid_search_id, str(experiment_id), str(checkpoint_id))
+        def delete_checkpoint_entity(full_file_path: str):
+            if os.path.exists(full_file_path):
+                os.remove(full_file_path)
+            parent_dir = Path(full_file_path).parent
+            if os.path.exists(parent_dir):
+                try:
+                    os.removedirs(parent_dir)  # removes all the parent directory that are empty
+                except:  # raised when the parent dir was not empty
+                    pass
 
-        for key, stream in checkpoint["checkpoint_streams"].items():
-            checkpoint_element_path = os.path.join(full_path, key + ".bin")
+        def save_chunk_list(entity: CheckpointEntity):
+            byte_stream = b''.join(entity.get_chunk_list())
 
-            if stream is None:
-                if os.path.exists(checkpoint_element_path):
-                    os.remove(checkpoint_element_path)
-                parent_dir = Path(checkpoint_element_path).parent
-                if os.path.exists(parent_dir):
-                    if not any(Path(parent_dir).iterdir()):  # if the directory is empty we can also just remove the folder
-                        os.rmdir(parent_dir)
+            full_directory_path = os.path.join(path, str(entity.grid_search_id), str(entity.experiment_id), str(entity.checkpoint_id))
+            full_file_path = os.path.join(full_directory_path, f"{entity.entity_id}.pickle")
+            os.makedirs(full_directory_path, exist_ok=True)
+            with open(full_file_path, "wb") as fd:
+                fd.write(byte_stream)
 
-            else:  # add new checkpoint or replace checkpoint
-                os.makedirs(full_path, exist_ok=True)
-                with open(checkpoint_element_path, "wb") as fd:
-                    fd.write(stream)
+        if checkpoint["final_num_chunks"] == 0:  # delete message
+            try:
+                self._checkpoint_cache.delete_entity(**checkpoint)
+            except CheckpointEntityError:  # raised when the entity is not present
+                pass
+            full_directory_path = os.path.join(path, str(checkpoint["grid_search_id"]),
+                                               str(checkpoint["experiment_id"]), str(checkpoint["checkpoint_id"]))
+            full_file_path = os.path.join(full_directory_path, f"{checkpoint['entity_id']}.pickle")
+            delete_checkpoint_entity(full_file_path=full_file_path)
+        else:  # checkpoint message
+            entity = self._checkpoint_cache.add_chunk(**checkpoint)
+            print(f"Received chunk id {checkpoint['chunk_id']} for entity {checkpoint['entity_id']}")
+            transfer_status = entity.get_transfer_status()
+            if transfer_status == CheckpointEntityTransferStatus.TRANSFERRED:
+                save_chunk_list(entity=entity)
+                entity.delete_chunks()
 
 
 if __name__ == '__main__':
-    port = 5000
+    host = "127.0.0.1"
+    port = 5002
+    cors_allowed_origins = ["http://localhost:5001", "http://localhost:3000", "http://127.0.0.1:3000"]
     async_mode = None
     top_level_logging_path = "event_storage/"
     app = Flask(__name__, template_folder="template")
@@ -153,6 +174,8 @@ if __name__ == '__main__':
 
     # thread = socketio.start_background_task(background_thread, )
 
-    ws = WebSocketServer(port=port, async_mode=async_mode, app=app, top_level_logging_path=top_level_logging_path)
+    ws = WebSocketServer(host=host, port=port, async_mode=async_mode, app=app,
+                         top_level_logging_path=top_level_logging_path,
+                         cors_allowed_origins=cors_allowed_origins)
 
-    ws.run(app)
+    ws.run()
