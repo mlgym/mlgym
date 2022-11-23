@@ -34,7 +34,8 @@ class SaveLastEpochOnlyCheckpointingStrategy(CheckpointingIF):
 
     def get_model_checkpoint_instruction(self, current_epoch: int, num_epochs: int,
                                          evaluation_result: EvaluationBatchResult) -> CheckpointingInstruction:
-        return CheckpointingInstruction(save_current=True, checkpoints_to_delete=[current_epoch-1])
+        checkpoints_to_delete = [current_epoch-1] if current_epoch > 0 else []
+        return CheckpointingInstruction(save_current=True, checkpoints_to_delete=checkpoints_to_delete)
 
 
 class SaveAllCheckpointingStrategy(CheckpointingIF):

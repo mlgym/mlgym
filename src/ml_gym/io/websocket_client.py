@@ -34,7 +34,8 @@ class BufferedClient:
         sio_client.on("mlgym_event", BufferedClient.on_mlgym_event_message)
 
     def connect(self):
-        self._sio_client.connect(f"{self._host}:{self._port}", wait=True, wait_timeout=20)
+        self._sio_client.connect(f"{self._host}:{self._port}", wait=True, wait_timeout=20, transports="websocket")
+        print(f"Connected to {self._host}:{self._port} with transport protocol {self._sio_client.transport()}")
         BufferedClient._register_callback_funs(self._sio_client)
         self.emit("join", {"client_id": self._client_id, "rooms": [*self.rooms, self._client_id]})
 
@@ -52,4 +53,3 @@ class BufferedClient:
     def emit(self, message_key: str,  message: Dict):
         self._sio_client.emit(message_key, message)
         # print(f"Sent message {message_key}: {message}")
-
