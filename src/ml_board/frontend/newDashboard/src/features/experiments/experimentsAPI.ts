@@ -12,8 +12,8 @@ export const convertExperiment = (input: serverExpriment, eType: experimentEvent
   if (input["experiment_id"] === undefined) throw ("Missing identifier in message 'experiment_id'");
 
   let result: Experiment = {
-    grid_search_id : input.grid_seach_id,
-    experiment_id  : input.experiment_id
+    grid_search_id : "",
+    experiment_id  : ""
   }
 
   switch (eType) {
@@ -59,14 +59,16 @@ export const convertExperiment = (input: serverExpriment, eType: experimentEvent
       if (Array.isArray (scores)) {
         for (let iScore = 0; iScore < scores.length; iScore++) {
           let curScore = scores[iScore];
-          let chartID  = `${curScore["split"]}-${curScore["metric"]}`;
-          let point: Epoch = { id: input["epoch"], score: curScore["score"] };
+          let chartID  = `${curScore["split"]}@@${curScore["metric"]}`; // ${split}@@${metric}
+          let point: Epoch = { id: Number (input["epoch"]), [input.experiment_id]: Number (curScore["score"]) };
           chart_ids.push (chartID);
           result[chartID] = [point];
         }
       }
 
-      result.chart_ids = [ ...new Set (chart_ids) ];
+      result.grid_search_id = input.grid_seach_id;
+      result.experiment_id  = input.experiment_id;
+      result.chart_ids      = [ ...new Set (chart_ids) ];
     } break;
 
     /*

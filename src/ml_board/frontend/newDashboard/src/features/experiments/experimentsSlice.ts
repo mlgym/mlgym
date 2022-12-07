@@ -1,17 +1,16 @@
-import cloneDeep         from 'lodash.clonedeep';
 import { createSlice   } from '@reduxjs/toolkit';
 import { PayloadAction } from '@reduxjs/toolkit';
 import { RootState     } from '../../app/store';
 
 export interface Epoch {
-  id    : number;
-  score : number;
+  id            : number;
+  [eID: string] : number;
 }
 
 export interface Experiment {
   grid_search_id : string; 
   experiment_id  : string;
-  chart_ids?     : string[]; // ${split}-${metric}
+  chart_ids?     : string[]; // ${split}@@${metric}
   status?        : string;
   current_split? : string;
   splits?        : string[];
@@ -19,6 +18,7 @@ export interface Experiment {
   current_epoch? : number;
   num_batches?   : number;
   current_batch? : number;
+  color?         : string;
   // used to keep split data -- VV    To avoid compilation error      VV
   [split_metric: string] : Epoch[] | number | string | string[] | undefined;
   // -------------------------- ^^^^^^ To avoid compilation error ^^^^^^
@@ -30,13 +30,13 @@ export interface ExperimentsState {
 
 const initialState: ExperimentsState = { }
 
-export const experimentsSlice = createSlice({
+export const experimentsSlice = createSlice ({
   name: 'experiments',
   initialState,
   reducers: {
     upsertExp: (state, action: PayloadAction<Experiment>) => {
       if (state[action.payload.experiment_id] === undefined) {
-        state[action.payload.experiment_id] = action.payload;
+        state[action.payload.experiment_id] = { ...action.payload, color: getRandColor () };
       } else {
         state[action.payload.experiment_id] = 
         mergeExperiments (state[action.payload.experiment_id], action.payload);
@@ -46,10 +46,10 @@ export const experimentsSlice = createSlice({
 });
 
 // used so that the values in an experiment are merged rather than overwritten
-// the reason this function is used is because not all the key names are knows
-// e.g. "train-F1", "val-bceloss", or any other split-metric identifiers
+// the reason this function is used is the variable object keys are not known
+// e.g. "train@@F1", "val@@bceloss", or any other split@@metric identifiers
 let mergeExperiments = (e1: Experiment, e2: Experiment): Experiment => {
-  let res: Experiment = cloneDeep (e1);
+  let res: Experiment = e1;
 
   // The only objects that need to be merged in type experiment are Arrays
   // only care about the already existing arrays of e1
@@ -59,12 +59,9 @@ let mergeExperiments = (e1: Experiment, e2: Experiment): Experiment => {
     // This can only handle one-dimensional arrays
     if (Array.isArray (val)) {
       if (Array.isArray (res[key])) {
-        let currentData = res[key] as Array<any>;
-        let newData     = e2[key]  as Array<any>;
-        let tmp         = [ ...currentData, ...newData ];
-        res[key]        = [ ...new Set (tmp) ];
+        res[key] = [ ...new Set ([ ...res[key] as Array<any>, ...e2[key]  as Array<any> ]) ];
       } else if (res[key] === undefined) {
-        res[key] = cloneDeep (e2[key]);
+        res[key] = e2[key];
       }
     } else if (typeof (val) === "object") { // object that isn't an array.
       // if keys with values that are objects or objects with nested objects are added
@@ -77,6 +74,12 @@ let mergeExperiments = (e1: Experiment, e2: Experiment): Experiment => {
   }
 
   return res;
+}
+
+// one can only hope that it doesn't produce
+// a blue blue blue blue blue... pattern
+const getRandColor = (): string => {
+  return `#${Math.floor (Math.random () * 16777215).toString (16)}`;
 }
 
 export const { upsertExp } = experimentsSlice.actions;

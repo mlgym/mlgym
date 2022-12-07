@@ -32,7 +32,16 @@ function Charts({eIDs}: {eIDs: string[]}) {
     if (curEIDs !== undefined) {
       let chart: JSX.Element = (
         <div className="chart" key={`chart#${curKey}`}>
-          <div className="title">{curKey}</div>
+          <div className="chartTitle">
+            {
+              curKey.split ('@@').map (
+                (val: string, idx: number) =>
+                  <span key={`titlePart#${idx}`} className={`titlePart-${idx}`}>
+                    {val}
+                  </span>
+              )
+            }
+          </div>
           <Chart eIDs={curEIDs} split_metric={curKey} />
         </div>
       );

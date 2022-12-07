@@ -1,6 +1,5 @@
 import { createSlice   } from '@reduxjs/toolkit';
 import { PayloadAction } from '@reduxjs/toolkit';
-import cloneDeep         from 'lodash.clonedeep';
 import { RootState     } from '../../app/store';
 
 export interface Job {
@@ -22,7 +21,7 @@ export interface JobsState {
 
 const initialState: JobsState = { }
 
-export const jobsSlice = createSlice({
+export const jobsSlice = createSlice ({
   name: 'jobs',
   initialState,
   reducers: {

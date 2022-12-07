@@ -138,10 +138,8 @@ let wsConnect = async (wsEndpointURL: string, runId: string, dispatch: AppDispat
 
   socket.on ('mlgym_event', (msg: string) => {
     let parsedMsg = {
-      data: {
-        event_type : "unknown" as supportedEvents,
-        payload    : {}
-      }
+      event_type : "unknown" as supportedEvents,
+      payload    : {}
     };
 
     try {
@@ -151,15 +149,15 @@ let wsConnect = async (wsEndpointURL: string, runId: string, dispatch: AppDispat
       console.log ("Websocket Error " + error.message);
     }
 
-    const eventType: supportedEvents = parsedMsg["data"]["event_type"];
-    let data = parsedMsg["data"]["payload"] as serverJob | serverExpriment;
+    const eventType: supportedEvents = parsedMsg["event_type"];
+    let data = parsedMsg["payload"] as serverJob | serverExpriment;
     let dispatchData: Experiment | Job | undefined = undefined;
 
     if (supportedEvents.indexOf (eventType) > -1) {
       try {
         switch (eventType) {
-          case "job_status":        dispatchData = convertJob (data as serverJob, eventType);              break;
-          case "job_scheduled":     dispatchData = convertJob (data as serverJob, eventType);              break;
+          case "job_status":        dispatchData = convertJob        (data as serverJob,       eventType); break;
+          case "job_scheduled":     dispatchData = convertJob        (data as serverJob,       eventType); break;
           case "evaluation_result": dispatchData = convertExperiment (data as serverExpriment, eventType); break;
           case "experiment_config": dispatchData = convertExperiment (data as serverExpriment, eventType); break;
           case "experiment_status": dispatchData = convertExperiment (data as serverExpriment, eventType); break;

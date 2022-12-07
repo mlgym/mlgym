@@ -12,10 +12,10 @@ export interface StatusState {
 const initialState: StatusState = {
   currentFilter : '.*',
   iTab          : 0,
-  wsConnected   : false,
+  wsConnected   : false
 };
 
-export const statusSlice = createSlice({
+export const statusSlice = createSlice ({
   name: 'status',
   initialState,
   reducers: {

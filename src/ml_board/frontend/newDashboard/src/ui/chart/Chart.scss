@@ -1,6 +1,71 @@
 .chart {
     display: grid;
-    grid-template-rows: 20px 380px;
-    width: 350px;
-    height: 400px;
+    grid-template-rows: 20px 200px;
+    width: calc(50vw - 200px);
+    height: 33%;
+}
+
+.legendVal,
+.tooltipVal {
+  border: 1px solid;
+  border-left-width: 6px;
+  border-radius: 5px;
+  padding: 1px 4px;
+  padding-top: 0px;
+  margin: 2px;
+  width: max-content;
+  max-width: 80px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.recharts-tooltip-wrapper {
+    z-index: 10;
+}
+
+.chartTooltip {
+  display: grid;
+  grid-template-rows: 20px auto;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.9);
+  color: rgb(236, 236, 236);
+  max-width: 190px;
+  border-radius: 5px;
+  z-index: 10;
+}
+
+.tooltipValues {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 5px;
+  justify-content: center;
+  z-index: 10;
+}
+
+.legendsContainer {
+  height: max-content;
+  width: 70%;
+  overflow: auto;
+  z-index: 4;
+}
+
+.chartLegends {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.legendVal {
+  opacity: 0.3;
+}
+
+.legendVal:hover {
+  opacity: 1;
+}
+
+.recharts-legend-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
