@@ -163,13 +163,13 @@ def scoring_fun_single_scalar_metric(metric_key: str, experiment: ExperimentRepr
     return experiment.results[metric_key][epoch]
 
 
-# if __name__ == "__main__":
-#     from functools import partial
+if __name__ == "__main__":
+    from functools import partial
 
-#     epoch = -1
-#     scoring_fun = partial(scoring_fun_single_scalar_metric, metric_key="train/auroc_macro", epoch=epoch)
+    epoch = -1
+    scoring_fun = partial(scoring_fun_single_scalar_metric, metric_key="train/auroc_macro", epoch=epoch)
 
-#     result_directory = ""
-#     analyzer = NestedCVAnalyzer(result_directory, scoring_fun=scoring_fun)
-#     report = analyzer.analyze(epoch)
-#     print(report)
+    result_directory = ""
+    analyzer = NestedCVAnalyzer(result_directory, scoring_fun=scoring_fun)
+    report = analyzer.analyze(epoch)
+    print(report)

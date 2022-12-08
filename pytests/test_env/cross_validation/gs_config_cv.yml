@@ -1,0 +1,263 @@
+global_config:
+  storage_connector_path: &storage_path_anchor ./file_storage/
+  seed: &seed_value 2
+  target_key: &target_key_anchor target_key
+  model_prediction_key: &model_prediction_key_anchor model_prediction_key
+  postprocessing_argmax_key: &postprocessing_argmax_key_anchor postprocessing_argmax_key
+
+
+cv_experiment_information:
+  component_type_key: DATASET_ITERATORS
+  variant_key: DEFAULT
+  config:
+    experiment_id:
+      injectable:
+        id: id_experiment_id
+    hyper_paramater_combination_id:
+      injectable:
+        id: id_hyper_paramater_combination_id 
+    val_fold_id:
+      injectable:
+        id: id_val_fold_id
+
+
+dataset_repository:
+  component_type_key: DATASET_REPOSITORY
+  variant_key: DEFAULT
+
+dataset_iterators:
+  component_type_key: DATASET_ITERATORS
+  variant_key: DEFAULT
+  requirements:
+    - name: repository
+      component_name: dataset_repository
+  config:
+    dataset_identifier: mocked_dataset
+    split_configs:
+        - split: train 
+        - split: test
+
+splitted_dataset_iterators:
+  component_type_key: SPLITTED_DATASET_ITERATORS
+  variant_key: RANDOM
+  requirements:
+    - name: iterators
+      component_name: dataset_iterators
+      subscription:
+        - train
+        - test
+  config:
+    split_configs:
+      train:
+        train: 0.05
+        train_: 0.95
+      test: 
+        test: 0.01
+        test_: 0.99
+    seed: *seed_value
+
+iterator_folds:
+  component_type_key: ITERATOR_VIEW
+  variant_key: DEFAULT
+  requirements:
+    - name: iterators
+      component_name: splitted_dataset_iterators
+      subscription: [train]
+  config:
+    applicable_split: train
+    split_indices:
+      injectable:
+          id: id_split_indices
+
+combined_dataset_iterators: 
+  component_type_key: COMBINED_DATASET_ITERATORS
+  variant_key: DEFAULT
+  requirements:
+    - name: iterator_folds
+      component_name: iterator_folds
+      subscription: [train, val]
+    - name: splitted_dataset_iterators
+      component_name: splitted_dataset_iterators
+      subscription: [test]
+  config:
+    combine_configs:
+      - new_split: train
+        old_splits: 
+          - iterators_name: iterator_folds
+            splits: [train]
+      - new_split: val
+        old_splits: 
+          - iterators_name: iterator_folds
+            splits: [val]
+      - new_split: test
+        old_splits: 
+          - iterators_name: splitted_dataset_iterators
+            splits: [test]
+
+data_collator:
+  component_type_key: DATA_COLLATOR
+  variant_key: DEFAULT
+  config:
+    collator_type:
+      injectable:
+        id: id_conv_mnist_standard_collator
+    collator_params:
+      target_publication_key: *target_key_anchor
+
+data_loaders:
+  component_type_key: DATA_LOADER
+  variant_key: DEFAULT
+  requirements:
+    - name: iterators
+      component_name: combined_dataset_iterators
+      subscription: [train, val, test]
+    - name: data_collator
+      component_name: data_collator
+  config:
+    batch_size: 50
+    weigthed_sampling_split_name: null
+
+model_registry:
+  component_type_key: MODEL_REGISTRY
+  variant_key: DEFAULT
+
+model:
+  component_type_key: MODEL
+  variant_key: DEFAULT
+  requirements:
+    - name: model_registry
+      component_name: model_registry
+      subscription: linear_net
+  config:
+    model_definition:
+      layer_config:
+        - params:
+            in_features: 1
+            out_features: 128
+          type: fc
+        - params:
+            in_features: 128
+            out_features: 1
+          type: fc
+    prediction_publication_keys:
+      prediction_publication_key: *model_prediction_key_anchor
+    seed: *seed_value
+
+optimizer:
+  component_type_key: OPTIMIZER
+  variant_key: DEFAULT
+  config:
+    optimizer_key: ADAM
+    params:
+      lr:
+        sweep: absolute
+        values: [0.01]
+      # weight_decay: 0.0001
+
+loss_function_registry:
+  component_type_key: LOSS_FUNCTION_REGISTRY
+  variant_key: DEFAULT
+
+metric_registry:
+  component_type_key: METRIC_REGISTRY
+  variant_key: DEFAULT
+
+prediction_postprocessing_registry:
+  component_type_key: PREDICTION_POSTPROCESSING_REGISTRY
+  variant_key: DEFAULT
+
+train_component:
+  component_type_key: TRAIN_COMPONENT
+  variant_key: DEFAULT
+  requirements:
+    - name: loss_function_registry
+      component_name: loss_function_registry
+    - name: prediction_postprocessing_registry
+      component_name: prediction_postprocessing_registry
+  config:
+    loss_fun_config:
+      prediction_subscription_key: *model_prediction_key_anchor
+      target_subscription_key: *target_key_anchor
+      key: LPLoss
+      tag: lp_loss
+
+trainer:
+  component_type_key: TRAINER
+  variant_key: DEFAULT
+  requirements:
+    - name: train_component
+      component_name: train_component
+    - name: model
+      component_name: model
+      subscription: null
+    - name: data_loaders
+      component_name: data_loaders
+      subscription: train
+
+eval_component:
+  component_type_key: EVAL_COMPONENT
+  variant_key: DEFAULT
+  requirements:
+    - name: model
+      component_name: model
+      subscription: null
+    - name: data_loaders
+      component_name: data_loaders
+      subscription: [train, test]
+    - name: loss_function_registry
+      component_name: loss_function_registry
+    - name: metric_registry
+      component_name: metric_registry
+    - name: prediction_postprocessing_registry
+      component_name: prediction_postprocessing_registry
+  config:
+    cpu_target_subscription_keys:
+      - *target_key_anchor
+    cpu_prediction_subscription_keys: 
+      - *postprocessing_argmax_key_anchor
+      - *model_prediction_key_anchor
+    post_processors_config:
+      - key: "ARG_MAX"
+        applicable_splits: [train, val, test]
+        params:
+          prediction_subscription_key: *model_prediction_key_anchor
+          prediction_publication_key: *postprocessing_argmax_key_anchor
+    train_split_name: train
+    metrics_computation_config:
+      - metric_tag: F1_SCORE_macro
+        applicable_splits: [train, val, test]
+      - metric_tag: PRECISION_macro
+        applicable_splits: [train, val, test]
+      - metric_tag: RECALL_macro
+        applicable_splits: [train, val, test]
+    metrics_config:
+      - key: F1_SCORE
+        params:
+          average: macro
+        prediction_subscription_key: *postprocessing_argmax_key_anchor
+        target_subscription_key: *target_key_anchor
+        tag: F1_SCORE_macro
+      - key: PRECISION
+        params:
+          average: macro
+        prediction_subscription_key: *postprocessing_argmax_key_anchor
+        target_subscription_key: *target_key_anchor
+        tag: PRECISION_macro
+      - key: RECALL
+        params:
+          average: macro
+        prediction_subscription_key: *postprocessing_argmax_key_anchor
+        target_subscription_key: *target_key_anchor
+        tag: RECALL_macro
+    loss_funs_config:
+      - prediction_subscription_key: *model_prediction_key_anchor
+        target_subscription_key: *target_key_anchor
+        key: LPLoss
+        tag: lp_loss
+
+evaluator:
+  component_type_key: EVALUATOR
+  variant_key: DEFAULT
+  requirements:
+    - name: eval_component
+      component_name: eval_component

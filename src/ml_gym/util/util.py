@@ -62,9 +62,11 @@ class ExportedModel:
 
     def predict_dataset_iterator(self, dataset_iterator: InformedDatasetIteratorIF,
                                  batch_size: int, collate_fn: Callable, no_grad: bool = True) -> InferenceResultBatch:
-        dataset_loader = DatasetLoaderFactory.get_splitted_data_loaders(
-            {"x": dataset_iterator}, batch_size=batch_size, collate_fn=collate_fn, seeds={"x": 1})["x"]
-
+        split_key = "dataset_split"
+        sampling_strategies = {split_key: {"strategy": "IN_ORDER"}}
+        dataset_loader = DatasetLoaderFactory.get_splitted_data_loaders({split_key: dataset_iterator}, batch_size=batch_size,
+                                                                        sampling_strategies=sampling_strategies,
+                                                                        collate_fn=collate_fn)[split_key]
         irb = self.predict_data_loader(dataset_loader=dataset_loader, no_grad=no_grad)
         return irb
 
@@ -112,7 +114,6 @@ class ComponentLoader:
         cv_config = YAMLConfigLoader.load(cv_path)
         nested_cv = ValidatorFactory.get_nested_cv(gs_config=gs_config,
                                                    cv_config=cv_config,
-                                                   grid_search_id="bla",
                                                    blue_print_type=blueprint_type)
         blue_print = nested_cv.create_blue_prints(blueprint_type, AbstractGymJob.Type.STANDARD, gs_config, 1, dashify_logging_path="")[0]
         components = blueprint_type.construct_components(

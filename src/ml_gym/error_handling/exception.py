@@ -90,15 +90,32 @@ class OptimizerNotInitializedError(Exception):
     """Raised when we want to run an operation on an optimizer, which was not instantiated, yet."""
     pass
 
+
 class MetricCalculationError(Exception):
     """Raised when there was an error during metric calculation"""
     pass
+
 
 class LossCalculationError(Exception):
     """Raised when there was an error during loss calculation"""
     pass
 
 
-class EventStorageInvalidIndexingError(Exception):
-    """Raised when an event is tried to indexed within the event storage but the index is not present."""
+class SamplerNotFoundError(Exception):
+    """Raised when the sampler implemenation for a given datsetloader was not found."""
+    pass
+
+
+class NetworkError(Exception):
+    """Raised when there is a network or connetion error."""
+    pass
+
+
+class DataIntegrityError(Exception):
+    """Raised when the data is not in the expected format."""
+    pass
+
+
+class InvalidPathError(Exception):
+    """Raised when the path to a file or directory is invalid/corrupt."""
     pass

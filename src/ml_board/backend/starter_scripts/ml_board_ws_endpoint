@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+import argparse
+from flask import Flask
+from ml_board.backend.websocket_api.websocket_server import WebSocketServer
+from os.path import abspath
+from typing import List
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Websocket server')
+    parser.add_argument('--event_storage_path', type=str, help='Path to the event storage', required=True)
+    parser.add_argument('--host', type=str, help='The hostname or IP address for the server to listen on',
+                        default="127.0.0.1", required=True)
+    parser.add_argument('--port', type=int, help='Port on which the websocket server runs', default=5000, required=True)
+    parser.add_argument('--cors_allowed_origins', nargs='+', type=str, help='List of origins allowed to connnect to the server',
+                        required=True)
+
+    args = parser.parse_args()
+    host = args.host
+    port = args.port
+    event_storage_path = abspath(args.event_storage_path)
+    cors_allowed_origins = args.cors_allowed_origins
+    print(event_storage_path)
+    return host, port, event_storage_path, cors_allowed_origins
+
+
+def run_websocket_server(host: str, port: int, event_storage_path: str, cors_allowed_origins: List[str]):
+    async_mode = None
+    app = Flask(__name__, template_folder="template")
+    app.config['SECRET_KEY'] = 'secret!'
+
+    # thread = socketio.start_background_task(background_thread, )
+
+    ws = WebSocketServer(host=host, port=port, async_mode=async_mode, app=app, top_level_logging_path=event_storage_path,
+                         cors_allowed_origins=cors_allowed_origins)
+    ws.run()
+
+
+host, port, event_storage_path, cors_allowed_origins = parse_args()
+
+run_websocket_server(host=host, port=port, event_storage_path=event_storage_path, cors_allowed_origins=cors_allowed_origins)

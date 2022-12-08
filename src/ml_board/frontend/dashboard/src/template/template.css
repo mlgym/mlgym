@@ -1,0 +1,18 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
+@import url('https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css');
+
+
+.flex-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.children-content {
+    width: 100% - calc(var(--nav-width));
+    /* margin: auto; */
+    /* padding-left: calc(var(--nav-width) + 1rem) */
+    margin-left: calc(var(--nav-width));
+    height: 100%;
+    overflow: auto;
+}

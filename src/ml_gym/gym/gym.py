@@ -12,7 +12,7 @@ torch.multiprocessing.set_start_method('spawn', force=True)
 
 
 class Gym:
-    def __init__(self, process_count: int = 1, device_ids: List[int] = None, log_std_to_file: bool = True,
+    def __init__(self, job_id_prefix: str, process_count: int = 1, device_ids: List[int] = None, log_std_to_file: bool = True,
                  logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None):
         self.devices = get_devices(device_ids)
         self.logger_collection_constructable = logger_collection_constructable
@@ -20,6 +20,8 @@ class Gym:
         self.log_std_to_file = log_std_to_file
         self.pool = Pool(num_processes=process_count, devices=self.devices, logger_collection_constructable=logger_collection_constructable)
         self.jobs: List[Job] = []
+        self.job_id_prefix = job_id_prefix
+        self.job_counter = 0
 
     def run(self, parallel=True):
         """Executes the jobs. Note that this function blocks until all jobs have been executed!
@@ -28,33 +30,35 @@ class Gym:
             parallel (bool, optional): When set to True, jobs are run in parallel in the multiprocessing environment. Defaults to True.
         """
         if parallel:
-            for job in self.jobs:
+            for _ in range(len(self.jobs)):
+                job = self.jobs.pop(0)
                 self.pool.add_job(job)
+
             self.pool.run()
         else:
-            self.work(self.devices[0])
+            for _ in tqdm.tqdm(range(len(self.jobs)), desc="Models trained"):
+                job = self.jobs.pop(0)
+                self.work(job, self.devices[0])
 
-    def add_blue_print(self, blue_print: BluePrint) -> int:
-        job = Job(job_id=len(self.jobs), fun=Gym._run_job, blue_print=blue_print, param_dict={"log_std_to_file": self.log_std_to_file})
+    def add_blueprint(self, blueprint: BluePrint) -> int:
+        job = Job(job_id=f"{blueprint.grid_search_id}-{self.job_counter}", fun=Gym._run_job, blueprint=blueprint, param_dict={"log_std_to_file": self.log_std_to_file})
+        self.job_counter += 1
         self.jobs.append(job)
         return job.job_id
 
-    def add_blue_prints(self, blue_prints: List[BluePrint]):
-        job_id_to_blueprint: Dict[int, BluePrint] = {}
-        for blue_print in blue_prints:
-            job_id = self.add_blue_print(blue_print)
-            job_id_to_blueprint[job_id] = blue_print
-            self.job_status_logger.log_experiment_config(grid_search_id=blue_print.grid_search_id,
-                                                         experiment_id=blue_print.experiment_id,
+    def add_blueprints(self, blueprints: List[BluePrint]):
+        for blueprint in blueprints:
+            job_id = self.add_blueprint(blueprint)
+            self.job_status_logger.log_experiment_config(grid_search_id=blueprint.grid_search_id,
+                                                         experiment_id=blueprint.experiment_id,
                                                          job_id=job_id,
-                                                         config=blue_print.config)
+                                                         config=blueprint.config)
 
     @staticmethod
-    def _run_job(blue_print: BluePrint, device: torch.device, log_std_to_file: bool) -> AbstractGymJob:
-        gym_job = AbstractGymJob.from_blue_print(blue_print)
+    def _run_job(blueprint: BluePrint, device: torch.device, log_std_to_file: bool) -> AbstractGymJob:
+        gym_job = AbstractGymJob.from_blue_print(blueprint, device=device)
         return gym_job.execute(device=device)
 
-    def work(self, device: torch.device):
-        for job in tqdm.tqdm(self.jobs, desc="Models trained"):
-            job.device = device
-            job.execute()
+    def work(self, job: Job, device: torch.device):
+        job.device = device
+        job.execute()

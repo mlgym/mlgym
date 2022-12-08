@@ -134,18 +134,23 @@ class NLLLoss(Loss):
 
 
 class BCEWithLogitsLoss(Loss):
-    def __init__(self, target_subscription_key: str, prediction_subscription_key: str, tag: str = "", average_batch_loss: bool = True):
+    def __init__(self, target_subscription_key: str, prediction_subscription_key: str, tag: str = "", average_batch_loss: bool = True,
+                 flatten_predictions: bool = False):
         super().__init__(tag)
         self.target_subscription_key: str = target_subscription_key
         self.prediction_subscription_key: str = prediction_subscription_key
         self.average_batch_loss = average_batch_loss
+        self.flatten_predictions = flatten_predictions
+        self.loss_fun = nn.BCEWithLogitsLoss(reduction="none")
 
     def __call__(self, inference_result_batch: InferenceResultBatch) -> torch.Tensor:
         t = inference_result_batch.get_targets(
-            self.target_subscription_key).float()#.flatten()
+            self.target_subscription_key).float()  # .flatten()
         p = inference_result_batch.get_predictions(
-            self.prediction_subscription_key)#.flatten()
-        loss_values = nn.BCEWithLogitsLoss(reduction="none")(p, t)
+            self.prediction_subscription_key)  # .flatten()
+        if self.flatten_predictions:
+            p = p.flatten()
+        loss_values = self.loss_fun(p, t)
         if self.average_batch_loss:
             loss_values = torch.sum(loss_values)/len(loss_values)
         return loss_values
@@ -154,6 +159,7 @@ class BCEWithLogitsLoss(Loss):
 class BCELoss(Loss):
     """ NOTE, that this loss is numerically less stable than BCEWithLogitsLoss
     """
+
     def __init__(self, target_subscription_key: str, prediction_subscription_key: str, tag: str = "", average_batch_loss: bool = True):
         super().__init__(tag)
         self.target_subscription_key: str = target_subscription_key
@@ -162,8 +168,8 @@ class BCELoss(Loss):
 
     def __call__(self, inference_result_batch: InferenceResultBatch) -> torch.Tensor:
         t = inference_result_batch.get_targets(
-            self.target_subscription_key).float()#.flatten()
-        p = inference_result_batch.get_predictions(self.prediction_subscription_key)#.flatten()
+            self.target_subscription_key).float()  # .flatten()
+        p = inference_result_batch.get_predictions(self.prediction_subscription_key)  # .flatten()
         loss_values = nn.BCELoss(reduction="none")(p, t)
         if self.average_batch_loss:
             loss_values = torch.sum(loss_values)/len(loss_values)

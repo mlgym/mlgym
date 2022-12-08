@@ -1,0 +1,17 @@
+.App {
+  text-align: center;
+  display: grid;
+  grid-template-columns: max-content auto;
+  grid-template-rows: 100vh;
+
+  .tabContent {
+    display: grid;
+    grid-template-columns: auto;
+    grid-template-rows: auto 150px;
+
+    .mainView {
+      height: 100%;
+      overflow: auto;
+    }
+  }
+}

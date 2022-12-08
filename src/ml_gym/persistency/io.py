@@ -1,134 +1,129 @@
-from abc import ABC, abstractmethod
-from ml_gym.gym.evaluator import EvaluationBatchResult
-from typing import List, Dict, Any, BinaryIO
-from dashify.logging.dashify_logging import ExperimentInfo, DashifyLogger
-import glob
-import os
-from ml_gym.error_handling.exception import TrainingStateCorruptError
-import json
+from abc import abstractmethod
+from dataclasses import dataclass
+from enum import Enum
+from typing import Dict, List
+import requests
+from http import HTTPStatus
+from ml_gym.error_handling.exception import NetworkError, DataIntegrityError
+from abc import ABC
+from ml_board.backend.restful_api.data_models import RawTextFile, FileFormat, ExperimentStatus, CheckpointResource
 
 
-class AbstractWriter(ABC):
-    @staticmethod
-    @abstractmethod
-    def log_console(result: EvaluationBatchResult):
+class GridSearchAPIClientIF(ABC):
+
+    def get_config(self, grid_search_id: str, config_name: str):
         raise NotImplementedError
 
-    @staticmethod
-    @abstractmethod
-    def log_measurement_result(results: List[EvaluationBatchResult], experiment_info: ExperimentInfo,
-                               measurement_id: int):
+    def add_config_string(self, grid_search_id: str, config_name: str, config: Dict, experiment_id: int = None) -> Dict:
+        raise NotImplementedError
+
+    def get_validation_config(self, grid_search_id: str):
+        raise NotImplementedError
+
+    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int,
+                                checkpoint_resource: CheckpointResource):
+        raise NotImplementedError
+
+    def get_full_checkpoint(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int):
+        raise NotImplementedError
+
+    def get_unfinished_experiments(self, grid_search_id: str):
+        raise NotImplementedError
+
+    def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
         raise NotImplementedError
 
 
-class DashifyWriter(AbstractWriter):
-    """ Partially wraps the `DashifyLogger`.
-    """
+class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
 
-    @staticmethod
-    def log_console(result: EvaluationBatchResult):
-        result.aggregate()
-        print(str(result))
+    def __init__(self, endpoint: str):
+        self.endpoint = endpoint
 
-    @staticmethod
-    def save_state(data_dict: Dict[str, Any], experiment_info: ExperimentInfo, measurement_id: int = 0):
-        file_name = f"state_{str(measurement_id)}.json"
-        DashifyLogger.save_dict(file_name, data_dict, experiment_info)
-
-    @staticmethod
-    def log_raw_experiment_message(data_dict: Dict[str, Any], experiment_info: ExperimentInfo):
-        file_name = "raw_messages.log"
-        DashifyLogger.log_raw_experiment_message(file_name, data_dict, experiment_info)
-
-    @staticmethod
-    def log_raw_gs_message(data_dict: Dict[str, Any], experiment_info: ExperimentInfo):
-        file_name = "raw_messages.log"
-        DashifyLogger.log_raw_gs_message(file_name, data_dict, experiment_info)
-
-    @staticmethod
-    def log_measurement_result(results: List[EvaluationBatchResult], experiment_info: ExperimentInfo,
-                               measurement_id: int):
-        results_dict = {}
-        for result in results:
-            metrics_dictionary = DashifyWriter._get_results_dict(result)
-            results_dict = {**metrics_dictionary, **results_dict}
-        DashifyLogger.log_metrics(experiment_info=experiment_info, metrics=results_dict, measurement_id=measurement_id)
-
-    @staticmethod
-    def save_binary_state(key: str, state: BinaryIO, experiment_info: ExperimentInfo, measurement_id: int):
-        DashifyLogger.save_checkpoint_state_dict(state, key, experiment_info, measurement_id)
-
-    # @staticmethod
-    # def save_model_state(model_state: Dict, experiment_info: ExperimentInfo, measurement_id: int):
-    #     DashifyLogger.save_checkpoint_state_dict(model_state, "model", experiment_info, measurement_id)
-
-    # @staticmethod
-    # def save_optimizer_state(optimizer_state: Dict, experiment_info: ExperimentInfo, measurement_id: int):
-    #     DashifyLogger.save_checkpoint_state_dict(optimizer_state, "optimizer", experiment_info, measurement_id)
-
-    @staticmethod
-    def _get_results_dict(result: EvaluationBatchResult) -> Dict[str, List[float]]:
-        def combine_metric_name(dataset_split: str, metric_name: str):
-            return f"{dataset_split}/{metric_name.lower()}"
-
-        # get metrics and losses as dict
-        results_dict = dict()
-        metrics_and_losses = {**result.metrics, **result.losses}
-        for metric_name, metric_value in metrics_and_losses.items():
-            results_dict[combine_metric_name(result.split_name, metric_name)] = metric_value
-        return results_dict
-
-
-class DashifyReader:
-
-    @staticmethod
-    def load_model_state(experiment_info: ExperimentInfo, measurement_id: int) -> Dict:
-        model_state = DashifyLogger.load_checkpoint_state_dict("model", experiment_info, measurement_id)
-        return model_state
-
-    @staticmethod
-    def experiments_exist(experiment_info: ExperimentInfo, measurement_id: int) -> bool:
-        try:
-            DashifyReader.load_model_state(experiment_info, measurement_id)
-        except:
-            return False
-        return True
-
-    @staticmethod
-    def load_optimizer_state(experiment_info: ExperimentInfo, measurement_id: int) -> Dict:
-        optimizer_state = DashifyLogger.load_checkpoint_state_dict("optimizer", experiment_info, measurement_id)
-        return optimizer_state
-
-    @staticmethod
-    def load_state(experiment_info: ExperimentInfo, measurement_id: int = 0) -> Dict[str, Any]:
-        file_name = f"state_{str(measurement_id)}.json"
-        data_dict = DashifyLogger.load_dict(file_name, experiment_info)
-        return data_dict
-
-    @staticmethod
-    def get_last_epoch(experiment_info: ExperimentInfo) -> int:
-        # TODO integrate into DashifyML
-        # get epoch of latest model
-        checkpoint_folder_path = os.path.join(experiment_info.full_experiment_path, DashifyLogger.checkpoint_folder)
-        model_paths = glob.glob(os.path.join(checkpoint_folder_path, "model_*.pt"))
-        if not model_paths:
-            model_epoch = -1
+    def _get_json_resource(url) -> Dict:
+        response = requests.get(url)
+        if response.status_code != HTTPStatus.OK:
+            raise NetworkError(f"Server responded with error code {response.status_code}")
         else:
-            model_epoch = max([int(p.split("model_")[-1][:-3]) for p in model_paths])
+            try:
+                grid_search_config = response.json()
+            except ValueError as e:
+                raise DataIntegrityError(f"Could not cast response from {url} to json.") from e
+            return grid_search_config
 
-        # get epoch according to metrics
-        metrics_path = os.path.join(experiment_info.full_experiment_path, "metrics.json")
-        with open(metrics_path, "r") as f:
-            metrics = json.load(f)
-        if not metrics.keys():
-            metric_epoch = -1
+    def _get_binary_resource(url) -> bytes:
+        response = requests.get(url)
+        if response.status_code != HTTPStatus.OK:
+            raise NetworkError(f"Server responded with error code {response.status_code}")
         else:
-            metric_epoch = len(metrics[list(metrics.keys())[0]]) - 1
+            return response.content
 
-        # The model can be trained until epoch n but the model might have been only evaluated until n-1
-        # this is ok, since the first step is to reevaluate the model for the last epoch. 
-        # The second normal case is that a model is trained and evaluated until epoch n.
-        # All other cases, indicate a corrupted training state.
-        if not (model_epoch == metric_epoch or model_epoch-1 == metric_epoch):
-            raise TrainingStateCorruptError(f"The experiment {experiment_info.experiment_id} has checkpointed the model at epoch {model_epoch} and but has evaluated the model until epoch {metric_epoch}.")
-        return model_epoch
+    def _set_raw_text_file_resource(url: str, payload: Dict) -> Dict:
+        response = requests.put(url=url, json=payload)
+        if response.status_code != HTTPStatus.OK:
+            raise NetworkError(f"Server responded with error code {response.status_code}")
+
+    def get_config(self, grid_search_id: str, config_name: str) -> str:
+        url = f"{self.endpoint}/{grid_search_id}/{config_name}"
+        return GridSearchRestfulAPIClient._get_json_resource(url)
+
+    # def add_grid_search_config(self, grid_search_id: str, grid_search_config: Dict) -> Dict:
+    #     url = f"{self.endpoint}/grid_searches/{grid_search_id}/gs_config"
+    #     return GridSearchRestfulAPIClient._set_raw_text_file_resource(url, grid_search_config)
+
+    def add_config_string(self, grid_search_id: str, config_name: str, config: str, file_format: FileFormat,
+                          experiment_id: int = None) -> Dict:
+        payload_dict = RawTextFile(file_format=file_format, content=config).dict()
+        if experiment_id is None:
+            url = f"{self.endpoint}/grid_searches/{grid_search_id}/{config_name}"
+        else:
+            url = f"{self.endpoint}/grid_searches/{grid_search_id}/{experiment_id}/{config_name}"
+
+        return GridSearchRestfulAPIClient._set_raw_text_file_resource(url, payload_dict)
+
+    def get_validation_config(self, grid_search_id: str):
+        url = f"{self.endpoint}/{grid_search_id}/validation_config"
+        return GridSearchRestfulAPIClient._get_json_resource(url)
+
+    def get_experiments(self, grid_search_id: str):
+        url = f"{self.endpoint}/{grid_search_id}/experiments"
+        return GridSearchRestfulAPIClient._get_json_resource(url)
+
+    def get_full_checkpoint(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int):
+        url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{checkpoint_id}"
+        return GridSearchRestfulAPIClient._get_json_resource(url)
+
+    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int,
+                                checkpoint_resource: CheckpointResource):
+        url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{checkpoint_id}/{checkpoint_resource}"
+        return GridSearchRestfulAPIClient._get_binary_resource(url)
+
+    def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
+        url = f"{self.endpoint}/grid_searches/{grid_search_id}/experiments"
+        response = GridSearchRestfulAPIClient._get_json_resource(url)
+        experiment_statuses = [ExperimentStatus(**r) for r in response]
+        return experiment_statuses
+
+
+class GridSearchAPIClientConstructableIF(ABC):
+
+    @abstractmethod
+    def construct(self) -> GridSearchAPIClientIF:
+        raise NotImplementedError
+
+
+class GridSearchAPIClientType(Enum):
+    GRID_SEARCH_RESTFUL_API_CLIENT = GridSearchRestfulAPIClient
+
+
+@dataclass
+class GridSearchAPIClientConfig:
+    api_client_type: GridSearchAPIClientType
+    api_client_config: Dict
+
+
+@dataclass
+class GridSearchAPIClientConstructable(GridSearchAPIClientConstructableIF):
+    config: GridSearchAPIClientConfig
+
+    def construct(self) -> GridSearchAPIClientIF:
+        return self.config.api_client_type.value(**self.config.api_client_config)

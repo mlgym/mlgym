@@ -1,13 +1,14 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Union, Type
-from dashify.logging.dashify_logging import DashifyLogger
 from data_stack.dataset.iterator import DatasetIteratorIF
 from data_stack.repository.repository import DatasetRepository
 from abc import abstractmethod, ABC
 from data_stack.io.storage_connectors import StorageConnectorFactory
 from data_stack.mnist.factory import MNISTFactory
 from ml_gym.data_handling.dataset_loader import DatasetLoader, DatasetLoaderFactory
+from ml_gym.early_stopping.early_stopping_strategies import EarlyStoppingIF, EarlyStoppingStrategyFactory
+from ml_gym.optimizers.optimizer import OptimizerAdapter, OptimizerBundle
 from ml_gym.optimizers.optimizer_factory import OptimizerFactory
 from ml_gym.models.nn.net import NNModel
 from collections.abc import Mapping
@@ -27,6 +28,9 @@ from data_stack.dataset.meta import MetaFactory
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 from functools import partial
 from ml_gym.loss_functions.loss_factory import LossFactory
+import warnings
+from ml_gym.checkpointing.checkpoint_factory import CheckpointingStrategyFactory
+from ml_gym.checkpointing.checkpointing import CheckpointingIF
 
 
 @dataclass
@@ -58,7 +62,7 @@ class ComponentConstructable(ABC):
         return self.constructed
 
     @abstractmethod
-    def _construct_impl():
+    def _construct_impl(self):
         raise NotImplementedError
 
     def get_requirement(self, name: str) -> List[Any]:
@@ -227,11 +231,30 @@ class DataCollatorConstructable(ComponentConstructable):
 
 
 @dataclass
-class DataLoadersConstructable(ComponentConstructable):
+class DeprecatedDataLoadersConstructable(ComponentConstructable):
     batch_size: int = 1
     weigthed_sampling_split_name: str = None
     label_pos: int = 2
     seeds: Dict[str, int] = field(default_factory=dict)
+    drop_last: bool = False
+
+    def _construct_impl(self) -> DatasetLoader:
+        warnings.warn(message="Future DataLoader interface change. Expects sampling strategy in the future.", category=FutureWarning)
+        dataset_iterators_dict = self.get_requirement("iterators")
+        collator: Collator = self.get_requirement("data_collator")
+        return DatasetLoaderFactory.get_splitted_data_loaders_deprecated(dataset_splits=dataset_iterators_dict,
+                                                                         batch_size=self.batch_size,
+                                                                         collate_fn=collator,
+                                                                         weigthed_sampling_split_name=self.weigthed_sampling_split_name,
+                                                                         label_pos=self.label_pos,
+                                                                         seeds=self.seeds,
+                                                                         drop_last=self.drop_last)
+
+
+@dataclass
+class DataLoadersConstructable(ComponentConstructable):
+    batch_size: int = 1
+    sampling_strategies: Dict[str, Any] = field(default_factory=dict)
     drop_last: bool = False
 
     def _construct_impl(self) -> DatasetLoader:
@@ -240,9 +263,7 @@ class DataLoadersConstructable(ComponentConstructable):
         return DatasetLoaderFactory.get_splitted_data_loaders(dataset_splits=dataset_iterators_dict,
                                                               batch_size=self.batch_size,
                                                               collate_fn=collator,
-                                                              weigthed_sampling_split_name=self.weigthed_sampling_split_name,
-                                                              label_pos=self.label_pos,
-                                                              seeds=self.seeds,
+                                                              sampling_strategies=self.sampling_strategies,
                                                               drop_last=self.drop_last)
 
 
@@ -251,8 +272,29 @@ class OptimizerConstructable(ComponentConstructable):
     optimizer_key: str = ""
     params: Dict[str, Any] = field(default_factory=dict)
 
-    def _construct_impl(self):
+    def _construct_impl(self) -> OptimizerAdapter:
         return OptimizerFactory.get_optimizer(self.optimizer_key, self.params)
+
+
+@dataclass
+class OptimizerBundleConstructable(ComponentConstructable):
+
+    optimizers_config: Dict[str, Any] = field(default_factory=list)
+    # {
+    #     "o_1": {"optimizer_key": "ADAM", "params": {"lr": 1, "momentum": 0.9}},
+    #     "o_2": {"optimizer_key": "SGD", "params": {"lr": 2, "momentum": 0.8}}
+    # }
+
+    optimizer_key_to_param_key_filters: Dict[str, Any] = field(default_factory=dict)
+    # {
+    #     "o_1": ["encoder_1", "encoder_2"],
+    #     "o_2": ["bias"]
+    # }
+
+    def _construct_impl(self) -> OptimizerAdapter:
+        optimizers = {optimizer_id: OptimizerFactory.get_optimizer(**optimizer_config)
+                      for optimizer_id, optimizer_config in self.optimizers_config.items()}
+        return OptimizerBundle(optimizers=optimizers, optimizer_key_to_param_key_filters=self.optimizer_key_to_param_key_filters)
 
 
 @dataclass
@@ -462,3 +504,62 @@ class EvaluatorConstructable(ComponentConstructable):
         eval_component: EvalComponent = self.get_requirement("eval_component")
         evaluator = Evaluator(eval_component)
         return evaluator
+
+
+@dataclass
+class EarlyStoppingRegistryConstructable(ComponentConstructable):
+    class StrategyKeys:
+        LAST_K_EPOCHS_IMPROVEMENT_STRATEGY = "LAST_K_EPOCHS_IMPROVEMENT_STRATEGY"
+
+    def _construct_impl(self):
+        strategy_registry = ClassRegistry()
+        default_mapping: Dict[str, Metric] = {
+            EarlyStoppingRegistryConstructable.StrategyKeys.LAST_K_EPOCHS_IMPROVEMENT_STRATEGY:
+                EarlyStoppingStrategyFactory.get_last_k_epochs_improvement_strategy
+        }
+        for key, metric_type in default_mapping.items():
+            strategy_registry.add_class(key, metric_type)
+
+        return strategy_registry
+
+
+@dataclass
+class EarlyStoppingStrategyConstructable(ComponentConstructable):
+    early_stopping_config: Dict = field(default_factory=dict)
+    early_stopping_key: str = ""
+
+    def _construct_impl(self) -> EarlyStoppingIF:
+        early_stopping_registry: ClassRegistry = self.get_requirement("early_stopping_strategy_registry")
+        early_stopping_strategy = early_stopping_registry.get_instance(key=self.early_stopping_key, **self.early_stopping_config)
+        return early_stopping_strategy
+
+
+@dataclass
+class CheckpointingRegistryConstructable(ComponentConstructable):
+    class StrategyKeys:
+        SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY = "SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY"
+        SAVE_ALL_CHECKPOINTING_STRATEGY = "SAVE_ALL_CHECKPOINTING_STRATEGY"
+
+    def _construct_impl(self) -> ClassRegistry:
+        strategy_registry = ClassRegistry()
+        default_mapping: Dict[str, Metric] = {
+            CheckpointingRegistryConstructable.StrategyKeys.SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY:
+            CheckpointingStrategyFactory.get_save_last_epoch_only_checkpointing_strategy,
+            CheckpointingRegistryConstructable.StrategyKeys.SAVE_ALL_CHECKPOINTING_STRATEGY:
+            CheckpointingStrategyFactory.get_save_all_checkpointing_strategy
+        }
+        for key, metric_type in default_mapping.items():
+            strategy_registry.add_class(key, metric_type)
+
+        return strategy_registry
+
+
+@dataclass
+class CheckpointingStrategyConstructable(ComponentConstructable):
+    checkpointing_config: Dict = field(default_factory=dict)
+    checkpointing_key: str = ""
+
+    def _construct_impl(self) -> CheckpointingIF:
+        checkpointing_registry: ClassRegistry = self.get_requirement("checkpointing_strategy_registry")
+        checkpointing_strategy = checkpointing_registry.get_instance(key=self.checkpointing_key, **self.checkpointing_config)
+        return checkpointing_strategy
