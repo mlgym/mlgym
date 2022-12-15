@@ -3,9 +3,9 @@ import { PayloadAction } from '@reduxjs/toolkit';
 import { RootState     } from '../../app/store';
 
 export interface Job {
-  job_id          : string;
-  job_type?       : string;
-  status?         : string;
+  job_id          : string; // format <grid_search_id>-<job index>
+  job_type?       : string; // <CALC, TERMINATE>
+  status?         : string; // <INIT, RUNNING, DONE>
   grid_search_id? : string; 
   experiment_id?  : string;
   starting_time?  : number;

@@ -2,7 +2,11 @@
 import { Link } from "react-router-dom";
 
 // internal deps
-import { dashboard } from '../icons/Icons';
+import { flag, logo       } from '../icons/Icons';
+import { dashboard       } from '../icons/Icons';
+import { chartsMixedIcon } from '../icons/Icons';
+import { cellTowerIcon   } from '../icons/Icons';
+import { slidersIcon     } from '../icons/Icons';
 
 // state-selectors
 import { useAppSelector } from '../../app/hooks';
@@ -26,10 +30,11 @@ function Tabs() {
   const dispatch = useAppDispatch ();
 
   let tabs: Tab[] = [
-    { icon: dashboard, route: "flowboard",     name: "Dashboard"  },
-    { icon: dashboard, route: "analysisboard", name: "Metrics"    },
-    { icon: dashboard, route: "throughput",    name: "Throughput" },
-    { icon: dashboard, route: "settings",      name: "Settings"   }
+    { icon: logo,            route: "",              name: ""           },
+    { icon: flag,            route: "flowboard",     name: "Dashboard"  },
+    { icon: chartsMixedIcon, route: "analysisboard", name: "Graphs"     },
+    { icon: cellTowerIcon,   route: "throughput",    name: "Throughput" },
+    { icon: slidersIcon,     route: "settings",      name: "Settings"   }
   ];
 
   return (
