@@ -11,9 +11,9 @@ export interface Experiment {
   grid_search_id : string; 
   experiment_id  : string;
   chart_ids?     : string[]; // ${split}@@${metric}
-  status?        : string;
+  status?        : string;   // <TRAINING, EVALUATING>,
   current_split? : string;
-  splits?        : string[];
+  splits?        : string[]; //e.g.: ["train", "val", "test"],
   num_epochs?    : number;
   current_epoch? : number;
   num_batches?   : number;

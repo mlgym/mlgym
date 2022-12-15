@@ -1,9 +1,11 @@
+$white:#F7F6FB;
+
 .homeTabs {
   display: grid;
   grid-template-columns: 200px;
   grid-template-rows: repeat(auto-fit, 50px);
   place-items: center;
-  background: #DDF0FF;
+  background: #4723D9;
   height: 100vh;
   width: max-content;
 
@@ -20,11 +22,13 @@
       width: 30px;
       height: 30px;
       margin-right: 10px;
+      fill: $white;
     }
 
     .tabLabel {
       width: 100px;
       text-align: left;
+      color: $white;
     }
   }
 }
