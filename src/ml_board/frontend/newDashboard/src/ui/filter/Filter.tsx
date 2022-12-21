@@ -1,7 +1,21 @@
+import { useAppDispatch } from "../../app/hooks";
+import { changeFilter } from "../../features/status/statusSlice";
+
 function Filter() {
-    return (
-      <div className="filterArea">filter</div>
-    )
+  const dispatch = useAppDispatch();
+  const defaultValue = ".*";
+
+  const OnChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = event.currentTarget.value || defaultValue;
+    // TODO: check the rules here!
+    dispatch(changeFilter(value));
   }
-  
-  export default Filter;
+
+  return (
+    <div className="filterArea" style={{ padding: 20 }}>
+      <textarea onChange={OnChange} placeholder={defaultValue} style={{ height: "50px", width: "500px" }} />
+    </div>
+  )
+}
+
+export default Filter;
