@@ -34,7 +34,9 @@ function Tabs() {
     { icon: flag,            route: "flowboard",     name: "Dashboard"  },
     { icon: chartsMixedIcon, route: "analysisboard", name: "Graphs"     },
     { icon: cellTowerIcon,   route: "throughput",    name: "Throughput" },
-    { icon: slidersIcon,     route: "settings",      name: "Settings"   }
+    { icon: slidersIcon,     route: "settings",      name: "Settings"   },
+    { icon: flag,     route: "appnew",      name: "App New"   }
+
   ];
 
   return (

@@ -38,6 +38,8 @@ import { Job               } from './features/jobs/jobsSlice';
 import { upsertJob         } from './features/jobs/jobsSlice';
 import { AppDispatch       } from './app/store';
 
+import AppNew from './app/AppNew';
+
 // globals - can be put in the state if you plan to presist your state
 // otherwise it doesn't matter, since on refresh everything resets.
 let supportedEvents = [
@@ -88,6 +90,7 @@ function App() {
             <Route path="/analysisboard" element={ Chartboard ()  } />
             <Route path="/throughput"    element={ Throughput ()  } />
             <Route path="/settings"      element={ Settings   ()  } />
+            <Route path="/appnew" element={<AppNew/>} />
             <Route path="*"              element={ <div>404</div> } />
           </Routes>
         </div>

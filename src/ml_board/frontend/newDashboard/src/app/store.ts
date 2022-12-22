@@ -4,12 +4,14 @@ import { Action         } from '@reduxjs/toolkit';
 import experiments        from '../features/experiments/experimentsSlice';
 import jobs               from '../features/jobs/jobsSlice';
 import status             from '../features/status/statusSlice';
+import ExperimentsReducer from '../redux/reducers/ExperimentsReducer';
 
 export const store = configureStore ({
   reducer: {
     experiments,
     jobs,
-    status
+    status,
+    ExperimentsReducer
   }
 });
 
