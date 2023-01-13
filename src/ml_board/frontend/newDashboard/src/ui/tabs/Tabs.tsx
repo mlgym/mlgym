@@ -2,19 +2,15 @@
 import { Link } from "react-router-dom";
 
 // internal deps
-import { flag, logo       } from '../icons/Icons';
-import { dashboard       } from '../icons/Icons';
-import { chartsMixedIcon } from '../icons/Icons';
-import { cellTowerIcon   } from '../icons/Icons';
-import { slidersIcon     } from '../icons/Icons';
+import { CellTower, Logo, ModelTraining, StackedLineChart, Tune } from '../icons/Icons';
 
 // state-selectors
 import { useAppSelector } from '../../app/hooks';
-import { selectTab      } from '../../features/status/statusSlice';
+import { selectTab } from '../../features/status/statusSlice';
 
 // actions
 import { useAppDispatch } from '../../app/hooks';
-import { changeTab      } from '../../features/status/statusSlice';
+import { changeTab } from '../../features/status/statusSlice';
 
 // styles
 import './Tabs.scss';
@@ -30,16 +26,18 @@ function Tabs() {
   const dispatch = useAppDispatch ();
 
   let tabs: Tab[] = [
-    { icon: logo,            route: "",              name: ""           },
-    { icon: flag,            route: "flowboard",     name: "Dashboard"  },
-    { icon: chartsMixedIcon, route: "analysisboard", name: "Graphs"     },
-    { icon: cellTowerIcon,   route: "throughput",    name: "Throughput" },
-    { icon: slidersIcon,     route: "settings",      name: "Settings"   }
+    // { icon: Logo,             route: "",              name: ""           },
+    { icon: ModelTraining,    route: "flowboard",     name: "Dashboard"  },
+    { icon: StackedLineChart, route: "analysisboard", name: "Graphs"     },
+    { icon: CellTower,        route: "throughput",    name: "Throughput" },
+    { icon: Tune,             route: "settings",      name: "Settings"   }
   ];
 
   return (
     <div className='homeTabs'>
+      <div className="logo">{Logo}</div>
       {tabs.map ((val: Tab, idx: number) => renderTab (val, idx, currentTab, dispatch))}
+      {/* <button className="homeTab" type="button">click to expand</button> */}
     </div>
   )
 }

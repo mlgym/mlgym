@@ -12,7 +12,7 @@ function Filter() {
   }
 
   return (
-    <div className="filterArea" style={{ padding: 20 }}>
+    <div className="filterArea" style={{ padding: 20, background: "#cccccc" }}>
       <textarea onChange={OnChange} placeholder={defaultValue} style={{ height: "50px", width: "500px" }} />
     </div>
   )
