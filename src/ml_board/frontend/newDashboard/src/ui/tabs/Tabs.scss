@@ -1,4 +1,5 @@
 $white:#F7F6FB;
+$transition_time: 0.5s;
 
 .homeTabs {
   display: grid;
@@ -7,7 +8,31 @@ $white:#F7F6FB;
   place-items: center;
   background: #4723D9;
   height: 100vh;
-  width: max-content;
+  width: 5rem;
+  transition: $transition_time ease-in-out;
+
+  &:hover{
+    // width: max-content;
+    width: 13rem;
+
+    .homeTab .tabLabel {
+        opacity: 1;
+        transition: $transition_time ease-in;
+      }
+
+    .logo {
+      content: url("../icons/logoText.svg");
+      left: 0;
+    }
+  }
+
+  .logo{
+    grid-row-start: span 2;
+    position: relative;
+    left: -60px;
+    transition: $transition_time ease-in-out;
+  }
+
 
   .homeTab {
     display: flex;
@@ -18,6 +43,11 @@ $white:#F7F6FB;
     font-size: 20px;
     margin: auto 0;
 
+    // &:last-child{
+    //   grid-row: -1;
+    //   margin-bottom: 0;
+    // }
+
     .tabIcon {
       width: 30px;
       height: 30px;
@@ -26,6 +56,7 @@ $white:#F7F6FB;
     }
 
     .tabLabel {
+      opacity: 0;
       width: 100px;
       text-align: left;
       color: $white;
