@@ -1,17 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { ThunkAction    } from '@reduxjs/toolkit';
 import { Action         } from '@reduxjs/toolkit';
-import experiments        from '../features/experiments/experimentsSlice';
-import jobs               from '../features/jobs/jobsSlice';
-import status             from '../features/status/statusSlice';
-import ExperimentsReducer from '../redux/reducers/ExperimentsReducer';
+import status             from './status/statusSlice';
+import experimentsSlice from './experiments/experimentsSlice';
 
 export const store = configureStore ({
   reducer: {
-    experiments,
-    jobs,
     status,
-    ExperimentsReducer
+    experimentsSlice,
   }
 });
 

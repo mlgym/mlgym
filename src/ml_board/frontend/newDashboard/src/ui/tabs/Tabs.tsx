@@ -3,18 +3,18 @@ import { Link } from "react-router-dom";
 
 // internal deps
 import { flag, logo       } from '../icons/Icons';
-import { dashboard       } from '../icons/Icons';
+// import { dashboard       } from '../icons/Icons';
 import { chartsMixedIcon } from '../icons/Icons';
 import { cellTowerIcon   } from '../icons/Icons';
 import { slidersIcon     } from '../icons/Icons';
 
 // state-selectors
 import { useAppSelector } from '../../app/hooks';
-import { selectTab      } from '../../features/status/statusSlice';
+import { selectTab      } from '../../redux/status/statusSlice';
 
 // actions
 import { useAppDispatch } from '../../app/hooks';
-import { changeTab      } from '../../features/status/statusSlice';
+import { changeTab      } from '../../redux/status/statusSlice';
 
 // styles
 import './Tabs.scss';
@@ -31,11 +31,10 @@ function Tabs() {
 
   let tabs: Tab[] = [
     { icon: logo,            route: "",              name: ""           },
-    { icon: flag,            route: "flowboard",     name: "Dashboard"  },
+    { icon: flag,            route: "dashboard",     name: "Dashboard"  },
     { icon: chartsMixedIcon, route: "analysisboard", name: "Graphs"     },
     { icon: cellTowerIcon,   route: "throughput",    name: "Throughput" },
-    { icon: slidersIcon,     route: "settings",      name: "Settings"   },
-    { icon: flag,     route: "appnew",      name: "App New"   }
+    { icon: slidersIcon,     route: "settings",      name: "Settings"   }
 
   ];
 

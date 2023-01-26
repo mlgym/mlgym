@@ -5,8 +5,10 @@ import EVENT_TYPE from './socketEventConstants';
 let webSocket = null;
 
 const workerOnMessageCallback = (reduxData: reduxData, dataFromSocket: any) => {
+
     let eventType = dataFromSocket["event_type"].toLowerCase();
-    let result = null;
+    let dataToUpdateReduxInChart = null;
+    let dataToUpdateReduxInDashboard = null
     switch(eventType) {
         case EVENT_TYPE.JOB_STATUS:
             console.log("Job Status found")
@@ -15,10 +17,9 @@ const workerOnMessageCallback = (reduxData: reduxData, dataFromSocket: any) => {
             console.log("Job scheduled found")
             break;
         case EVENT_TYPE.EVALUATION_RESULT:
-            let dataToUpdateReduxInChart = handleExperimentStatusData(reduxData, dataFromSocket["payload"]);
+            dataToUpdateReduxInChart = handleExperimentStatusData(reduxData, dataFromSocket["payload"]);
             // TODO: make handleExperimentStatusDataForDashboard()
-            let dataToUpdateReduxInDashboard = "handleExperimentStatusDataForDashboard()"
-            postMessage({dataToUpdateReduxInChart, dataToUpdateReduxInDashboard});
+            dataToUpdateReduxInDashboard = "handleExperimentStatusDataForDashboard()"
             break;
         case EVENT_TYPE.EXPERIMENT_CONFIG:
             console.log("Exp config found")
@@ -28,6 +29,7 @@ const workerOnMessageCallback = (reduxData: reduxData, dataFromSocket: any) => {
             break;
         default: throw new Error(EVENT_TYPE.UNKNOWN_EVENT);
     }
+    postMessage({dataToUpdateReduxInChart, dataToUpdateReduxInDashboard});
 }
 
 onmessage = (e) => {

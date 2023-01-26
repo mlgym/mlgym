@@ -1,6 +1,8 @@
 function Settings() {
   return (
-    'settings'
+    <div>
+      Settings
+    </div>
   )
 }
 

@@ -1,6 +1,8 @@
 function Throughput() {
   return (
-    'throughput'
+    <div>
+      Throughput
+    </div>
   )
 }
 

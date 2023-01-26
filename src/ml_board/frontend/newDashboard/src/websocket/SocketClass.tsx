@@ -85,9 +85,9 @@ class SocketClass implements SocketClassInterface {
         }
     } | undefined
     defaultURL: string
-    dataCallback: Function | null
+    dataCallback: Function
 
-    constructor(dataCallback = null, socketURL = null) {
+    constructor(dataCallback: Function, socketURL = null) {
         this.defaultURL = socketURL || DEFAULT_URL
         this.dataCallback = dataCallback
     }
@@ -104,15 +104,10 @@ class SocketClass implements SocketClassInterface {
         });
 
         socket.on('mlgym_event', (msg) => {
-            try {
-                let parsedMsg = JSON.parse(msg);
-                if (this.dataCallback) {
-                    this.dataCallback(parsedMsg);
-                }
-            } 
-            catch(error) {
-                console.log("Websocket Event Error = ",error.message);
-            }            
+            let parsedMsg = JSON.parse(msg);
+            if (this.dataCallback) {
+                this.dataCallback(parsedMsg);
+            }          
         });
 
         socket.on('connect_error', (err) => {
@@ -124,34 +119,6 @@ class SocketClass implements SocketClassInterface {
         });
 
     }
-
-    // handleEventMessage = (parsedMsg: parsedMsg) => {
-    //     // let eventType = parsedMsg["event_type"].toLowerCase();
-    //     // let result = null;
-
-    //     // switch(eventType) {
-    //     //     case EVENT_TYPE.JOB_STATUS:
-    //     //         console.log("Job Status found")
-    //     //         break;
-    //     //     case EVENT_TYPE.JOB_SCHEDULED:
-    //     //         console.log("Job scheduled found")
-    //     //         break;
-    //     //     case EVENT_TYPE.EVALUATION_RESULT:
-    //     //         result = parsedMsg["payload"]
-    //     //         break;
-    //     //     case EVENT_TYPE.EXPERIMENT_CONFIG:
-    //     //         console.log("Exp config found")
-    //     //         break;
-    //     //     case EVENT_TYPE.EXPERIMENT_STATUS:
-    //     //         console.log("Exp status found")
-    //     //         break;
-    //     //     default: throw new Error(EVENT_TYPE.UNKNOWN_EVENT);
-    //     // }
-    //     // console.log(result);
-    //     if (this.dataCallback) {
-    //         this.dataCallback(parsedMsg);
-    //     }
-    // }
 }
 
 export default SocketClass;

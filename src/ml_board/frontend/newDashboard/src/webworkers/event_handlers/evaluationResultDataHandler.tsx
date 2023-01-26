@@ -61,6 +61,7 @@ const handleExperimentStatusData = (reduxData: reduxData, data: dataFromSocket) 
     }
 
     if(reduxData.colors_mapped_to_exp_id[data.experiment_id] === undefined) {
+        console.log("data.experiment_id === ",data.experiment_id, typeof(data.experiment_id))
         let random_color = getRandomColor();
         reduxData.colors_mapped_to_exp_id[data.experiment_id] = random_color;
     }
@@ -186,9 +187,9 @@ const handleExperimentStatusData = (reduxData: reduxData, data: dataFromSocket) 
 // TODO: const handleExperimentStatusDataForDashboard() [like above method]
 
 function getRandomColor() {
-    var letters = '0123456789ABCDEF'.split('');
-    var color = '#';
-    for (var i = 0; i < 6; i++ ) {
+    let letters = '0123456789ABCDEF'.split('');
+    let color = '#';
+    for (let i = 0; i < 6; i++ ) {
         color += letters[Math.floor(Math.random() * 16)];
     }
     return color;

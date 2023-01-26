@@ -1,7 +1,6 @@
-import React from "react";
-import { connect, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Line } from "react-chartjs-2";
-import './Home.css';
+import './Graphs.css';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 ChartJS.register(
     CategoryScale,
@@ -14,8 +13,8 @@ ChartJS.register(
     Filler
 )
 
-function Home () {
-    const evalResult = useSelector((state:any) => state.ExperimentsReducer.evalResult);
+function Graphs () {
+    const evalResult = useSelector((state:any) => state.experimentsSlice.evalResult);
 
     return(
         <div>
@@ -45,8 +44,4 @@ function Home () {
     );
 }
 
-const mapStateToProps = (state: any) => ({
-    evalResult: state.ExperimentsReducer.evalResult
-});
-
-export default connect(mapStateToProps)(Home);
+export default Graphs;

@@ -5,8 +5,8 @@ import { Provider      } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 
 // internal deps
-import { store         } from './app/store';
-import App               from './App';
+import { store         } from './redux/store';
+import App               from './app/App';
 
 // styles
 import './index.scss';
