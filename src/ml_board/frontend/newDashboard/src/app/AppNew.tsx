@@ -43,10 +43,14 @@ class AppNew extends Component<AppProps, AppState> implements AppInterface{
     }
 
     workerOnMessageHandler = async(data: any) => {
-        if(data && data.grid_search_id !== null && data.experiments !== undefined)
+        if(data && data.dataToUpdateReduxInChart && data.dataToUpdateReduxInChart.grid_search_id !== null && data.dataToUpdateReduxInChart.experiments !== undefined)
         {
-            await this.props.saveEvalResultData(data);
+            await this.props.saveEvalResultData(data.dataToUpdateReduxInChart);
             console.log("Data from redux = ",this.props.evalResult);
+        }
+        if(data && data.dataToUpdateReduxInDashboard)
+        {
+            // TODO: Save to redux like above
         }
     }
 }

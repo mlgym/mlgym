@@ -1,11 +1,33 @@
 import SocketClass from '../websocket/SocketClass';
 import { handleExperimentStatusData, reduxData, dataFromSocket } from './event_handlers/evaluationResultDataHandler';
+import EVENT_TYPE from './socketEventConstants';
 
 let webSocket = null;
 
-const workerOnMessageCallback = (reduxData: reduxData, dataFromSocket: dataFromSocket) => {
-    let dataToUpdateRedux = handleExperimentStatusData(reduxData, dataFromSocket);
-    postMessage(dataToUpdateRedux);
+const workerOnMessageCallback = (reduxData: reduxData, dataFromSocket: any) => {
+    let eventType = dataFromSocket["event_type"].toLowerCase();
+    let result = null;
+    switch(eventType) {
+        case EVENT_TYPE.JOB_STATUS:
+            console.log("Job Status found")
+            break;
+        case EVENT_TYPE.JOB_SCHEDULED:
+            console.log("Job scheduled found")
+            break;
+        case EVENT_TYPE.EVALUATION_RESULT:
+            let dataToUpdateReduxInChart = handleExperimentStatusData(reduxData, dataFromSocket["payload"]);
+            // TODO: make handleExperimentStatusDataForDashboard()
+            let dataToUpdateReduxInDashboard = "handleExperimentStatusDataForDashboard()"
+            postMessage({dataToUpdateReduxInChart, dataToUpdateReduxInDashboard});
+            break;
+        case EVENT_TYPE.EXPERIMENT_CONFIG:
+            console.log("Exp config found")
+            break;
+        case EVENT_TYPE.EXPERIMENT_STATUS:
+            console.log("Exp status found")
+            break;
+        default: throw new Error(EVENT_TYPE.UNKNOWN_EVENT);
+    }
 }
 
 onmessage = (e) => {

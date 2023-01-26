@@ -12,6 +12,7 @@ class DedicatedWorker implements DedicatedWorkerInterface{
         if(window.Worker) {
             this.worker = new Worker(new URL('./worker_utils.tsx', import.meta.url));
             this.worker.onmessage = (e: any) => {
+                console.log("onMessage ==> ",e.data)
                 this.onMessageCtxNFunc.apply(this.onMessageCtxNFunc, [e.data])
             }
             this.onMessageCtxNFunc = onMessageCtxNFunc

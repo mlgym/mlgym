@@ -87,10 +87,10 @@ function App() {
           <Routes>
             <Route path="/"              element={ Dashboard  ()  } />
             <Route path="/flowboard"     element={ Dashboard  ()  } />
-            <Route path="/analysisboard" element={ Chartboard ()  } />
+            {/* <Route path="/analysisboard" element={ Chartboard ()  } /> */}
             <Route path="/throughput"    element={ Throughput ()  } />
             <Route path="/settings"      element={ Settings   ()  } />
-            <Route path="/appnew" element={<AppNew/>} />
+            <Route path="/analysisboard" element={<AppNew/>} />
             <Route path="*"              element={ <div>404</div> } />
           </Routes>
         </div>

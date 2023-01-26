@@ -1,5 +1,4 @@
-import { io } from 'socket.io-client';
-import EVENT_TYPE from './socketEventConstants';
+import socketIO from 'socket.io-client';
 
 const DEFAULT_URL = 'http://localhost:7000/'; // or http://127.0.0.1:7000/'
 
@@ -94,20 +93,22 @@ class SocketClass implements SocketClassInterface {
     }
 
     init = () => {
-        let socket = io(this.defaultURL, { autoConnect: true });
+        
+        let socket = socketIO(this.defaultURL, { autoConnect: true });
         let runId = "mlgym_event_subscribers";
         
         socket.open();
         
         socket.on('connect', () => {
-            console.log(socket)
             socket.emit('join', { rooms: [runId], client_id: "3000" });
         });
 
         socket.on('mlgym_event', (msg) => {
             try {
                 let parsedMsg = JSON.parse(msg);
-                this.handleEventMessage(parsedMsg);
+                if (this.dataCallback) {
+                    this.dataCallback(parsedMsg);
+                }
             } 
             catch(error) {
                 console.log("Websocket Event Error = ",error.message);
@@ -124,33 +125,33 @@ class SocketClass implements SocketClassInterface {
 
     }
 
-    handleEventMessage = (parsedMsg: parsedMsg) => {
-        let eventType = parsedMsg["event_type"].toLowerCase();
-        let result = null;
+    // handleEventMessage = (parsedMsg: parsedMsg) => {
+    //     // let eventType = parsedMsg["event_type"].toLowerCase();
+    //     // let result = null;
 
-        switch(eventType) {
-            case EVENT_TYPE.JOB_STATUS:
-                console.log("Job Status found")
-                break;
-            case EVENT_TYPE.JOB_SCHEDULED:
-                console.log("Job scheduled found")
-                break;
-            case EVENT_TYPE.EVALUATION_RESULT:
-                result = parsedMsg["payload"]
-                break;
-            case EVENT_TYPE.EXPERIMENT_CONFIG:
-                console.log("Exp config found")
-                break;
-            case EVENT_TYPE.EXPERIMENT_STATUS:
-                console.log("Exp status found")
-                break;
-            default: throw new Error(EVENT_TYPE.UNKNOWN_EVENT);
-        }
-        // console.log(result);
-        if (this.dataCallback) {
-            this.dataCallback(result);
-        }
-    }
+    //     // switch(eventType) {
+    //     //     case EVENT_TYPE.JOB_STATUS:
+    //     //         console.log("Job Status found")
+    //     //         break;
+    //     //     case EVENT_TYPE.JOB_SCHEDULED:
+    //     //         console.log("Job scheduled found")
+    //     //         break;
+    //     //     case EVENT_TYPE.EVALUATION_RESULT:
+    //     //         result = parsedMsg["payload"]
+    //     //         break;
+    //     //     case EVENT_TYPE.EXPERIMENT_CONFIG:
+    //     //         console.log("Exp config found")
+    //     //         break;
+    //     //     case EVENT_TYPE.EXPERIMENT_STATUS:
+    //     //         console.log("Exp status found")
+    //     //         break;
+    //     //     default: throw new Error(EVENT_TYPE.UNKNOWN_EVENT);
+    //     // }
+    //     // console.log(result);
+    //     if (this.dataCallback) {
+    //         this.dataCallback(parsedMsg);
+    //     }
+    // }
 }
 
 export default SocketClass;

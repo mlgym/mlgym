@@ -183,6 +183,8 @@ const handleExperimentStatusData = (reduxData: reduxData, data: dataFromSocket) 
     
 }
 
+// TODO: const handleExperimentStatusDataForDashboard() [like above method]
+
 function getRandomColor() {
     var letters = '0123456789ABCDEF'.split('');
     var color = '#';
@@ -196,4 +198,5 @@ export {
     handleExperimentStatusData,
     type reduxData,
     type dataFromSocket
+    // TODO: export handleExperimentStatusDataForDashboard
 } 
