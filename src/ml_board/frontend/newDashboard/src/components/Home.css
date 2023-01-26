@@ -1,0 +1,28 @@
+.home-main {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.home-child {
+    width: 40%;
+    height: 70%;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.home-main-h2 {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: lightblue;
+    color: darkblue;
+    font-size: 30px;
+    font-weight: bold;
+    padding: 10px;
+    margin-bottom: 10px;
+}

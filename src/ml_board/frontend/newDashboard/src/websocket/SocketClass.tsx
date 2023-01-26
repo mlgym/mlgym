@@ -1,8 +1,7 @@
 import { io } from 'socket.io-client';
 import EVENT_TYPE from './socketEventConstants';
-import handleEvaluationResultData from './event_handlers/evaluationResultDataHandler';
 
-const DEFAULT_URL = 'http://127.0.0.1:7000/';
+const DEFAULT_URL = 'http://localhost:7000/'; // or http://127.0.0.1:7000/'
 
 type parsedMsg = {
     event_type: string,
@@ -89,8 +88,7 @@ class SocketClass implements SocketClassInterface {
     defaultURL: string
     dataCallback: Function | null
 
-    constructor(reduxData = undefined, dataCallback = null, socketURL = null) {
-        this.reduxData = reduxData
+    constructor(dataCallback = null, socketURL = null) {
         this.defaultURL = socketURL || DEFAULT_URL
         this.dataCallback = dataCallback
     }
@@ -101,11 +99,8 @@ class SocketClass implements SocketClassInterface {
         
         socket.open();
         
-        socket.emit('ping', () => {
-            // console.log("ping");
-        });
-        
         socket.on('connect', () => {
+            console.log(socket)
             socket.emit('join', { rooms: [runId], client_id: "3000" });
         });
 
@@ -127,9 +122,6 @@ class SocketClass implements SocketClassInterface {
             console.log("disconnected");
         });
 
-        socket.on('pong', () => {
-            // console.log("pong");
-        });
     }
 
     handleEventMessage = (parsedMsg: parsedMsg) => {
@@ -144,9 +136,7 @@ class SocketClass implements SocketClassInterface {
                 console.log("Job scheduled found")
                 break;
             case EVENT_TYPE.EVALUATION_RESULT:
-                if(this.reduxData !== undefined) {
-                    result = handleEvaluationResultData(parsedMsg["payload"], this.reduxData);                    
-                }
+                result = parsedMsg["payload"]
                 break;
             case EVENT_TYPE.EXPERIMENT_CONFIG:
                 console.log("Exp config found")

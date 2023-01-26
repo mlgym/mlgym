@@ -34,7 +34,7 @@ type reduxData = {
     }
 }
 
-type data = {
+type dataFromSocket = {
     epoch: number,
     grid_search_id: string, 
     experiment_id: number,
@@ -50,7 +50,7 @@ type data = {
     }>
 }
 
-const handleExperimentStatusData = (data: data, reduxData: reduxData) => {
+const handleExperimentStatusData = (reduxData: reduxData, data: dataFromSocket) => {
     let exp = undefined;
     if(reduxData.grid_search_id !== null) {
         exp = reduxData.experiments;
@@ -192,4 +192,8 @@ function getRandomColor() {
     return color;
 }
 
-export default handleExperimentStatusData;
+export {
+    handleExperimentStatusData,
+    type reduxData,
+    type dataFromSocket
+} 

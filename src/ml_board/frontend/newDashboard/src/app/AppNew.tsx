@@ -1,7 +1,6 @@
-import React, { Component } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Component } from 'react';
 import Home from '../components/Home';
-import DedicatedWorkerClass from '../webworkers/DedicatedWorkerClass';
+import DedicatedWorkerClass from '../webworkers/DedicatedWorker';
 import { connect } from 'react-redux';
 import { saveEvalResultData } from '../redux/actions/ExperimentActions';
 
@@ -35,10 +34,6 @@ class AppNew extends Component<AppProps, AppState> implements AppInterface{
     render() {
         return(
             <Home/>
-            // <Routes>
-            //     <Route path="/" element={<Home/>} />
-            //     <Route path="*" element={<div>404</div>} />
-            // </Routes>
         )
     }
 

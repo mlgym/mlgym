@@ -69,7 +69,7 @@ function App() {
   let runId = searchParams.get ("run_id") || "mlgym_event_subscribers";
 
   if (!useAppSelector (isConnected)) {
-    wsConnect ("http://localhost:7000", runId, dispatch);
+    // wsConnect ("http://localhost:7000", runId, dispatch);
   } else {
     if (!joinedRoom) {
       socket.emit ('join', { rooms: [runId], client_id: "3000" });
