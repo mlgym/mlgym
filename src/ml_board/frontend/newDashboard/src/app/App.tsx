@@ -4,6 +4,7 @@ import { Route,Routes }    from 'react-router-dom';
 import DedicatedWorkerClass from '../webworkers/DedicatedWorker';
 import { connect } from 'react-redux';
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
+import EVENT_TYPE from '../webworkers/socketEventConstants';
 import './App.scss';
 
 import Filter              from '../components/filter/Filter';
@@ -39,7 +40,6 @@ class App extends Component<AppProps, AppState> implements AppInterface{
     // if we use functional component, then the page refreshes again and again due to constant redux updates. So it will cause to create new worker & socket connection everytime forever - going into infinte loop, & thus will crash the app.
     // so, here we use the class component - which follows the react lifecycle & limiting the page refresh to just once i.e. on screen load / reload.
     componentDidMount() {
-        localStorage.clear();
         this.createWorker();
     }
 
@@ -72,8 +72,25 @@ class App extends Component<AppProps, AppState> implements AppInterface{
     workerOnMessageHandler = async(data: any) => {
         if(data && data.dataToUpdateReduxInChart && data.dataToUpdateReduxInChart.grid_search_id !== null && data.dataToUpdateReduxInChart.experiments !== undefined)
         {
-            await this.props.saveEvalResultData(data.dataToUpdateReduxInChart);
-            console.log("Data from redux = ",this.props.evalResult);
+            switch(data.dataToUpdateReduxInChart.event_type) {
+                case EVENT_TYPE.JOB_STATUS:
+                    
+                    break;
+                case EVENT_TYPE.JOB_SCHEDULED:
+                    
+                    break;
+                case EVENT_TYPE.EVALUATION_RESULT:
+                    await this.props.saveEvalResultData(data.dataToUpdateReduxInChart);
+                    console.log("Data from redux = ",this.props.evalResult);
+                    break;
+                case EVENT_TYPE.EXPERIMENT_CONFIG:
+                    
+                    break;
+                case EVENT_TYPE.EXPERIMENT_STATUS:
+                    
+                    break;
+                default: throw new Error(EVENT_TYPE.UNKNOWN_EVENT); 
+            }
         }
         if(data && data.dataToUpdateReduxInDashboard)
         {

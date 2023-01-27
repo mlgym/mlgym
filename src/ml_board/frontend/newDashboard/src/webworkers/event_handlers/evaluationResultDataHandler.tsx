@@ -1,5 +1,6 @@
 type reduxData = {
     grid_search_id: string,
+    event_type: string,
     experiments: {
         [key: string]: {
             data: {
@@ -50,13 +51,14 @@ type dataFromSocket = {
     }>
 }
 
-const handleExperimentStatusData = (reduxData: reduxData, data: dataFromSocket) => {
+const handleExperimentStatusData = (event_type: string, reduxData: reduxData, data: dataFromSocket) => {
     let exp = undefined;
     if(reduxData.grid_search_id !== null) {
         exp = reduxData.experiments;
     }
     else {
         reduxData.grid_search_id = data.grid_search_id;
+        reduxData.event_type = event_type
         exp = {}
     }
 

@@ -17,7 +17,7 @@ const workerOnMessageCallback = (reduxData: reduxData, dataFromSocket: any) => {
             console.log("Job scheduled found")
             break;
         case EVENT_TYPE.EVALUATION_RESULT:
-            dataToUpdateReduxInChart = handleExperimentStatusData(reduxData, dataFromSocket["payload"]);
+            dataToUpdateReduxInChart = handleExperimentStatusData(EVENT_TYPE.EVALUATION_RESULT, reduxData, dataFromSocket["payload"]);
             // TODO: make handleExperimentStatusDataForDashboard()
             dataToUpdateReduxInDashboard = "handleExperimentStatusDataForDashboard()"
             break;
