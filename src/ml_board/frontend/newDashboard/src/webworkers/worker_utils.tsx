@@ -1,5 +1,5 @@
 import SocketClass from '../websocket/SocketClass';
-import { handleExperimentStatusData, reduxData, dataFromSocket } from './event_handlers/evaluationResultDataHandler';
+import { handleEvaluationResultData, reduxData, dataFromSocket } from './event_handlers/evaluationResultDataHandler';
 import EVENT_TYPE from './socketEventConstants';
 
 let webSocket = null;
@@ -17,7 +17,7 @@ const workerOnMessageCallback = (reduxData: reduxData, dataFromSocket: any) => {
             console.log("Job scheduled found")
             break;
         case EVENT_TYPE.EVALUATION_RESULT:
-            dataToUpdateReduxInChart = handleExperimentStatusData(EVENT_TYPE.EVALUATION_RESULT, reduxData, dataFromSocket["payload"]);
+            dataToUpdateReduxInChart = handleEvaluationResultData(EVENT_TYPE.EVALUATION_RESULT, reduxData, dataFromSocket["payload"]);
             // TODO: make handleExperimentStatusDataForDashboard()
             dataToUpdateReduxInDashboard = "handleExperimentStatusDataForDashboard()"
             break;

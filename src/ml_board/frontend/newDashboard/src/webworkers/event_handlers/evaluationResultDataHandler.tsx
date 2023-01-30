@@ -51,7 +51,7 @@ type dataFromSocket = {
     }>
 }
 
-const handleExperimentStatusData = (event_type: string, reduxData: reduxData, data: dataFromSocket) => {
+const handleEvaluationResultData = (event_type: string, reduxData: reduxData, data: dataFromSocket) => {
     let exp = undefined;
     if(reduxData.grid_search_id !== null) {
         exp = reduxData.experiments;
@@ -198,7 +198,7 @@ function getRandomColor() {
 }
 
 export {
-    handleExperimentStatusData,
+    handleEvaluationResultData,
     type reduxData,
     type dataFromSocket
     // TODO: export handleExperimentStatusDataForDashboard
