@@ -1,11 +1,11 @@
 type DedicatedWorkerInterface = {
-    worker: any // I don't know what type should come here. Ask someone regarding this...
+    worker: Worker // I don't know what type should come here. Ask someone regarding this...
     onMessageCtxNFunc: Function
 }
 
 class DedicatedWorker implements DedicatedWorkerInterface{
     
-    worker: any // I don't know what type should come here. Ask someone regarding this...
+    worker: Worker // I don't know what type should come here. Ask someone regarding this...
     onMessageCtxNFunc: Function
 
     constructor(onMessageCtxNFunc: Function) {

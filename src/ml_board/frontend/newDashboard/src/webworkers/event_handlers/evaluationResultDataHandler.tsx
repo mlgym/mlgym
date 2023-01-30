@@ -63,7 +63,6 @@ const handleEvaluationResultData = (event_type: string, reduxData: reduxData, da
     }
 
     if(reduxData.colors_mapped_to_exp_id[data.experiment_id] === undefined) {
-        console.log("data.experiment_id === ",data.experiment_id, typeof(data.experiment_id))
         let random_color = getRandomColor();
         reduxData.colors_mapped_to_exp_id[data.experiment_id] = random_color;
     }

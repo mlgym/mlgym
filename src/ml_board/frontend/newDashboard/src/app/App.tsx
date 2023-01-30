@@ -1,10 +1,11 @@
 import { Component } from 'react';
 import Graphs from '../components/graphs/Graphs';
 import { Route,Routes }    from 'react-router-dom';
-import DedicatedWorkerClass from '../webworkers/DedicatedWorker';
+import DedicatedWorker from '../webworkers/DedicatedWorker';
 import { connect } from 'react-redux';
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
 import EVENT_TYPE from '../webworkers/socketEventConstants';
+import { reduxData } from '../webworkers/event_handlers/evaluationResultDataHandler';
 import './App.scss';
 
 import Filter              from '../components/filter/Filter';
@@ -14,7 +15,7 @@ import Throughput          from '../components/throughputs/Throughput';
 import Tabs                from '../ui/tabs/Tabs';
 
 type AppProps = {
-    evalResult: any
+    evalResult: reduxData
     saveEvalResultData: Function
 }
 
@@ -23,8 +24,20 @@ type AppState = {
 }
 
 type AppInterface = {
-    mlgymWorker: any
+    mlgymWorker: {
+        DedicatedWorker: {
+            onMessageCtxNFunc: Function,
+            worker: Worker
+        }
+    }
 }
+
+type postMessageData = {
+    dataToUpdateReduxInChart: reduxData,
+    dataToUpdateReduxInDashboard: {
+
+    }
+} | string
 
 class App extends Component<AppProps, AppState> implements AppInterface{
     
@@ -32,7 +45,7 @@ class App extends Component<AppProps, AppState> implements AppInterface{
     
     constructor(props: any) {
         super(props);
-        this.mlgymWorker = null;
+        this.mlgymWorker = null
     }
 
     // NOTE:
@@ -65,36 +78,49 @@ class App extends Component<AppProps, AppState> implements AppInterface{
     }
 
     createWorker = () => {
-        this.mlgymWorker = new DedicatedWorkerClass(Object(this.workerOnMessageHandler));
+        this.mlgymWorker = new DedicatedWorker(Object(this.workerOnMessageHandler));
         this.mlgymWorker.postMessage(this.props.evalResult);
     }
 
-    workerOnMessageHandler = async(data: any) => {
-        if(data && data.dataToUpdateReduxInChart && data.dataToUpdateReduxInChart.grid_search_id !== null && data.dataToUpdateReduxInChart.experiments !== undefined)
-        {
-            switch(data.dataToUpdateReduxInChart.event_type) {
-                case EVENT_TYPE.JOB_STATUS:
-                    
-                    break;
-                case EVENT_TYPE.JOB_SCHEDULED:
-                    
-                    break;
-                case EVENT_TYPE.EVALUATION_RESULT:
-                    await this.props.saveEvalResultData(data.dataToUpdateReduxInChart);
-                    console.log("Data from redux = ",this.props.evalResult);
-                    break;
-                case EVENT_TYPE.EXPERIMENT_CONFIG:
-                    
-                    break;
-                case EVENT_TYPE.EXPERIMENT_STATUS:
-                    
-                    break;
-                default: throw new Error(EVENT_TYPE.UNKNOWN_EVENT); 
+    workerOnMessageHandler = async(data: postMessageData) => {
+        if (typeof(data) === "string") {
+            if(data === EVENT_TYPE.SOCKET_CONN_SUCCESS)
+            {
+                console.log(EVENT_TYPE.SOCKET_CONN_SUCCESS);
             }
+            else
+            {
+                console.log(EVENT_TYPE.SOCKET_CONN_FAIL);
+            }    
         }
-        if(data && data.dataToUpdateReduxInDashboard)
+        else
         {
-            // TODO: Save to redux like above
+            if(data && data.dataToUpdateReduxInChart && data.dataToUpdateReduxInChart.grid_search_id !== null && data.dataToUpdateReduxInChart.experiments !== undefined)
+            {
+                switch(data.dataToUpdateReduxInChart.event_type) {
+                    case EVENT_TYPE.JOB_STATUS:
+                        
+                        break;
+                    case EVENT_TYPE.JOB_SCHEDULED:
+                        
+                        break;
+                    case EVENT_TYPE.EVALUATION_RESULT:
+                        await this.props.saveEvalResultData(data.dataToUpdateReduxInChart);
+                        console.log("Data from redux = ",this.props.evalResult);
+                        break;
+                    case EVENT_TYPE.EXPERIMENT_CONFIG:
+                        
+                        break;
+                    case EVENT_TYPE.EXPERIMENT_STATUS:
+                        
+                        break;
+                    default: throw new Error(EVENT_TYPE.UNKNOWN_EVENT); 
+                }
+            }
+            else if(data && data.dataToUpdateReduxInDashboard)
+            {
+                // TODO: Save to redux like above
+            }
         }
     }
 }

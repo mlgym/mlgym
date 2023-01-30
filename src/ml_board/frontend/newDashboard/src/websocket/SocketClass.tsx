@@ -2,88 +2,13 @@ import socketIO from 'socket.io-client';
 
 const DEFAULT_URL = 'http://localhost:7000/'; // or http://127.0.0.1:7000/'
 
-type parsedMsg = {
-    event_type: string,
-    payload: any,
-    event_id: number
-}
-
 type SocketClassInterface = {
-    reduxData: {
-        grid_search_id: string,
-        experiments: {
-            [key: string]: {
-                data: {
-                    labels: Array<number>,
-                    datasets: Array<{
-                        exp_id: number,
-                        label: string,
-                        data: Array<number>,
-                        fill: Boolean,
-                        backgroundColor: string,
-                        borderColor: string 
-                    }>
-                },
-                options: {
-                    plugins: {
-                        title: {
-                            display: Boolean,
-                            text: string,
-                            color: string,
-                            font: {
-                                weight: string,
-                                size: string
-                            }
-                        }
-                    }
-                },
-                ids_to_track_and_find_exp_id: Array<number>
-            };
-        },
-        colors_mapped_to_exp_id: {
-            [key: number]: string
-        }
-    } | undefined,
     defaultURL: string,
     dataCallback: Function | null
 }
+
 class SocketClass implements SocketClassInterface {
     
-    reduxData: {
-        grid_search_id: string,
-        experiments: {
-            [key: string]: {
-                data: {
-                    labels: Array<number>,
-                    datasets: Array<{
-                        exp_id: number,
-                        label: string,
-                        data: Array<number>,
-                        fill: Boolean,
-                        backgroundColor: string,
-                        borderColor: string 
-                    }>
-                },
-                options: {
-                    plugins: {
-                        title: {
-                            display: Boolean,
-                            text: string,
-                            color: string,
-                            font: {
-                                weight: string,
-                                size: string
-                            }
-                        }
-                    }
-                },
-                ids_to_track_and_find_exp_id: Array<number>
-            };
-        },
-        colors_mapped_to_exp_id: {
-            [key: number]: string
-        }
-    } | undefined
     defaultURL: string
     dataCallback: Function
 

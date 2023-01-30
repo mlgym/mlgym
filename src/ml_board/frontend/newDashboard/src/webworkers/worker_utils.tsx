@@ -38,10 +38,10 @@ onmessage = (e) => {
     try {
         webSocket = new SocketClass(Object((dataFromSocket:dataFromSocket)=>workerOnMessageCallback(reduxData,dataFromSocket)));
         webSocket.init();
-        result = "SUCCESS";
+        result = EVENT_TYPE.SOCKET_CONN_SUCCESS;
     }
     catch(e) {
-        result = "FAIL";
+        result = EVENT_TYPE.SOCKET_CONN_FAIL;
     }
     postMessage(result);
 }
