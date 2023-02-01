@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
 import { Line } from "react-chartjs-2";
+// import { reduxState } from "../../redux/store";
 import './Graphs.css';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 ChartJS.register(
@@ -14,7 +15,7 @@ ChartJS.register(
 )
 
 function Graphs () {
-    const evalResult = useSelector((state:any) => state.experimentsSlice.evalResult);
+    const evalResult = useSelector((state: any) => state.experimentsSlice.evalResult);
 
     return(
         <div>

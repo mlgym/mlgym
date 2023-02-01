@@ -15,6 +15,7 @@ import { selectTab      } from '../../redux/status/statusSlice';
 // actions
 import { useAppDispatch } from '../../app/hooks';
 import { changeTab      } from '../../redux/status/statusSlice';
+import type { AppDispatch } from '../../redux/store';
 
 // styles
 import './Tabs.scss';
@@ -45,7 +46,7 @@ function Tabs() {
   )
 }
 
-let renderTab = (val: Tab, idx: number, iActiveTab: number, dispatch: any) => {
+let renderTab = (val: Tab, idx: number, iActiveTab: number, dispatch: AppDispatch) => {
   let isActive = iActiveTab === idx;
   let className  = 'homeTab';
   if (isActive) className += ' active';

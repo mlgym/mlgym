@@ -3,6 +3,7 @@ import { ThunkAction    } from '@reduxjs/toolkit';
 import { Action         } from '@reduxjs/toolkit';
 import status             from './status/statusSlice';
 import experimentsSlice from './experiments/experimentsSlice';
+import { evalResultCustomData } from '../webworkers/event_handlers/evaluationResultDataHandler';
 
 export const store = configureStore ({
   reducer: {
@@ -11,6 +12,11 @@ export const store = configureStore ({
   }
 });
 
+export type reduxState = {
+  experimentsSlice: {
+    evalResult: evalResultCustomData
+  }
+}
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;
 export type AppThunk<ReturnType = void> = ThunkAction<

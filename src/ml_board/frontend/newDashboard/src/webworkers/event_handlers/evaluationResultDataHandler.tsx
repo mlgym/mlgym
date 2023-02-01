@@ -1,4 +1,4 @@
-type reduxData = {
+type evalResultCustomData = {
     grid_search_id: string,
     event_type: string,
     experiments: {
@@ -28,14 +28,14 @@ type reduxData = {
                 }
             },
             ids_to_track_and_find_exp_id: Array<number>
-        };
+        }
     },
     colors_mapped_to_exp_id: {
         [key: number]: string
     }
 }
 
-type dataFromSocket = {
+type evalResultSocketData = {
     epoch: number,
     grid_search_id: string, 
     experiment_id: number,
@@ -51,25 +51,25 @@ type dataFromSocket = {
     }>
 }
 
-const handleEvaluationResultData = (event_type: string, reduxData: reduxData, data: dataFromSocket) => {
+const handleEvaluationResultData = (event_type: string, evalResultCustomData: evalResultCustomData, evalResultSocketData: evalResultSocketData) => {
     let exp = undefined;
-    if(reduxData.grid_search_id !== null) {
-        exp = reduxData.experiments;
+    if(evalResultCustomData.grid_search_id !== null) {
+        exp = evalResultCustomData.experiments;
     }
     else {
-        reduxData.grid_search_id = data.grid_search_id;
-        reduxData.event_type = event_type
+        evalResultCustomData.grid_search_id = evalResultSocketData.grid_search_id;
+        evalResultCustomData.event_type = event_type
         exp = {}
     }
 
-    if(reduxData.colors_mapped_to_exp_id[data.experiment_id] === undefined) {
+    if(evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id] === undefined) {
         let random_color = getRandomColor();
-        reduxData.colors_mapped_to_exp_id[data.experiment_id] = random_color;
+        evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id] = random_color;
     }
 
-    for(let i=0; i<data.loss_scores.length; i++)
+    for(let i=0; i<evalResultSocketData.loss_scores.length; i++)
     {
-        let d = data.loss_scores[i]
+        let d = evalResultSocketData.loss_scores[i]
         if(exp[d.split + "_" + d.loss] === undefined) {
             exp[d.split + "_" + d.loss] = {
                 data: {
@@ -94,15 +94,15 @@ const handleEvaluationResultData = (event_type: string, reduxData: reduxData, da
         }
 
         let prevIndex = null;
-        if(exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.includes(data.experiment_id)){
-            prevIndex = exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.indexOf(data.experiment_id)
+        if(exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.includes(evalResultSocketData.experiment_id)){
+            prevIndex = exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.indexOf(evalResultSocketData.experiment_id)
         }
         else {
-            exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.push(data.experiment_id);
+            exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.push(evalResultSocketData.experiment_id);
         }
 
-        if(!exp[d.split + "_" + d.loss].data.labels.includes(data.epoch)) {
-            exp[d.split + "_" + d.loss].data.labels.push(data.epoch);
+        if(!exp[d.split + "_" + d.loss].data.labels.includes(evalResultSocketData.epoch)) {
+            exp[d.split + "_" + d.loss].data.labels.push(evalResultSocketData.epoch);
         }
 
         if(prevIndex!==null) {
@@ -110,21 +110,21 @@ const handleEvaluationResultData = (event_type: string, reduxData: reduxData, da
         }
         else {
             exp[d.split + "_" + d.loss].data.datasets.push({
-                exp_id: data.experiment_id,
-                label: "experiment_"+data.experiment_id.toString(),
+                exp_id: evalResultSocketData.experiment_id,
+                label: "experiment_"+evalResultSocketData.experiment_id.toString(),
                 data: [d.score],
                 fill: false,
-                backgroundColor: reduxData.colors_mapped_to_exp_id[data.experiment_id],
-                borderColor: reduxData.colors_mapped_to_exp_id[data.experiment_id]
+                backgroundColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
+                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id]
             });
         }
         exp[d.split + "_" + d.loss].data.datasets.sort((a,b) => (a.exp_id > b.exp_id) ? 1 : -1)
         exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.sort((a,b) => (a > b) ? 1 : -1)
     }
 
-    for(let i=0; i<data.metric_scores.length; i++)
+    for(let i=0; i<evalResultSocketData.metric_scores.length; i++)
     {
-        let d = data.metric_scores[i]
+        let d = evalResultSocketData.metric_scores[i]
         if(exp[d.split + "_" + d.metric] === undefined) {
             exp[d.split + "_" + d.metric] = {
                 data: {
@@ -149,15 +149,15 @@ const handleEvaluationResultData = (event_type: string, reduxData: reduxData, da
         }
 
         let prevIndex = null;
-        if(exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.includes(data.experiment_id)){
-            prevIndex = exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.indexOf(data.experiment_id)
+        if(exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.includes(evalResultSocketData.experiment_id)){
+            prevIndex = exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.indexOf(evalResultSocketData.experiment_id)
         }
         else {
-            exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.push(data.experiment_id);
+            exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.push(evalResultSocketData.experiment_id);
         }
 
-        if(!exp[d.split + "_" + d.metric].data.labels.includes(data.epoch)) {
-            exp[d.split + "_" + d.metric].data.labels.push(data.epoch);
+        if(!exp[d.split + "_" + d.metric].data.labels.includes(evalResultSocketData.epoch)) {
+            exp[d.split + "_" + d.metric].data.labels.push(evalResultSocketData.epoch);
         }
 
         if(prevIndex!==null) {
@@ -165,12 +165,12 @@ const handleEvaluationResultData = (event_type: string, reduxData: reduxData, da
         }
         else {
             exp[d.split + "_" + d.metric].data.datasets.push({
-                exp_id: data.experiment_id,
-                label: "experiment_"+data.experiment_id.toString(),
+                exp_id: evalResultSocketData.experiment_id,
+                label: "experiment_"+evalResultSocketData.experiment_id.toString(),
                 data: [d.score],
                 fill: false,
-                backgroundColor: reduxData.colors_mapped_to_exp_id[data.experiment_id],
-                borderColor: reduxData.colors_mapped_to_exp_id[data.experiment_id]
+                backgroundColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
+                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id]
             });
         }
 
@@ -178,10 +178,10 @@ const handleEvaluationResultData = (event_type: string, reduxData: reduxData, da
         exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.sort((a,b) => (a > b) ? 1 : -1)
     }
     
-    reduxData.experiments = exp;
-    // console.log("In Handle Exp reduxData = ",reduxData);
+    evalResultCustomData.experiments = exp;
+    // console.log("In Handle Exp evalResultCustomData = ",evalResultCustomData);
     
-    return reduxData;
+    return evalResultCustomData;
     
 }
 
@@ -198,7 +198,7 @@ function getRandomColor() {
 
 export {
     handleEvaluationResultData,
-    type reduxData,
-    type dataFromSocket
+    type evalResultCustomData,
+    type evalResultSocketData
     // TODO: export handleExperimentStatusDataForDashboard
 } 

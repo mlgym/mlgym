@@ -1,14 +1,21 @@
 import SocketClass from '../websocket/SocketClass';
-import { handleEvaluationResultData, reduxData, dataFromSocket } from './event_handlers/evaluationResultDataHandler';
+import { handleEvaluationResultData, evalResultCustomData, evalResultSocketData } from './event_handlers/evaluationResultDataHandler';
 import EVENT_TYPE from './socketEventConstants';
 
 let webSocket = null;
 
-const workerOnMessageCallback = (reduxData: reduxData, dataFromSocket: any) => {
+type parsedSocketData = {
+    creation_ts: BigInteger,
+    event_type: string,
+    payload: evalResultSocketData //as you handle experiment_status, job_status, keep adding: evalResultSocketData | expStatusSocketData | jobStatusSocketData like this & so on...
+}
 
-    let eventType = dataFromSocket["event_type"].toLowerCase();
+const workerOnMessageCallback = (evalResultCustomData:evalResultCustomData, parsedSocketData:parsedSocketData)=>{
+
+    let eventType = parsedSocketData["event_type"].toLowerCase();
     let dataToUpdateReduxInChart = null;
     let dataToUpdateReduxInDashboard = null
+    
     switch(eventType) {
         case EVENT_TYPE.JOB_STATUS:
             console.log("Job Status found")
@@ -17,7 +24,7 @@ const workerOnMessageCallback = (reduxData: reduxData, dataFromSocket: any) => {
             console.log("Job scheduled found")
             break;
         case EVENT_TYPE.EVALUATION_RESULT:
-            dataToUpdateReduxInChart = handleEvaluationResultData(EVENT_TYPE.EVALUATION_RESULT, reduxData, dataFromSocket["payload"]);
+            dataToUpdateReduxInChart = handleEvaluationResultData(EVENT_TYPE.EVALUATION_RESULT, evalResultCustomData, parsedSocketData["payload"]);
             // TODO: make handleExperimentStatusDataForDashboard()
             dataToUpdateReduxInDashboard = "handleExperimentStatusDataForDashboard()"
             break;
@@ -36,7 +43,7 @@ onmessage = (e) => {
     const reduxData = e.data
     let result = null;
     try {
-        webSocket = new SocketClass(Object((dataFromSocket:dataFromSocket)=>workerOnMessageCallback(reduxData,dataFromSocket)));
+        webSocket = new SocketClass(Object((parsedSocketData:parsedSocketData)=>workerOnMessageCallback(reduxData,parsedSocketData)));
         webSocket.init();
         result = EVENT_TYPE.SOCKET_CONN_SUCCESS;
     }

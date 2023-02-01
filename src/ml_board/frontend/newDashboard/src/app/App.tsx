@@ -4,8 +4,9 @@ import { Route,Routes }    from 'react-router-dom';
 import DedicatedWorker from '../webworkers/DedicatedWorker';
 import { connect } from 'react-redux';
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
+import { reduxState } from '../redux/store';
 import EVENT_TYPE from '../webworkers/socketEventConstants';
-import { reduxData } from '../webworkers/event_handlers/evaluationResultDataHandler';
+import { evalResultCustomData } from '../webworkers/event_handlers/evaluationResultDataHandler';
 import './App.scss';
 
 import Filter              from '../components/filter/Filter';
@@ -15,7 +16,7 @@ import Throughput          from '../components/throughputs/Throughput';
 import Tabs                from '../ui/tabs/Tabs';
 
 type AppProps = {
-    evalResult: reduxData
+    evalResult: evalResultCustomData
     saveEvalResultData: Function
 }
 
@@ -33,7 +34,7 @@ type AppInterface = {
 }
 
 type postMessageData = {
-    dataToUpdateReduxInChart: reduxData,
+    dataToUpdateReduxInChart: evalResultCustomData,
     dataToUpdateReduxInDashboard: {
 
     }
@@ -43,7 +44,7 @@ class App extends Component<AppProps, AppState> implements AppInterface{
     
     mlgymWorker: any
     
-    constructor(props: any) {
+    constructor(props: AppProps) {
         super(props);
         this.mlgymWorker = null
     }
@@ -95,7 +96,7 @@ class App extends Component<AppProps, AppState> implements AppInterface{
         }
         else
         {
-            if(data && data.dataToUpdateReduxInChart && data.dataToUpdateReduxInChart.grid_search_id !== null && data.dataToUpdateReduxInChart.experiments !== undefined)
+            if(data && data.dataToUpdateReduxInChart)
             {
                 switch(data.dataToUpdateReduxInChart.event_type) {
                     case EVENT_TYPE.JOB_STATUS:
@@ -125,7 +126,7 @@ class App extends Component<AppProps, AppState> implements AppInterface{
     }
 }
 
-const mapStateToProps = (state: any) => ({
+const mapStateToProps = (state: reduxState) => ({
     evalResult: state.experimentsSlice.evalResult
 });
 

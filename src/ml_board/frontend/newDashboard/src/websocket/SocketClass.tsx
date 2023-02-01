@@ -4,7 +4,7 @@ const DEFAULT_URL = 'http://localhost:7000/'; // or http://127.0.0.1:7000/'
 
 type SocketClassInterface = {
     defaultURL: string,
-    dataCallback: Function | null
+    dataCallback: Function
 }
 
 class SocketClass implements SocketClassInterface {
