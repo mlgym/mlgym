@@ -61,7 +61,7 @@ const handleEvaluationResultData = (event_type: string, evalResultCustomData: ev
         evalResultCustomData.event_type = event_type
         exp = {}
     }
-
+    
     if(evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id] === undefined) {
         let random_color = getRandomColor();
         evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id] = random_color;
