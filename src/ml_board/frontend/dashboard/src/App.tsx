@@ -100,7 +100,7 @@ export default function App() {
 
         socket.on('connect', () => {
           setIsConnected(true);
-          socket.emit('join', { rooms: [runId] });
+          socket.emit('join', { rooms: ["mlgym_event_subscribers", runId] });
         });
 
         socket.on('disconnect', () => {

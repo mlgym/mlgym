@@ -70,7 +70,7 @@ function App() {
     wsConnect ("http://localhost:7000", runId, dispatch);
   } else {
     if (!joinedRoom) {
-      socket.emit ('join', { rooms: [runId], client_id: "3000" });
+      socket.emit ('join', { rooms: ["mlgym_event_subscribers", runId], client_id: "3000" });
       joinedRoom = true;
     }
   }
