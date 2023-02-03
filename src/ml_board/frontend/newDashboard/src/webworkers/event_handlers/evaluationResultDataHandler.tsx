@@ -1,6 +1,5 @@
 type reduxData = {
     grid_search_id: string,
-    event_type: string,
     experiments: {
         [key: string]: {
             data: {
@@ -35,6 +34,8 @@ type reduxData = {
     }
 }
 
+// ASK Vijul: as a better naming 
+// interface EvaluationResultPayload  {
 type dataFromSocket = {
     epoch: number,
     grid_search_id: string, 
@@ -51,22 +52,22 @@ type dataFromSocket = {
     }>
 }
 
-const handleEvaluationResultData = (event_type: string, reduxData: reduxData, data: dataFromSocket) => {
+const handleEvaluationResultData = (reduxData: reduxData, data: dataFromSocket) => {
     let exp = undefined;
+    // ASK MAX: if we can refactor this "grid_search_id"? (if it doesn't change anywas?)
     if(reduxData.grid_search_id !== null) {
         exp = reduxData.experiments;
     }
     else {
         reduxData.grid_search_id = data.grid_search_id;
-        reduxData.event_type = event_type
         exp = {}
     }
 
     if(reduxData.colors_mapped_to_exp_id[data.experiment_id] === undefined) {
-        let random_color = getRandomColor();
-        reduxData.colors_mapped_to_exp_id[data.experiment_id] = random_color;
+        reduxData.colors_mapped_to_exp_id[data.experiment_id] = getRandomColor();
     }
 
+    // TODO: check these later after the Dashboard is done!
     for(let i=0; i<data.loss_scores.length; i++)
     {
         let d = data.loss_scores[i]
@@ -122,6 +123,7 @@ const handleEvaluationResultData = (event_type: string, reduxData: reduxData, da
         exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.sort((a,b) => (a > b) ? 1 : -1)
     }
 
+    // TODO: check these later after the Dashboard is done!
     for(let i=0; i<data.metric_scores.length; i++)
     {
         let d = data.metric_scores[i]
@@ -185,8 +187,6 @@ const handleEvaluationResultData = (event_type: string, reduxData: reduxData, da
     
 }
 
-// TODO: const handleExperimentStatusDataForDashboard() [like above method]
-
 function getRandomColor() {
     let letters = '0123456789ABCDEF'.split('');
     let color = '#';
@@ -200,5 +200,5 @@ export {
     handleEvaluationResultData,
     type reduxData,
     type dataFromSocket
-    // TODO: export handleExperimentStatusDataForDashboard
-} 
+};
+

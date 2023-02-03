@@ -21,8 +21,8 @@ class DedicatedWorker implements DedicatedWorkerInterface{
         }
     }
 
-    postMessage(data = {}, transferData = []) {
-        this.worker.postMessage(data, transferData)
+    postMessage(data = {}) {
+        this.worker.postMessage(data)
     }
 }
 

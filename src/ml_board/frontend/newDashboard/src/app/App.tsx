@@ -1,48 +1,39 @@
 import { Component } from 'react';
-import Graphs from '../components/graphs/Graphs';
-import { Route,Routes }    from 'react-router-dom';
-import DedicatedWorker from '../webworkers/DedicatedWorker';
 import { connect } from 'react-redux';
+import { Route, Routes } from 'react-router-dom';
+import Graphs from '../components/graphs/Graphs';
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
-import EVENT_TYPE from '../webworkers/socketEventConstants';
+import { upsertExperiment } from '../redux/experiments/yetAnotherExperimentSlice';
+import { upsertJob } from '../redux/jobs/jobSlice';
+import { changeSocketConnection } from '../redux/status/statusSlice';
+import DedicatedWorker from '../webworkers/DedicatedWorker';
 import { reduxData } from '../webworkers/event_handlers/evaluationResultDataHandler';
 import './App.scss';
 
-import Filter              from '../components/filter/Filter';
-import Dashboard           from '../components/dashboard/Dashboard';
-import Settings            from '../components/settings/Settings';
-import Throughput          from '../components/throughputs/Throughput';
-import Tabs                from '../ui/tabs/Tabs';
+import Dashboard from '../components/dashboard/Dashboard';
+import Filter from '../components/filter/Filter';
+import Settings from '../components/settings/Settings';
+import Throughput from '../components/throughputs/Throughput';
+import Tabs from '../ui/tabs/Tabs';
+import { DataToRedux } from '../webworkers/worker_utils';
 
 type AppProps = {
     evalResult: reduxData
     saveEvalResultData: Function
-}
-
-type AppState = {
-    
+    upsertJob:Function
+    upsertExperiment:Function
 }
 
 type AppInterface = {
-    mlgymWorker: {
-        DedicatedWorker: {
-            onMessageCtxNFunc: Function,
-            worker: Worker
-        }
-    }
+    mlgymWorker:DedicatedWorker | null
 }
 
-type postMessageData = {
-    dataToUpdateReduxInChart: reduxData,
-    dataToUpdateReduxInDashboard: {
-
-    }
-} | string
-
-class App extends Component<AppProps, AppState> implements AppInterface{
+class App extends Component<AppProps> implements AppInterface{
     
-    mlgymWorker: any
+    mlgymWorker: DedicatedWorker | null
+    isConnectingWebSocket: boolean = false;
     
+
     constructor(props: any) {
         super(props);
         this.mlgymWorker = null
@@ -53,7 +44,10 @@ class App extends Component<AppProps, AppState> implements AppInterface{
     // if we use functional component, then the page refreshes again and again due to constant redux updates. So it will cause to create new worker & socket connection everytime forever - going into infinte loop, & thus will crash the app.
     // so, here we use the class component - which follows the react lifecycle & limiting the page refresh to just once i.e. on screen load / reload.
     componentDidMount() {
-        this.createWorker();
+        if (!this.isConnectingWebSocket) {
+            this.createWorker();
+            this.isConnectingWebSocket = true;
+        }
     }
 
     render() {
@@ -62,14 +56,14 @@ class App extends Component<AppProps, AppState> implements AppInterface{
                 <Tabs/>
                 <div className='tabContent'>
                     <div className='mainView'>
-                    <Routes>
+                        <Routes>
                         <Route path="/"              element={ <Graphs/> } />
                         <Route path="/analysisboard" element={ <Graphs/> } />
                         <Route path="/dashboard"     element={ <Dashboard/> } />
                         <Route path="/throughput"    element={ <Throughput/>  } />
                         <Route path="/settings"      element={ <Settings/>  } />
                         <Route path="*"              element={ <div>404</div> } />
-                    </Routes>
+                        </Routes>
                     </div>
                     <Filter/>
                 </div>
@@ -78,57 +72,40 @@ class App extends Component<AppProps, AppState> implements AppInterface{
     }
 
     createWorker = () => {
+        // TODO: is DedicatedWorker really needed? 
         this.mlgymWorker = new DedicatedWorker(Object(this.workerOnMessageHandler));
         this.mlgymWorker.postMessage(this.props.evalResult);
     }
 
-    workerOnMessageHandler = async(data: postMessageData) => {
+    // ASK Vijul: Why the 'async'?
+    workerOnMessageHandler = async(data: DataToRedux|string) => {
         if (typeof(data) === "string") {
-            if(data === EVENT_TYPE.SOCKET_CONN_SUCCESS)
-            {
-                console.log(EVENT_TYPE.SOCKET_CONN_SUCCESS);
-            }
-            else
-            {
-                console.log(EVENT_TYPE.SOCKET_CONN_FAIL);
-            }    
+            console.log(data);
         }
         else
         {
-            if(data && data.dataToUpdateReduxInChart && data.dataToUpdateReduxInChart.grid_search_id !== null && data.dataToUpdateReduxInChart.experiments !== undefined)
+            if(data && data.evaluationResultsData)
             {
-                switch(data.dataToUpdateReduxInChart.event_type) {
-                    case EVENT_TYPE.JOB_STATUS:
-                        
-                        break;
-                    case EVENT_TYPE.JOB_SCHEDULED:
-                        
-                        break;
-                    case EVENT_TYPE.EVALUATION_RESULT:
-                        await this.props.saveEvalResultData(data.dataToUpdateReduxInChart);
-                        console.log("Data from redux = ",this.props.evalResult);
-                        break;
-                    case EVENT_TYPE.EXPERIMENT_CONFIG:
-                        
-                        break;
-                    case EVENT_TYPE.EXPERIMENT_STATUS:
-                        
-                        break;
-                    default: throw new Error(EVENT_TYPE.UNKNOWN_EVENT); 
-                }
+                // ASK Vijul: Why the 'await'? (in case we get update request at the same time the state is being updated)
+                await this.props.saveEvalResultData(data.evaluationResultsData);
             }
-            else if(data && data.dataToUpdateReduxInDashboard)
+            else if(data && data.jobStatusData)
             {
-                // TODO: Save to redux like above
+                this.props.upsertJob(data.jobStatusData)
+            }
+            else if(data && data.experimentStatusData)
+            {
+                this.props.upsertExperiment(data.experimentStatusData)
             }
         }
     }
 }
 
 const mapStateToProps = (state: any) => ({
-    evalResult: state.experimentsSlice.evalResult
+    evalResult: state.experimentsSlice.evalResult,
+    isWebSocketConnected: state.status.wsConnected,
 });
 
-const mapDispatchToProps = { saveEvalResultData };
+const mapDispatchToProps = { saveEvalResultData, changeSocketConnection, upsertJob, upsertExperiment };
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

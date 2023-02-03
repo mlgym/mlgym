@@ -7,6 +7,13 @@ type SocketClassInterface = {
     dataCallback: Function | null
 }
 
+// ASK: Vijul
+export interface DataFromSocket{
+    event_type:string,
+    creation_ts: number,
+    payload: JSON, // TODO: could be specified further!
+}
+
 class SocketClass implements SocketClassInterface {
     
     defaultURL: string
@@ -25,7 +32,7 @@ class SocketClass implements SocketClassInterface {
         socket.open();
         
         socket.on('connect', () => {
-            socket.emit('join', { rooms: [runId], client_id: "3000" });
+            socket.emit('join', { rooms: [runId] });
         });
 
         socket.on('mlgym_event', (msg) => {
