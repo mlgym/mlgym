@@ -2,9 +2,9 @@
 import { Link } from "react-router-dom";
 
 // internal deps
-import { flag } from '../icons/Icons';
+import { flag } from '../../svg/Icons';
 // import { dashboard       } from '../icons/Icons';
-import { cellTowerIcon, chartsMixedIcon, slidersIcon } from '../icons/Icons';
+import { cellTowerIcon, chartsMixedIcon, slidersIcon } from '../../svg/Icons';
 
 // state-selectors
 import { useAppSelector } from '../../app/hooks';
@@ -13,6 +13,7 @@ import { selectTab } from '../../redux/status/statusSlice';
 // actions
 import { useAppDispatch } from '../../app/hooks';
 import { changeTab } from '../../redux/status/statusSlice';
+import type { AppDispatch } from '../../redux/store';
 
 // styles
 import './Tabs.scss';
@@ -44,7 +45,7 @@ function Tabs() {
   )
 }
 
-let renderTab = (val: Tab, id:string, iActiveTab: string, dispatch: any) => {
+let renderTab = (val: Tab, id:string, iActiveTab: string, dispatch: AppDispatch) => {
   let isActive = iActiveTab === id;
   let className  = 'homeTab';
   if (isActive) className += ' active';

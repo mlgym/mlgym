@@ -11,10 +11,8 @@ import { Experiment } from "../../redux/experiments/yetAnotherExperimentSlice";
 //     "num_batches": 8400,
 //     "current_batch": 840
 // }
-const handleExperimentStatusData = (data: any): Experiment => {
+export default function handleExperimentStatusData(data: any): Experiment {
     data.model_status = data.status;
     delete data.status
     return data;
 }
-
-export default handleExperimentStatusData;

@@ -1,39 +1,37 @@
 import { Experiment } from '../redux/experiments/yetAnotherExperimentSlice';
 import { Job } from '../redux/jobs/jobSlice';
-import SocketClass from '../websocket/SocketClass';
-import { dataFromSocket, handleEvaluationResultData, reduxData } from './event_handlers/evaluationResultDataHandler';
+import SocketClass, { DataFromSocket } from '../websocket/SocketClass';
+import handleEvaluationResultData, { evalResultCustomData, EvaluationResultPayload } from './event_handlers/evaluationResultDataHandler';
 import handleExperimentStatusData from './event_handlers/ExperimentStatusHandler';
 import handleJobStatusData from './event_handlers/JobStatusHandler';
-import EVENT_TYPE from './socketEventConstants';
+import { EVENT_TYPE, SOCKET_STATUS } from './socketEventConstants';
 
 export interface DataToRedux {
     jobStatusData?: Job,
     experimentStatusData?: Experiment,
-    evaluationResultsData?: reduxData,
+    evaluationResultsData?: evalResultCustomData,
 }
 
-const workerOnMessageCallback = (reduxData: reduxData, dataFromSocket: any) => {
+const workerOnMessageCallback = (evalResultCustomData:evalResultCustomData, parsedSocketData:DataFromSocket)=>{
 
-    const eventType = dataFromSocket["event_type"].toLowerCase();
+    const eventType = parsedSocketData.event_type.toLowerCase();
     const dataToRedux: DataToRedux = {};
     switch (eventType) {
         case EVENT_TYPE.JOB_STATUS:
-            // TODO: HERE
-            dataToRedux.jobStatusData = handleJobStatusData(dataFromSocket["payload"]);
+            dataToRedux.jobStatusData = handleJobStatusData(parsedSocketData.payload);
             break;
         case EVENT_TYPE.JOB_SCHEDULED:
             console.log("Job scheduled found")
             break;
         case EVENT_TYPE.EVALUATION_RESULT:
-            // TODO: make handleExperimentStatusDataForDashboard()
-            dataToRedux.evaluationResultsData = handleEvaluationResultData(reduxData, dataFromSocket["payload"]);
+            // TODO: get the "latest_split_metric" in the experimentsSlice too
+            dataToRedux.evaluationResultsData = handleEvaluationResultData(evalResultCustomData, parsedSocketData.payload as unknown as EvaluationResultPayload);
             break;
         case EVENT_TYPE.EXPERIMENT_CONFIG:
             console.log("Exp config found")
             break;
         case EVENT_TYPE.EXPERIMENT_STATUS:
-            // TODO: HERE
-            dataToRedux.experimentStatusData = handleExperimentStatusData(dataFromSocket["payload"]);
+            dataToRedux.experimentStatusData = handleExperimentStatusData(parsedSocketData.payload);
             break;
         default: throw new Error(EVENT_TYPE.UNKNOWN_EVENT);
     }
@@ -45,13 +43,12 @@ onmessage = (e) => {
     const reduxData = e.data
     let result = null;
     try {
-        // ASK Vijul: how is this casting to "dataFromSocket" even possible? while sending the data to workerOnMessageCallback as "any"?
-        const webSocket = new SocketClass(Object((dataFromSocket: dataFromSocket) => workerOnMessageCallback(reduxData, dataFromSocket)));
+        const webSocket = new SocketClass(Object((parsedSocketData:DataFromSocket)=>workerOnMessageCallback(reduxData,parsedSocketData)));
         webSocket.init();
-        result = EVENT_TYPE.SOCKET_CONN_SUCCESS;
+        result = SOCKET_STATUS.SOCKET_CONN_SUCCESS;
     }
     catch (e) {
-        result = EVENT_TYPE.SOCKET_CONN_FAIL;
+        result = SOCKET_STATUS.SOCKET_CONN_FAIL;
     }
     // this is sent as a reply ONLY IN the first time
     postMessage(result);

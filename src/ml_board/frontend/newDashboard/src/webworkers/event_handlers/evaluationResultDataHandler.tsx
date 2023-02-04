@@ -1,5 +1,5 @@
-type reduxData = {
-    grid_search_id: string,
+export interface evalResultCustomData {
+    grid_search_id: string, //TODO: move it to the statusSlice?
     experiments: {
         [key: string]: {
             data: {
@@ -10,7 +10,7 @@ type reduxData = {
                     data: Array<number>,
                     fill: Boolean,
                     backgroundColor: string,
-                    borderColor: string 
+                    borderColor: string
                 }>
             },
             options: {
@@ -27,51 +27,47 @@ type reduxData = {
                 }
             },
             ids_to_track_and_find_exp_id: Array<number>
-        };
+        }
     },
     colors_mapped_to_exp_id: {
         [key: number]: string
     }
 }
 
-// ASK Vijul: as a better naming 
-// interface EvaluationResultPayload  {
-type dataFromSocket = {
+export interface EvaluationResultPayload {
     epoch: number,
-    grid_search_id: string, 
+    grid_search_id: string,
     experiment_id: number,
     metric_scores: Array<{
-        metric: string, 
+        metric: string,
         split: string,
         score: number
     }>,
     loss_scores: Array<{
-        loss: string, 
+        loss: string,
         split: string,
         score: number
     }>
 }
 
-const handleEvaluationResultData = (reduxData: reduxData, data: dataFromSocket) => {
+export default function handleEvaluationResultData(evalResultCustomData: evalResultCustomData, evalResultSocketData: EvaluationResultPayload) {
     let exp = undefined;
-    // ASK MAX: if we can refactor this "grid_search_id"? (if it doesn't change anywas?)
-    if(reduxData.grid_search_id !== null) {
-        exp = reduxData.experiments;
+    if (evalResultCustomData.grid_search_id !== null) {
+        exp = evalResultCustomData.experiments;
     }
     else {
-        reduxData.grid_search_id = data.grid_search_id;
+        evalResultCustomData.grid_search_id = evalResultSocketData.grid_search_id;
         exp = {}
     }
 
-    if(reduxData.colors_mapped_to_exp_id[data.experiment_id] === undefined) {
-        reduxData.colors_mapped_to_exp_id[data.experiment_id] = getRandomColor();
+    if (evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id] === undefined) {
+        let random_color = getRandomColor();
+        evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id] = random_color;
     }
 
-    // TODO: check these later after the Dashboard is done!
-    for(let i=0; i<data.loss_scores.length; i++)
-    {
-        let d = data.loss_scores[i]
-        if(exp[d.split + "_" + d.loss] === undefined) {
+    for (let i = 0; i < evalResultSocketData.loss_scores.length; i++) {
+        let d = evalResultSocketData.loss_scores[i]
+        if (exp[d.split + "_" + d.loss] === undefined) {
             exp[d.split + "_" + d.loss] = {
                 data: {
                     labels: [],
@@ -95,39 +91,37 @@ const handleEvaluationResultData = (reduxData: reduxData, data: dataFromSocket) 
         }
 
         let prevIndex = null;
-        if(exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.includes(data.experiment_id)){
-            prevIndex = exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.indexOf(data.experiment_id)
+        if (exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.includes(evalResultSocketData.experiment_id)) {
+            prevIndex = exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.indexOf(evalResultSocketData.experiment_id)
         }
         else {
-            exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.push(data.experiment_id);
+            exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.push(evalResultSocketData.experiment_id);
         }
 
-        if(!exp[d.split + "_" + d.loss].data.labels.includes(data.epoch)) {
-            exp[d.split + "_" + d.loss].data.labels.push(data.epoch);
+        if (!exp[d.split + "_" + d.loss].data.labels.includes(evalResultSocketData.epoch)) {
+            exp[d.split + "_" + d.loss].data.labels.push(evalResultSocketData.epoch);
         }
 
-        if(prevIndex!==null) {
+        if (prevIndex !== null) {
             exp[d.split + "_" + d.loss].data.datasets[prevIndex].data = [...exp[d.split + "_" + d.loss].data.datasets[prevIndex].data, d.score]
         }
         else {
             exp[d.split + "_" + d.loss].data.datasets.push({
-                exp_id: data.experiment_id,
-                label: "experiment_"+data.experiment_id.toString(),
+                exp_id: evalResultSocketData.experiment_id,
+                label: "experiment_" + evalResultSocketData.experiment_id.toString(),
                 data: [d.score],
                 fill: false,
-                backgroundColor: reduxData.colors_mapped_to_exp_id[data.experiment_id],
-                borderColor: reduxData.colors_mapped_to_exp_id[data.experiment_id]
+                backgroundColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
+                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id]
             });
         }
-        exp[d.split + "_" + d.loss].data.datasets.sort((a,b) => (a.exp_id > b.exp_id) ? 1 : -1)
-        exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.sort((a,b) => (a > b) ? 1 : -1)
+        exp[d.split + "_" + d.loss].data.datasets.sort((a, b) => (a.exp_id > b.exp_id) ? 1 : -1)
+        exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.sort((a, b) => (a > b) ? 1 : -1)
     }
 
-    // TODO: check these later after the Dashboard is done!
-    for(let i=0; i<data.metric_scores.length; i++)
-    {
-        let d = data.metric_scores[i]
-        if(exp[d.split + "_" + d.metric] === undefined) {
+    for (let i = 0; i < evalResultSocketData.metric_scores.length; i++) {
+        let d = evalResultSocketData.metric_scores[i]
+        if (exp[d.split + "_" + d.metric] === undefined) {
             exp[d.split + "_" + d.metric] = {
                 data: {
                     labels: [],
@@ -151,54 +145,48 @@ const handleEvaluationResultData = (reduxData: reduxData, data: dataFromSocket) 
         }
 
         let prevIndex = null;
-        if(exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.includes(data.experiment_id)){
-            prevIndex = exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.indexOf(data.experiment_id)
+        if (exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.includes(evalResultSocketData.experiment_id)) {
+            prevIndex = exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.indexOf(evalResultSocketData.experiment_id)
         }
         else {
-            exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.push(data.experiment_id);
+            exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.push(evalResultSocketData.experiment_id);
         }
 
-        if(!exp[d.split + "_" + d.metric].data.labels.includes(data.epoch)) {
-            exp[d.split + "_" + d.metric].data.labels.push(data.epoch);
+        if (!exp[d.split + "_" + d.metric].data.labels.includes(evalResultSocketData.epoch)) {
+            exp[d.split + "_" + d.metric].data.labels.push(evalResultSocketData.epoch);
         }
 
-        if(prevIndex!==null) {
+        if (prevIndex !== null) {
             exp[d.split + "_" + d.metric].data.datasets[prevIndex].data = [...exp[d.split + "_" + d.metric].data.datasets[prevIndex].data, d.score]
         }
         else {
             exp[d.split + "_" + d.metric].data.datasets.push({
-                exp_id: data.experiment_id,
-                label: "experiment_"+data.experiment_id.toString(),
+                exp_id: evalResultSocketData.experiment_id,
+                label: "experiment_" + evalResultSocketData.experiment_id.toString(),
                 data: [d.score],
                 fill: false,
-                backgroundColor: reduxData.colors_mapped_to_exp_id[data.experiment_id],
-                borderColor: reduxData.colors_mapped_to_exp_id[data.experiment_id]
+                backgroundColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
+                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id]
             });
         }
 
-        exp[d.split + "_" + d.metric].data.datasets.sort((a,b) => (a.exp_id > b.exp_id) ? 1 : -1)
-        exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.sort((a,b) => (a > b) ? 1 : -1)
+        exp[d.split + "_" + d.metric].data.datasets.sort((a, b) => (a.exp_id > b.exp_id) ? 1 : -1)
+        exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.sort((a, b) => (a > b) ? 1 : -1)
     }
-    
-    reduxData.experiments = exp;
-    // console.log("In Handle Exp reduxData = ",reduxData);
-    
-    return reduxData;
-    
+
+    evalResultCustomData.experiments = exp;
+    // console.log("In Handle Exp evalResultCustomData = ",evalResultCustomData);
+
+    return evalResultCustomData;
+
 }
 
+// TODO: should be moved to the statusSlice maybe ?
 function getRandomColor() {
     let letters = '0123456789ABCDEF'.split('');
     let color = '#';
-    for (let i = 0; i < 6; i++ ) {
+    for (let i = 0; i < 6; i++) {
         color += letters[Math.floor(Math.random() * 16)];
     }
     return color;
 }
-
-export {
-    handleEvaluationResultData,
-    type reduxData,
-    type dataFromSocket
-};
-

@@ -15,10 +15,8 @@ import { Job } from "../../redux/jobs/jobSlice";
 
 
 // data should be like Job but I'm chaning the key name from "status" to "job_status"
-const handleJobStatusData = (data: any): Job => {
+export default function handleJobStatusData(data: any): Job {
     data.job_status = data.status;
     delete data.status
     return data;
 }
-
-export default handleJobStatusData;
