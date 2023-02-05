@@ -16,7 +16,7 @@ class WebSocketServer:
         self._host = host
         self._port = port
         self._message_delay = message_delay
-        self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=["http://localhost:3000", "http://localhost:7000"])
+        self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=["http://localhost:3000", "http://localhost:7000", "http://localhost:8080", "http://127.0.0.1:8080", "http://127.0.0.1:3000"])
         self._client_sids = []
         self._init_call_backs()
 
@@ -98,7 +98,8 @@ if __name__ == '__main__':
 
     log_file_path = "./event_storage_less_data.log"
 
-    message_delay = 0.1  # in seconds
+
+    message_delay = 0.001  # in seconds
 
     ws = WebSocketServer(host=host, port=port, message_delay=message_delay, log_file_path=log_file_path, async_mode=async_mode, app=app)
 
