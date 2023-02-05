@@ -96,7 +96,7 @@ if __name__ == '__main__':
     host = "localhost"
     async_mode = None
 
-    log_file_path = "/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_gym/backend/streaming/log.txt"
+    log_file_path = "./event_storage_less_data.log"
 
     message_delay = 0.1  # in seconds
 
