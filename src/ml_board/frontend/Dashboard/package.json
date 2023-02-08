@@ -1,0 +1,54 @@
+{
+  "name": "front-end",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@reduxjs/toolkit": "^1.9.0",
+    "ag-grid-community": "^28.2.1",
+    "ag-grid-react": "^28.2.1",
+    "chart.js": "^4.1.1",
+    "history": "^4.7.2",
+    "lodash.clonedeep": "^4.5.0",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.1.0",
+    "react-dom": "^18.2.0",
+    "react-redux": "^8.0.5",
+    "react-router-dom": "^6.3.0",
+    "react-scripts": "5.0.1",
+    "recharts": "^2.1.16",
+    "socket.io-client": "^4.5.3",
+    "typescript": "^4.8.4",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@types/history": "^4.7.3",
+    "@types/lodash.clonedeep": "^4.5.7",
+    "@types/node": "^17.0.45",
+    "@types/react": "^18.0.25",
+    "@types/react-dom": "^18.0.8",
+    "sass": "^1.56.1"
+  }
+}

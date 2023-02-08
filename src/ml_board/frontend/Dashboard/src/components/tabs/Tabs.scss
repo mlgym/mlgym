@@ -1,0 +1,34 @@
+$white:#F7F6FB;
+
+.homeTabs {
+  display: grid;
+  grid-template-columns: 200px;
+  grid-template-rows: repeat(auto-fit, 50px);
+  place-items: center;
+  background: #4723D9;
+  height: 100vh;
+  width: max-content;
+
+  .homeTab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 30px;
+    font-size: 20px;
+    margin: auto 0;
+
+    .tabIcon {
+      width: 30px;
+      height: 30px;
+      margin-right: 10px;
+      fill: $white;
+    }
+
+    .tabLabel {
+      width: 100px;
+      text-align: left;
+      color: $white;
+    }
+  }
+}
