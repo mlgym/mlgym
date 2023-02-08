@@ -1,12 +1,10 @@
 from copy import deepcopy
-
 import numpy as np
 import pytest
 import torch
 from ml_gym.batching.batch import InferenceResultBatch
 from ml_gym.gym.post_processing import SoftmaxPostProcessorImpl, \
     ArgmaxPostProcessorImpl, MaxOrMinPostProcessorImpl, BinarizationPostProcessorImpl, SigmoidalPostProcessorImpl
-
 from pytests.test_env.inference_result_batch_fixtures import InferenceBatchResultFixture
 
 

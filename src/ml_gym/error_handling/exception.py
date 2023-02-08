@@ -119,3 +119,8 @@ class DataIntegrityError(Exception):
 class InvalidPathError(Exception):
     """Raised when the path to a file or directory is invalid/corrupt."""
     pass
+
+
+class CheckpointEntityError(Exception):
+    """Raised when there is an error within the checkpoint entity."""
+    pass

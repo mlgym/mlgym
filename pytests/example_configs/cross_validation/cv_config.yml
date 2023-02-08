@@ -2,7 +2,7 @@ global_config:
   seed: &seed_value 2
 
 
-CV:
+CROSS_VALIDATION:
   iterator_key: splitted_dataset_iterators
   split_key: train
   config:

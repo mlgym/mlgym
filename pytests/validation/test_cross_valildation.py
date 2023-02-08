@@ -3,12 +3,10 @@ import os
 import re
 from collections import Counter
 from typing import Type, Dict, Any, List
-from datetime import datetime
-
+from ml_gym.modes import RunMode
 import numpy as np
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.gym import Gym
-from ml_gym.gym.jobs import AbstractGymJob
 from ml_gym.util.grid_search import GridSearch
 from ml_gym.util.logger import QueuedLogging
 from ml_gym.validation.cross_validation import CrossValidation
@@ -17,7 +15,6 @@ from data_stack.dataset.factory import InformedDatasetFactory
 from data_stack.dataset.meta import MetaFactory
 import torch
 from ml_gym.validation.validator_factory import ValidatorFactory
-
 from pytests.test_env.fixtures import LoggingFixture, DeviceFixture
 import pytest
 from pytests.test_env.validation_fixtures import ValidationFixtures
@@ -45,8 +42,8 @@ class TestCrossValidation(LoggingFixture, DeviceFixture, ValidationFixtures):
                              stratification=False,
                              target_pos=1,
                              shuffle=True,
-                             grid_search_id=datetime.now().strftime("%Y-%m-%d--%H-%M-%S"),
-                             seed=1)
+                             seed=1,
+                             run_mode=RunMode.TRAIN)
 
         return cv
 

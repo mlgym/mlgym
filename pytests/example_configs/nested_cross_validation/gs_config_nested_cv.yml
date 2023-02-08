@@ -5,8 +5,7 @@ global_config:
   model_prediction_key: &model_prediction_key_anchor model_prediction_key
   postprocessing_argmax_key: &postprocessing_argmax_key_anchor postprocessing_argmax_key
 
-
-cv_experiment_information:
+nested_cv_experiment_information:
   component_type_key: DATASET_ITERATORS
   variant_key: DEFAULT
   config:
@@ -16,10 +15,12 @@ cv_experiment_information:
     hyper_paramater_combination_id:
       injectable:
         id: id_hyper_paramater_combination_id 
-    val_fold_id:
+    outer_test_fold_id:
       injectable:
-        id: id_val_fold_id
-
+        id: id_outer_test_fold_id
+    inner_test_fold_id:
+      injectable:
+        id: id_inner_test_fold_id
 
 dataset_repository:
   component_type_key: DATASET_REPOSITORY
@@ -49,50 +50,39 @@ splitted_dataset_iterators:
   config:
     split_configs:
       train:
-        train: 0.05
-        train_: 0.95
+        train: 0.01
+        train_: 0.99
       test: 
         test: 0.01
         test_: 0.99
     seed: *seed_value
+
+combined_dataset_iterators: 
+  component_type_key: COMBINED_DATASET_ITERATORS
+  variant_key: DEFAULT
+  requirements:
+    - name: splitted_dataset_iterators
+      component_name: splitted_dataset_iterators
+      subscription: [train, test]
+  config:
+    combine_configs:
+      - new_split: full
+        old_splits: 
+          - iterators_name: splitted_dataset_iterators
+            splits: [train, test]
 
 iterator_folds:
   component_type_key: ITERATOR_VIEW
   variant_key: DEFAULT
   requirements:
     - name: iterators
-      component_name: splitted_dataset_iterators
-      subscription: [train]
+      component_name: combined_dataset_iterators
+      subscription: [full]
   config:
-    applicable_split: train
+    applicable_split: full
     split_indices:
       injectable:
           id: id_split_indices
-
-combined_dataset_iterators: 
-  component_type_key: COMBINED_DATASET_ITERATORS
-  variant_key: DEFAULT
-  requirements:
-    - name: iterator_folds
-      component_name: iterator_folds
-      subscription: [train, val]
-    - name: splitted_dataset_iterators
-      component_name: splitted_dataset_iterators
-      subscription: [test]
-  config:
-    combine_configs:
-      - new_split: train
-        old_splits: 
-          - iterators_name: iterator_folds
-            splits: [train]
-      - new_split: val
-        old_splits: 
-          - iterators_name: iterator_folds
-            splits: [val]
-      - new_split: test
-        old_splits: 
-          - iterators_name: splitted_dataset_iterators
-            splits: [test]
 
 data_collator:
   component_type_key: DATA_COLLATOR
@@ -109,8 +99,8 @@ data_loaders:
   variant_key: DEFAULT
   requirements:
     - name: iterators
-      component_name: combined_dataset_iterators
-      subscription: [train, val, test]
+      component_name: iterator_folds
+      subscription: [train, test]
     - name: data_collator
       component_name: data_collator
   config:
@@ -218,18 +208,9 @@ eval_component:
       - *model_prediction_key_anchor
     post_processors_config:
       - key: "ARG_MAX"
-        applicable_splits: [train, val, test]
-        params:
-          prediction_subscription_key: *model_prediction_key_anchor
-          prediction_publication_key: *postprocessing_argmax_key_anchor
+        prediction_subscription_key: *model_prediction_key_anchor
+        prediction_publication_key: *postprocessing_argmax_key_anchor
     train_split_name: train
-    metrics_computation_config:
-      - metric_tag: F1_SCORE_macro
-        applicable_splits: [train, val, test]
-      - metric_tag: PRECISION_macro
-        applicable_splits: [train, val, test]
-      - metric_tag: RECALL_macro
-        applicable_splits: [train, val, test]
     metrics_config:
       - key: F1_SCORE
         params:
@@ -261,3 +242,35 @@ evaluator:
   requirements:
     - name: eval_component
       component_name: eval_component
+
+early_stopping_strategy_registry:
+  component_type_key: EARLY_STOPPING_STRATEGY_REGISTRY
+  variant_key: DEFAULT
+
+early_stopping_strategy:
+  component_type_key: EARLY_STOPPING_STRATEGY
+  variant_key: DEFAULT
+  requirements:
+    - name: early_stopping_strategy_registry
+      component_name: early_stopping_strategy_registry
+  config:
+    early_stopping_key: LAST_K_EPOCHS_IMPROVEMENT_STRATEGY
+    early_stopping_config:
+      min_relative_improvement: 0.01
+      epochs_window: 5
+      split_name: val
+      monitoring_key: "F1_SCORE_macro"
+      is_increase_task: true
+
+checkpointing_strategy_registry:
+  component_type_key: CHECKPOINTING_STRATEGY_REGISTRY
+  variant_key: DEFAULT
+
+checkpointing_strategy:
+  component_type_key: CHECKPOINTING_STRATEGY
+  variant_key: DEFAULT
+  requirements:
+    - name: checkpointing_strategy_registry
+      component_name: checkpointing_strategy_registry
+  config:
+    checkpointing_key: SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY

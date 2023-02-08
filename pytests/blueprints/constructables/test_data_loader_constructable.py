@@ -6,12 +6,10 @@ from ml_gym.blueprints.constructables import Requirement, DataCollatorConstructa
     DatasetIteratorConstructable, DeprecatedDataLoadersConstructable
 from ml_gym.data_handling.dataset_loader import DatasetLoader
 from torch.utils.data import RandomSampler, WeightedRandomSampler, SequentialSampler
-
-from typing import List, Dict
+from typing import Dict
 import tempfile
 import shutil
-
-from mocked_classes import MockedMNISTFactory, MockedCollator
+from pytests.blueprints.constructables.mocked_classes import MockedMNISTFactory, MockedCollator
 
 
 class IteratorFixtures:

@@ -1,6 +1,6 @@
 from ml_gym.persistency.logging import JobStatusLogger, MLgymStatusLoggerCollectionConstructable
 import torch
-from typing import Dict, List
+from typing import List
 from ml_gym.multiprocessing.pool import Pool, Job
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.jobs import AbstractGymJob
@@ -12,11 +12,10 @@ torch.multiprocessing.set_start_method('spawn', force=True)
 
 
 class Gym:
-    def __init__(self, job_id_prefix: str, process_count: int = 1, device_ids: List[int] = None, log_std_to_file: bool = True,
-                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None):
+    def __init__(self, job_id_prefix: str, logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
+                 process_count: int = 1, device_ids: List[int] = None, log_std_to_file: bool = True):
         self.devices = get_devices(device_ids)
-        self.logger_collection_constructable = logger_collection_constructable
-        self.job_status_logger = JobStatusLogger(self.logger_collection_constructable.construct())
+        self.job_status_logger = JobStatusLogger(logger_collection_constructable.construct())
         self.log_std_to_file = log_std_to_file
         self.pool = Pool(num_processes=process_count, devices=self.devices, logger_collection_constructable=logger_collection_constructable)
         self.jobs: List[Job] = []

@@ -4,10 +4,10 @@ from enum import Enum
 from typing import Any, List, Dict
 from ml_gym.multiprocessing.states import JobStatus, JobType
 from ml_gym.io.websocket_client import ClientFactory, BufferedClient
-#from ml_gym.gym.model_checkpointing import ModelCheckpointComponent
 import time
 import torch
 import pickle
+import math
 
 
 def get_timestamp() -> int:
@@ -81,7 +81,17 @@ class StreamedLogger(MLgymStatusLoggerIF):
         self._sio_client.emit(message_key="mlgym_event", message=raw_log_message)
 
 
-class JobStatusLogger:
+class JobStatusLoggerIF(ABC):
+
+    def log_job_status(self, job_id: str, job_type: JobType, status: JobStatus, grid_search_id: str, experiment_id: str, starting_time: int, finishing_time: int,
+                       device: torch.device, error: str = "", stacktrace: str = ""):
+        raise NotImplementedError
+
+    def log_experiment_config(self, grid_search_id: str, experiment_id: str, job_id: str, config: Dict[str, Any]):
+        raise NotImplementedError
+
+
+class JobStatusLogger(JobStatusLoggerIF):
     def __init__(self, logger: MLgymStatusLoggerIF) -> None:
         self._logger = logger
 
@@ -102,10 +112,11 @@ class JobStatusLogger:
 
 
 class ExperimentStatusLogger:
-    def __init__(self, logger: MLgymStatusLoggerIF, experiment_id: str, grid_search_id: str) -> None:
+    def __init__(self, logger: MLgymStatusLoggerIF, experiment_id: str, grid_search_id: str, binary_stream_chunk_size: int = 1000000):
         self._logger = logger
         self._grid_search_id = grid_search_id
         self._experiment_id = experiment_id
+        self._binary_stream_chunk_size = binary_stream_chunk_size  # in bytes default 100,000 -> 100kb
 
     def log_experiment_status(self, status: str, num_epochs: int, current_epoch: int, splits: List[str], current_split: str,
                               num_batches: int, current_batch: int):
@@ -127,21 +138,52 @@ class ExperimentStatusLogger:
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
 
-    def log_checkpoint(self, epoch: int, model_binary_stream=None, optimizer_binary_stream=None, stateful_components_binary_stream=None):
-        message = {"event_type": "checkpoint", "creation_ts": get_timestamp()}
-        payload = {
-            "grid_search_id": self._grid_search_id,
-            "experiment_id": self._experiment_id,
-            "checkpoint_id": epoch,
-            "checkpoint_streams": {
-                "model": pickle.dumps(model_binary_stream) if model_binary_stream is not None else None,
-                "optimizer": pickle.dumps(optimizer_binary_stream) if optimizer_binary_stream is not None else None,
-                "stateful_components": pickle.dumps(stateful_components_binary_stream) if stateful_components_binary_stream is not None else None
-            }
+    def log_checkpoint(self, epoch: int, model_state_dict=None, optimizer_state_dict=None, stateful_components_state_dict=None):
+        def get_chunks(binary_stream, binary_stream_chunk_size: int):
+            stream_length = len(binary_stream)
+            num_chunks = math.ceil(stream_length/binary_stream_chunk_size)
+            chunks = [binary_stream[i*binary_stream_chunk_size: (i+1)*binary_stream_chunk_size] for i in range(num_chunks)]
+            return chunks
+
+        data_streams = {
+            "model": pickle.dumps(model_state_dict) if model_state_dict is not None else None,
+            "optimizer": pickle.dumps(optimizer_state_dict) if optimizer_state_dict is not None else None,
+            "stateful_components": pickle.dumps(stateful_components_state_dict) if stateful_components_state_dict is not None else None
         }
-        message["payload"] = payload
-        # for i in range(1000):
-        self._logger.log_raw_message(raw_log_message=message)
+
+        for entity_id, binary_stream in data_streams.items():
+            if binary_stream is not None:  # new checkpoint message
+                print(f"Sending checkpoint entity {entity_id}")
+                chunks = get_chunks(binary_stream, binary_stream_chunk_size=self._binary_stream_chunk_size)
+                final_num_chunks = len(chunks)
+                for chunk_id, chunk in enumerate(chunks):
+                    payload = {
+                        "grid_search_id": self._grid_search_id,
+                        "experiment_id": self._experiment_id,
+                        "checkpoint_id": epoch,
+                        "entity_id": entity_id,
+                        "chunk_data": chunk,
+                        "chunk_id": chunk_id,
+                        "final_num_chunks": final_num_chunks
+                    }
+                    message = {"event_type": "checkpoint", "creation_ts": get_timestamp()}
+                    message["payload"] = payload
+                    self._logger.log_raw_message(raw_log_message=message)
+
+            else:  # delete message
+                payload = {
+                    "grid_search_id": self._grid_search_id,
+                    "experiment_id": self._experiment_id,
+                    "checkpoint_id": epoch,
+                    "entity_id": entity_id,
+                    "chunk_data": None,
+                    "chunk_id": -1,
+                    "final_num_chunks": 0
+                }
+
+                message = {"event_type": "checkpoint", "creation_ts": get_timestamp()}
+                message["payload"] = payload
+                self._logger.log_raw_message(raw_log_message=message)
 
 
 class MLgymStatusLoggerTypes(Enum):

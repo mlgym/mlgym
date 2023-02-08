@@ -21,10 +21,9 @@ class TestLogger:
     def test_logging_with_local_queue(self, tmp_folder_path):
         test_message = "my test_message"
         logger_id = "my_logger"
-        queue = Queue()
-        q_logger = QLogger(logger_id, queue)
+        q_logger = QueuedLogging.get_qlogger(logger_id)
         QueuedLogging._instance = None
-        QueuedLogging.start_logging(queue, tmp_folder_path)
+        QueuedLogging.start_logging(tmp_folder_path)
         q_logger.log(LogLevel.DEBUG, test_message)
         log_file_path = os.path.join(tmp_folder_path, f"{logger_id}.log")
         QueuedLogging.stop_listener()

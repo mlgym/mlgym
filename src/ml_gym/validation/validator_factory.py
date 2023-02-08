@@ -5,7 +5,7 @@ from ml_gym.validation.cross_validation import CrossValidation
 from ml_gym.validation.gs_validator import GridSearchValidator, ValidatorIF
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.error_handling.exception import ValidationModeNotValidError
-
+import torch
 
 class ValidatorFactory:
 
@@ -25,7 +25,8 @@ class ValidatorFactory:
         iterator_key = cv_config["CROSS_VALIDATION"]["iterator_key"]
         split_key = cv_config["CROSS_VALIDATION"]["split_key"]
         component_names = [iterator_key]
-        components = blue_print_type.construct_components(config=gs_config, component_names=component_names)
+        components = blue_print_type.construct_components(config=gs_config, component_names=component_names,
+                                                          device=torch.device("cpu"))
         iterator = components[iterator_key][split_key]
         return CrossValidation(dataset_iterator=iterator, **cv_config["CROSS_VALIDATION"]["config"], run_mode=run_mode)
 

@@ -8,11 +8,11 @@ import tempfile
 import shutil
 from data_stack.repository.repository import DatasetRepository
 from typing import Dict
-from data_stack.dataset.iterator import InformedDatasetIteratorIF, InformedDatasetIterator, InMemoryDatasetIterator, \
+from data_stack.dataset.iterator import InformedDatasetIteratorIF, InMemoryDatasetIterator, \
     DatasetIteratorView
 from ml_gym.data_handling.iterators import PostProcessedDatasetIterator
 
-from mocked_classes import MockedMNISTFactory
+from pytests.blueprints.constructables.mocked_classes import MockedMNISTFactory
 
 
 class IteratorFixtures:

@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 from typing import Dict, List
-
 import pytest
-
 from ml_gym.blueprints.constructables import TrainComponentConstructable, LossFunctionRegistryConstructable, \
-    PredictionPostProcessingRegistryConstructable, Requirement, TrainerConstructable, DataLoadersConstructable, \
-    MetricFunctionRegistryConstructable, EvalComponentConstructable
-from ml_gym.gym.evaluator import EvalComponent
+    PredictionPostProcessingRegistryConstructable, Requirement,  DataLoadersConstructable, \
+    MetricFunctionRegistryConstructable
 from ml_gym.gym.post_processing import ArgmaxPostProcessorImpl
 from ml_gym.gym.trainer import TrainComponent
 from ml_gym.loss_functions.loss_functions import CrossEntropyLoss
-
-from test_data_loader_constructable import CollatorFixture
+from pytests.blueprints.constructables.test_data_loader_constructable import CollatorFixture
 
 
 class RegistryFixture:

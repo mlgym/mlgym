@@ -1,12 +1,10 @@
 from copy import deepcopy
 from typing import List
-
 import numpy as np
 import pytest
 from ml_gym.batching.batch import InferenceResultBatch
 from ml_gym.gym.post_processing import PredictPostProcessingIF, BinarizationPostProcessorImpl, DummyPostProcessorImpl
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent
-
 from pytests.test_env.inference_result_batch_fixtures import InferenceBatchResultFixture
 
 

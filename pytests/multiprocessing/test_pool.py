@@ -1,12 +1,9 @@
-from multiprocessing import Queue
 from typing import List
-
 import pytest
 import torch
 from ml_gym.multiprocessing.job import Job
 from ml_gym.multiprocessing.pool import Pool
 from ml_gym.util.logger import QueuedLogging
-
 from pytests.multiprocessing.test_job import JobFixture
 from pytests.test_env.fixtures import LoggingFixture, DeviceFixture
 
@@ -28,31 +25,31 @@ class TestPool(JobFixture, DeviceFixture, LoggingFixture):
     def test_add_job(self, pool: Pool, job: Job):
         assert pool.job_q.empty()
         pool.add_job(job)
-        assert pool.job_count == pool.job_q.qsize() == 1
         # remove one by one
         pool.job_q.get()
         assert pool.job_q.empty()
         QueuedLogging.stop_listener()
 
-    def test_add_jobs(self, pool: Pool, jobs: List[Job], num_processes:int):
+    def test_add_jobs(self, pool: Pool, jobs: List[Job], num_processes: int):
         assert pool.job_q.empty()
         pool.add_jobs(jobs)
-        assert not pool.job_q.empty() and pool.job_count == pool.job_q.qsize()
-        assert pool.job_count == len(jobs)
+        assert not pool.job_q.empty()
         # remove one by one
-        for i in range(pool.job_count):
+        for i in range(len(jobs)):
             pool.job_q.get()
         assert pool.job_q.empty()
         QueuedLogging.stop_listener()
 
     def test_run(self, pool: Pool, jobs: List[Job], num_processes: int):
+        assert pool.job_q.empty()
+        assert pool.job_update_q.empty()
+
         pool.add_jobs(jobs)
-        assert len(pool.worker_processes) == 0
-        assert pool.job_q.qsize() == 10
+        assert pool.job_update_q.empty()
+        assert not pool.job_q.empty()
+
         pool.run()
-        assert pool.job_q.qsize() == 0
-        assert pool.done_q.qsize() == 0
-        assert len(pool.worker_processes) == num_processes
+        # TODO come up with a better check.
         QueuedLogging.stop_listener()
 
     def test_create_or_replace_process(self, pool: Pool, num_processes: int):

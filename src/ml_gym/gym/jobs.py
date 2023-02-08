@@ -118,11 +118,16 @@ class GymJob(AbstractGymJob):
 
     def run_checkpointing(self, checkpoint_instruction: CheckpointingInstruction):
         if checkpoint_instruction.save_current:
-            self._experiment_status_logger.log_checkpoint(self.current_epoch, self.model.state_dict(), self.optimizer.state_dict(),
-                                                          self.get_state())
+            self._experiment_status_logger.log_checkpoint(epoch=self.current_epoch,
+                                                          model_state_dict=self.model.state_dict(),
+                                                          optimizer_state_dict=self.optimizer.state_dict(),
+                                                          stateful_components_state_dict=self.get_state())
         for epoch in checkpoint_instruction.checkpoints_to_delete:
-            self._experiment_status_logger.log_checkpoint(epoch=epoch, model_binary_stream=None,
-                                                          optimizer_binary_stream=None, stateful_components_binary_stream=None)
+            print(f"epoch to delete: {epoch}")
+            self._experiment_status_logger.log_checkpoint(epoch=epoch,
+                                                          model_state_dict=None,
+                                                          optimizer_state_dict=None,
+                                                          stateful_components_state_dict=None)
 
     def execute(self, device: torch.device):
         """ Executes the job

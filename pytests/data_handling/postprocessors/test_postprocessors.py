@@ -1,13 +1,11 @@
 import pytest
 from typing import Tuple
-
 from data_stack.dataset.iterator import InformedDatasetIterator
 from data_stack.dataset.meta import IteratorMeta, DatasetMeta
 from ml_gym.data_handling.postprocessors.feature_encoder import CategoricalEncoder, ContinuousEncoder
 from ml_gym.data_handling.postprocessors.postprocessor import OneHotEncodedTargetPostProcessor, \
     LabelMapperPostProcessor, FeatureEncoderPostProcessor
-
-from mocked_class import MockedIterator
+from pytests.data_handling.postprocessors.mocked_class import MockedIterator
 
 
 class TestFeatureEncoderPostProcessor:
