@@ -11,8 +11,10 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Drawer from '@mui/material/Drawer';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import AutoGraphIcon from '@mui/icons-material/AutoGraph';
+import SettingsIcon from '@mui/icons-material/Settings';
+import SportsBarIcon from '@mui/icons-material/SportsBar';
 
 type Anchor = 'left';
 
@@ -47,11 +49,22 @@ export default function TopBarWithDrawer() {
         onKeyDown={toggleDrawer(anchor, false)}
     >
         <List>
-        {['Dashboard', 'Graphs', 'Throughput', 'Settings'].map((text, index) => (
+        {['Dashboard', 'Graphs', 'Settings'].map((text, index) => (
             <ListItem key={text} disablePadding>
             <ListItemButton>
                 <ListItemIcon>
-                    {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                    {
+                        text === "Dashboard" ?
+                        <DashboardIcon/>
+                        :
+                        text === "Graphs" ?
+                        <AutoGraphIcon/>
+                        :
+                        text === "Settings" ?
+                        <SettingsIcon/>
+                        :
+                        <SportsBarIcon/>
+                    }
                 </ListItemIcon>
                 <ListItemText primary={text} />
             </ListItemButton>

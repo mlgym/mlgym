@@ -23,6 +23,13 @@ export interface evalResultCustomData {
                             weight: string,
                             size: string
                         }
+                    },
+                    legend: {
+                        display: true,
+                        labels: {
+                            usePointStyle: boolean,
+                            pointStyle: string
+                        }
                     }
                 }
             },
@@ -83,6 +90,13 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                                 weight: 'bold',
                                 size: '20px'
                             }
+                        },
+                        legend: {
+                            display: true,
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
                         }
                     }
                 },
@@ -136,6 +150,13 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                             font: {
                                 weight: 'bold',
                                 size: '20px'
+                            }
+                        },
+                        legend: {
+                           display: true,
+                           labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle'
                             }
                         }
                     }
