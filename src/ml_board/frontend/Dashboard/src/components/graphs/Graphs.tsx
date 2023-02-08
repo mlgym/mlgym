@@ -2,6 +2,9 @@ import { Line } from "react-chartjs-2";
 import { useSelector } from 'react-redux';
 // import { reduxState } from "../../redux/store";
 import { CategoryScale, Chart as ChartJS, Filler, Legend, LinearScale, LineElement, PointElement, Title, Tooltip } from 'chart.js';
+import Toolbar from '@mui/material/Toolbar';
+import Box from '@mui/material/Box';
+
 import './Graphs.css';
 ChartJS.register(
     CategoryScale,
@@ -23,10 +26,8 @@ function Graphs () {
     // TODO: const chartsCount = useAppSelector(selectChartsCount);
 
     return(
-        <div>
-            <div className="home-main-h2">
-                Training Scores & Loss
-            </div>
+        <Box component="main" sx={{ p: 3 }}>
+            <Toolbar />
             {
                 // TODO: chartsCount > 0 ?
                 Object.keys(evalResult.experiments).length > 0 ?
@@ -50,7 +51,7 @@ function Graphs () {
                 :
                 null
             } 
-        </div>
+        </Box>
     );
 }
 

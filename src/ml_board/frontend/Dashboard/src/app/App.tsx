@@ -14,7 +14,9 @@ import { upsertExperiment } from '../redux/experiments/yetAnotherExperimentSlice
 import { upsertJob } from '../redux/jobs/jobSlice';
 import { DataToRedux } from '../webworkers/worker_utils';
 import { useAppDispatch } from './hooks';
+import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 
+import ScrollToTop from '../components/scroll-to-top/ScrollToTop';
 
 export default function App() {
     const dispatch = useAppDispatch();
@@ -56,20 +58,16 @@ export default function App() {
 
     return (
         <div className="App">
-            <Tabs />
-            <div className='tabContent'>
-                <div className='mainView'>
-                    <Routes>
-                        <Route path="/" element={<Graphs />} />
-                        <Route path="/analysisboard" element={<Graphs />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/throughput" element={<Throughput />} />
-                        <Route path="/settings" element={<Settings />} />
-                        <Route path="*" element={<div>404</div>} />
-                    </Routes>
-                </div>
-                <Filter />
-            </div>
+            <ScrollToTop />
+            <TopBarWithDrawer/>
+            <Routes>
+                <Route path="/" element={<Graphs />} />
+                <Route path="/analysisboard" element={<Graphs />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/throughput" element={<Throughput />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="*" element={<div>404</div>} />
+            </Routes>
         </div>
     );
 }
