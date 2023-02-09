@@ -59,7 +59,9 @@ data_loaders:
     - name: data_collator
       component_name: data_collator
   config:
-    batch_size: 50
+    batch_size:
+      sweep: absolute
+      values: [10, 50, 100]
     weigthed_sampling_split_name: train
     seeds: [0, 1, 2]
 
@@ -109,7 +111,13 @@ optimizer:
     params:
       lr:
         sweep: absolute
-        values: [0.1]
+        values: [1, 0.1, 0.01, 0.001, 0.0001]
+
+lr_scheduler:
+  component_type_key: LR_SCHEDULER
+  variant_key: DEFAULT
+  config:
+    lr_scheduler_key: dummy
 
 loss_function_registry:
   component_type_key: LOSS_FUNCTION_REGISTRY
@@ -225,7 +233,7 @@ early_stopping_strategy:
   config:
     early_stopping_key: LAST_K_EPOCHS_IMPROVEMENT_STRATEGY
     early_stopping_config:
-      min_relative_improvement: 0.01
+      min_relative_improvement: 0.00001
       epochs_window: 5
       split_name: val
       monitoring_key: "F1_SCORE_macro"
