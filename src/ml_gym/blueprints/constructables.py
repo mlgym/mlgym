@@ -8,6 +8,8 @@ from data_stack.io.storage_connectors import StorageConnectorFactory
 from data_stack.mnist.factory import MNISTFactory
 from ml_gym.data_handling.dataset_loader import DatasetLoader, DatasetLoaderFactory
 from ml_gym.early_stopping.early_stopping_strategies import EarlyStoppingIF, EarlyStoppingStrategyFactory
+from ml_gym.optimizers.lr_scheduler_factory import LRSchedulerFactory
+from ml_gym.optimizers.lr_schedulers import LRSchedulerAdapter
 from ml_gym.optimizers.optimizer import OptimizerAdapter, OptimizerBundle
 from ml_gym.optimizers.optimizer_factory import OptimizerFactory
 from ml_gym.models.nn.net import NNModel
@@ -274,6 +276,15 @@ class OptimizerConstructable(ComponentConstructable):
 
     def _construct_impl(self) -> OptimizerAdapter:
         return OptimizerFactory.get_optimizer(self.optimizer_key, self.params)
+
+
+@dataclass
+class LRSchedulerConstructable(ComponentConstructable):
+    lr_scheduler_key: str = ""
+    params: Dict[str, Any] = field(default_factory=dict)
+
+    def _construct_impl(self) -> LRSchedulerAdapter:
+        return LRSchedulerFactory.get_lr_scheduler(self.lr_scheduler_key, self.params)
 
 
 @dataclass
