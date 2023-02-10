@@ -1,4 +1,4 @@
-from torch.optim import Optimizer, SGD, Adam, Adadelta
+from torch.optim import Optimizer, SGD, Adam, Adadelta, AdamW
 from typing import Dict
 from ml_gym.optimizers.optimizer import OptimizerAdapter
 
@@ -7,7 +7,8 @@ class OptimizerFactory:
     optimizer_map: Dict[str, Optimizer] = {
         "SGD": SGD,
         "ADAM": Adam,
-        "ADADELTA": Adadelta
+        "ADADELTA": Adadelta,
+        "ADAMW": AdamW
     }
 
     @classmethod
