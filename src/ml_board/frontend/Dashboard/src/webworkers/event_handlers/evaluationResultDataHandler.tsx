@@ -10,10 +10,20 @@ export interface evalResultCustomData {
                     data: Array<number>,
                     fill: Boolean,
                     backgroundColor: string,
-                    borderColor: string
+                    borderColor: string,
+                    tension: number
                 }>
             },
             options: {
+                animation: {
+                    duration: number,
+                    easing: string
+                }
+                radius: number,
+                hoverRadius: number,
+                hitRadius: number,
+                responsive: Boolean,
+                maintainAspectRatio: Boolean,
                 plugins: {
                     title: {
                         display: Boolean,
@@ -81,6 +91,15 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                     datasets: []
                 },
                 options: {
+                    animation: {
+                        duration: 300,
+                        easing: 'linear'
+                    },
+                    radius: 3,
+                    hoverRadius: 12,
+                    hitRadius: 20,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         title: {
                             display: true,
@@ -126,7 +145,8 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                 data: [d.score],
                 fill: false,
                 backgroundColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
-                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id]
+                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
+                tension: 0.4
             });
         }
         exp[d.split + "_" + d.loss].data.datasets.sort((a, b) => (a.exp_id > b.exp_id) ? 1 : -1)
@@ -142,6 +162,15 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                     datasets: []
                 },
                 options: {
+                    animation: {
+                        duration: 300,
+                        easing: 'linear'
+                    },
+                    radius: 3,
+                    hoverRadius: 12,
+                    hitRadius: 20,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         title: {
                             display: true,
@@ -187,7 +216,8 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                 data: [d.score],
                 fill: false,
                 backgroundColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
-                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id]
+                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
+                tension: 0.4
             });
         }
 

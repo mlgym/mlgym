@@ -33,19 +33,21 @@ function Graphs () {
             {
                 // TODO: chartsCount > 0 ?
                 Object.keys(evalResult.experiments).length > 0 ?
-                <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }} sx={{ paddingLeft: '5%', paddingRight: '5%', paddingTop: '2%', paddingBottom: '2%' }}>
+                <Grid container rowSpacing={1} spacing={{ xs: 2, md: 3 }} sx={{ paddingLeft: '3%', paddingRight: '3%', paddingTop: '2%', paddingBottom: '3%' }}>
                     {
                         // TODO: chartIds.map((loss_or_metric, index) => {
                         Object.keys(evalResult.experiments).map((loss_or_metric, index) => {
                             return(
-                                <Grid item={true} xs={6} key={index}>
-                                    <Card sx={{ boxShadow: 3, mb: 2, padding: 1, display: 'flex' }}>
-                                        <Line
-                                            // TODO: data={charts[loss_or_metric].data} 
-                                            // TODO: options={charts[loss_or_metric].options}
-                                            data={evalResult.experiments[loss_or_metric].data} 
-                                            options={evalResult.experiments[loss_or_metric].options}
-                                        />
+                                <Grid item={true} xs={12} sm={12} md={6} key={index}>
+                                    <Card sx={{ boxShadow: 3, mb: 2, padding: 1, display: 'flex'}}>
+                                        <div className="chart-container">
+                                            <Line
+                                                // TODO: data={charts[loss_or_metric].data} 
+                                                // TODO: options={charts[loss_or_metric].options}
+                                                data={evalResult.experiments[loss_or_metric].data} 
+                                                options={evalResult.experiments[loss_or_metric].options}
+                                            />
+                                        </div>
                                     </Card>
                                 </Grid>
                             )

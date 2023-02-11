@@ -13,3 +13,12 @@
     margin-left: 20px;
     margin-right: 20px;
 }
+
+.chart-container {
+    position: relative;
+    margin: auto;
+    height: 80vh;
+    width: 100%;
+    /* height: auto;
+    width: 80vw; */
+  }

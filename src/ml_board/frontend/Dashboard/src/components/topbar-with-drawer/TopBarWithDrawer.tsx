@@ -11,34 +11,51 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Drawer from '@mui/material/Drawer';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import AutoGraphIcon from '@mui/icons-material/AutoGraph';
-import SettingsIcon from '@mui/icons-material/Settings';
-import SportsBarIcon from '@mui/icons-material/SportsBar';
+import Divider from '@mui/material/Divider';
+import Container from '@mui/material/Container';
+import Icon from '@mui/material/Icon';
 
-type Anchor = 'left';
+import { selectTab } from '../../redux/status/statusSlice';
+import { useAppSelector } from '../../app/hooks';
+import { useAppDispatch } from '../../app/hooks';
+import { changeTab } from '../../redux/status/statusSlice';
+import { useLocation, useNavigate } from "react-router-dom";
+import { RoutesMapping } from '../../app/RoutesMapping';
 
 export default function TopBarWithDrawer() {
 
+    const location = useLocation();
+    let currentTab = useAppSelector(selectTab);
+    const dispatch = useAppDispatch();
     const [state, setState] = React.useState({
         left: false,
     });
 
-  const toggleDrawer =
-  (anchor: Anchor, open: boolean) =>
-  (event: React.KeyboardEvent | React.MouseEvent) => {
-    if (
-      event.type === 'keydown' &&
-      ((event as React.KeyboardEvent).key === 'Tab' ||
-        (event as React.KeyboardEvent).key === 'Shift')
-    ) {
-      return;
-    }
+    React.useEffect(() => {
+        if(location.pathname.split("/")[1] !== "" && currentTab !== location.pathname.split("/")[1]) {
+            dispatch(changeTab(location.pathname.split("/")[1]));
+        }
+        else if (location.pathname.split("/")[1] === "") {
+            dispatch(changeTab(RoutesMapping.Graphs.url));
+        }
+    }, [location.pathname])
 
-    setState({ ...state, [anchor]: open });
+    const toggleDrawer = (anchor: string, open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
+        if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' ||
+            (event as React.KeyboardEvent).key === 'Shift')) {
+            return;
+        }
+        setState({ ...state, [anchor]: open });
     };
 
-    const list = (anchor: Anchor) => (
+    const navigate = useNavigate();
+
+    const changeTabRequest = (text:string) => {
+        dispatch(changeTab(text));
+        navigate(text);
+    }
+
+    const list = (anchor: string) => (
     <Box
         sx={{ 
             backgroundColor: "#FFFFFF",
@@ -48,30 +65,42 @@ export default function TopBarWithDrawer() {
         onClick={toggleDrawer(anchor, false)}
         onKeyDown={toggleDrawer(anchor, false)}
     >
+        <Container maxWidth="sm">
+            <Icon>
+                {/* <img src={require("../../svg/logoText.svg")}/> */}
+            </Icon>
+            MLGym
+        </Container>
         <List>
-        {['Dashboard', 'Graphs', 'Settings'].map((text, index) => (
-            <ListItem key={text} disablePadding>
-            <ListItemButton>
-                <ListItemIcon>
-                    {
-                        text === "Dashboard" ?
-                        <DashboardIcon/>
-                        :
-                        text === "Graphs" ?
-                        <AutoGraphIcon/>
-                        :
-                        text === "Settings" ?
-                        <SettingsIcon/>
-                        :
-                        <SportsBarIcon/>
+            
+            {
+                Object.keys(RoutesMapping).map((routeMapKey, index) => {
+                    if(RoutesMapping[routeMapKey].showInMenu) {
+                        return (
+                            <ListItem key={index} disablePadding onClick={() => changeTabRequest(RoutesMapping[routeMapKey].url)}>
+                                <ListItemButton 
+                                    selected={
+                                        RoutesMapping[routeMapKey].url === currentTab ? 
+                                        true 
+                                        :
+                                        false
+                                    }
+                                    >
+                                    <ListItemIcon>
+                                        {RoutesMapping[routeMapKey].menuIcon}
+                                    </ListItemIcon>
+                                    <ListItemText primary={routeMapKey} />
+                                </ListItemButton>
+                            </ListItem>
+                        )
                     }
-                </ListItemIcon>
-                <ListItemText primary={text} />
-            </ListItemButton>
-            </ListItem>
-        ))}
+                    else {
+                        return null
+                    }
+                })
+            }
         </List>
-        {/* <Divider /> */}
+        <Divider />
     </Box>
     );
 
@@ -113,7 +142,7 @@ export default function TopBarWithDrawer() {
                 </div>
             </Toolbar>
         </AppBar>
-        <Box component="nav">
+        <React.Fragment>
             <Drawer
                 variant="temporary"
                 anchor={"left"}
@@ -122,7 +151,7 @@ export default function TopBarWithDrawer() {
             >
                 {list("left")}
             </Drawer>
-        </Box>
+        </React.Fragment>
     </Box>
   );
 }
