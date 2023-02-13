@@ -15,7 +15,7 @@ from ml_gym.optimizers.optimizer_factory import OptimizerFactory
 from ml_gym.models.nn.net import NNModel
 from collections.abc import Mapping
 from ml_gym.registries.class_registry import ClassRegistry
-from ml_gym.gym.trainer import Trainer, TrainComponent, InferenceComponent
+from ml_gym.gym.trainer import LMTrainer, Trainer, TrainComponent, InferenceComponent
 from ml_gym.loss_functions.loss_functions import Loss
 from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score, balanced_accuracy_score
 from ml_gym.metrics.metrics import Metric, binary_aupr_score, binary_auroc_score
@@ -431,12 +431,13 @@ class PredictionPostProcessingRegistryConstructable(ComponentConstructable):
 class ModelConstructable(ComponentConstructable):
     model_type: str = ""
     model_definition: Dict[str, Any] = field(default_factory=dict)
-    seed: int = 0
+    seed: int = None
     prediction_publication_keys: Dict[str, str] = field(default_factory=dict)
 
     def _construct_impl(self) -> NNModel:
+        other_params = {"seed": self.seed} if self.seed is not None else {}
         model_type = self.get_requirement("model_registry")
-        return model_type(seed=self.seed, **self.model_definition, **self.prediction_publication_keys)
+        return model_type(**other_params, **self.model_definition, **self.prediction_publication_keys)
 
 
 @dataclass
@@ -468,8 +469,19 @@ class TrainerConstructable(ComponentConstructable):
 
 
 @dataclass
+class LMTrainerConstructable(ComponentConstructable):
+    num_batches_per_epoch: int = None
+
+    def _construct_impl(self) -> Trainer:
+        train_loader: DatasetLoader = self.get_requirement("data_loaders")
+        train_component: TrainComponent = self.get_requirement("train_component")
+        trainer = LMTrainer(train_component=train_component, train_loader=train_loader,
+                            num_batches_per_epoch=self.num_batches_per_epoch, verbose=True)
+        return trainer
+
+
+@dataclass
 class EvalComponentConstructable(ComponentConstructable):
-    train_split_name: str = ""
     metrics_config: List = field(default_factory=list)
     loss_funs_config: List = field(default_factory=list)
     post_processors_config: List[Dict] = field(default_factory=list)
@@ -502,7 +514,7 @@ class EvalComponentConstructable(ComponentConstructable):
                     postprocessors_dict["default"].append(PredictPostProcessing(prediction_post_processing_registry.get_instance(**config)))
 
         inference_component = InferenceComponent(no_grad=True)
-        eval_component = EvalComponent(inference_component, postprocessors_dict, metric_funs, loss_funs, dataset_loaders, self.train_split_name,
+        eval_component = EvalComponent(inference_component, postprocessors_dict, metric_funs, loss_funs, dataset_loaders,
                                        self.show_progress, self.cpu_target_subscription_keys, self.cpu_prediction_subscription_keys,
                                        self.metrics_computation_config, self.loss_computation_config)
         return eval_component

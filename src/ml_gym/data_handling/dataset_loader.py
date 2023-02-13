@@ -1,3 +1,4 @@
+from itertools import chain
 from ml_gym.error_handling.exception import SamplerNotFoundError
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import RandomSampler, WeightedRandomSampler, Sampler, SequentialSampler
@@ -7,6 +8,7 @@ from collections import Counter
 import torch
 from ml_gym.data_handling.postprocessors.collator import Collator
 from enum import Enum
+import numpy as np
 
 
 class DatasetLoaderFactory:
@@ -117,3 +119,61 @@ class DatasetLoader(DataLoader):
     def device(self, d: torch.device):
         if self.collate_fn is not None:
             self.collate_fn.device = d
+
+
+class GeneratorLMDatasetLoader(DatasetLoader):
+    """ Language Model Trainer
+    Language models are generally trained using datasets of tremendous size, making the concept of "epochs" meaningless, as we tend to not iterate
+    over the entire dataset multiple times. In this class, we set an epoch to be a subset of the entire dataset, e.g., 1000 batches.
+    As a result, the first epoch consists of the first 1k batches in the dataset and the second epoch of the baches from position 1000 to 2000, and so on.  
+    """
+
+    def __init__(self, data_loader: DatasetLoader, num_batches_per_epoch: int, num_epochs: int,
+                 current_epoch: int = 0):
+        self.data_loader = data_loader
+        self.current_epoch = current_epoch
+        self.num_batches_per_epoch = num_batches_per_epoch
+        self.num_epochs = num_epochs
+
+        self.data_loader_generator, self.num_generator_batches, self.current_batch_pos = self._initialize_generator(self.current_epoch)
+
+    def _initialize_generator(self, current_epoch: int = 1):
+
+        num_loaders = int(np.ceil((self.num_batches_per_epoch*self.num_epochs) / len(self.data_loader)))
+        loaders = [self.data_loader]*num_loaders
+        data_loader_generator = (i for i in chain(*loaders))
+        # -1 since epoch 0 is only for evaluation (pos is always points to the beginning of an epoch)
+        pos = (current_epoch-1)*self.num_batches_per_epoch
+        # fast-forward to the correct position in case warm start (current_epoch > 0)
+        [i for i in zip(range(pos), data_loader_generator)]
+
+        num_generator_batches = self.num_batches_per_epoch*self.num_epochs - pos
+        return data_loader_generator, num_generator_batches, 0
+
+    def __iter__(self):
+        if self.current_batch_pos + self.num_batches_per_epoch > self.num_generator_batches:
+            self.data_loader_generator, self.num_generator_batches, self.current_batch_pos = self._initialize_generator(self.current_epoch)
+        else:
+            self.current_batch_pos += self.num_batches_per_epoch
+
+        return (i for _, i in zip(range(self.num_batches_per_epoch), self.data_loader_generator))
+
+    @property
+    def dataset_name(self) -> str:
+        return self.data_loader.dataset.dataset_meta.dataset_name
+
+    @property
+    def dataset_tag(self) -> str:
+        return self.data_loader.dataset.dataset_meta.dataset_tag
+
+    @property
+    def device(self) -> torch.device:
+        return self.data_loader.collate_fn.device
+
+    @device.setter
+    def device(self, d: torch.device):
+        if self.data_loader.collate_fn is not None:
+            self.data_loader.collate_fn.device = d
+
+    def __len__(self) -> int:
+        return self.num_batches_per_epoch
