@@ -56,7 +56,7 @@ class EvalComponent(EvalComponentIF):
     """This thing always comes with batteries included, i.e., datasets, loss functions etc. are all already stored in here."""
 
     def __init__(self, inference_component: InferenceComponent, post_processors: Dict[str, PredictPostprocessingComponent], metrics: List[Metric],
-                 loss_funs: Dict[str, Loss], dataset_loaders: Dict[str, DatasetLoader], train_split_name: str, show_progress: bool = False,
+                 loss_funs: Dict[str, Loss], dataset_loaders: Dict[str, DatasetLoader], show_progress: bool = False,
                  cpu_target_subscription_keys: List[str] = None, cpu_prediction_subscription_keys: List[Union[str, List]] = None,
                  metrics_computation_config: List[Dict] = None, loss_computation_config: List[Dict] = None):
         self.loss_funs = loss_funs
@@ -65,7 +65,6 @@ class EvalComponent(EvalComponentIF):
         self.post_processors = post_processors
         self.metrics = metrics
         self.dataset_loaders = dataset_loaders
-        self.train_split_name = train_split_name
         self.show_progress = show_progress
         self.cpu_target_subscription_keys = cpu_target_subscription_keys
         self.cpu_prediction_subscription_keys = cpu_prediction_subscription_keys
