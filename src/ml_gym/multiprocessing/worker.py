@@ -51,7 +51,7 @@ class WorkerProcessWrapper:
         self.jobs_done_count += 1
         if self.num_jobs_to_perform == self.jobs_done_count:
             self.process = WorkerProcess(self.process_id, self.num_jobs_to_perform,
-                                         self.job_q, self.job_update_q, self.device, self.logger)
+                                         self.job_q, self.job_update_q, self.device)
             self.jobs_done_count = 0
             self.process.start()
 
