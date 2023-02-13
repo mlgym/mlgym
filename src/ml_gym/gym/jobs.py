@@ -10,7 +10,6 @@ from ml_gym.optimizers.optimizer import OptimizerAdapter
 import torch
 from ml_gym.gym.stateful_components import StatefulComponent
 from typing import List, Dict, Any
-from ml_gym.util.logger import ConsoleLogger, LogLevel
 from ml_gym.batching.batch import EvaluationBatchResult
 from ml_gym.persistency.logging import ExperimentStatusLogger
 from functools import partial
@@ -27,7 +26,6 @@ class AbstractGymJob(StatefulComponent):
         # TODO: This is only a console logger that does not store on disk.
         # Since GymJob is a StatefulComponent we would have to implement serialization
         # for the queue in the QLogger. Solving this issue is left for the future
-        self.logger = ConsoleLogger("logger_gym_job")
 
     @abstractmethod
     def execute(self, device: torch.device):
@@ -169,7 +167,6 @@ class GymJob(AbstractGymJob):
         self.current_epoch += 1
         self.trainer.set_current_epoch(self.current_epoch)
         while not self.trainer.is_done():
-            self.logger.log(LogLevel.INFO,  f"epoch: {self.current_epoch}")
             self._train_step(device)
             evaluation_results = self._evaluation_step(device)
             self.lr_scheduler.step()

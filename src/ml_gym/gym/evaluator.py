@@ -12,7 +12,6 @@ from ml_gym.metrics.metrics import Metric
 from ml_gym.models.nn.net import NNModel
 from ml_gym.loss_functions.loss_functions import Loss
 import tqdm
-from ml_gym.util.logger import ConsoleLogger
 import numpy as np
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent
 from ml_gym.error_handling.exception import BatchStateError, EvaluationError, MetricCalculationError, LossCalculationError
@@ -68,7 +67,6 @@ class EvalComponent(EvalComponentIF):
         self.show_progress = show_progress
         self.cpu_target_subscription_keys = cpu_target_subscription_keys
         self.cpu_prediction_subscription_keys = cpu_prediction_subscription_keys
-        self.logger = ConsoleLogger("logger_eval_component")
         # determines which metrics are applied to which splits (metric_key to split list)
         self.metrics_computation_config = None if metrics_computation_config is None else {
             m["metric_tag"]: m["applicable_splits"] for m in metrics_computation_config}

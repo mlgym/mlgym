@@ -6,11 +6,9 @@ from ml_gym.gym.gym import Gym
 from ml_gym.modes import RunMode
 from ml_gym.persistency.io import GridSearchAPIClientConstructableIF, GridSearchAPIClientIF
 from ml_gym.persistency.logging import LoggerConstructableIF, MLgymStatusLoggerCollectionConstructable
-from ml_gym.util.logger import QueuedLogging
 from ml_gym.validation.validator import ValidatorIF
 from datetime import datetime
 from ml_gym.io.config_parser import YAMLConfigLoader
-from ml_gym.error_handling.exception import SingletonAlreadyInstantiatedError
 
 
 class MLGymStarter:
@@ -20,17 +18,6 @@ class MLGymStarter:
         gym = Gym(job_id_prefix=job_id_prefix, process_count=process_count, device_ids=device_ids, log_std_to_file=log_std_to_file,
                   logger_collection_constructable=logger_collection_constructable)
         return gym
-
-    @staticmethod
-    def _setup_logging_environment(log_dir_path: str):
-        try:
-            QueuedLogging.start_logging(log_dir_path)
-        except SingletonAlreadyInstantiatedError:
-            pass
-
-    @staticmethod
-    def _stop_logging_environment():
-        QueuedLogging.stop_listener()
 
 
 # class MLGymTrainWarmStarter(MLGymStarter):
@@ -78,7 +65,6 @@ class MLGymTrainStarter(MLGymStarter):
         self.logger_collection_constructable = logger_collection_constructable
 
     def start(self):
-        self._setup_logging_environment(self.text_logging_path)
         job_id_prefix = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
 
         gym = MLGymStarter._create_gym(job_id_prefix=job_id_prefix, process_count=self.process_count, device_ids=self.gpus,
@@ -86,8 +72,6 @@ class MLGymTrainStarter(MLGymStarter):
                                        logger_collection_constructable=self.logger_collection_constructable)
         gym.add_blueprints(self.blueprints)
         gym.run(parallel=True)
-
-        self._stop_logging_environment()
 
 
 def save_blueprint_config(blueprint: BluePrint, gs_api_client: GridSearchAPIClientIF):
