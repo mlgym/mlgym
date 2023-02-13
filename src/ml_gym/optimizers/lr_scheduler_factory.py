@@ -1,13 +1,17 @@
 from ml_gym.optimizers.lr_schedulers import LRSchedulerAdapter, DummyLRcheduler
-from torch.optim.lr_scheduler import LinearLR, ConstantLR, _LRScheduler
+from torch.optim.lr_scheduler import LinearLR, ConstantLR, _LRScheduler, LambdaLR
 from typing import Dict
+from transformers import get_scheduler
 
 
 class LRSchedulerFactory:
     lr_scheduler_map: Dict[str, _LRScheduler] = {
         "LinearLR": LinearLR,
         "ConstantLR": ConstantLR,
+        "LambdaLR": LambdaLR,
+        "hugging_face_scheduler": get_scheduler,
         "dummy": DummyLRcheduler
+
     }
 
     @classmethod
