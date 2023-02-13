@@ -54,10 +54,8 @@ def entry_train(args):
                       gs_config_raw_string=gs_config_string,
                       validation_strategy_config_raw_string=validation_strategy_config_string,
                       validator=validator,
-                      text_logging_path=args.text_logging_path,
                       process_count=args.process_count,
                       gpus=args.gpus,
-                      log_std_to_file=args.log_std_to_file,
                       num_epochs=args.num_epochs)
 
 
@@ -70,10 +68,8 @@ def entry_warm_start(args):
                            grid_search_id=args.grid_search_id,
                            logger_collection_constructable=logger_collection_constructable,
                            gs_api_client_constructable=gs_restful_api_client_constructable,
-                           text_logging_path=args.text_logging_path,
                            process_count=args.process_count,
                            gpus=args.gpus,
-                           log_std_to_file=args.log_std_to_file,
                            num_epochs=args.num_epochs)
 
     # starter = MLGymTrainWarmStarter(grid_search_id=grid_search_id, blueprint_class=blueprint_class, validation_mode=)
@@ -102,9 +98,7 @@ def parse_args_and_run():
     # Common
     parser.add_argument('--num_epochs', type=int, required=True, help='Number of epoch')
     parser.add_argument('--process_count', type=int, required=True, help='Max. number of processes running at a time.')
-    parser.add_argument('--text_logging_path', type=str, required=True, help='Path to python textual logging directory')
     parser.add_argument('--gpus', type=int, nargs='+', help='Indices of GPUs to distribute the GS over', default=None)
-    parser.add_argument('--log_std_to_file', default=False, action="store_true", help='Flag for forwarding std output to file')
     parser.add_argument('--websocket_logging_servers', type=str, nargs='+',
                         help='List of websocket logging servers, e.g., 127.0.0.1:9090 127.0.0.1:8080', default=None)
     parser.add_argument('--gs_rest_api_endpoint', type=str, required=True,

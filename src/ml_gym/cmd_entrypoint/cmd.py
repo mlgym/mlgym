@@ -1,12 +1,12 @@
 import argparse
+from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable, LoggerConstructableIF, MLgymStatusLoggerConfig, \
     MLgymStatusLoggerTypes
 from ml_gym.modes import RunMode, ValidationMode
-from conv_net_blueprint import ConvNetBluePrint
 from ml_gym.starter import mlgym_entry_train, mlgym_entry_warm_start
 from ml_gym.validation.validator_factory import get_validator
 from ml_gym.io.config_parser import YAMLConfigLoader
-from typing import List
+from typing import Callable, List, Tuple, Type, Dict
 from ml_gym.persistency.io import GridSearchAPIClientConfig, GridSearchAPIClientConstructableIF, GridSearchAPIClientConstructable, \
     GridSearchAPIClientType
 from pathlib import Path
@@ -29,16 +29,16 @@ def get_grid_search_restful_api_client_constructable(endpoint: str) -> GridSearc
     return client_constructable
 
 
-def entry_train(args):
-    logger_collection_constructable = get_logger_constructable(args.websocket_logging_servers)
-    gs_restful_api_client_constructable = get_grid_search_restful_api_client_constructable(endpoint=args.gs_rest_api_endpoint)
-    blueprint_class = ConvNetBluePrint
+def entry_train(blueprint_class: Type[BluePrint], websocket_logging_servers: List[str],  gs_rest_api_endpoint: str, gs_config_path: str,
+                validation_strategy_config_path: str, process_count: int, gpus: List[int], num_epochs: int):
+    logger_collection_constructable = get_logger_constructable(websocket_logging_servers)
+    gs_restful_api_client_constructable = get_grid_search_restful_api_client_constructable(endpoint=gs_rest_api_endpoint)
 
-    gs_config_string = Path(args.gs_config_path).read_text()
+    gs_config_string = Path(gs_config_path).read_text()
     gs_config = YAMLConfigLoader.load_string(gs_config_string)
 
-    if args.validation_strategy_config_path is not None:
-        validation_strategy_config_string = Path(args.validation_strategy_config_path).read_text()
+    if validation_strategy_config_path is not None:
+        validation_strategy_config_string = Path(validation_strategy_config_path).read_text()
         validation_strategy_config = YAMLConfigLoader.load(validation_strategy_config_string)
         validation_mode = ValidationMode[list(validation_strategy_config.keys())[0]]
     else:
@@ -54,28 +54,26 @@ def entry_train(args):
                       gs_config_raw_string=gs_config_string,
                       validation_strategy_config_raw_string=validation_strategy_config_string,
                       validator=validator,
-                      process_count=args.process_count,
-                      gpus=args.gpus,
-                      num_epochs=args.num_epochs)
+                      process_count=process_count,
+                      gpus=gpus,
+                      num_epochs=num_epochs)
 
 
-def entry_warm_start(args):
-    blueprint_class = ConvNetBluePrint
-    logger_collection_constructable = get_logger_constructable(args.websocket_logging_servers)
-    gs_restful_api_client_constructable = get_grid_search_restful_api_client_constructable(endpoint=args.gs_rest_api_endpoint)
+def entry_warm_start(blueprint_class: Type[BluePrint], websocket_logging_servers: List[str], gs_rest_api_endpoint: str,
+                     grid_search_id: str, process_count: int, gpus: List[int], num_epochs: int):
+    logger_collection_constructable = get_logger_constructable(websocket_logging_servers)
+    gs_restful_api_client_constructable = get_grid_search_restful_api_client_constructable(endpoint=gs_rest_api_endpoint)
 
     mlgym_entry_warm_start(blueprint_class=blueprint_class,
-                           grid_search_id=args.grid_search_id,
+                           grid_search_id=grid_search_id,
                            logger_collection_constructable=logger_collection_constructable,
                            gs_api_client_constructable=gs_restful_api_client_constructable,
-                           process_count=args.process_count,
-                           gpus=args.gpus,
-                           num_epochs=args.num_epochs)
-
-    # starter = MLGymTrainWarmStarter(grid_search_id=grid_search_id, blueprint_class=blueprint_class, validation_mode=)
+                           process_count=process_count,
+                           gpus=gpus,
+                           num_epochs=num_epochs)
 
 
-def parse_args_and_run():
+def get_args() -> Tuple[Callable, Dict]:
     parser = argparse.ArgumentParser(description='Run a grid search on CPUs or distributed over multiple GPUs')
 
     subparsers = parser.add_subparsers(help='Mutually exclusive arguments for TRAIN and WARM_START')
@@ -85,13 +83,11 @@ def parse_args_and_run():
     parser_train.set_defaults(func=entry_train)
     parser_train.add_argument('--gs_config_path', type=str, required=True, help='Path to the grid search config')
     parser_train.add_argument('--validation_strategy_config_path', type=str, required=False, help='Path to the validation strategy config')
-    parser_train.add_argument('--early_stopping_config_path', type=str, required=False, help='Path to the early stopping config')
 
     # Warmstart
     parser_warm_start = subparsers.add_parser('warm_start', help='Starts off from a previously started grid search')
     parser_warm_start.set_defaults(func=entry_warm_start)
     parser_warm_start.add_argument('--grid_search_id', type=str, required=True, help='Gridsearch id identifying the specific grid search')
-    parser_warm_start.add_argument('--early_stopping_config_path', type=str, required=False, help='Path to the early stopping config')
 
     # parser.add_argument('--run_mode', choices=['TRAIN', 'WARM_START'], required=True)
 
@@ -106,9 +102,11 @@ def parse_args_and_run():
     # parser.add_argument('--validation_mode', choices=['NESTED_CROSS_VALIDATION', 'GRID_SEARCH', 'CROSS_VALIDATION'], required=True)
 
     args = parser.parse_args()
-    args.func(args)
+    fun = args.func
+    args_dict = vars(args)
+    args_dict.pop("func")
+    return fun, args_dict
 
 
-if __name__ == '__main__':
-
-    parse_args_and_run()
+def run(fun: Callable, blueprint_class: BluePrint, args):
+    return fun(blueprint_class=blueprint_class, **args)

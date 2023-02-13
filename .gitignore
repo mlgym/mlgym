@@ -127,3 +127,5 @@ src/ml_gym/backend/websocket_api/event_storage
 event_storage
 *.whl
 *.arrow
+
+transformer/

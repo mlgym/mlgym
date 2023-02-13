@@ -27,12 +27,12 @@ class JobIF:
 
 
 class Job(JobIF):
-    def __init__(self, job_id: str, fun: Callable, blueprint: BluePrint, param_dict: Dict, job_type: JobType = JobType.CALC):
+    def __init__(self, job_id: str, fun: Callable, blueprint: BluePrint, param_dict: Dict = None, job_type: JobType = JobType.CALC):
         self.job_id = job_id
         self.job_type = job_type
         self.fun = fun
         self.blueprint = blueprint
-        self.param_dict = param_dict
+        self.param_dict = param_dict if param_dict is not None else {}
         self.status = JobStatus.INIT
         self.starting_time = -1
         self.finishing_time = -1

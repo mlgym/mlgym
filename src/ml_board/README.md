@@ -60,6 +60,7 @@ payload:
 
 *GET /grid_searches/<grid_search_id>/experiments*
 
+TODO need to check "experiments" in URL  
 ```json
 [
     {
@@ -92,6 +93,16 @@ payload:
 *GET /checkpoints/<grid_search_id>/<experiment_id><checkpoint_id>/optimizer*
 
 *GET /checkpoints/<grid_search_id>/<experiment_id><checkpoint_id>/stateful_component*
+
+*PUT /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>/<model, optimizer, lr_scheduler, stateful_component>*
+```json
+{
+        "<model, optimizer, lr_scheduler, stateful_component>": <binary stream>,
+        "chunk_id": <chunk_id>,
+        "num_chunks": <num_chunks>
+```
+
+*DELETE /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>*
 
 
 ## Websocket API
@@ -212,7 +223,7 @@ metric scores of a model at a specific epoch.
 }
 ```
 
-**Checkpointing**:
+**Checkpointing (legacy)**:
 
 After each epoch and if condition is fulfilled (based on strategy), the model is binarized and sent to the server as a checkpoint.
 

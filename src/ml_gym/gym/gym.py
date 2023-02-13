@@ -13,10 +13,9 @@ torch.multiprocessing.set_start_method('spawn', force=True)
 
 class Gym:
     def __init__(self, job_id_prefix: str, logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
-                 process_count: int = 1, device_ids: List[int] = None, log_std_to_file: bool = True):
+                 process_count: int = 1, device_ids: List[int] = None):
         self.devices = get_devices(device_ids)
         self.job_status_logger = JobStatusLogger(logger_collection_constructable.construct())
-        self.log_std_to_file = log_std_to_file
         self.pool = Pool(num_processes=process_count, devices=self.devices, logger_collection_constructable=logger_collection_constructable)
         self.jobs: List[Job] = []
         self.job_id_prefix = job_id_prefix
@@ -40,7 +39,7 @@ class Gym:
                 self.work(job, self.devices[0])
 
     def add_blueprint(self, blueprint: BluePrint) -> int:
-        job = Job(job_id=f"{blueprint.grid_search_id}-{self.job_counter}", fun=Gym._run_job, blueprint=blueprint, param_dict={"log_std_to_file": self.log_std_to_file})
+        job = Job(job_id=f"{blueprint.grid_search_id}-{self.job_counter}", fun=Gym._run_job, blueprint=blueprint)
         self.job_counter += 1
         self.jobs.append(job)
         return job.job_id
@@ -54,7 +53,7 @@ class Gym:
                                                          config=blueprint.config)
 
     @staticmethod
-    def _run_job(blueprint: BluePrint, device: torch.device, log_std_to_file: bool) -> AbstractGymJob:
+    def _run_job(blueprint: BluePrint, device: torch.device) -> AbstractGymJob:
         gym_job = AbstractGymJob.from_blue_print(blueprint, device=device)
         return gym_job.execute(device=device)
 
