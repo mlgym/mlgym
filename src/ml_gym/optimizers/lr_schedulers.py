@@ -17,10 +17,10 @@ class LRSchedulerAdapter(object):
         # since we instantiate a new optimizer when we register a model, we have to save and restore the optimizer state
         if self._lr_scheduler is not None:
             state_dict = self.state_dict()
-            self._lr_scheduler = self._lr_scheduler_class(optimizer, **self._lr_scheduler_params)
+            self._lr_scheduler = self._lr_scheduler_class(optimizer=optimizer, **self._lr_scheduler_params)
             self.load_state_dict(state_dict)
         else:
-            self._lr_scheduler = self._lr_scheduler_class(optimizer, **self._lr_scheduler_params)
+            self._lr_scheduler = self._lr_scheduler_class(optimizer=optimizer, **self._lr_scheduler_params)
             if self._state_dict is not None:
                 self._lr_scheduler.load_state_dict(self._state_dict)
                 self._state_dict = None
@@ -62,7 +62,10 @@ class LRSchedulerAdapter(object):
     def print_lr(self, is_verbose, group, lr, epoch=None):
         """Display the current learning rate.
         """
-        return self._lr_scheduler_class.print_lr(is_verbose, group, lr, epoch)
+        return self._lr_scheduler.print_lr(is_verbose, group, lr, epoch)
+
+    def step(self, epoch=None):
+        self._lr_scheduler.step(epoch)
 
 
 class DummyLRcheduler(LRSchedulerAdapter):
@@ -84,3 +87,6 @@ class DummyLRcheduler(LRSchedulerAdapter):
     def print_lr(self, is_verbose, group, lr, epoch=None):
 
         return
+
+    def step(self, epoch=None):
+        pass
