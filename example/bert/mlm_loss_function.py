@@ -37,5 +37,4 @@ class MLMCrossEntropyLoss(Loss):
         t = forward_batch.get_targets(self.target_subscription_key)
         p = forward_batch.get_predictions(self.prediction_subscription_key)
         masked_lm_loss = self.loss_fun(p.view(-1, self.vocab_size), t.view(-1))
-        print(masked_lm_loss)
         return masked_lm_loss
