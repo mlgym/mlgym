@@ -134,9 +134,9 @@ export default function Dashboard() {
     "stacktrace", "device", "current_epoch", "num_epochs", "F1", "Precision", "Recall"];
 
   return (
-    <div>
-      Dashboard
+    // <div>
+    //   Dashboard
       <Table colNames={colNames.filter((colName: string) => re.test(colName))} rows={rows} />
-    </div>
+    // </div>
   );
 }
