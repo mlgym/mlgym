@@ -12,13 +12,14 @@ import Tabs from '../components/tabs/Tabs';
 import Throughput from '../components/throughputs/Throughput';
 import { upsertExperiment } from '../redux/experiments/yetAnotherExperimentSlice';
 import { upsertJob } from '../redux/jobs/jobSlice';
+import { setLastPing, setLastPong } from '../redux/status/statusSlice';
 import { DataToRedux } from '../webworkers/worker_utils';
 import { useAppDispatch } from './hooks';
 
 
 export default function App() {
     const dispatch = useAppDispatch();
-    
+
     useEffect(() => {
         // TODO: is DedicatedWorker really needed? 
         const mlgymWorker = new DedicatedWorker(Object(workerOnMessageHandler));
@@ -27,7 +28,7 @@ export default function App() {
         const evalResult = {
             grid_search_id: null,
             experiments: {},
-            colors_mapped_to_exp_id: [[],[]]
+            colors_mapped_to_exp_id: [[], []]
         }
         mlgymWorker.postMessage(evalResult);
 
@@ -41,15 +42,21 @@ export default function App() {
             console.log(data);
         }
         else {
-            if(data && data.evaluationResultsData && data.evaluationResultsData.grid_search_id !== null && data.evaluationResultsData.experiments !== undefined){
+            if (data && data.evaluationResultsData && data.evaluationResultsData.grid_search_id !== null && data.evaluationResultsData.experiments !== undefined) {
                 dispatch(saveEvalResultData(data.evaluationResultsData));
             }
             else if (data && data.jobStatusData) {
                 dispatch(upsertJob(data.jobStatusData))
             }
-            else if(data && data.experimentStatusData)
-            {
+            else if (data && data.experimentStatusData) {
                 dispatch(upsertExperiment(data.experimentStatusData))
+            }
+            else if (data && data.status) {
+                if (data.status["type"] === "PING") {
+                    dispatch(setLastPing(data.status["time"]))
+                } else if (data.status["type"] === "PONG") {
+                    dispatch(setLastPong(data.status["time"]))
+                }
             }
         }
     }

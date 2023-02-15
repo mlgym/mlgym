@@ -1,6 +1,6 @@
 import { Experiment } from '../redux/experiments/yetAnotherExperimentSlice';
 import { Job } from '../redux/jobs/jobSlice';
-import SocketClass, { DataFromSocket } from '../websocket/SocketClass';
+import SocketClass, { DataFromSocket, PingPong } from '../websocket/SocketClass';
 import handleEvaluationResultData, { evalResultCustomData, EvaluationResultPayload } from './event_handlers/evaluationResultDataHandler';
 import handleExperimentStatusData from './event_handlers/ExperimentStatusHandler';
 import handleJobStatusData from './event_handlers/JobStatusHandler';
@@ -10,9 +10,10 @@ export interface DataToRedux {
     jobStatusData?: Job,
     experimentStatusData?: Experiment,
     evaluationResultsData?: evalResultCustomData,
+    status?: any,
 }
 
-const workerOnMessageCallback = (evalResultCustomData:evalResultCustomData, parsedSocketData:DataFromSocket)=>{
+const workerOnMessageCallback = (evalResultCustomData: evalResultCustomData, parsedSocketData: DataFromSocket) => {
 
     const eventType = parsedSocketData.event_type.toLowerCase();
     const dataToRedux: DataToRedux = {};
@@ -39,11 +40,18 @@ const workerOnMessageCallback = (evalResultCustomData:evalResultCustomData, pars
     postMessage(dataToRedux);
 }
 
+const ping_pong_callback = (type: PingPong, time: number) => {
+    postMessage({ status: { type, time } } as DataToRedux);
+};
+
 onmessage = (e) => {
     const reduxData = e.data
     let result = null;
     try {
-        const webSocket = new SocketClass(Object((parsedSocketData:DataFromSocket)=>workerOnMessageCallback(reduxData,parsedSocketData)));
+        const webSocket = new SocketClass(
+            (parsedSocketData: DataFromSocket) => workerOnMessageCallback(reduxData, parsedSocketData),
+            (type: PingPong, time: number) => ping_pong_callback(type, time)
+        );
         webSocket.init();
         result = SOCKET_STATUS.SOCKET_CONN_SUCCESS;
     }
