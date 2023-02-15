@@ -33,7 +33,7 @@ function Graphs () {
             {
                 // TODO: chartsCount > 0 ?
                 Object.keys(evalResult.experiments).length > 0 ?
-                <Grid container rowSpacing={1} spacing={{ xs: 2, md: 3 }} sx={{ paddingLeft: '3%', paddingRight: '3%', paddingTop: '2%', paddingBottom: '3%' }}>
+                <Grid container rowSpacing={1} spacing={{ xs: 2, md: 3 }} sx={{ paddingLeft: '3%', paddingRight: '3%', paddingTop: '2%', paddingBottom: '6%' }}>
                     {
                         // TODO: chartIds.map((loss_or_metric, index) => {
                         Object.keys(evalResult.experiments).map((loss_or_metric, index) => {

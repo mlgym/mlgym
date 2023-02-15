@@ -7,11 +7,12 @@ import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 interface RoutesMappingInterface {
+    // Object's Key name will be the name shown in Menu List
     [AnyComponent: string]: {
-        url: string,
-        component: JSX.Element,
-        showInMenu: Boolean,
-        menuIcon?: JSX.Element | null
+        url: string, // actual url of the page
+        component: JSX.Element, // url mapping with the React JSX Component
+        showInMenu: Boolean, // true: if that component is needed for navigation from menu
+        menuIcon?: JSX.Element | null // icon to show beside component name inside menu
     }
 }
 

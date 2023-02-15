@@ -1,14 +1,9 @@
-import Toolbar from '@mui/material/Toolbar';
-import Box from '@mui/material/Box';
+import UnderConstruction from '../under_construction_component/UnderConstruction'
 
 function Settings() {
     return (
-        <Box component="main" sx={{ width: '100%' }}>
-            <Toolbar />
-            <div>
-                Setting Page is Under Construction
-            </div>
-        </Box>
+        // Just kept Under Construction as a placeholder till the functionality is implemented
+        <UnderConstruction />
     )
 }
 

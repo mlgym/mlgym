@@ -12,15 +12,15 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Drawer from '@mui/material/Drawer';
 import Divider from '@mui/material/Divider';
-import Container from '@mui/material/Container';
-import Icon from '@mui/material/Icon';
-
 import { selectTab } from '../../redux/status/statusSlice';
 import { useAppSelector } from '../../app/hooks';
 import { useAppDispatch } from '../../app/hooks';
 import { changeTab } from '../../redux/status/statusSlice';
 import { useLocation, useNavigate } from "react-router-dom";
 import { RoutesMapping } from '../../app/RoutesMapping';
+import { LogoText, LogoOnly } from "../../svgs_and_imgs/Icons";
+import { Container } from '@mui/material';
+import Throughput from '../throughputs/Throughput';
 
 export default function TopBarWithDrawer() {
 
@@ -33,9 +33,11 @@ export default function TopBarWithDrawer() {
 
     React.useEffect(() => {
         if(location.pathname.split("/")[1] !== "" && currentTab !== location.pathname.split("/")[1]) {
+            // Select the menu tab as per the url name
             dispatch(changeTab(location.pathname.split("/")[1]));
         }
         else if (location.pathname.split("/")[1] === "") {
+            // if the app started directly, then the home page would be Graphs. So the graphs tab should be selected in the menu
             dispatch(changeTab(RoutesMapping.Graphs.url));
         }
     }, [location.pathname])
@@ -65,14 +67,19 @@ export default function TopBarWithDrawer() {
         onClick={toggleDrawer(anchor, false)}
         onKeyDown={toggleDrawer(anchor, false)}
     >
-        <Container maxWidth="sm">
-            <Icon>
-                {/* <img src={require("../../svg/logoText.svg")}/> */}
-            </Icon>
-            MLGym
+        {/* MLGym Logo with Text */}
+        <Container sx={{ 
+            padding: 1,
+            direction: "column",
+            alignItems:"center",
+            justifyContent: "center"
+        }}>
+            {LogoText}
         </Container>
-        <List>
-            
+        <Divider/>
+        {/* Menu Items */}
+        <List sx={{ marginTop: -1, marginBottom: -1 }}>
+            {/* Iterate through the Dynamic Routes and check which component's name to display in the Menu and then Navigate to the destination URL on selection / click of that component */}
             {
                 Object.keys(RoutesMapping).map((routeMapKey, index) => {
                     if(RoutesMapping[routeMapKey].showInMenu) {
@@ -101,11 +108,13 @@ export default function TopBarWithDrawer() {
             }
         </List>
         <Divider />
+        <Throughput/>
     </Box>
     );
 
   return (
     <Box sx={{ display: 'flex' }}>
+        {/* Title Bar */}
         <AppBar 
             component="nav" 
             sx={{ 
@@ -114,6 +123,7 @@ export default function TopBarWithDrawer() {
             }}
         >
             <Toolbar>
+                {/* Hamburger Menu Icon */}
                 <IconButton
                     size="large"
                     edge="start"
@@ -128,20 +138,50 @@ export default function TopBarWithDrawer() {
                 >
                     <MenuIcon />
                 </IconButton>
-                <div>
+                
+                {/* Page Title Text Goes Here */}
+                <Container
+                    sx={{
+                        display: {display: "flex"},
+                        direction: "row",
+                        alignItems:"center",
+                        justifyContent: "center"
+                    }}
+                >
                     <Typography
-                        variant="h6"
-                        noWrap
                         component="div"
-                        sx={{ 
-                            display: { xs: 'none', sm: 'block', color: "black", fontWeight: "bold" }
+                        variant="h6"
+                        sx={{
+                            display: {color: "black", fontWeight: "bold", fontSize: 30}
                         }}
                     >
-                        MLGym
+                        {
+                            location.pathname.split("/")[1] === "" ?
+                            RoutesMapping.Graphs.url.charAt(0).toUpperCase() + RoutesMapping.Graphs.url.slice(1)
+                            :
+                            location.pathname.split("/")[1].charAt(0).toUpperCase() + location.pathname.split("/")[1].slice(1)
+                        }
                     </Typography>
-                </div>
+                </Container>
+
+                {/* MLGym Logo at the end of the title bar */}
+                <IconButton
+                    size="small"
+                    edge="end"
+                    sx={{ 
+                        ml: 2, 
+                        mr: -2,
+                        display: {color: "black"}, 
+                        backgroundColor: 'transparent'
+                    }}
+                    disabled={true}
+                >
+                    {LogoOnly}
+                </IconButton>
             </Toolbar>
         </AppBar>
+
+        {/* Drawer Menu */}
         <React.Fragment>
             <Drawer
                 variant="temporary"

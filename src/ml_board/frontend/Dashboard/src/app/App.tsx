@@ -4,23 +4,15 @@ import { Route, Routes } from 'react-router-dom';
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
 import DedicatedWorker from '../webworkers/DedicatedWorker';
 import './App.scss';
-
-// import Filter from '../components/filter/Filter';
 import { upsertExperiment } from '../redux/experiments/yetAnotherExperimentSlice';
 import { upsertJob } from '../redux/jobs/jobSlice';
 import { DataToRedux } from '../webworkers/worker_utils';
 import { useAppDispatch } from './hooks';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import Drawer from '@mui/material/Drawer';
-import ScrollToTop from '../components/scroll-to-top/ScrollToTop';
 import { RoutesMapping } from './RoutesMapping';
 import Fab from '@mui/material/Fab';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import TextareaAutosize from '@mui/material/TextareaAutosize';
-import Button from '@mui/material/Button';
-import CloseIcon from '@mui/icons-material/Close';
-import CheckIcon from '@mui/icons-material/Check';
-import Stack from '@mui/material/Stack';
 import Zoom from '@mui/material/Zoom';
 import { useLocation } from "react-router-dom";
 import TextField from '@mui/material/TextField';
@@ -28,7 +20,8 @@ import TextField from '@mui/material/TextField';
 export default function App() {
 
     const [state, setState] = useState({
-        bottom: false
+        bottom: false,
+        filterText: ""
     })
     const location = useLocation();
     const dispatch = useAppDispatch();
@@ -82,21 +75,23 @@ export default function App() {
         setState({ ...state, [anchor]: open });
     }
 
-    const applyFilter = () => {
-        setState({ ...state, ["bottom"]: false });
+    function changeFilterText (text:string) {
+        setState({ ...state, ["filterText"]: text });
     }
 
     return (
         <div className="App">
-            <ScrollToTop />
             {
                 urls.includes(location.pathname.split("/")[1]) ?
+                // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't the TopBar
                 <TopBarWithDrawer/>
                 :
                 null
             }
             <Routes>
                 {
+                    // Dynamic Routes added as a functionality. 
+                    // Rendering Names as per routes helps in Menu also. So, to keep the Component and Route name mapping uniform, RoutesMapping.tsx is the single file to look at for any updates or changes to be made
                     Object.keys(RoutesMapping).map((routeMapKey, index) => {
                         return (
                             <Route 
@@ -109,13 +104,17 @@ export default function App() {
                 }
             </Routes>
             {
+                // Floating Action Button (FAB) added for filter popup
+                // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar)
                 urls.includes(location.pathname.split("/")[1]) ?
                 <Zoom in={true}>
                     <Fab
                         sx={{
                             position: "fixed",
-                            bottom: (theme) => theme.spacing(2),
-                            right: (theme) => theme.spacing(2)
+                            bottom: (theme) => theme.spacing(6),
+                            right: (theme) => theme.spacing(3),
+                            opacity: 0.5,
+                            ":hover": { opacity: 1 }
                         }}
                         variant="extended" 
                         color="primary" 
@@ -128,6 +127,7 @@ export default function App() {
                 :
                 null
             }
+            {/* Filter Popup */}
             <React.Fragment>
                 <Drawer
                     anchor={"bottom"}
@@ -138,12 +138,13 @@ export default function App() {
                             borderTopLeftRadius: "10px",
                             borderTopRightRadius: "10px",
                             paddingLeft: "20px",
-                            paddingRight: "20px"
+                            paddingRight: "20px",
+                            paddingBottom: "30px"
                         }
                     }}
                 >
                     <h3>
-                        Filter Results
+                        Filter Your Results
                     </h3>
                     <TextField
                         id="outlined-multiline-flexible"
@@ -151,36 +152,9 @@ export default function App() {
                         placeholder="Filter your experiments here!..."
                         multiline
                         maxRows={4}
+                        value={state["filterText"]}
+                        onChange={(e)=>changeFilterText(e.target.value)}
                     />
-                    <Stack 
-                        direction="row" 
-                        spacing={5}
-                        sx={{
-                            marginTop: "20px",
-                            marginBottom: "30px"
-                        }}
-                    >
-                        <Button 
-                            variant="contained" 
-                            startIcon={<CheckIcon />}
-                            onClick={()=>applyFilter()}
-                            sx={{
-                                width: "20%"
-                            }}
-                        >
-                            Apply
-                        </Button>
-                        <Button 
-                            variant="contained" 
-                            endIcon={<CloseIcon />}
-                            onClick={toggleDrawer("bottom", false)}
-                            sx={{
-                                width: "20%"
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                    </Stack>
                 </Drawer>
             </React.Fragment>
         </div>

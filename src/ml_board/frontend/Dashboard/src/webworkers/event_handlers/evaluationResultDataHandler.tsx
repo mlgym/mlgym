@@ -11,7 +11,7 @@ export interface evalResultCustomData {
                     fill: Boolean,
                     backgroundColor: string,
                     borderColor: string,
-                    tension: number
+                    tension: number // to give smoothness to the line curves
                 }>
             },
             options: {
@@ -19,9 +19,9 @@ export interface evalResultCustomData {
                     duration: number,
                     easing: string
                 }
-                radius: number,
-                hoverRadius: number,
-                hitRadius: number,
+                radius: number, // radius of the label tag
+                hoverRadius: number, // on hover:: change of data point radius size
+                hitRadius: number, // radius of mouse to show the label values when mouse is near a datapoint
                 responsive: Boolean,
                 maintainAspectRatio: Boolean,
                 plugins: {
@@ -146,7 +146,7 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                 fill: false,
                 backgroundColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
                 borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
-                tension: 0.4
+                tension: 0
             });
         }
         exp[d.split + "_" + d.loss].data.datasets.sort((a, b) => (a.exp_id > b.exp_id) ? 1 : -1)
@@ -217,7 +217,7 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                 fill: false,
                 backgroundColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
                 borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
-                tension: 0.4
+                tension: 0
             });
         }
 
