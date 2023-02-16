@@ -75,7 +75,7 @@ export default function Dashboard() {
 
     rows.push(row);
   }
-  console.log(rows.at(-1));
+  // console.log(rows.at(-1));
 
   // TODO: get the colNames from the redux state ???
   // IMPORTANT NOTE: these names have to match the keys of the row object exactly in order to appear in the table

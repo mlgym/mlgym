@@ -1,6 +1,6 @@
 import { Experiment } from '../redux/experiments/yetAnotherExperimentSlice';
 import { Job } from '../redux/jobs/jobSlice';
-import SocketClass, { DataFromSocket, PingPong } from '../websocket/SocketClass';
+import SocketClass, { DataFromSocket } from '../websocket/SocketClass';
 import handleEvaluationResultData, { evalResultCustomData, EvaluationResultPayload } from './event_handlers/evaluationResultDataHandler';
 import handleExperimentStatusData from './event_handlers/ExperimentStatusHandler';
 import handleJobStatusData from './event_handlers/JobStatusHandler';
@@ -45,8 +45,19 @@ const workerOnMessageCallback = (evalResultCustomData: evalResultCustomData, par
     postMessage(dataToRedux);
 }
 
-const ping_pong_callback = (type: PingPong, time: number) => {
-    postMessage({ status: { type, time } } as DataToRedux);
+const ping_callback = (ping: number) => {
+    postMessage({ status: { ping } } as DataToRedux);
+};
+
+const connection_callback = (isSocketConnected: boolean) => {
+    postMessage({ status: { isSocketConnected } } as DataToRedux);
+};
+
+const msgCounterInc_callback = () => {
+    postMessage({ status: "msg_count_increment" } as DataToRedux);
+};
+const throughput_callback = (throughput: number) => {
+    postMessage({ status: { throughput } } as DataToRedux);
 };
 
 onmessage = (e) => {
@@ -55,7 +66,10 @@ onmessage = (e) => {
     try {
         const webSocket = new SocketClass(
             (parsedSocketData: DataFromSocket) => workerOnMessageCallback(reduxData, parsedSocketData),
-            (type: PingPong, time: number) => ping_pong_callback(type, time)
+            (isSocketConnected: boolean) => connection_callback(isSocketConnected),
+            (time: number) => ping_callback(time),
+            () => msgCounterInc_callback(),
+            (throughput: number) => throughput_callback(throughput)
         );
         webSocket.init();
         result = SOCKET_STATUS.SOCKET_CONN_SUCCESS;

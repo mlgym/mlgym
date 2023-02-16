@@ -2,7 +2,7 @@ import socketIO, { Socket } from 'socket.io-client';
 
 const DEFAULT_URL = 'http://localhost:7000/'; // or http://127.0.0.1:7000/'
 
-export type PingPong = "PING" | "PONG"
+// export type PingPong = "PING" | "PONG"
 
 interface SocketClassInterface {
     socketURL: string,
@@ -23,31 +23,41 @@ class SocketClass implements SocketClassInterface {
     interval!: NodeJS.Timer;
     lastPing: number = -1;
     lastPong: number = -1;
+    readonly period: number = 10;
+    msgCountPerPeriod: number = 0;
 
     constructor(
-        public dataCallback: (data: DataFromSocket) => void,
-        public ping_pong: (type: PingPong, time: number) => void,
+        private dataCallback: (data: DataFromSocket) => void,
+        private connectionCb: (isConnected: boolean) => void,
+        private pingCb: (time: number) => void,
+        private msgCountIncCb: () => void,
+        private throughputCb: (throughput: number) => void,
         public socketURL: string = '',
     ) {
         this.socketURL = socketURL || DEFAULT_URL
-        this.dataCallback = dataCallback
-        this.ping_pong = ping_pong
+        this.dataCallback = dataCallback;
+        this.connectionCb = connectionCb;
+        this.pingCb = pingCb;
+        this.msgCountIncCb = msgCountIncCb;
     }
 
     init = () => {
 
-        let socket = socketIO(this.socketURL, { autoConnect: true });
-        let runId = "mlgym_event_subscribers";
+        const socket = socketIO(this.socketURL, { autoConnect: true });
+        const runId = "mlgym_event_subscribers";
 
         socket.open();
 
         socket.on('connect', () => {
             socket.emit('join', { rooms: [runId] });
-            this.interval = setInterval(this.pinging, 10000, socket);
+            this.interval = setInterval(this.pinging, this.period * 1000, socket);
+            this.connectionCb(true);
         });
 
         socket.on('mlgym_event', (msg) => {
             const parsedMsg: DataFromSocket = JSON.parse(msg);
+            this.msgCountPerPeriod++;
+            this.msgCountIncCb();
             if (this.dataCallback) {
                 this.dataCallback(parsedMsg);
             }
@@ -60,20 +70,29 @@ class SocketClass implements SocketClassInterface {
         socket.on('disconnect', () => {
             console.log("disconnected");
             clearInterval(this.interval);
+            this.connectionCb(false);
         });
 
         socket.on('pong', () => {
+            // on Pong , save time of receiving 
             this.lastPong = new Date().getTime();
-            this.ping_pong('PONG', this.lastPong);
+            // calculate the ping and send it to the MainThread
+            this.pingCb(this.lastPong - this.lastPing);
         });
     }
 
     pinging = (socket: Socket) => {
+        // if Pong was received after sending a Ping 
+        // if no Ping was sent before
         if (this.lastPong > this.lastPing || this.lastPing === -1) {
+            // save ping time
             this.lastPing = new Date().getTime();
+            // ping the server
             socket.emit('ping');
-            this.ping_pong('PING', this.lastPing);
         }
+        
+        this.throughputCb(this.msgCountPerPeriod / this.period)
+        this.msgCountPerPeriod = 0;
     }
 }
 

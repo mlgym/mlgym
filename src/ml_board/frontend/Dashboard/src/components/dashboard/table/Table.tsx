@@ -1,3 +1,4 @@
+import { Toolbar } from '@mui/material';
 import { CellClickedEvent } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
 import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
@@ -29,6 +30,7 @@ function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
 
   return (
     <div className="ag-theme-alpine" id="ag-grid-container">
+      <Toolbar />
       <AgGridReact
         defaultColDef={defaultColDef}
         // {/* provide column definitions */}

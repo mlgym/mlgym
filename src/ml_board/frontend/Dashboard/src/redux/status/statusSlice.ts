@@ -5,9 +5,10 @@ export interface StatusState {
   currentFilter: string;
   idTab: string;
   wsConnected: boolean;
-  lastPing?: number;
-  lastPong?: number;
-  grid_search_id?: string;
+  ping: number;
+  received_msg_count: number;
+  throughput: number;
+  grid_search_id: string;
   color_map: { [expID: string]: string }; // expID mapped to a color
   metric_loss: Array<string>;
 }
@@ -16,6 +17,10 @@ const initialState: StatusState = {
   currentFilter: '.*',
   idTab: "Dashboard",
   wsConnected: false,
+  ping: -1,
+  received_msg_count: 0,
+  throughput: 0,
+  grid_search_id: "",
   color_map: {},
   metric_loss: []
 };
@@ -30,14 +35,17 @@ export const statusSlice = createSlice({
     changeTab: (state, { payload }: PayloadAction<string>) => {
       state.idTab = payload;
     },
-    changeSocketConnection: (state, action: PayloadAction<boolean>) => {
+    setSocketConnection: (state, action: PayloadAction<boolean>) => {
       state.wsConnected = action.payload
     },
     setLastPing: (state, action: PayloadAction<number>) => {
-      state.lastPing = action.payload
+      state.ping = action.payload
     },
-    setLastPong: (state, action: PayloadAction<number>) => {
-      state.lastPong = action.payload
+    increamentReceivedMsgCount: (state) => {
+      state.received_msg_count++;
+    },
+    setThroughput: (state, { payload }: PayloadAction<number>) => {
+      state.throughput = payload;
     },
     setGridSearchId: (state, action: PayloadAction<string>) => {
       state.grid_search_id = action.payload;
@@ -50,11 +58,12 @@ export const statusSlice = createSlice({
   }
 });
 
-export const { changeFilter, changeTab, changeSocketConnection, setLastPing, setLastPong } = statusSlice.actions;
+export const { changeFilter, changeTab, setSocketConnection, setLastPing, increamentReceivedMsgCount, setThroughput } = statusSlice.actions;
 export const selectFilter = (state: RootState) => state.status.currentFilter;
 export const selectTab = (state: RootState) => state.status.idTab;
 export const isConnected = (state: RootState) => state.status.wsConnected;
-export const getLastPing = (state: RootState) => state.status.lastPing;
-export const getLastPong = (state: RootState) => state.status.lastPong;
+export const getLastPing = (state: RootState) => state.status.ping;
+export const getReceivevMsgCount = (state: RootState) => state.status.received_msg_count;
+export const getThroughput = (state: RootState) => state.status.throughput;
 export const selectColorMap = (state: RootState) => state.status.color_map;
 export default statusSlice.reducer;
