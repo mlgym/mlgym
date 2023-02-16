@@ -5,10 +5,11 @@ export interface StatusState {
   currentFilter: string;
   idTab: string;
   wsConnected: boolean;
-  lastPing?     : number;
-  lastPong?     : number;
+  lastPing?: number;
+  lastPong?: number;
   grid_search_id?: string;
   color_map: { [expID: string]: string }; // expID mapped to a color
+  metric_loss: Array<string>;
 }
 
 const initialState: StatusState = {
@@ -16,6 +17,7 @@ const initialState: StatusState = {
   idTab: "Dashboard",
   wsConnected: false,
   color_map: {},
+  metric_loss: []
 };
 
 export const statusSlice = createSlice({
@@ -40,14 +42,19 @@ export const statusSlice = createSlice({
     setGridSearchId: (state, action: PayloadAction<string>) => {
       state.grid_search_id = action.payload;
     },
+    // ASK MAX: To be used if we want to save the Metric or Losses key here for the table
+    // I stopped from doing so because then function is going to be called every evaluation_result message!!!
+    upsertMetricOrLoss: (state, { payload }: PayloadAction<string[]>) => {
+      state.metric_loss.push(...payload);
+    }
   }
 });
 
 export const { changeFilter, changeTab, changeSocketConnection, setLastPing, setLastPong } = statusSlice.actions;
 export const selectFilter = (state: RootState) => state.status.currentFilter;
 export const selectTab = (state: RootState) => state.status.idTab;
-export const isConnected  = (state: RootState) => state.status.wsConnected;
-export const getLastPing  = (state: RootState) => state.status.lastPing;
-export const getLastPong  = (state: RootState) => state.status.lastPong;
+export const isConnected = (state: RootState) => state.status.wsConnected;
+export const getLastPing = (state: RootState) => state.status.lastPing;
+export const getLastPong = (state: RootState) => state.status.lastPong;
 export const selectColorMap = (state: RootState) => state.status.color_map;
 export default statusSlice.reducer;

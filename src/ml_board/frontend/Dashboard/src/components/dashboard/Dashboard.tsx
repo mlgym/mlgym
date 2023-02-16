@@ -1,5 +1,5 @@
 import { useAppSelector } from "../../app/hooks";
-import { Experiment, selectExperiments } from "../../redux/experiments/yetAnotherExperimentSlice";
+import { selectExperiments } from "../../redux/experiments/yetAnotherExperimentSlice";
 import { selectAllJobs } from "../../redux/jobs/jobSlice";
 import { selectColorMap, selectFilter } from "../../redux/status/statusSlice";
 import Table from "./table/Table";
@@ -8,15 +8,15 @@ import Table from "./table/Table";
 interface TableRow {
   // Job
   job_id: string; // format <grid_search_id>-<job index>
-  job_type?: string; // <CALC, TERMINATE>
-  job_status?: string; // <INIT, RUNNING, DONE>
-  starting_time?: number;
-  finishing_time?: number;
-  error?: string;
-  stacktrace?: string;
-  device?: string;
+  job_type: string; // <CALC, TERMINATE>
+  job_status: string; // <INIT, RUNNING, DONE>
+  starting_time: number;
+  finishing_time: number;
+  error: string;
+  stacktrace: string;
+  device: string;
   // Experiment
-  experiment_id: string;
+  experiment_id: number;
   model_status?: string;   // <TRAINING, EVALUATING>,
   current_split?: string;
   splits?: string[]; //e.g.: ["train", "val", "test"],
@@ -49,94 +49,41 @@ export default function Dashboard() {
   const experiments = useAppSelector(selectExperiments);
   // loop over all job
   for (const job of jobs) {
-    const expID = job.experiment_id as string;
-    const experiment = experiments[expID] as Experiment;
+
+    // create a table row with the job
+    let row: TableRow = { ...job };
+
+    // get the experiment and do the needed progress calculations
+    const expID = job.experiment_id;
+    const experiment = experiments[expID];
+    // NOTE: assumption is if the experiment is there then all it's values exist as well
     if (experiment !== undefined) {
       // calc the progresses here for better code readablity 
-      let epoch_progress = -1;
-      if (experiment.current_epoch !== undefined && experiment.num_epochs !== undefined) {
-        epoch_progress = experiment.current_epoch / experiment.num_epochs;
-      }
-      let batch_progress = -1;
-      if (experiment.current_batch !== undefined && experiment.num_batches !== undefined) {
-        epoch_progress = experiment.current_batch / experiment.num_batches;
-      }
+      let epoch_progress = experiment.current_epoch / experiment.num_epochs;
+      let batch_progress = experiment.current_batch / experiment.num_batches;
+
+      // // if the scores/"latest_split_metric" needs handling before showing them in the table? (I don't think so)
+      // const scores = {
+      //   F1: experiment.F1 as string,
+      //   Precision: experiment.Precision as string,
+      //   Recall: experiment.Recall as string,
+      // }
+
+      // add the experiment to the row
+      row = { ...row, ...experiment, epoch_progress, batch_progress }
     }
 
-    // // if the scores/"latest_split_metric" needs handling before showing them in the table? (I don't think so)
-    // const scores = {
-    //   F1: experiment.F1 as string,
-    //   Precision: experiment.Precision as string,
-    //   Recall: experiment.Recall as string,
-    // }
-
-    // create the TableRow and push it
-    rows.push({
-      ...job,
-      ...experiment,
-      // epoch_progress: epoch_progress,
-      // batch_progress: batch_progress,
-      // color: colorMap[experiment.experiment_id],
-      // ...scores
-    });
+    rows.push(row);
   }
   console.log(rows.at(-1));
-
-
-
-  // // loop over all job ids
-  // const job_ids = useAppSelector(selectJobIds);
-  // for (const jID of job_ids) {
-  //   // get job and the experiment
-  //   const job: Job = useAppSelector(state => selectJobById(state, jID)) as Job;
-  //   const expID = job.experiment_id as string;
-  //   const experiment: Experiment = useAppSelector(state => selectExperimentById(state, expID)) as Experiment;
-
-  //   // calc the progresses here for better code readablity 
-  //   let epoch_progress = -1;
-  //   if (experiment.current_epoch !== undefined && experiment.num_epochs !== undefined) {
-  //     epoch_progress = experiment.current_epoch / experiment.num_epochs;
-  //   }
-  //   let batch_progress = -1;
-  //   if (experiment.current_batch !== undefined && experiment.num_batches !== undefined) {
-  //     epoch_progress = experiment.current_batch / experiment.num_batches;
-  //   }
-
-  //   // // if the scores/"latest_split_metric" needs handling before showing them in the table? (I don't think so)
-  //   // const scores = {
-  //   //   F1: experiment.F1 as string,
-  //   //   Precision: experiment.Precision as string,
-  //   //   Recall: experiment.Recall as string,
-  //   // }
-
-  //   // create the TableRow and push it
-  //   rows.push({
-  //     ...job,
-  //     ...experiment,
-  //     epoch_progress: epoch_progress,
-  //     batch_progress: batch_progress,
-  //     color: colorMap[experiment.experiment_id],
-  //     // ...scores
-  //   });
-  // }
-
-
-  // REMOVED because the type 'undefined' is not a valid JSX element
-  // // TODO: this might be redundant???
-  // const iActiveTab = useAppSelector(selectTab);
-  // if ("Dashboard" !== iActiveTab)
-  //   return;
 
   // TODO: get the colNames from the redux state ???
   // IMPORTANT NOTE: these names have to match the keys of the row object exactly in order to appear in the table
   const colNames = ["job_id", "job_type", "job_status", "experiment_id", "starting_time", "finishing_time",
     "epoch_progress", "batch_progress", "model_status", "current_split", "splits", "error",
-    "stacktrace", "device", "current_epoch", "num_epochs", "F1", "Precision", "Recall"];
+    "stacktrace", "device", "current_epoch", "num_epochs", "train_F1_SCORE_macro", "train_PRECISION_macro",
+    "train_RECALL_macro", "train_cross_entropy_loss", "val_F1_SCORE_macro", "val_PRECISION_macro", "val_RECALL_macro",
+    "val_cross_entropy_loss", "test_F1_SCORE_macro", "test_PRECISION_macro", "test_RECALL_macro", "test_cross_entropy_loss"];
 
-  return (
-    // <div>
-    //   Dashboard
-      <Table colNames={colNames.filter((colName: string) => re.test(colName))} rows={rows} />
-    // </div>
-  );
+  return (<Table colNames={colNames.filter((colName: string) => re.test(colName))} rows={rows} />);
 }

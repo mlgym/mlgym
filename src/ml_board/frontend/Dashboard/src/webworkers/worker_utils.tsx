@@ -10,6 +10,7 @@ export interface DataToRedux {
     jobStatusData?: Job,
     experimentStatusData?: Experiment,
     evaluationResultsData?: evalResultCustomData,
+    latest_split_metric?: EvaluationResultPayload,
     status?: any,
 }
 
@@ -26,7 +27,11 @@ const workerOnMessageCallback = (evalResultCustomData: evalResultCustomData, par
             break;
         case EVENT_TYPE.EVALUATION_RESULT:
             // TODO: get the "latest_split_metric" in the experimentsSlice too
-            dataToRedux.evaluationResultsData = handleEvaluationResultData(evalResultCustomData, parsedSocketData.payload as unknown as EvaluationResultPayload);
+            // just save the value directly in the Experiment, since the table is being formed from there
+            // later decide if the column names are going to stay hard coded or inducted from the incoming messages 
+            const evalResPayload = parsedSocketData.payload as unknown as EvaluationResultPayload;
+            dataToRedux.evaluationResultsData = handleEvaluationResultData(evalResultCustomData, evalResPayload);
+            dataToRedux.latest_split_metric = evalResPayload;
             break;
         case EVENT_TYPE.EXPERIMENT_CONFIG:
             console.log("Exp config found")
