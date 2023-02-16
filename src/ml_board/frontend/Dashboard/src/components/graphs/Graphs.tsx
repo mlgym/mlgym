@@ -2,6 +2,11 @@ import { Line } from "react-chartjs-2";
 import { useSelector } from 'react-redux';
 // import { reduxState } from "../../redux/store";
 import { CategoryScale, Chart as ChartJS, Filler, Legend, LinearScale, LineElement, PointElement, Title, Tooltip } from 'chart.js';
+import Toolbar from '@mui/material/Toolbar';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Grid from '@mui/material/Grid';
+
 import './Graphs.css';
 ChartJS.register(
     CategoryScale,
@@ -21,36 +26,38 @@ function Graphs () {
     // TODO: const chartIds = useAppSelector(selectChartIds);
     // TODO: const charts = useAppSelector(selectCharts);
     // TODO: const chartsCount = useAppSelector(selectChartsCount);
-
+     
     return(
-        <div>
-            <div className="home-main-h2">
-                Training Scores & Loss
-            </div>
+        <Box component="main" sx={{ width: '100%' }}>
+            <Toolbar />
             {
                 // TODO: chartsCount > 0 ?
                 Object.keys(evalResult.experiments).length > 0 ?
-                <div className="home-main">
+                <Grid container rowSpacing={1} spacing={{ xs: 2, md: 3 }} sx={{ paddingLeft: '3%', paddingRight: '3%', paddingTop: '2%', paddingBottom: '6%' }}>
                     {
                         // TODO: chartIds.map((loss_or_metric, index) => {
                         Object.keys(evalResult.experiments).map((loss_or_metric, index) => {
                             return(
-                                <div className="home-child" key={index}>
-                                    <Line 
-                                        // TODO: data={charts[loss_or_metric].data} 
-                                        // TODO: options={charts[loss_or_metric].options}
-                                        data={evalResult.experiments[loss_or_metric].data} 
-                                        options={evalResult.experiments[loss_or_metric].options}
-                                    />
-                                </div>
+                                <Grid item={true} xs={12} sm={12} md={6} key={index}>
+                                    <Card sx={{ boxShadow: 3, mb: 2, padding: 1, display: 'flex'}}>
+                                        <div className="chart-container">
+                                            <Line
+                                                // TODO: data={charts[loss_or_metric].data} 
+                                                // TODO: options={charts[loss_or_metric].options}
+                                                data={evalResult.experiments[loss_or_metric].data} 
+                                                options={evalResult.experiments[loss_or_metric].options}
+                                            />
+                                        </div>
+                                    </Card>
+                                </Grid>
                             )
                         })
                     }
-                </div>
+                </Grid>
                 :
                 null
             } 
-        </div>
+        </Box>
     );
 }
 

@@ -10,10 +10,20 @@ export interface evalResultCustomData {
                     data: Array<number>,
                     fill: Boolean,
                     backgroundColor: string,
-                    borderColor: string
+                    borderColor: string,
+                    tension: number // to give smoothness to the line curves
                 }>
             },
             options: {
+                animation: {
+                    duration: number,
+                    easing: string
+                }
+                radius: number, // radius of the label tag
+                hoverRadius: number, // on hover:: change of data point radius size
+                hitRadius: number, // radius of mouse to show the label values when mouse is near a datapoint
+                responsive: Boolean,
+                maintainAspectRatio: Boolean,
                 plugins: {
                     title: {
                         display: Boolean,
@@ -22,6 +32,13 @@ export interface evalResultCustomData {
                         font: {
                             weight: string,
                             size: string
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        labels: {
+                            usePointStyle: boolean,
+                            pointStyle: string
                         }
                     }
                 }
@@ -74,6 +91,15 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                     datasets: []
                 },
                 options: {
+                    animation: {
+                        duration: 300,
+                        easing: 'linear'
+                    },
+                    radius: 3,
+                    hoverRadius: 12,
+                    hitRadius: 20,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         title: {
                             display: true,
@@ -82,6 +108,13 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                             font: {
                                 weight: 'bold',
                                 size: '20px'
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle'
                             }
                         }
                     }
@@ -112,7 +145,8 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                 data: [d.score],
                 fill: false,
                 backgroundColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
-                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id]
+                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
+                tension: 0
             });
         }
         exp[d.split + "_" + d.loss].data.datasets.sort((a, b) => (a.exp_id > b.exp_id) ? 1 : -1)
@@ -128,6 +162,15 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                     datasets: []
                 },
                 options: {
+                    animation: {
+                        duration: 300,
+                        easing: 'linear'
+                    },
+                    radius: 3,
+                    hoverRadius: 12,
+                    hitRadius: 20,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         title: {
                             display: true,
@@ -136,6 +179,13 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                             font: {
                                 weight: 'bold',
                                 size: '20px'
+                            }
+                        },
+                        legend: {
+                           display: true,
+                           labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle'
                             }
                         }
                     }
@@ -166,7 +216,8 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                 data: [d.score],
                 fill: false,
                 backgroundColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
-                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id]
+                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
+                tension: 0
             });
         }
 
