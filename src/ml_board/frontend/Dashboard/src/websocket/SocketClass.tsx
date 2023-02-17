@@ -71,6 +71,8 @@ class SocketClass implements SocketClassInterface {
             console.log("disconnected");
             clearInterval(this.interval);
             this.connectionCb(false);
+            this.throughputCb(0);
+            this.pingCb(0);
         });
 
         socket.on('pong', () => {
@@ -91,6 +93,7 @@ class SocketClass implements SocketClassInterface {
             socket.emit('ping');
         }
         
+        // regardless of the if statement, this function runs every "period"
         this.throughputCb(this.msgCountPerPeriod / this.period)
         this.msgCountPerPeriod = 0;
     }

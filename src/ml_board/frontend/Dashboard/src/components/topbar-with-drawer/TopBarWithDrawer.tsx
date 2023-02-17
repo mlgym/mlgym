@@ -1,26 +1,24 @@
-import * as React from 'react';
+import MenuIcon from '@mui/icons-material/Menu';
+import { Container } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
+import Divider from '@mui/material/Divider';
+import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import MenuIcon from '@mui/icons-material/Menu';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import Drawer from '@mui/material/Drawer';
-import Divider from '@mui/material/Divider';
-import { selectTab } from '../../redux/status/statusSlice';
-import { useAppSelector } from '../../app/hooks';
-import { useAppDispatch } from '../../app/hooks';
-import { changeTab } from '../../redux/status/statusSlice';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import * as React from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { RoutesMapping } from '../../app/RoutesMapping';
-import { LogoText, LogoOnly } from "../../svgs_and_imgs/Icons";
-import { Container } from '@mui/material';
-import Throughput from '../throughputs/Throughput';
+import { changeTab, selectTab } from '../../redux/status/statusSlice';
+import { LogoOnly, LogoText } from "../../svgs_and_imgs/Icons";
+import Statistics from '../statistics/Statistics';
 
 export default function TopBarWithDrawer() {
 
@@ -42,9 +40,9 @@ export default function TopBarWithDrawer() {
         }
     }, [location.pathname])
 
+    // ASK Vijul: Duplication ?
     const toggleDrawer = (anchor: string, open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
-        if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' ||
-            (event as React.KeyboardEvent).key === 'Shift')) {
+        if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')) {
             return;
         }
         setState({ ...state, [anchor]: open });
@@ -81,34 +79,22 @@ export default function TopBarWithDrawer() {
         <List sx={{ marginTop: -1, marginBottom: -1 }}>
             {/* Iterate through the Dynamic Routes and check which component's name to display in the Menu and then Navigate to the destination URL on selection / click of that component */}
             {
-                Object.keys(RoutesMapping).map((routeMapKey, index) => {
-                    if(RoutesMapping[routeMapKey].showInMenu) {
-                        return (
+                Object.keys(RoutesMapping)
+                .filter((routeMapKey)=> RoutesMapping[routeMapKey].showInMenu)
+                .map((routeMapKey, index) => (
                             <ListItem key={index} disablePadding onClick={() => changeTabRequest(RoutesMapping[routeMapKey].url)}>
-                                <ListItemButton 
-                                    selected={
-                                        RoutesMapping[routeMapKey].url === currentTab ? 
-                                        true 
-                                        :
-                                        false
-                                    }
-                                    >
+                                <ListItemButton selected={RoutesMapping[routeMapKey].url === currentTab}>
                                     <ListItemIcon>
                                         {RoutesMapping[routeMapKey].menuIcon}
                                     </ListItemIcon>
                                     <ListItemText primary={routeMapKey} />
                                 </ListItemButton>
                             </ListItem>
-                        )
-                    }
-                    else {
-                        return null
-                    }
-                })
+                        ))
             }
         </List>
         <Divider />
-        <Throughput/>
+        <Statistics/>
     </Box>
     );
 

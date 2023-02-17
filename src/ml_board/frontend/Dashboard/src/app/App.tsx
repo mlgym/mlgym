@@ -10,7 +10,7 @@ import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer'
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
 import { updateExperiment, upsertExperiment } from '../redux/experiments/yetAnotherExperimentSlice';
 import { upsertJob } from '../redux/jobs/jobSlice';
-import { increamentReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
+import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
 import DedicatedWorker from '../webworkers/DedicatedWorker';
 import { EvaluationResultPayload } from '../webworkers/event_handlers/evaluationResultDataHandler';
 import { DataToRedux } from '../webworkers/worker_utils';
@@ -79,7 +79,7 @@ export default function App() {
             }
             else if (data && data.status) {
                 if (data.status === "msg_count_increment") {
-                    dispatch(increamentReceivedMsgCount())
+                    dispatch(incrementReceivedMsgCount())
                 } else if (data.status["ping"]) {
                     dispatch(setLastPing(data.status["ping"]))
                 } else if (data.status["throughput"]) {
@@ -91,6 +91,7 @@ export default function App() {
         }
     }
 
+    // ASK Vijul: Duplication ?
     const toggleDrawer = (anchor: string, open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
         if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')) {
             return;
