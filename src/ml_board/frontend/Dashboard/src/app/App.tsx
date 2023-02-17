@@ -18,6 +18,7 @@ import Drawer from '@mui/material/Drawer';
 import Fab from '@mui/material/Fab';
 import TextField from '@mui/material/TextField';
 import styles from './App.module.css';
+import ConfigPopup from '../components/configPopup/ConfigPopup';
 
 export default function App() {
 
@@ -164,6 +165,7 @@ export default function App() {
                     </div>
                 </Drawer>
             </React.Fragment>
+            <ConfigPopup/>
         </div>
     );
 }
