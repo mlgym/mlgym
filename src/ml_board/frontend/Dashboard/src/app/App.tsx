@@ -53,6 +53,8 @@ export default function App() {
     // TODO: maybe useCallback
     const workerOnMessageHandler = (data: DataToRedux) => {
         if (typeof (data) === "string") {
+            // TODO: this is not correct, try running the frontend without a backend to connect to it would still say "Socket Connection Successful"
+            // this is solved in the stash "DedicatedWorker redundancy" push it after solving the mystery of initial redux state!
             console.log(data);
         }
         else {
@@ -80,11 +82,11 @@ export default function App() {
             else if (data && data.status) {
                 if (data.status === "msg_count_increment") {
                     dispatch(incrementReceivedMsgCount())
-                } else if (data.status["ping"]) {
+                } else if (data.status["ping"] !== undefined) {
                     dispatch(setLastPing(data.status["ping"]))
-                } else if (data.status["throughput"]) {
+                } else if (data.status["throughput"] !== undefined) {
                     dispatch(setThroughput(data.status["throughput"]))
-                } else if (data.status["isSocketConnected"]) {
+                } else if (data.status["isSocketConnected"] !== undefined) {
                     dispatch(setSocketConnection(data.status["isSocketConnected"]))
                 }
             }

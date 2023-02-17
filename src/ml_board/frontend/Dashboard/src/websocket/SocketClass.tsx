@@ -63,17 +63,9 @@ class SocketClass implements SocketClassInterface {
             }
         });
 
-        socket.on('connect_error', (err) => {
-            console.log("connection error", err);
-        })
+        socket.on('connect_error', (err: Error) => this.stop(err));
 
-        socket.on('disconnect', () => {
-            console.log("disconnected");
-            clearInterval(this.interval);
-            this.connectionCb(false);
-            this.throughputCb(0);
-            this.pingCb(0);
-        });
+        socket.on('disconnect', (reason: Socket.DisconnectReason) => this.stop(reason));
 
         socket.on('pong', () => {
             // on Pong , save time of receiving 
@@ -92,10 +84,18 @@ class SocketClass implements SocketClassInterface {
             // ping the server
             socket.emit('ping');
         }
-        
+
         // regardless of the if statement, this function runs every "period"
         this.throughputCb(this.msgCountPerPeriod / this.period)
         this.msgCountPerPeriod = 0;
+    }
+
+    stop = (why: any) => {
+        console.log(`${why instanceof Error ? "connection" /* error */: "disconnected"} : ${why}`);
+        clearInterval(this.interval);
+        this.connectionCb(false);
+        this.throughputCb(0);
+        this.pingCb(0);
     }
 }
 
