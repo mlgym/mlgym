@@ -14,9 +14,9 @@ import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThrough
 import DedicatedWorker from '../webworkers/DedicatedWorker';
 import { EvaluationResultPayload } from '../webworkers/event_handlers/evaluationResultDataHandler';
 import { DataToRedux } from '../webworkers/worker_utils';
-import './App.scss';
 import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
+import app_css from './AppCss';
 
 export default function App() {
 
@@ -28,7 +28,7 @@ export default function App() {
     const dispatch = useAppDispatch();
 
     const urls: Array<string> = [];
-    Object.keys(RoutesMapping).map((routeMapKey) => {
+    Object.keys(RoutesMapping).forEach((routeMapKey) => {
         if (routeMapKey !== "ErrorComponent") {
             urls.push(RoutesMapping[routeMapKey].url);
         }
@@ -100,14 +100,14 @@ export default function App() {
     }
 
     function changeFilterText(text: string) {
-        setState({ ...state, ["filterText"]: text });
+        setState({ ...state, filterText: text });
     }
 
     return (
-        <div className="App">
+        <div style={app_css.main_container}>
             {
                 urls.includes(location.pathname.split("/")[1]) ?
-                    // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't the TopBar
+                    // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
                     <TopBarWithDrawer />
                     :
                     null
@@ -133,13 +133,7 @@ export default function App() {
                 urls.includes(location.pathname.split("/")[1]) ?
                     <Zoom in={true}>
                         <Fab
-                            sx={{
-                                position: "fixed",
-                                bottom: (theme) => theme.spacing(6),
-                                right: (theme) => theme.spacing(3),
-                                opacity: 0.5,
-                                ":hover": { opacity: 1 }
-                            }}
+                            sx={app_css.fab}
                             variant="extended"
                             color="primary"
                             aria-label="add"
@@ -158,13 +152,7 @@ export default function App() {
                     open={state["bottom"]}
                     onClose={toggleDrawer("bottom", false)}
                     PaperProps={{
-                        style: {
-                            borderTopLeftRadius: "10px",
-                            borderTopRightRadius: "10px",
-                            paddingLeft: "20px",
-                            paddingRight: "20px",
-                            paddingBottom: "30px"
-                        }
+                        style: app_css.filter
                     }}
                 >
                     <h3>

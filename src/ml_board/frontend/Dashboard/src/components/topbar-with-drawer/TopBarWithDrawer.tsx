@@ -19,6 +19,7 @@ import { RoutesMapping } from '../../app/RoutesMapping';
 import { changeTab, selectTab } from '../../redux/status/statusSlice';
 import { LogoOnly, LogoText } from "../../svgs_and_imgs/Icons";
 import Statistics from '../statistics/Statistics';
+import top_bar_with_drawer_css from './TopBarWithDrawerCss';
 
 export default function TopBarWithDrawer() {
 
@@ -55,42 +56,34 @@ export default function TopBarWithDrawer() {
         navigate(text);
     }
 
-    const list = (anchor: string) => (
+    const menu_list = (anchor: string) => (
     <Box
-        sx={{ 
-            backgroundColor: "#FFFFFF",
-            width:  250 
-        }}
+        sx={top_bar_with_drawer_css.menu_container}
         role="presentation"
         onClick={toggleDrawer(anchor, false)}
         onKeyDown={toggleDrawer(anchor, false)}
     >
         {/* MLGym Logo with Text */}
-        <Container sx={{ 
-            padding: 1,
-            direction: "column",
-            alignItems:"center",
-            justifyContent: "center"
-        }}>
+        <Container sx={top_bar_with_drawer_css.logo_inside_menu}>
             {LogoText}
         </Container>
         <Divider/>
         {/* Menu Items */}
-        <List sx={{ marginTop: -1, marginBottom: -1 }}>
+        <List sx={top_bar_with_drawer_css.menu_list}>
             {/* Iterate through the Dynamic Routes and check which component's name to display in the Menu and then Navigate to the destination URL on selection / click of that component */}
             {
                 Object.keys(RoutesMapping)
                 .filter((routeMapKey)=> RoutesMapping[routeMapKey].showInMenu)
                 .map((routeMapKey, index) => (
-                            <ListItem key={index} disablePadding onClick={() => changeTabRequest(RoutesMapping[routeMapKey].url)}>
-                                <ListItemButton selected={RoutesMapping[routeMapKey].url === currentTab}>
-                                    <ListItemIcon>
-                                        {RoutesMapping[routeMapKey].menuIcon}
-                                    </ListItemIcon>
-                                    <ListItemText primary={routeMapKey} />
-                                </ListItemButton>
-                            </ListItem>
-                        ))
+                    <ListItem key={index} disablePadding onClick={() => changeTabRequest(RoutesMapping[routeMapKey].url)}>
+                        <ListItemButton selected={RoutesMapping[routeMapKey].url === currentTab}>
+                            <ListItemIcon>
+                                {RoutesMapping[routeMapKey].menuIcon}
+                            </ListItemIcon>
+                            <ListItemText primary={routeMapKey} />
+                        </ListItemButton>
+                    </ListItem>
+                ))
             }
         </List>
         <Divider />
@@ -99,14 +92,11 @@ export default function TopBarWithDrawer() {
     );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={top_bar_with_drawer_css.main_container}>
         {/* Title Bar */}
         <AppBar 
             component="nav" 
-            sx={{ 
-                backgroundColor: "#FFFFFF",
-                flexGrow: 1
-            }}
+            sx={top_bar_with_drawer_css.app_bar_container}
         >
             <Toolbar>
                 {/* Hamburger Menu Icon */}
@@ -114,12 +104,7 @@ export default function TopBarWithDrawer() {
                     size="large"
                     edge="start"
                     aria-label="open drawer"
-                    sx={{ 
-                        mr: 2,
-                        borderRadius: "10px",
-                        border: "1px solid",
-                        borderColor: "#E0E3E7"
-                    }}
+                    sx={top_bar_with_drawer_css.app_bar_hamburger_icon}
                     onClick={toggleDrawer("left", true)}
                 >
                     <MenuIcon />
@@ -127,19 +112,12 @@ export default function TopBarWithDrawer() {
                 
                 {/* Page Title Text Goes Here */}
                 <Container
-                    sx={{
-                        display: {display: "flex"},
-                        direction: "row",
-                        alignItems:"center",
-                        justifyContent: "center"
-                    }}
+                    sx={top_bar_with_drawer_css.app_bar_page_title_contianer}
                 >
                     <Typography
                         component="div"
                         variant="h6"
-                        sx={{
-                            display: {color: "black", fontWeight: "bold", fontSize: 30}
-                        }}
+                        sx={top_bar_with_drawer_css.app_bar_page_title_text}
                     >
                         {
                             location.pathname.split("/")[1] === "" ?
@@ -154,12 +132,7 @@ export default function TopBarWithDrawer() {
                 <IconButton
                     size="small"
                     edge="end"
-                    sx={{ 
-                        ml: 2, 
-                        mr: -2,
-                        display: {color: "black"}, 
-                        backgroundColor: 'transparent'
-                    }}
+                    sx={top_bar_with_drawer_css.app_bar_right_corner_logo}
                     disabled={true}
                 >
                     {LogoOnly}
@@ -175,7 +148,7 @@ export default function TopBarWithDrawer() {
                 open={state["left"]}
                 onClose={toggleDrawer("left", false)}
             >
-                {list("left")}
+                {menu_list("left")}
             </Drawer>
         </React.Fragment>
     </Box>

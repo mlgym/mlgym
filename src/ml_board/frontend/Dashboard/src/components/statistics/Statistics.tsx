@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import { useAppSelector } from "../../app/hooks";
 import { getLastPing, getReceivevMsgCount, getThroughput, isConnected } from "../../redux/status/statusSlice";
-import './Statistics.css';
+import statistics_css from "./StatisticsCss";
 
 export default function Statistics() {
     // NOTE: for micro performance this component can be divide into smaller components to avoid unnecessary rerendering
@@ -13,43 +13,37 @@ export default function Statistics() {
     const throughput = useAppSelector(getThroughput);
 
     return (
-        <Box sx={{
-            width: 250,
-            position: 'fixed',
-            display: "flex",
-            flexDirection: "column",
-            bottom: 0,
-        }}>
-            <div className="statistics-containers">
+        <Box sx={statistics_css.main_container}>
+            <div style={statistics_css.sub_container}>
                 Connected: {
                     isSocketConnected ?
-                        <span className="statistics-containers-span-connected">
+                        <span style={statistics_css.span_connected}>
                             Yes
                         </span>
                         :
-                        <span className="statistics-containers-span-disconnected">
+                        <span style={statistics_css.span_disconnected}>
                             No
                         </span>
                 }
             </div>
             <Divider />
-            <div className="statistics-containers">
+            <div style={statistics_css.sub_container}>
                 Messages received:
-                <span className="statistics-containers-span-general">
+                <span style={statistics_css.span_general}>
                     {receivedMsgCount}
                 </span>
             </div>
             <Divider />
-            <div className="statistics-containers">
+            <div style={statistics_css.sub_container}>
                 Ping:
-                <span className="statistics-containers-span-ping">
+                <span style={statistics_css.span_ping}>
                     {ping} ms
                 </span>
             </div>
             <Divider />
-            <div className="statistics-containers">
+            <div style={statistics_css.sub_container}>
                 Throughput:
-                <span className="statistics-containers-span-general">
+                <span style={statistics_css.span_general}>
                     {throughput}
                 </span>
             </div>

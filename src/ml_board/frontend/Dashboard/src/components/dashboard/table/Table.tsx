@@ -5,8 +5,7 @@ import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
 import { AgGridReact } from "ag-grid-react";
 import { useCallback, useMemo } from 'react';
 // styles
-import './Table.scss';
-
+import table_css from './TableCss';
 
 interface columnDefinition {
   field: string;
@@ -29,7 +28,7 @@ function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
   const onCellClicked = useCallback((event: CellClickedEvent) => { console.log(event) }, []);
 
   return (
-    <div className="ag-theme-alpine" id="ag-grid-container">
+    <div className="ag-theme-alpine" style={table_css.ag_grid_container}>
       <Toolbar />
       <AgGridReact
         defaultColDef={defaultColDef}
