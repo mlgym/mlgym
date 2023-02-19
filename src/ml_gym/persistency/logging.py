@@ -138,7 +138,8 @@ class ExperimentStatusLogger:
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
 
-    def log_checkpoint(self, epoch: int, model_state_dict=None, optimizer_state_dict=None, stateful_components_state_dict=None):
+    def log_checkpoint(self, epoch: int, model_state_dict=None, optimizer_state_dict=None, lr_scheduler_state_dict=None,
+                       stateful_components_state_dict=None):
         def get_chunks(binary_stream, binary_stream_chunk_size: int):
             stream_length = len(binary_stream)
             num_chunks = math.ceil(stream_length/binary_stream_chunk_size)
@@ -148,6 +149,7 @@ class ExperimentStatusLogger:
         data_streams = {
             "model": pickle.dumps(model_state_dict) if model_state_dict is not None else None,
             "optimizer": pickle.dumps(optimizer_state_dict) if optimizer_state_dict is not None else None,
+            "lr_scheduler": pickle.dumps(lr_scheduler_state_dict) if lr_scheduler_state_dict is not None else None,
             "stateful_components": pickle.dumps(stateful_components_state_dict) if stateful_components_state_dict is not None else None
         }
 
