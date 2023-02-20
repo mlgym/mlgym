@@ -124,3 +124,8 @@ class InvalidPathError(Exception):
 class CheckpointEntityError(Exception):
     """Raised when there is an error within the checkpoint entity."""
     pass
+
+
+class EarlyStoppingCriterionFulfilledError(Exception):
+    """Raised when the early stopping criterion in the gym job was fulfilled."""
+    pass
