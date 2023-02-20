@@ -16,12 +16,11 @@ class WorkerProcess(Process):
         jobs_done_count = 0
         for job in iter(job_q.get, None):  # https://stackoverflow.com/a/21157892
             job.status = JobStatus.RUNNING
-            job.device = device
             job.executing_process_id = self.process_id
             job.starting_time = time.time()
             job_update_q.put(deepcopy(job))
             if job.job_type == JobType.CALC:
-                self._do_calc(job)
+                self._do_calc(job, device=device)
             job.finishing_time = time.time()
             job.status = JobStatus.DONE
             jobs_done_count += 1
@@ -29,9 +28,9 @@ class WorkerProcess(Process):
             if job.job_type == JobType.TERMINATE or num_jobs_to_perform == jobs_done_count:
                 break
 
-    def _do_calc(self, job: Job):
+    def _do_calc(self, job: Job, device: torch.device):
         try:
-            job.execute()
+            job.execute(device=device)
         except Exception as e:
             job.error = str(e)
             job.stacktrace = traceback.format_exc()

@@ -14,27 +14,27 @@ class JobStatusLoggingSubscriber(JobStatusSubscriberIF):
         self._logger = logger
 
     def callback_job_event(self, job: Job):
-        representation = {"job_id": job.job_id, "job_type": job.job_type, "grid_search_id": job.grid_search_id, "experiment_id": job.experiment_id, "status": job.status,
+        representation = {"job_id": job.job_id, "job_type": job.job_type, "grid_search_id": job.grid_search_id,
+                          "experiment_id": job.experiment_id, "status": job.status,
                           "starting_time": job.starting_time, "finishing_time": job.finishing_time, "error": job.error,
                           "stacktrace": job.stacktrace, "device": job.device}
         self._logger.log_job_status(**representation)
 
 
 class Pool:
-    def __init__(self, num_processes: int, devices: List[torch.device], max_jobs_per_process: int = 1,
-                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None):
+    def __init__(self, num_processes: int, devices: List[torch.device],
+                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable, max_jobs_per_process: int = 1):
         self.num_processes = num_processes
         self.job_q = Queue()
         self.job_update_q = Queue()
         self.devices = devices
         self.worker_processes = []
         self.max_jobs_per_process = max_jobs_per_process
+        logger_collection = logger_collection_constructable.construct()
+        self.job_status_logger = JobStatusLogger(logger=logger_collection)
+        subscriber = JobStatusLoggingSubscriber(self.job_status_logger)
         self.job_collection = JobCollection()
-        if logger_collection_constructable is not None:
-            logger_collection = logger_collection_constructable.construct()
-            job_status_logger = JobStatusLogger(logger=logger_collection)
-            subscriber = JobStatusLoggingSubscriber(job_status_logger)
-            self.job_collection.add_subscriber(subscriber)
+        self.job_collection.add_subscriber(subscriber)
 
     def add_job(self, job: Job):
         self.job_q.put(job)
@@ -66,6 +66,8 @@ class Pool:
                 pass
             if updated_job.status == JobStatus.DONE and updated_job.job_type == JobType.CALC:
                 self.worker_processes[updated_job.executing_process_id].recreate_process_if_done()
+
+        self.job_status_logger.disconnect()
 
     def create_or_replace_process(self, process_id: int, num_jobs_to_perform: int):
         process = WorkerProcessWrapper(process_id=process_id,

@@ -39,11 +39,6 @@ class Job(JobIF):
         self.executing_process_id = -1
         self.error = None
         self.stacktrace = None
-        self._device: torch.device = torch.device("cpu")
-
-    @property
-    def device(self) -> torch.device:
-        return self._device
 
     @property
     def experiment_id(self) -> str:
@@ -59,12 +54,9 @@ class Job(JobIF):
         else:
             return None
 
-    @device.setter
-    def device(self, value: torch.device):
-        self._device = value
-
-    def execute(self):
-        self.param_dict["device"] = self._device
+    def execute(self, device: torch.device = None):
+        if device is not None:
+            self.param_dict["device"] = self._device
         return self.fun(blueprint=self.blueprint, **self.param_dict)
 
 
