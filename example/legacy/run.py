@@ -6,7 +6,7 @@ from conv_net_blueprint import ConvNetBluePrint
 from ml_gym.starter import mlgym_entry_train, mlgym_entry_warm_start
 from ml_gym.validation.validator_factory import get_validator
 from ml_gym.io.config_parser import YAMLConfigLoader
-from typing import List, Dict, Type
+from typing import List
 from ml_gym.persistency.io import GridSearchAPIClientConfig, GridSearchAPIClientConstructableIF, GridSearchAPIClientConstructable, \
     GridSearchAPIClientType
 from pathlib import Path

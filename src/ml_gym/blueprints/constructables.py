@@ -15,12 +15,12 @@ from ml_gym.optimizers.optimizer_factory import OptimizerFactory
 from ml_gym.models.nn.net import NNModel
 from collections.abc import Mapping
 from ml_gym.registries.class_registry import ClassRegistry
-from ml_gym.gym.trainer import LMTrainer, Trainer, TrainComponent, InferenceComponent
+from ml_gym.gym.trainers.standard_trainer import LMTrainer, Trainer, TrainComponent, InferenceComponent
 from ml_gym.loss_functions.loss_functions import Loss
 from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score, balanced_accuracy_score
 from ml_gym.metrics.metrics import Metric, binary_aupr_score, binary_auroc_score
 from ml_gym.metrics.metric_factory import MetricFactory
-from ml_gym.gym.evaluator import Evaluator, EvalComponent
+from ml_gym.gym.evaluators.evaluator import Evaluator, EvalComponent
 from ml_gym.data_handling.postprocessors.factory import ModelGymInformedIteratorFactory
 from ml_gym.data_handling.postprocessors.collator import Collator
 from ml_gym.gym.post_processing import PredictPostProcessingIF, SoftmaxPostProcessorImpl, \

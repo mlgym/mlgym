@@ -15,7 +15,7 @@ from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 import tqdm
-from ml_gym.gym.jobs import AbstractGymJob
+from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 
 
