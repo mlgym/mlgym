@@ -3,7 +3,7 @@
 from typing import List, Dict
 import pytest
 from ml_gym.blueprints.constructables import Requirement, EvalComponentConstructable
-from ml_gym.gym.evaluator import EvalComponent
+from ml_gym.gym.evaluators.evaluator import EvalComponent
 from pytests.blueprints.constructables.test_train_component_constructable import RegistryFixture, DataLoaderFixture
 
 
