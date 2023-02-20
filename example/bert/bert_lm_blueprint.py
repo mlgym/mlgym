@@ -6,7 +6,7 @@ from ml_gym.persistency.logging import ExperimentStatusLogger, MLgymStatusLogger
 import torch
 from ml_gym.blueprints.constructables import ComponentConstructable, ModelRegistryConstructable
 from ml_gym.blueprints.blue_prints import BluePrint
-from ml_gym.gym.jobs import AbstractGymJob, GymJobFactory
+from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob, GymJobFactory
 from ml_gym.batching.batch import DatasetBatch
 from dataclasses import dataclass
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector
@@ -17,7 +17,6 @@ from transformers import DataCollatorForLanguageModeling, BertTokenizerFast
 from data_stack.dataset.meta import MetaFactory
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 from datasets import load_from_disk
-
 from mlm_loss_function import LMLossFunctionRegistryConstructable
 
 
@@ -72,12 +71,10 @@ class MyModelRegistryConstructable(ModelRegistryConstructable):
 
 class BERTLMBluePrint(BluePrint):
     def __init__(self, run_mode: RunMode, config: Dict, num_epochs: int, grid_search_id: str,
-                 gs_api_client_constructable: GridSearchAPIClientConstructableIF,
                  experiment_id: str, external_injection: Dict[str, Any] = None,
-                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None,
                  warm_start_epoch: int = 0):
-        super().__init__(run_mode, num_epochs, config, grid_search_id, gs_api_client_constructable,
-                         experiment_id, external_injection, logger_collection_constructable, warm_start_epoch)
+        super().__init__(run_mode, num_epochs, config, grid_search_id,
+                         experiment_id, external_injection, warm_start_epoch)
 
     @staticmethod
     def construct_components(config: Dict, component_names: List[str], device: torch.device, external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -99,20 +96,8 @@ class BERTLMBluePrint(BluePrint):
         components = component_factory.build_components_from_config(config, component_names)
         return components
 
-    def construct(self, device: torch.device = None) -> AbstractGymJob:
-        component_names = ["model", "trainer", "optimizer", "evaluator", "early_stopping_strategy", "checkpointing_strategy"]
+    def construct(self, device: torch.device = None) -> Dict:
+        component_names = ["model", "trainer", "optimizer", "evaluator", "early_stopping_strategy", "checkpointing_strategy", "lr_scheduler"]
         components = BERTLMBluePrint.construct_components(self.config, component_names, device, self.external_injection)
 
-        logger_collection = self.logger_collection_constructable.construct()
-        experiment_status_logger = ExperimentStatusLogger(logger=logger_collection, grid_search_id=self.grid_search_id,
-                                                          experiment_id=self.experiment_id)
-
-        gym_job = GymJobFactory.get_gym_job(run_mode=self.run_mode,
-                                            grid_search_id=self.grid_search_id,
-                                            experiment_id=self.experiment_id,
-                                            num_epochs=self.num_epochs,
-                                            warm_start_epoch=self.warm_start_epoch,
-                                            experiment_status_logger=experiment_status_logger,
-                                            gs_api_client=self.gs_api_client_constructable.construct(),
-                                            **components)
-        return gym_job
+        return components

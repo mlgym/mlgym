@@ -122,7 +122,6 @@ train_component:
       tag: mlm_entropy_loss
       vocab_size: 30522
 
-
 trainer:
   component_type_key: TRAINER
   variant_key: LM
