@@ -129,3 +129,8 @@ class CheckpointEntityError(Exception):
 class EarlyStoppingCriterionFulfilledError(Exception):
     """Raised when the early stopping criterion in the gym job was fulfilled."""
     pass
+
+
+class GymError(Exception):
+    """Raised when an error occurs within the gym or during gym instantiation."""
+    pass

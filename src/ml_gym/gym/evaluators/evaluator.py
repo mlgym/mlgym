@@ -99,7 +99,6 @@ class EvalComponent(EvalComponentIF):
         inference_result_batches_cpu = []
         num_batches = len(dataset_loader_iterator)
         processed_batches = 0
-        update_lag = max(1, int(num_batches/10))
         for batch in dataset_loader_iterator:
             inference_result_batch = self.forward_batch(dataset_batch=batch, model=model, device=device, postprocessors=post_processors)
             batch_loss = self._calculate_loss_scores(inference_result_batch, split_loss_funs)
@@ -109,13 +108,12 @@ class EvalComponent(EvalComponentIF):
                                                                 device=torch.device("cpu"))
             inference_result_batches_cpu.append(irb_filtered)
             processed_batches += 1
-            if batch_processed_callback_fun is not None and (processed_batches % update_lag == 0 or processed_batches == num_batches):
-                splits = [d.dataset_tag for _, d in self.dataset_loaders.items()]
-                batch_processed_callback_fun(status="evaluation",
-                                             num_batches=num_batches,
-                                             current_batch=processed_batches,
-                                             splits=splits,
-                                             current_split=dataset_loader.dataset_tag)
+            splits = [d.dataset_tag for _, d in self.dataset_loaders.items()]
+            batch_processed_callback_fun(status="evaluation",
+                                         num_batches=num_batches,
+                                         current_batch=processed_batches,
+                                         splits=splits,
+                                         current_split=dataset_loader.dataset_tag)
 
         # calc metrics
         try:
