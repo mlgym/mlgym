@@ -2,16 +2,13 @@ from ml_gym.error_handling.exception import DatasetNotFoundError
 from typing import Dict, List, Any
 from ml_gym.data_handling.postprocessors.factory import ModelGymInformedIteratorFactory
 from ml_gym.modes import RunMode
-from ml_gym.persistency.logging import ExperimentStatusLogger, MLgymStatusLoggerCollectionConstructable
 import torch
 from ml_gym.blueprints.constructables import ComponentConstructable, ModelRegistryConstructable
 from ml_gym.blueprints.blue_prints import BluePrint
-from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob, GymJobFactory
 from ml_gym.batching.batch import DatasetBatch
 from dataclasses import dataclass
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector
 from ml_gym.data_handling.postprocessors.collator import Collator
-from ml_gym.persistency.io import GridSearchAPIClientConstructableIF
 from bert_model import BERTLM
 from transformers import DataCollatorForLanguageModeling, BertTokenizerFast
 from data_stack.dataset.meta import MetaFactory
@@ -77,7 +74,8 @@ class BERTLMBluePrint(BluePrint):
                          experiment_id, external_injection, warm_start_epoch)
 
     @staticmethod
-    def construct_components(config: Dict, component_names: List[str], device: torch.device, external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
+    def construct_components(config: Dict, component_names: List[str], device: torch.device,
+                             external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
         if external_injection is not None:
             injection_mapping = {"id_bert_lm_collator": BERRTLMCollator,
                                  "id_computation_device": device,
@@ -96,7 +94,7 @@ class BERTLMBluePrint(BluePrint):
         components = component_factory.build_components_from_config(config, component_names)
         return components
 
-    def construct(self, device: torch.device = None) -> Dict:
+    def construct(self, device: torch.device = None) -> Dict[str, Any]:
         component_names = ["model", "trainer", "optimizer", "evaluator", "early_stopping_strategy", "checkpointing_strategy", "lr_scheduler"]
         components = BERTLMBluePrint.construct_components(self.config, component_names, device, self.external_injection)
 
