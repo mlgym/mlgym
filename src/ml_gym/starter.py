@@ -5,7 +5,7 @@ from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.gym.gym import Gym
 from ml_gym.modes import RunMode
 from ml_gym.persistency.io import GridSearchAPIClientConstructableIF, GridSearchAPIClientIF
-from ml_gym.persistency.logging import LoggerConstructableIF, MLgymStatusLoggerCollectionConstructable
+from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
 from ml_gym.validation.validator import ValidatorIF
 from datetime import datetime
 from ml_gym.io.config_parser import YAMLConfigLoader
@@ -35,11 +35,9 @@ class MLGymTrainStarter:
 
 
 def get_blueprints_train(blueprint_class: Type[BluePrint],
-                         logger_collection_constructable: LoggerConstructableIF,
                          gs_api_client_constructable: GridSearchAPIClientConstructableIF,
                          gs_config_raw_string: str,
                          validator: ValidatorIF,
-                         num_epochs: int,
                          validation_strategy_config_raw_string: str = None):
 
     def save_blueprint_config(blueprint: BluePrint, gs_api_client: GridSearchAPIClientIF):
@@ -63,10 +61,7 @@ def get_blueprints_train(blueprint_class: Type[BluePrint],
 
     blueprints = validator.create_blueprints(grid_search_id=grid_search_id,
                                              blue_print_type=blueprint_class,
-                                             gs_config=gs_config,
-                                             num_epochs=num_epochs,
-                                             gs_api_client_constructable=gs_api_client_constructable,
-                                             logger_collection_constructable=logger_collection_constructable)
+                                             gs_config=gs_config)
 
     for blueprint in blueprints:
         save_blueprint_config(blueprint=blueprint, gs_api_client=gs_api_client)
@@ -76,7 +71,6 @@ def get_blueprints_train(blueprint_class: Type[BluePrint],
 
 def get_blueprints_warmstart(blueprint_class: Type[BluePrint],
                              grid_search_id: str,
-                             logger_collection_constructable: LoggerConstructableIF,
                              gs_api_client_constructable: GridSearchAPIClientConstructableIF,
                              num_epochs: int):
     gs_api_client = gs_api_client_constructable.construct()
@@ -85,11 +79,8 @@ def get_blueprints_warmstart(blueprint_class: Type[BluePrint],
     blueprints = [BluePrint.create_blueprint(blue_print_class=blueprint_class,
                                              run_mode=RunMode.WARM_START,
                                              experiment_config=experiment_status.experiment_config,
-                                             num_epochs=num_epochs,
                                              warm_start_epoch=experiment_status.last_checkpoint_id,
                                              grid_search_id=grid_search_id,
-                                             experiment_id=experiment_status.experiment_id,
-                                             logger_collection_constructable=logger_collection_constructable,
-                                             gs_api_client_constructable=gs_api_client_constructable)
+                                             experiment_id=experiment_status.experiment_id)
                   for experiment_status in experiment_statuses if experiment_status.last_checkpoint_id < num_epochs]
     return blueprints
