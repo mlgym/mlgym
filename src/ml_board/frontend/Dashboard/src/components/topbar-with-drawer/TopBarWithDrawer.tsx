@@ -27,7 +27,7 @@ export default function TopBarWithDrawer() {
     let currentTab = useAppSelector(selectTab);
     const dispatch = useAppDispatch();
     const [state, setState] = React.useState({
-        left: false,
+        menuDrawer: false,
     });
 
     React.useEffect(() => {
@@ -41,12 +41,8 @@ export default function TopBarWithDrawer() {
         }
     }, [location.pathname])
 
-    // ASK Vijul: Duplication ?
-    const toggleDrawer = (anchor: string, open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
-        if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')) {
-            return;
-        }
-        setState({ ...state, [anchor]: open });
+    const toggleMenuDrawer = (drawerState: string, open: boolean) => {
+        setState({ ...state, [drawerState]: open });
     };
 
     const navigate = useNavigate();
@@ -56,12 +52,11 @@ export default function TopBarWithDrawer() {
         navigate(text);
     }
 
-    const menu_list = (anchor: string) => (
+    const menu_list = () => (
     <Box
         sx={top_bar_with_drawer_css.menu_container}
         role="presentation"
-        onClick={toggleDrawer(anchor, false)}
-        onKeyDown={toggleDrawer(anchor, false)}
+        onClick={()=>toggleMenuDrawer("menuDrawer", false)}
     >
         {/* MLGym Logo with Text */}
         <Container sx={top_bar_with_drawer_css.logo_inside_menu}>
@@ -105,7 +100,7 @@ export default function TopBarWithDrawer() {
                     edge="start"
                     aria-label="open drawer"
                     sx={top_bar_with_drawer_css.app_bar_hamburger_icon}
-                    onClick={toggleDrawer("left", true)}
+                    onClick={()=>toggleMenuDrawer("menuDrawer", true)}
                 >
                     <MenuIcon />
                 </IconButton>
@@ -119,6 +114,10 @@ export default function TopBarWithDrawer() {
                         variant="h6"
                         sx={top_bar_with_drawer_css.app_bar_page_title_text}
                     >
+                        {/* 
+                            Just capitalizing the first letter of the selected page name. As the name from `location.pathname.split("/")[1]` would be the same as RoutesMapping.<MenuKey>.url --> it will be in lowercase.
+                            And, if the URL === "" then it's the home page, which will be the Graphs page by default. 
+                        */}
                         {
                             location.pathname.split("/")[1] === "" ?
                             RoutesMapping.Graphs.url.charAt(0).toUpperCase() + RoutesMapping.Graphs.url.slice(1)
@@ -144,11 +143,11 @@ export default function TopBarWithDrawer() {
         <React.Fragment>
             <Drawer
                 variant="temporary"
-                anchor={"left"}
-                open={state["left"]}
-                onClose={toggleDrawer("left", false)}
+                anchor={"left"} // MUI-Drawer property: tells from which side of the screen, the drawer should appear
+                open={state["menuDrawer"]}
+                onClose={()=>toggleMenuDrawer("menuDrawer", false)}
             >
-                {menu_list("left")}
+                {menu_list()}
             </Drawer>
         </React.Fragment>
     </Box>

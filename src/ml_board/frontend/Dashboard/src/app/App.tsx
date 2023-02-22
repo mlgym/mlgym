@@ -21,7 +21,7 @@ import app_css from './AppCss';
 export default function App() {
 
     const [state, setState] = useState({
-        bottom: false,
+        filterDrawer: false,
         filterText: ""
     })
     const location = useLocation();
@@ -90,13 +90,12 @@ export default function App() {
             }
         }
     }
-
-    // ASK Vijul: Duplication ?
-    const toggleDrawer = (anchor: string, open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
-        if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')) {
-            return;
-        }
-        setState({ ...state, [anchor]: open });
+    
+    const toggleFilterDrawer = (drawerState: string, open: boolean) => {
+        // if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')) {
+        //     return;
+        // }
+        setState({ ...state, [drawerState]: open });
     }
 
     function changeFilterText(text: string) {
@@ -137,7 +136,7 @@ export default function App() {
                             variant="extended"
                             color="primary"
                             aria-label="add"
-                            onClick={toggleDrawer("bottom", true)}
+                            onClick={()=>toggleFilterDrawer("filterDrawer", true)}
                         >
                             <FilterAltIcon /> Filter
                         </Fab>
@@ -148,9 +147,9 @@ export default function App() {
             {/* Filter Popup */}
             <React.Fragment>
                 <Drawer
-                    anchor={"bottom"}
-                    open={state["bottom"]}
-                    onClose={toggleDrawer("bottom", false)}
+                    anchor={"bottom"} // MUI-Drawer property: tells from which side of the screen, the drawer should appear
+                    open={state["filterDrawer"]}
+                    onClose={()=>toggleFilterDrawer("filterDrawer", false)}
                     PaperProps={{
                         style: app_css.filter
                     }}
