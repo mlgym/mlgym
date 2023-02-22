@@ -12,6 +12,8 @@ import tqdm
 from abc import ABC, abstractmethod
 from enum import Enum
 
+torch.multiprocessing.set_start_method('spawn', force=True)
+
 
 class Gym(ABC):
     def __init__(self, logger_collection_constructable: MLgymStatusLoggerCollectionConstructable):
@@ -46,7 +48,6 @@ class ParallelSingleNodeGym(Gym):
     def run(self, blueprints: List[BluePrint]):
         """Executes the jobs. Note that this function blocks until all jobs have been executed!
         """
-        torch.multiprocessing.set_start_method('spawn', force=True)
         jobs = self.get_jobs_from_blueprints(blueprints, exec_fun=self.exec_fun)
         for job in jobs:
             self.pool.add_job(job)
@@ -82,46 +83,51 @@ class GymType(Enum):
 class GymFactory:
 
     @staticmethod
-    def get_sequential_gym(gridsearch_id: str, logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
+    def get_sequential_gym(logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
                            gs_restful_api_client_constructable: GridSearchAPIClientConstructable,
-                           device_id: int = None, run_accelereate_env: bool = False) -> Gym:
+                           num_epochs: int, device_id: int = None, run_accelereate_env: bool = False) -> Gym:
         if run_accelereate_env:
             exec_fun = partial(GymFactory._run_accelerate_gym_job, logger_collection_constructable=logger_collection_constructable,
-                               gs_restful_api_client_constructable=gs_restful_api_client_constructable)
+                               gs_restful_api_client_constructable=gs_restful_api_client_constructable,
+                               num_epochs=num_epochs)
             if device_id is not None:
                 raise GymError("You cannot run the accelerate env on a specific device id")
         else:
             exec_fun = partial(GymFactory._run_standard_gym_job, logger_collection_constructable=logger_collection_constructable,
-                               gs_restful_api_client_constructable=gs_restful_api_client_constructable)
+                               gs_restful_api_client_constructable=gs_restful_api_client_constructable,
+                               num_epochs=num_epochs)
 
-        return SequentialGym(job_id_prefix=gridsearch_id, logger_collection_constructable=logger_collection_constructable,
+        return SequentialGym(logger_collection_constructable=logger_collection_constructable,
                              exec_fun=exec_fun,
                              device_id=device_id)
 
     @staticmethod
-    def get_parallel_single_node_gym(gridsearch_id: str, logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
+    def get_parallel_single_node_gym(logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
                                      gs_restful_api_client_constructable: GridSearchAPIClientConstructable,
-                                     process_count: int = 1, device_ids: List[int] = None) -> Gym:
+                                     num_epochs: int, process_count: int = 1, device_ids: List[int] = None) -> Gym:
 
         exec_fun = partial(GymFactory._run_standard_gym_job, logger_collection_constructable=logger_collection_constructable,
-                           gs_restful_api_client_constructable=gs_restful_api_client_constructable)
+                           gs_restful_api_client_constructable=gs_restful_api_client_constructable,
+                           num_epochs=num_epochs)
 
-        return ParallelSingleNodeGym(job_id_prefix=gridsearch_id, logger_collection_constructable=logger_collection_constructable,
+        return ParallelSingleNodeGym(logger_collection_constructable=logger_collection_constructable,
                                      process_count=process_count, device_ids=device_ids, exec_fun=exec_fun)
 
     @staticmethod
-    def _run_standard_gym_job(blueprint: BluePrint, device: torch.device,
+    def _run_standard_gym_job(blueprint: BluePrint, device: torch.device, num_epochs: int,
                               logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
                               gs_restful_api_client_constructable: GridSearchAPIClientConstructable):
-        gym_job = GymJobFactory.get_gym_job_from_blueprint(blueprint, device=device,
+        gym_job = GymJobFactory.get_gym_job_from_blueprint(blueprint, device=device, num_epochs=num_epochs,
                                                            logger_collection_constructable=logger_collection_constructable,
                                                            gs_restful_api_client_constructable=gs_restful_api_client_constructable)
         return gym_job.execute(device=device)
 
     @staticmethod
-    def _run_accelerate_gym_job(blueprint: BluePrint, logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
+    def _run_accelerate_gym_job(blueprint: BluePrint, num_epochs: int,
+                                logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
                                 gs_restful_api_client_constructable: GridSearchAPIClientConstructable):
-        gym_job = GymJobFactory.get_hf_accelerate_gymjob_from_blueprint(blueprint,
-                                                                        logger_collection_constructable=logger_collection_constructable,
-                                                                        gs_restful_api_client_constructable=gs_restful_api_client_constructable)
+        gym_job = GymJobFactory.get_accelerate_gymjob_from_blueprint(blueprint,
+                                                                     num_epochs=num_epochs,
+                                                                     logger_collection_constructable=logger_collection_constructable,
+                                                                     gs_restful_api_client_constructable=gs_restful_api_client_constructable)
         return gym_job.execute()

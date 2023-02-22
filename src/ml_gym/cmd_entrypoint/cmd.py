@@ -54,25 +54,25 @@ class LoggingConfiguration:
 
 def get_gym_from_environment_config(env_config: Union[MultiProcessingEnvironmentConfig, MainProcessEnvironmentConfig,
                                                       AccelerateEnvironmentConfig],
-                                    grid_search_id: str, logger_collection_constructable: LoggerConstructableIF,
-                                    gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF) -> Gym:
+                                    logger_collection_constructable: LoggerConstructableIF,
+                                    gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF,
+                                    num_epochs: int) -> Gym:
 
     if isinstance(env_config, MainProcessEnvironmentConfig):
-        gym = GymFactory.get_sequential_gym(job_id_prefix=grid_search_id, logger_collection_constructable=logger_collection_constructable,
+        gym = GymFactory.get_sequential_gym(logger_collection_constructable=logger_collection_constructable,
                                             gs_restful_api_client_constructable=gs_restful_api_client_constructable,
-
                                             device_id=env_config.computation_device_id)
     elif isinstance(env_config, AccelerateEnvironmentConfig):
-        gym = GymFactory.get_sequential_gym(job_id_prefix=grid_search_id, logger_collection_constructable=logger_collection_constructable,
+        gym = GymFactory.get_sequential_gym(logger_collection_constructable=logger_collection_constructable,
                                             gs_restful_api_client_constructable=gs_restful_api_client_constructable,
 
                                             run_accelereate_env=True)
-    elif isinstance(env_config, AccelerateEnvironmentConfig):
-        gym = GymFactory.get_parallel_single_node_gym(job_id_prefix=grid_search_id,
-                                                      logger_collection_constructable=logger_collection_constructable,
+    elif isinstance(env_config, MultiProcessingEnvironmentConfig):
+        gym = GymFactory.get_parallel_single_node_gym(logger_collection_constructable=logger_collection_constructable,
                                                       gs_restful_api_client_constructable=gs_restful_api_client_constructable,
                                                       process_count=env_config.process_count,
-                                                      device_ids=env_config.device_ids)
+                                                      num_epochs=num_epochs,
+                                                      device_ids=env_config.computation_device_ids)
     else:
         raise GymError("Did not provide correct env_config")
 
@@ -96,8 +96,8 @@ def get_grid_search_restful_api_client_constructable(endpoint: str) -> GridSearc
     return client_constructable
 
 
-def entry_train(blueprint_class: Type[BluePrint], gym: Gym, gs_config_path: str,
-                validation_strategy_config_path: str):
+def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, gs_config_path: str,
+                validation_strategy_config_path: str, gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF):
 
     gs_config_string = Path(gs_config_path).read_text()
     gs_config = YAMLConfigLoader.load_string(gs_config_string)
@@ -113,7 +113,9 @@ def entry_train(blueprint_class: Type[BluePrint], gym: Gym, gs_config_path: str,
 
     validator = get_validator(validation_mode, blueprint_class, RunMode.TRAIN, validation_strategy_config, gs_config)
 
-    blueprints = get_blueprints_train(blueprint_class=blueprint_class,
+    blueprints = get_blueprints_train(gridsearch_id=gridsearch_id,
+                                      gs_api_client_constructable=gs_restful_api_client_constructable,
+                                      blueprint_class=blueprint_class,
                                       gs_config_raw_string=gs_config_string,
                                       validation_strategy_config_raw_string=validation_strategy_config_string,
                                       validator=validator)
@@ -177,11 +179,11 @@ def get_logging_constructables(logging_config: LoggingConfiguration) -> Tuple[Lo
 
 def get_gym(env_config: Union[MultiProcessingEnvironmentConfig, AccelerateEnvironmentConfig, MainProcessEnvironmentConfig],
             logger_collection_constructable: LoggerConstructableIF,
-            gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF) -> Gym:
+            gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF,
+            num_epochs: int) -> Gym:
 
-    grid_search_id = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
-
-    gym = get_gym_from_environment_config(env_config=env_config, grid_search_id=grid_search_id,
+    gym = get_gym_from_environment_config(env_config=env_config,
+                                          num_epochs=num_epochs,
                                           logger_collection_constructable=logger_collection_constructable,
                                           gs_restful_api_client_constructable=gs_restful_api_client_constructable)
 
@@ -193,11 +195,13 @@ def run(blueprint_class: BluePrint, run_configuration_file_path):
     run_config, env_config, logging_config = parse_run_configuration(run_configuration_file_path=run_configuration_file_path)
 
     logger_collection_constructable, gs_restful_api_client_constructable = get_logging_constructables(logging_config)
-    gym = get_gym(env_config, logger_collection_constructable, gs_restful_api_client_constructable)
+    gym = get_gym(env_config, logger_collection_constructable, gs_restful_api_client_constructable, run_config.num_epochs)
 
     if isinstance(run_config, TrainRunConfiguration):
-        entry_train(blueprint_class=blueprint_class, gym=gym, gs_config_path=run_config.gs_config_path,
-                    validation_strategy_config_path=run_config.validation_config_path)
+        gridsearch_id = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+        entry_train(gridsearch_id=gridsearch_id, blueprint_class=blueprint_class, gym=gym, gs_config_path=run_config.gs_config_path,
+                    validation_strategy_config_path=run_config.validation_config_path,
+                    gs_restful_api_client_constructable=gs_restful_api_client_constructable)
     elif isinstance(run_config, WarmStartRunConfiguration):
         entry_warm_start(blueprint_class=blueprint_class, gym=gym, grid_search_id=run_config.gridsaerch_id,
                          gs_restful_api_client_constructable=gs_restful_api_client_constructable, num_epochs=run_config.num_epochs)

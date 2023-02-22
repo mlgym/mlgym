@@ -4,14 +4,15 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from ml_gym.error_handling.exception import ComponentConstructionError, InjectMappingNotFoundError, DependentComponentNotFoundError
 from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIteratorConstructable, \
-    DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, EarlyStoppingRegistryConstructable, EarlyStoppingStrategyConstructable, LMTrainerConstructable, LRSchedulerConstructable, OptimizerBundleConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
+    DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, EarlyStoppingRegistryConstructable, \
+    EarlyStoppingStrategyConstructable, LRSchedulerConstructable, OptimizerBundleConstructable, \
+    Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
     OptimizerConstructable, ModelRegistryConstructable, ModelConstructable, LossFunctionRegistryConstructable, \
     MetricFunctionRegistryConstructable, TrainerConstructable, EvaluatorConstructable, MappedLabelsIteratorConstructable, \
     FilteredLabelsIteratorConstructable, FeatureEncodedIteratorConstructable, CombinedDatasetIteratorConstructable, \
     DataCollatorConstructable, PredictionPostProcessingRegistryConstructable, TrainComponentConstructable, EvalComponentConstructable, \
     IteratorViewConstructable, OneHotEncodedTargetsIteratorConstructable, InMemoryDatasetIteratorConstructable, \
     ShuffledDatasetIteratorConstructable, CheckpointingStrategyConstructable, CheckpointingRegistryConstructable
-# from ml_gym.util.logger import LogLevel, ConsoleLogger
 
 
 class Injector:
@@ -133,7 +134,7 @@ class ComponentFactory:
             ComponentVariant("MODEL", "DEFAULT", ModelConstructable),
             ComponentVariant("TRAIN_COMPONENT", "DEFAULT", TrainComponentConstructable),
             ComponentVariant("TRAINER", "DEFAULT", TrainerConstructable),
-            ComponentVariant("TRAINER", "LM", LMTrainerConstructable),
+            # ComponentVariant("TRAINER", "LM", LMTrainerConstructable),
             ComponentVariant("EVAL_COMPONENT", "DEFAULT", EvalComponentConstructable),
             ComponentVariant("EVALUATOR", "DEFAULT", EvaluatorConstructable),
             ComponentVariant("EARLY_STOPPING_STRATEGY_REGISTRY", "DEFAULT", EarlyStoppingRegistryConstructable),

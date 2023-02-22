@@ -186,7 +186,6 @@ eval_component:
       - key: "ARG_MAX"
         prediction_subscription_key: *model_prediction_key_anchor
         prediction_publication_key: *postprocessing_argmax_key_anchor
-    train_split_name: train
     metrics_config:
       - key: F1_SCORE
         params:

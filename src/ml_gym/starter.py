@@ -34,7 +34,8 @@ class MLGymTrainStarter:
         return gym
 
 
-def get_blueprints_train(blueprint_class: Type[BluePrint],
+def get_blueprints_train(gridsearch_id: int,
+                         blueprint_class: Type[BluePrint],
                          gs_api_client_constructable: GridSearchAPIClientConstructableIF,
                          gs_config_raw_string: str,
                          validator: ValidatorIF,
@@ -47,19 +48,18 @@ def get_blueprints_train(blueprint_class: Type[BluePrint],
 
     gs_api_client = gs_api_client_constructable.construct()
 
-    grid_search_id = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
     gs_config = YAMLConfigLoader.load_string(gs_config_raw_string)
-    gs_api_client.add_config_string(grid_search_id=grid_search_id,
+    gs_api_client.add_config_string(grid_search_id=gridsearch_id,
                                     file_format=FileFormat.YAML,
                                     config_name="grid_search_config.yml",
                                     config=gs_config_raw_string)
 
     if validation_strategy_config_raw_string is not None:
-        gs_api_client.add_config_string(grid_search_id=grid_search_id,
+        gs_api_client.add_config_string(grid_search_id=gridsearch_id,
                                         config_name="validation_strategy_config.yml",
                                         config=validation_strategy_config_raw_string)
 
-    blueprints = validator.create_blueprints(grid_search_id=grid_search_id,
+    blueprints = validator.create_blueprints(grid_search_id=gridsearch_id,
                                              blue_print_type=blueprint_class,
                                              gs_config=gs_config)
 

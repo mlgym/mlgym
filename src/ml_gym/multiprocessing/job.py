@@ -6,9 +6,6 @@ from typing import Callable, Dict, List
 
 
 class JobIF:
-    @property
-    def device(self) -> torch.device:
-        raise NotImplementedError
 
     @property
     def experiment_id(self) -> str:
@@ -16,10 +13,6 @@ class JobIF:
 
     @property
     def grid_search_id(self) -> str:
-        raise NotImplementedError
-
-    @device.setter
-    def device(self, value: torch.device):
         raise NotImplementedError
 
     def execute(self):
@@ -55,9 +48,7 @@ class Job(JobIF):
             return None
 
     def execute(self, device: torch.device = None):
-        if device is not None:
-            self.param_dict["device"] = self._device
-        return self.fun(blueprint=self.blueprint, **self.param_dict)
+        return self.fun(blueprint=self.blueprint, device=device, **self.param_dict)
 
 
 class JobStatusSubscriberIF:

@@ -17,7 +17,7 @@ class JobStatusLoggingSubscriber(JobStatusSubscriberIF):
         representation = {"job_id": job.job_id, "job_type": job.job_type, "grid_search_id": job.grid_search_id,
                           "experiment_id": job.experiment_id, "status": job.status,
                           "starting_time": job.starting_time, "finishing_time": job.finishing_time, "error": job.error,
-                          "stacktrace": job.stacktrace, "device": job.device}
+                          "stacktrace": job.stacktrace}
         self._logger.log_job_status(**representation)
 
 
@@ -49,12 +49,11 @@ class Pool:
         # we have to add the termination jobs at the end of the queue such that the processes stop working and don't get stuck in jobs_q.get()
         termination_jobs = [Job(job_id=i+len(self.job_collection), fun=None, blueprint=None, param_dict=None,
                                 job_type=JobType.TERMINATE) for i in range(self.num_processes)]
-        print(f"num_processes: {self.num_processes}")
         self.add_jobs(termination_jobs)
         # create and start worker processes
-        for process_id in tqdm.tqdm(range(self.num_processes)):
+        for process_id in tqdm.tqdm(range(self.num_processes), desc="Creating processes"):
             self.create_or_replace_process(process_id, self.max_jobs_per_process)
-        for p in tqdm.tqdm(self.worker_processes):
+        for p in tqdm.tqdm(self.worker_processes, desc="Starting processes"):
             p.start()
         # wait until all jobs are done
         while not self.job_collection.done:

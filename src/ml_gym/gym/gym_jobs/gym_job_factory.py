@@ -10,7 +10,7 @@ import torch
 class GymJobFactory:
 
     @staticmethod
-    def get_gym_job_from_blueprint(blueprint: BluePrint, device: torch.device,
+    def get_gym_job_from_blueprint(blueprint: BluePrint, device: torch.device, num_epochs: int,
                                    logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
                                    gs_restful_api_client_constructable: GridSearchAPIClientConstructable) -> AbstractGymJob:
         components = blueprint.construct(device)
@@ -23,7 +23,7 @@ class GymJobFactory:
         gym_job = StandardGymJob(run_mode=blueprint.run_mode,
                                  grid_search_id=blueprint.grid_search_id,
                                  experiment_id=blueprint.experiment_id,
-                                 num_epochs=blueprint.num_epochs,
+                                 num_epochs=num_epochs,
                                  warm_start_epoch=blueprint.warm_start_epoch,
                                  experiment_status_logger=experiment_status_logger,
                                  gs_api_client=gs_api_client,
@@ -31,7 +31,7 @@ class GymJobFactory:
         return gym_job
 
     @staticmethod
-    def get_accelerate_gymjob_from_blueprint(blueprint: BluePrint,
+    def get_accelerate_gymjob_from_blueprint(blueprint: BluePrint, num_epochs: int,
                                              logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
                                              gs_restful_api_client_constructable: GridSearchAPIClientConstructable) -> AbstractGymJob:
         components = blueprint.construct()
@@ -44,7 +44,7 @@ class GymJobFactory:
         gym_job = AccelerateGymJob(run_mode=blueprint.run_mode,
                                    grid_search_id=blueprint.grid_search_id,
                                    experiment_id=blueprint.experiment_id,
-                                   num_epochs=blueprint.num_epochs,
+                                   num_epochs=num_epochs,
                                    warm_start_epoch=blueprint.warm_start_epoch,
                                    experiment_status_logger=experiment_status_logger,
                                    gs_api_client=gs_api_client,

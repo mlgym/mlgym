@@ -15,7 +15,7 @@ from ml_gym.optimizers.optimizer_factory import OptimizerFactory
 from ml_gym.models.nn.net import NNModel
 from collections.abc import Mapping
 from ml_gym.registries.class_registry import ClassRegistry
-from ml_gym.gym.trainers.standard_trainer import LMTrainer, Trainer, TrainComponent, InferenceComponent
+from ml_gym.gym.trainers.standard_trainer import Trainer, TrainComponent, InferenceComponent
 from ml_gym.loss_functions.loss_functions import Loss
 from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score, balanced_accuracy_score
 from ml_gym.metrics.metrics import Metric, binary_aupr_score, binary_auroc_score
@@ -454,7 +454,7 @@ class TrainComponentConstructable(ComponentConstructable):
                           for config in self.post_processors_config]
 
         inference_component = InferenceComponent(no_grad=False)
-        train_component = TrainComponent(inference_component, postprocessors, train_loss_fun, self.show_progress)
+        train_component = TrainComponent(inference_component, postprocessors, train_loss_fun)
         return train_component
 
 
@@ -464,20 +464,20 @@ class TrainerConstructable(ComponentConstructable):
     def _construct_impl(self) -> Trainer:
         train_loader: DatasetLoader = self.get_requirement("data_loaders")
         train_component: TrainComponent = self.get_requirement("train_component")
-        trainer = Trainer(train_component=train_component, train_loader=train_loader, verbose=True)
+        trainer = Trainer(train_component=train_component, train_loader=train_loader)
         return trainer
 
 
-@dataclass
-class LMTrainerConstructable(ComponentConstructable):
-    num_batches_per_epoch: int = None
+# @dataclass
+# class LMTrainerConstructable(ComponentConstructable):
+#     num_batches_per_epoch: int = None
 
-    def _construct_impl(self) -> Trainer:
-        train_loader: DatasetLoader = self.get_requirement("data_loaders")
-        train_component: TrainComponent = self.get_requirement("train_component")
-        trainer = LMTrainer(train_component=train_component, train_loader=train_loader,
-                            num_batches_per_epoch=self.num_batches_per_epoch, verbose=True)
-        return trainer
+#     def _construct_impl(self) -> Trainer:
+#         train_loader: DatasetLoader = self.get_requirement("data_loaders")
+#         train_component: TrainComponent = self.get_requirement("train_component")
+#         trainer = LMTrainer(train_component=train_component, train_loader=train_loader,
+#                             num_batches_per_epoch=self.num_batches_per_epoch, verbose=True)
+#         return trainer
 
 
 @dataclass
@@ -491,7 +491,7 @@ class EvalComponentConstructable(ComponentConstructable):
     metrics_computation_config: List[Dict] = None
     loss_computation_config: List[Dict] = None
 
-    def _construct_impl(self) -> Evaluator:
+    def _construct_impl(self) -> EvalComponent:
         dataset_loaders: Dict[str, DatasetLoader] = self.get_requirement("data_loaders")
         loss_function_registry: ClassRegistry = self.get_requirement("loss_function_registry")
         metric_registry: ClassRegistry = self.get_requirement("metric_registry")

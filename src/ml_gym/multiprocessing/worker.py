@@ -14,7 +14,8 @@ class WorkerProcess(Process):
     def work(self, job_q: Queue, job_update_q: Queue, num_jobs_to_perform: int, device: torch.device):
 
         jobs_done_count = 0
-        for job in iter(job_q.get, None):  # https://stackoverflow.com/a/21157892
+        while True:
+            job: Job = job_q.get(block=True)            # https://stackoverflow.com/a/21157892
             job.status = JobStatus.RUNNING
             job.executing_process_id = self.process_id
             job.starting_time = time.time()
