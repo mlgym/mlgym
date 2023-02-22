@@ -19,7 +19,8 @@ import { RoutesMapping } from '../../app/RoutesMapping';
 import { changeTab, selectTab } from '../../redux/status/statusSlice';
 import { LogoOnly, LogoText } from "../../svgs_and_imgs/Icons";
 import Statistics from '../statistics/Statistics';
-import top_bar_with_drawer_css from './TopBarWithDrawerCss';
+// styles
+import styles from './TopBarWithDrawer.module.css';
 
 export default function TopBarWithDrawer() {
 
@@ -48,23 +49,24 @@ export default function TopBarWithDrawer() {
     const navigate = useNavigate();
 
     const changeTabRequest = (text:string) => {
+        toggleMenuDrawer("menuDrawer", false)
         dispatch(changeTab(text));
         navigate(text);
     }
 
     const menu_list = () => (
     <Box
-        sx={top_bar_with_drawer_css.menu_container}
+        className={styles.menu_container}
         role="presentation"
-        onClick={()=>toggleMenuDrawer("menuDrawer", false)}
+        // onClick={()=>toggleMenuDrawer("menuDrawer", false)}
     >
         {/* MLGym Logo with Text */}
-        <Container sx={top_bar_with_drawer_css.logo_inside_menu}>
+        <Container className={styles.logo_inside_menu}>
             {LogoText}
         </Container>
         <Divider/>
         {/* Menu Items */}
-        <List sx={top_bar_with_drawer_css.menu_list}>
+        <List className={styles.menu_list}>
             {/* Iterate through the Dynamic Routes and check which component's name to display in the Menu and then Navigate to the destination URL on selection / click of that component */}
             {
                 Object.keys(RoutesMapping)
@@ -87,11 +89,11 @@ export default function TopBarWithDrawer() {
     );
 
   return (
-    <Box sx={top_bar_with_drawer_css.main_container}>
+    <Box className={styles.main_container}>
         {/* Title Bar */}
         <AppBar 
-            component="nav" 
-            sx={top_bar_with_drawer_css.app_bar_container}
+            component="nav"
+            className={styles.app_bar_container}
         >
             <Toolbar>
                 {/* Hamburger Menu Icon */}
@@ -99,7 +101,7 @@ export default function TopBarWithDrawer() {
                     size="large"
                     edge="start"
                     aria-label="open drawer"
-                    sx={top_bar_with_drawer_css.app_bar_hamburger_icon}
+                    className={styles.app_bar_hamburger_icon}
                     onClick={()=>toggleMenuDrawer("menuDrawer", true)}
                 >
                     <MenuIcon />
@@ -107,12 +109,12 @@ export default function TopBarWithDrawer() {
                 
                 {/* Page Title Text Goes Here */}
                 <Container
-                    sx={top_bar_with_drawer_css.app_bar_page_title_contianer}
+                    className={styles.app_bar_page_title_contianer}
                 >
                     <Typography
                         component="div"
                         variant="h6"
-                        sx={top_bar_with_drawer_css.app_bar_page_title_text}
+                        className={styles.app_bar_page_title_text}
                     >
                         {/* 
                             Just capitalizing the first letter of the selected page name. As the name from `location.pathname.split("/")[1]` would be the same as RoutesMapping.<MenuKey>.url --> it will be in lowercase.
@@ -131,7 +133,7 @@ export default function TopBarWithDrawer() {
                 <IconButton
                     size="small"
                     edge="end"
-                    sx={top_bar_with_drawer_css.app_bar_right_corner_logo}
+                    className={styles.app_bar_right_corner_logo}
                     disabled={true}
                 >
                     {LogoOnly}

@@ -6,7 +6,8 @@ import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
-import graphs_css from "./GraphsCss";
+// styles
+import styles from "./Graphs.module.css";
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -27,19 +28,19 @@ function Graphs () {
     // TODO: const chartsCount = useAppSelector(selectChartsCount);
      
     return(
-        <Box component="main" sx={graphs_css.graphs_main_container}>
+        <Box component="main" className={styles.graphs_main_container}>
             <Toolbar />
             {
                 // TODO: chartsCount > 0 ?
                 Object.keys(evalResult.experiments).length > 0 ?
-                <Grid container rowSpacing={1} spacing={{ xs: 2, md: 3 }} sx={graphs_css.grid_container}>
+                <Grid container rowSpacing={1} spacing={{ xs: 2, md: 3 }} className={styles.grid_container}>
                     {
                         // TODO: chartIds.map((loss_or_metric, index) => {
                         Object.keys(evalResult.experiments).map((loss_or_metric, index) => {
                             return(
                                 <Grid item={true} xs={12} sm={12} md={6} key={index}>
-                                    <Card sx={graphs_css.grid_card}>
-                                        <Box sx={graphs_css.graphs_chart_container}>
+                                    <Card className={styles.grid_card}>
+                                        <Box className={styles.graphs_chart_container}>
                                             <Line
                                                 // TODO: data={charts[loss_or_metric].data} 
                                                 // TODO: options={charts[loss_or_metric].options}
@@ -54,7 +55,7 @@ function Graphs () {
                     }
                 </Grid>
                 :
-                <Box sx={graphs_css.no_data_to_viz}>
+                <Box className={styles.no_data_to_viz}>
                     --- No Data To Visualize ---
                 </Box>
             } 

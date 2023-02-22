@@ -16,7 +16,8 @@ import { EvaluationResultPayload } from '../webworkers/event_handlers/evaluation
 import { DataToRedux } from '../webworkers/worker_utils';
 import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
-import app_css from './AppCss';
+// styles
+import styles from './App.module.css';
 
 export default function App() {
 
@@ -92,9 +93,6 @@ export default function App() {
     }
     
     const toggleFilterDrawer = (drawerState: string, open: boolean) => {
-        // if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')) {
-        //     return;
-        // }
         setState({ ...state, [drawerState]: open });
     }
 
@@ -103,7 +101,7 @@ export default function App() {
     }
 
     return (
-        <div style={app_css.main_container}>
+        <div className={styles.main_container}>
             {
                 urls.includes(location.pathname.split("/")[1]) ?
                     // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
@@ -128,11 +126,10 @@ export default function App() {
             </Routes>
             {
                 // Floating Action Button (FAB) added for filter popup
-                // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar)
-                urls.includes(location.pathname.split("/")[1]) ?
-                    <Zoom in={true}>
+                // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar). Also hide it when user is on Settings Page (As - not needed to do filter when viewing/inserting/updating configurations)
+                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url ?
+                    <div className={styles.fab}>
                         <Fab
-                            sx={app_css.fab}
                             variant="extended"
                             color="primary"
                             aria-label="add"
@@ -140,7 +137,7 @@ export default function App() {
                         >
                             <FilterAltIcon /> Filter
                         </Fab>
-                    </Zoom>
+                    </div>
                     :
                     null
             }
@@ -150,22 +147,24 @@ export default function App() {
                     anchor={"bottom"} // MUI-Drawer property: tells from which side of the screen, the drawer should appear
                     open={state["filterDrawer"]}
                     onClose={()=>toggleFilterDrawer("filterDrawer", false)}
-                    PaperProps={{
-                        style: app_css.filter
-                    }}
+                    // Drawer wraps your content inside a <Paper /> component. A Materiaul-UI paper component has shadows and a non-transparent background.
+                    classes={{ paper: styles.filter_drawer_container }}
                 >
-                    <h3>
-                        Filter Your Results
-                    </h3>
-                    <TextField
-                        id="outlined-multiline-flexible"
-                        label="Filter"
-                        placeholder="Filter your experiments here!..."
-                        multiline
-                        maxRows={4}
-                        value={state["filterText"]}
-                        onChange={(e) => changeFilterText(e.target.value)}
-                    />
+                    <div className={styles.filter_container}>
+                        <h3>
+                            Filter Your Results
+                        </h3>
+                        <TextField
+                            id="outlined-multiline-flexible"
+                            label="Filter"
+                            placeholder="Filter your experiments here!..."
+                            multiline
+                            maxRows={4}
+                            value={state["filterText"]}
+                            onChange={(e) => changeFilterText(e.target.value)}
+                            className={styles.filter_textfield}
+                        />
+                    </div>
                 </Drawer>
             </React.Fragment>
         </div>
