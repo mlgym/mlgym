@@ -19,6 +19,8 @@ import { RoutesMapping } from '../../app/RoutesMapping';
 import { changeTab, selectTab } from '../../redux/status/statusSlice';
 import { LogoOnly, LogoText } from "../../svgs_and_imgs/Icons";
 import Statistics from '../statistics/Statistics';
+// styles
+import styles from './TopBarWithDrawer.module.css';
 
 export default function TopBarWithDrawer() {
 
@@ -26,7 +28,7 @@ export default function TopBarWithDrawer() {
     let currentTab = useAppSelector(selectTab);
     const dispatch = useAppDispatch();
     const [state, setState] = React.useState({
-        left: false,
+        menuDrawer: false,
     });
 
     React.useEffect(() => {
@@ -40,57 +42,45 @@ export default function TopBarWithDrawer() {
         }
     }, [location.pathname])
 
-    // ASK Vijul: Duplication ?
-    const toggleDrawer = (anchor: string, open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
-        if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')) {
-            return;
-        }
-        setState({ ...state, [anchor]: open });
+    const toggleMenuDrawer = (drawerState: string, open: boolean) => {
+        setState({ ...state, [drawerState]: open });
     };
 
     const navigate = useNavigate();
 
     const changeTabRequest = (text:string) => {
+        toggleMenuDrawer("menuDrawer", false)
         dispatch(changeTab(text));
         navigate(text);
     }
 
-    const list = (anchor: string) => (
+    const menu_list = () => (
     <Box
-        sx={{ 
-            backgroundColor: "#FFFFFF",
-            width:  250 
-        }}
+        className={styles.menu_container}
         role="presentation"
-        onClick={toggleDrawer(anchor, false)}
-        onKeyDown={toggleDrawer(anchor, false)}
+        // onClick={()=>toggleMenuDrawer("menuDrawer", false)}
     >
         {/* MLGym Logo with Text */}
-        <Container sx={{ 
-            padding: 1,
-            direction: "column",
-            alignItems:"center",
-            justifyContent: "center"
-        }}>
+        <Container className={styles.logo_inside_menu}>
             {LogoText}
         </Container>
         <Divider/>
         {/* Menu Items */}
-        <List sx={{ marginTop: -1, marginBottom: -1 }}>
+        <List className={styles.menu_list}>
             {/* Iterate through the Dynamic Routes and check which component's name to display in the Menu and then Navigate to the destination URL on selection / click of that component */}
             {
                 Object.keys(RoutesMapping)
                 .filter((routeMapKey)=> RoutesMapping[routeMapKey].showInMenu)
                 .map((routeMapKey, index) => (
-                            <ListItem key={index} disablePadding onClick={() => changeTabRequest(RoutesMapping[routeMapKey].url)}>
-                                <ListItemButton selected={RoutesMapping[routeMapKey].url === currentTab}>
-                                    <ListItemIcon>
-                                        {RoutesMapping[routeMapKey].menuIcon}
-                                    </ListItemIcon>
-                                    <ListItemText primary={routeMapKey} />
-                                </ListItemButton>
-                            </ListItem>
-                        ))
+                    <ListItem key={index} disablePadding onClick={() => changeTabRequest(RoutesMapping[routeMapKey].url)}>
+                        <ListItemButton selected={RoutesMapping[routeMapKey].url === currentTab}>
+                            <ListItemIcon>
+                                {RoutesMapping[routeMapKey].menuIcon}
+                            </ListItemIcon>
+                            <ListItemText primary={routeMapKey} />
+                        </ListItemButton>
+                    </ListItem>
+                ))
             }
         </List>
         <Divider />
@@ -99,14 +89,11 @@ export default function TopBarWithDrawer() {
     );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box className={styles.main_container}>
         {/* Title Bar */}
         <AppBar 
-            component="nav" 
-            sx={{ 
-                backgroundColor: "#FFFFFF",
-                flexGrow: 1
-            }}
+            component="nav"
+            className={styles.app_bar_container}
         >
             <Toolbar>
                 {/* Hamburger Menu Icon */}
@@ -114,33 +101,25 @@ export default function TopBarWithDrawer() {
                     size="large"
                     edge="start"
                     aria-label="open drawer"
-                    sx={{ 
-                        mr: 2,
-                        borderRadius: "10px",
-                        border: "1px solid",
-                        borderColor: "#E0E3E7"
-                    }}
-                    onClick={toggleDrawer("left", true)}
+                    className={styles.app_bar_hamburger_icon}
+                    onClick={()=>toggleMenuDrawer("menuDrawer", true)}
                 >
                     <MenuIcon />
                 </IconButton>
                 
                 {/* Page Title Text Goes Here */}
                 <Container
-                    sx={{
-                        display: {display: "flex"},
-                        direction: "row",
-                        alignItems:"center",
-                        justifyContent: "center"
-                    }}
+                    className={styles.app_bar_page_title_contianer}
                 >
                     <Typography
                         component="div"
                         variant="h6"
-                        sx={{
-                            display: {color: "black", fontWeight: "bold", fontSize: 30}
-                        }}
+                        className={styles.app_bar_page_title_text}
                     >
+                        {/* 
+                            Just capitalizing the first letter of the selected page name. As the name from `location.pathname.split("/")[1]` would be the same as RoutesMapping.<MenuKey>.url --> it will be in lowercase.
+                            And, if the URL === "" then it's the home page, which will be the Graphs page by default. 
+                        */}
                         {
                             location.pathname.split("/")[1] === "" ?
                             RoutesMapping.Graphs.url.charAt(0).toUpperCase() + RoutesMapping.Graphs.url.slice(1)
@@ -154,12 +133,7 @@ export default function TopBarWithDrawer() {
                 <IconButton
                     size="small"
                     edge="end"
-                    sx={{ 
-                        ml: 2, 
-                        mr: -2,
-                        display: {color: "black"}, 
-                        backgroundColor: 'transparent'
-                    }}
+                    className={styles.app_bar_right_corner_logo}
                     disabled={true}
                 >
                     {LogoOnly}
@@ -171,11 +145,11 @@ export default function TopBarWithDrawer() {
         <React.Fragment>
             <Drawer
                 variant="temporary"
-                anchor={"left"}
-                open={state["left"]}
-                onClose={toggleDrawer("left", false)}
+                anchor={"left"} // MUI-Drawer property: tells from which side of the screen, the drawer should appear
+                open={state["menuDrawer"]}
+                onClose={()=>toggleMenuDrawer("menuDrawer", false)}
             >
-                {list("left")}
+                {menu_list()}
             </Drawer>
         </React.Fragment>
     </Box>
