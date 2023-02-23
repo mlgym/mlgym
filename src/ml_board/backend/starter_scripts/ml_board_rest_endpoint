@@ -8,9 +8,18 @@ from ml_board.backend.restful_api.restful_api_server import RestfulAPIServer
 
 
 def parse_args():
+    """
+    Extract args from Command line
+
+    :return: 
+             port: port number on which websocket will run
+             event_storage_path: path of folder where logs are stored
+    """
     parser = argparse.ArgumentParser(description='Websocket server')
-    parser.add_argument('--event_storage_path', type=str, help='Path to the event storage', required=True)
-    parser.add_argument('--port', type=int, help='Port on which the websocket server runs', required=True)
+    parser.add_argument('--event_storage_path', type=str,
+                        help='Path to the event storage', required=True)
+    parser.add_argument(
+        '--port', type=int, help='Port on which the websocket server runs', required=True)
     args = parser.parse_args()
     port = args.port
     event_storage_path = abspath(args.event_storage_path)
@@ -18,6 +27,13 @@ def parse_args():
 
 
 def run_restful_api_server(port: int, event_storage_path: str):
+    """
+    Main function creating Uvicorn server running FastAPI Framework
+
+    :params: 
+             port (int): port number on which websocket will run
+             event_storage_path (str): path of folder where logs will be stored
+    """
     data_access = FileDataAccess(top_level_logging_path=event_storage_path)
     api_server = RestfulAPIServer(data_access=data_access)
     server_partial = partial(uvicorn.run, host="0.0.0.0", port=port)

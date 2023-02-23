@@ -9,6 +9,12 @@ from typing import Callable
 
 
 class RestfulAPIServer:
+    """
+    RestAPI Server class
+
+    Creates FastAPI Server Object with HTTP RestAPIs for grid search and checkpoint communication.
+    """
+
     def __init__(self, data_access: DataAccessIF):
         self.app = FastAPI(port=8080)
         self.data_access = data_access
