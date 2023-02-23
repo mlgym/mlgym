@@ -5,15 +5,15 @@ import { RootState } from "../store";
 // A.K.A JobStatusPayload
 export interface Job {
     job_id: string; // format <grid_search_id>-<job index>
-    job_type?: string; // <CALC, TERMINATE>
-    job_status?: string; // <INIT, RUNNING, DONE>
-    // grid_search_id?: string;
-    experiment_id?: string;
-    starting_time?: number;
-    finishing_time?: number;
-    error?: string;
-    stacktrace?: string;
-    device?: string;
+    job_type: string; // <CALC, TERMINATE>
+    job_status: string; // <INIT, RUNNING, DONE>
+    // grid_search_id: string;
+    experiment_id: number;
+    starting_time: number;
+    finishing_time: number;
+    error: string;
+    stacktrace: string;
+    device: string;
 }
 
 const jobsAdapter = createEntityAdapter<Job>({

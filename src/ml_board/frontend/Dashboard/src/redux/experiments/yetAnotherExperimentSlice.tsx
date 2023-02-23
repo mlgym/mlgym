@@ -2,16 +2,16 @@ import { createEntityAdapter, createSlice, EntityState } from "@reduxjs/toolkit"
 import { RootState } from "../store";
 
 export interface Experiment {
-    experiment_id: string;
-    model_status?: string;   // <TRAINING, EVALUATING>,
-    current_split?: string;
-    splits?: string[]; //e.g.: ["train", "val", "test"],
-    num_epochs?: number;
-    current_epoch?: number;
-    num_batches?: number;
-    current_batch?: number;
+    experiment_id: number;
+    model_status: string;   // <TRAINING, EVALUATING>,
+    current_split: string;
+    splits: string[]; //e.g.: ["train", "val", "test"],
+    num_epochs: number;
+    current_epoch: number;
+    num_batches: number;
+    current_batch: number;
     // this is the lastest metric value per split (number, the rest is to avoid compilation error)
-    [latest_split_metric: string]: number | string | string[] | undefined;
+    [latest_split_metric: string]: number | string | string[];
 }
 
 const experimentsAdapter = createEntityAdapter<Experiment>({
@@ -33,7 +33,7 @@ export const experimentsSlice = createSlice({
     initialState,
     reducers: {
         // TODO: Override to add the latest_split_metric
-        upsertExperiment: experimentsAdapter.upsertOne //(state, action.payload);
+        upsertExperiment: experimentsAdapter.upsertOne, //(state, action.payload);
         // upsertExperiment:(state, action: PayloadAction<Experiment>) => {
         // const { experiment_id } = action.payload;
         // const experiment = state.entities[experiment_id];
@@ -50,11 +50,12 @@ export const experimentsSlice = createSlice({
         //     mergeExperiments(state[action.payload.experiment_id], action.payload);
         // }
         // }
+        updateExperiment: experimentsAdapter.updateOne,
     }
 });
 
 
-export const { upsertExperiment } = experimentsSlice.actions;
+export const { upsertExperiment, updateExperiment } = experimentsSlice.actions;
 
 // create a set of memoized selectors
 export const {
