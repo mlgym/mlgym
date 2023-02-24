@@ -1,33 +1,35 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
+import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
-import DedicatedWorker from '../webworkers/DedicatedWorker';
-import './App.scss';
-import { upsertExperiment } from '../redux/experiments/yetAnotherExperimentSlice';
+import { updateExperiment, upsertExperiment } from '../redux/experiments/yetAnotherExperimentSlice';
 import { upsertJob } from '../redux/jobs/jobSlice';
+import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
+import DedicatedWorker from '../webworkers/DedicatedWorker';
+import { EvaluationResultPayload } from '../webworkers/event_handlers/evaluationResultDataHandler';
 import { DataToRedux } from '../webworkers/worker_utils';
 import { useAppDispatch } from './hooks';
-import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
-import Drawer from '@mui/material/Drawer';
 import { RoutesMapping } from './RoutesMapping';
-import Fab from '@mui/material/Fab';
+
+// styles
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import Zoom from '@mui/material/Zoom';
-import { useLocation } from "react-router-dom";
+import Drawer from '@mui/material/Drawer';
+import Fab from '@mui/material/Fab';
 import TextField from '@mui/material/TextField';
+import styles from './App.module.css';
 
 export default function App() {
 
     const [state, setState] = useState({
-        bottom: false,
+        filterDrawer: false,
         filterText: ""
     })
     const location = useLocation();
     const dispatch = useAppDispatch();
-    
+
     const urls: Array<string> = [];
-    Object.keys(RoutesMapping).map((routeMapKey) => {
+    Object.keys(RoutesMapping).forEach((routeMapKey) => {
         if (routeMapKey !== "ErrorComponent") {
             urls.push(RoutesMapping[routeMapKey].url);
         }
@@ -41,7 +43,7 @@ export default function App() {
         const evalResult = {
             grid_search_id: null,
             experiments: {},
-            colors_mapped_to_exp_id: [[],[]]
+            colors_mapped_to_exp_id: [[], []]
         }
         mlgymWorker.postMessage(evalResult);
 
@@ -52,41 +54,59 @@ export default function App() {
     // TODO: maybe useCallback
     const workerOnMessageHandler = (data: DataToRedux) => {
         if (typeof (data) === "string") {
+            // TODO: this is not correct, try running the frontend without a backend to connect to it would still say "Socket Connection Successful"
+            // this is solved in the stash "DedicatedWorker redundancy" push it after solving the mystery of initial redux state!
             console.log(data);
         }
         else {
-            if(data && data.evaluationResultsData && data.evaluationResultsData.grid_search_id !== null && data.evaluationResultsData.experiments !== undefined){
+            if (data && data.evaluationResultsData) {
+                // update the Charts Slice
                 dispatch(saveEvalResultData(data.evaluationResultsData));
+                // save the latest metric in the Experiment Slice
+                const { epoch, experiment_id, metric_scores, loss_scores } = data.latest_split_metric as EvaluationResultPayload;
+                const changes: { [latest_split_metric_key: string]: number } = {};
+                for (const metric of metric_scores) {
+                    changes[metric.split + "_" + metric.metric] = metric.score;
+                }
+                for (const loss of loss_scores) {
+                    changes[loss.split + "_" + loss.loss] = loss.score;
+                }
+                //NOTE, I checked the epoch against the experiment's and that didn't work because of UseAppSelector! (can't be used here!)
+                dispatch(updateExperiment({ id: experiment_id, changes: changes }))
             }
             else if (data && data.jobStatusData) {
                 dispatch(upsertJob(data.jobStatusData))
             }
-            else if(data && data.experimentStatusData)
-            {
+            else if (data && data.experimentStatusData) {
                 dispatch(upsertExperiment(data.experimentStatusData))
+            }
+            else if (data && data.status) {
+                if (data.status === "msg_count_increment") {
+                    dispatch(incrementReceivedMsgCount())
+                } else if (data.status["ping"] !== undefined) {
+                    dispatch(setLastPing(data.status["ping"]))
+                } else if (data.status["throughput"] !== undefined) {
+                    dispatch(setThroughput(data.status["throughput"]))
+                } else if (data.status["isSocketConnected"] !== undefined) {
+                    dispatch(setSocketConnection(data.status["isSocketConnected"]))
+                }
             }
         }
     }
 
-    const toggleDrawer = (anchor: string, open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
-        if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')) {
-            return;
-        }
-        setState({ ...state, [anchor]: open });
+    const toggleFilterDrawer = (drawerState: string, open: boolean) => {
+        setState({ ...state, [drawerState]: open });
     }
 
-    function changeFilterText (text:string) {
-        setState({ ...state, ["filterText"]: text });
+    function changeFilterText(text: string) {
+        setState({ ...state, filterText: text });
     }
 
     return (
-        <div className="App">
+        <div className={styles.main_container}>
             {
-                urls.includes(location.pathname.split("/")[1]) ?
-                // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't the TopBar
-                <TopBarWithDrawer/>
-                :
-                null
+                // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
+                urls.includes(location.pathname.split("/")[1]) && <TopBarWithDrawer />
             }
             <Routes>
                 {
@@ -94,10 +114,10 @@ export default function App() {
                     // Rendering Names as per routes helps in Menu also. So, to keep the Component and Route name mapping uniform, RoutesMapping.tsx is the single file to look at for any updates or changes to be made
                     Object.keys(RoutesMapping).map((routeMapKey, index) => {
                         return (
-                            <Route 
-                                key={index} 
-                                path={RoutesMapping[routeMapKey].url} 
-                                element={RoutesMapping[routeMapKey].component} 
+                            <Route
+                                key={index}
+                                path={RoutesMapping[routeMapKey].url}
+                                element={RoutesMapping[routeMapKey].component}
                             />
                         )
                     })
@@ -105,56 +125,43 @@ export default function App() {
             </Routes>
             {
                 // Floating Action Button (FAB) added for filter popup
-                // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar)
-                urls.includes(location.pathname.split("/")[1]) ?
-                <Zoom in={true}>
-                    <Fab
-                        sx={{
-                            position: "fixed",
-                            bottom: (theme) => theme.spacing(6),
-                            right: (theme) => theme.spacing(3),
-                            opacity: 0.5,
-                            ":hover": { opacity: 1 }
-                        }}
-                        variant="extended" 
-                        color="primary" 
-                        aria-label="add"
-                        onClick={toggleDrawer("bottom", true)}
-                    >
-                        <FilterAltIcon /> Filter
-                    </Fab>
-                </Zoom>
-                :
-                null
+                // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar). Also hide it when user is on Settings Page (As - not needed to do filter when viewing/inserting/updating configurations)
+                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url &&
+                    <div className={styles.fab}>
+                        <Fab
+                            variant="extended"
+                            color="primary"
+                            aria-label="add"
+                            onClick={() => toggleFilterDrawer("filterDrawer", true)}
+                        >
+                            <FilterAltIcon /> Filter
+                        </Fab>
+                    </div>
             }
             {/* Filter Popup */}
             <React.Fragment>
                 <Drawer
-                    anchor={"bottom"}
-                    open={state["bottom"]}
-                    onClose={toggleDrawer("bottom", false)}
-                    PaperProps={{
-                        style: {
-                            borderTopLeftRadius: "10px",
-                            borderTopRightRadius: "10px",
-                            paddingLeft: "20px",
-                            paddingRight: "20px",
-                            paddingBottom: "30px"
-                        }
-                    }}
+                    anchor={"bottom"} // MUI-Drawer property: tells from which side of the screen, the drawer should appear
+                    open={state["filterDrawer"]}
+                    onClose={() => toggleFilterDrawer("filterDrawer", false)}
+                    // Drawer wraps your content inside a <Paper /> component. A Materiaul-UI paper component has shadows and a non-transparent background.
+                    classes={{ paper: styles.filter_drawer_container }}
                 >
-                    <h3>
-                        Filter Your Results
-                    </h3>
-                    <TextField
-                        id="outlined-multiline-flexible"
-                        label="Filter"
-                        placeholder="Filter your experiments here!..."
-                        multiline
-                        maxRows={4}
-                        value={state["filterText"]}
-                        onChange={(e)=>changeFilterText(e.target.value)}
-                    />
+                    <div className={styles.filter_container}>
+                        <h3>
+                            Filter Your Results
+                        </h3>
+                        <TextField
+                            id="outlined-multiline-flexible"
+                            label="Filter"
+                            placeholder="Filter your experiments here!..."
+                            multiline
+                            maxRows={4}
+                            value={state["filterText"]}
+                            onChange={(e) => changeFilterText(e.target.value)}
+                            className={styles.filter_textfield}
+                        />
+                    </div>
                 </Drawer>
             </React.Fragment>
         </div>

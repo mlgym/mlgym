@@ -1,9 +1,11 @@
+import { Toolbar } from '@mui/material';
+import { CellClickedEvent } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
 import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
 import { AgGridReact } from "ag-grid-react";
+import { useCallback, useMemo } from 'react';
 // styles
-import './Table.scss';
-
+import styles from './Table.module.css';
 
 interface columnDefinition {
   field: string;
@@ -18,15 +20,18 @@ function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
   const colDefs: columnDefinition[] = colNames.map(
     (colName: string) => ({
       field: colName,
-      sortable: true,
-      filter: true
     })
   );
 
+  const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), []);
+
+  const onCellClicked = useCallback((event: CellClickedEvent) => { console.log(event) }, []);
+
   return (
-    <div className="ag-theme-alpine" id="ag-grid-container">
+    <div className="ag-theme-alpine" id={styles.ag_grid_container_table}>
+      <Toolbar />
       <AgGridReact
-        defaultColDef={{ resizable: true }}
+        defaultColDef={defaultColDef}
         // {/* provide column definitions */}
         columnDefs={colDefs}
         // {/* specify auto group column definition */}
@@ -50,6 +55,8 @@ function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
         // // {/* specify our FileCellRenderer component */}
         // components={this.components}
         animateRows={true} // Optional - set to 'true' to have rows animate when sorted
+        rowSelection="multiple"
+        onCellClicked={onCellClicked}
       >
       </AgGridReact>
     </div>

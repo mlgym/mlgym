@@ -10,9 +10,11 @@ export interface DataToRedux {
     jobStatusData?: Job,
     experimentStatusData?: Experiment,
     evaluationResultsData?: evalResultCustomData,
+    latest_split_metric?: EvaluationResultPayload,
+    status?: any,
 }
 
-const workerOnMessageCallback = (evalResultCustomData:evalResultCustomData, parsedSocketData:DataFromSocket)=>{
+const workerOnMessageCallback = (evalResultCustomData: evalResultCustomData, parsedSocketData: DataFromSocket) => {
 
     const eventType = parsedSocketData.event_type.toLowerCase();
     const dataToRedux: DataToRedux = {};
@@ -25,7 +27,11 @@ const workerOnMessageCallback = (evalResultCustomData:evalResultCustomData, pars
             break;
         case EVENT_TYPE.EVALUATION_RESULT:
             // TODO: get the "latest_split_metric" in the experimentsSlice too
-            dataToRedux.evaluationResultsData = handleEvaluationResultData(evalResultCustomData, parsedSocketData.payload as unknown as EvaluationResultPayload);
+            // just save the value directly in the Experiment, since the table is being formed from there
+            // later decide if the column names are going to stay hard coded or inducted from the incoming messages 
+            const evalResPayload = parsedSocketData.payload as unknown as EvaluationResultPayload;
+            dataToRedux.evaluationResultsData = handleEvaluationResultData(evalResultCustomData, evalResPayload);
+            dataToRedux.latest_split_metric = evalResPayload;
             break;
         case EVENT_TYPE.EXPERIMENT_CONFIG:
             console.log("Exp config found")
@@ -39,11 +45,32 @@ const workerOnMessageCallback = (evalResultCustomData:evalResultCustomData, pars
     postMessage(dataToRedux);
 }
 
+const ping_callback = (ping: number) => {
+    postMessage({ status: { ping } } as DataToRedux);
+};
+
+const connection_callback = (isSocketConnected: boolean) => {
+    postMessage({ status: { isSocketConnected } } as DataToRedux);
+};
+
+const msgCounterInc_callback = () => {
+    postMessage({ status: "msg_count_increment" } as DataToRedux);
+};
+const throughput_callback = (throughput: number) => {
+    postMessage({ status: { throughput } } as DataToRedux);
+};
+
 onmessage = (e) => {
     const reduxData = e.data
     let result = null;
     try {
-        const webSocket = new SocketClass(Object((parsedSocketData:DataFromSocket)=>workerOnMessageCallback(reduxData,parsedSocketData)));
+        const webSocket = new SocketClass(
+            (parsedSocketData: DataFromSocket) => workerOnMessageCallback(reduxData, parsedSocketData),
+            (isSocketConnected: boolean) => connection_callback(isSocketConnected),
+            (time: number) => ping_callback(time),
+            () => msgCounterInc_callback(),
+            (throughput: number) => throughput_callback(throughput)
+        );
         webSocket.init();
         result = SOCKET_STATUS.SOCKET_CONN_SUCCESS;
     }

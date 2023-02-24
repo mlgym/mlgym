@@ -1,0 +1,41 @@
+/* Added "!important" tags to override MUI Components */
+.main_container {
+    display: 'flex';
+}
+.app_bar_container { 
+    background: #FFFFFF !important;
+}
+.app_bar_hamburger_icon {
+    border-radius: 10px !important;
+    border: 1px solid !important;
+    border-color: #E0E3E7 !important;
+}
+.menu_container { 
+    background-color: #FFFFFF !important;
+    width:  250px !important;
+}
+.app_bar_page_title_contianer {
+    display: flex !important;
+    direction: row;
+    align-items: center;
+    justify-content: center;
+}
+.app_bar_page_title_text {
+    color: black !important;
+    font-weight: bold !important; 
+    font-size: 30 !important;
+}
+.app_bar_right_corner_logo { 
+    color: black !important;
+}
+.logo_inside_menu { 
+    padding-top: 10px;
+    padding-bottom: 5px;
+    direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.menu_list { 
+    margin-top: -5px !important;
+    margin-bottom: -5px !important;
+}
