@@ -22,10 +22,10 @@ import ConfigPopup from '../components/configPopup/ConfigPopup';
 
 export default function App() {
 
-    const [state, setState] = useState({
-        filterDrawer: false,
-        filterText: ""
-    })
+    const [filterText, setFilterText] = useState("")
+    const [filterDrawer, setFilterDrawer] = useState(false)
+    const [isConfigValidated, setConfigValidation] = useState(false)
+
     const location = useLocation();
     const dispatch = useAppDispatch();
 
@@ -37,20 +37,24 @@ export default function App() {
     });
 
     useEffect(() => {
+        if(isConfigValidated)
+        {
         // TODO: is DedicatedWorker really needed? 
-        const mlgymWorker = new DedicatedWorker(Object(workerOnMessageHandler));
-        // NOTE: this is better than calling "useAppSelector(selectEvalResult)" as it will force the App function to get called everytime the state changes
-        // TODO: maybe find a better way later other than starting the worker with the empty redux state?
-        const evalResult = {
-            grid_search_id: null,
-            experiments: {},
-            colors_mapped_to_exp_id: [[], []]
-        }
-        mlgymWorker.postMessage(evalResult);
+            const mlgymWorker = new DedicatedWorker(Object(workerOnMessageHandler));
+            // NOTE: this is better than calling "useAppSelector(selectEvalResult)" as it will force the App function to get called everytime the state changes
+            // TODO: maybe find a better way later other than starting the worker with the empty redux state?
+            const evalResult = {
+                grid_search_id: null,
+                experiments: {},
+                colors_mapped_to_exp_id: [[], []]
+            }
+            mlgymWorker.postMessage(evalResult);
 
-        // TODO: close the worker here?
-        // return () =>{ }
-    }, []) // recommended way: keeping the second condition blank, fires useEffect just once as there are no conditions to check to fire up useEffect again (just like componentDidMount of React Life cycle). 
+            // TODO: close the worker here?
+            // return () =>{ }
+        }
+    }, [isConfigValidated]) 
+    // recommended way: keeping the second condition blank, fires useEffect just once as there are no conditions to check to fire up useEffect again (just like componentDidMount of React Life cycle). 
 
     // TODO: maybe useCallback
     const workerOnMessageHandler = (data: DataToRedux) => {
@@ -94,15 +98,7 @@ export default function App() {
             }
         }
     }
-
-    const toggleFilterDrawer = (drawerState: string, open: boolean) => {
-        setState({ ...state, [drawerState]: open });
-    }
-
-    function changeFilterText(text: string) {
-        setState({ ...state, filterText: text });
-    }
-
+    
     return (
         <div className={styles.main_container}>
             {
@@ -133,7 +129,7 @@ export default function App() {
                             variant="extended"
                             color="primary"
                             aria-label="add"
-                            onClick={() => toggleFilterDrawer("filterDrawer", true)}
+                            onClick={() => setFilterDrawer(true)}
                         >
                             <FilterAltIcon /> Filter
                         </Fab>
@@ -143,8 +139,8 @@ export default function App() {
             <React.Fragment>
                 <Drawer
                     anchor={"bottom"} // MUI-Drawer property: tells from which side of the screen, the drawer should appear
-                    open={state["filterDrawer"]}
-                    onClose={() => toggleFilterDrawer("filterDrawer", false)}
+                    open={filterDrawer}
+                    onClose={() => setFilterDrawer(false)}
                     // Drawer wraps your content inside a <Paper /> component. A Materiaul-UI paper component has shadows and a non-transparent background.
                     classes={{ paper: styles.filter_drawer_container }}
                 >
@@ -158,14 +154,14 @@ export default function App() {
                             placeholder="Filter your experiments here!..."
                             multiline
                             maxRows={4}
-                            value={state["filterText"]}
-                            onChange={(e) => changeFilterText(e.target.value)}
+                            value={filterText}
+                            onChange={(e) => setFilterText(e.target.value)}
                             className={styles.filter_textfield}
                         />
                     </div>
                 </Drawer>
             </React.Fragment>
-            <ConfigPopup/>
+            <ConfigPopup validateConfigs={(value:boolean):void=>setConfigValidation(value)}/>
         </div>
     );
 }
