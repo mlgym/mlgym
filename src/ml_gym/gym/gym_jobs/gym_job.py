@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List
+from typing import Callable, List
 from ml_gym.batching.batch import EvaluationBatchResult
 from ml_gym.checkpointing.checkpointing import CheckpointingIF
 from ml_gym.early_stopping.early_stopping_strategies import EarlyStoppingIF
@@ -23,7 +23,7 @@ class AbstractGymJob(StatefulComponent):
                  grid_search_id: str, experiment_id: int, run_mode: RunMode, num_epochs: int,
                  model: NNModel, optimizer: OptimizerAdapter, trainer: Trainer, evaluator: Evaluator,
                  checkpointing_strategy: CheckpointingIF, early_stopping_strategy: EarlyStoppingIF = None,
-                 warm_start_epoch: int = 0, lr_scheduler: LRSchedulerAdapter = None):
+                 warm_start_epoch: int = 0, lr_scheduler: LRSchedulerAdapter = None, num_batches_per_epoch: int = None):
         super().__init__()
         # logging
         self._experiment_status_logger = experiment_status_logger
@@ -36,6 +36,7 @@ class AbstractGymJob(StatefulComponent):
         # configuration
         self.run_mode = run_mode
         self.num_epochs = num_epochs
+        self.num_batches_per_epoch = num_batches_per_epoch
         self.current_epoch = warm_start_epoch
         if run_mode == RunMode.TRAIN:
             self._execution_method = self._execute_train
@@ -59,29 +60,33 @@ class AbstractGymJob(StatefulComponent):
         raise NotImplementedError
 
     @staticmethod
-    def batch_done_callback(status: str, experiment_status_logger: ExperimentStatusLogger, num_batches: int,
-                            current_batch: int, splits: List[str], current_split: str, num_epochs: int, current_epoch: int):
-        experiment_status_logger.log_experiment_status(status=status,
-                                                       num_epochs=num_epochs,
-                                                       current_epoch=current_epoch,
-                                                       splits=splits,
-                                                       current_split=current_split,
-                                                       num_batches=num_batches,
-                                                       current_batch=current_batch)
+    def batch_processed_callback(status: str, experiment_status_logger: ExperimentStatusLogger, num_batches: int,
+                                 current_batch: int, splits: List[str], current_split: str, num_epochs: int, current_epoch: int):
+        if (current_batch % int(num_batches/10)) == 0:
+            experiment_status_logger.log_experiment_status(status=status,
+                                                           num_epochs=num_epochs,
+                                                           current_epoch=current_epoch,
+                                                           splits=splits,
+                                                           current_split=current_split,
+                                                           num_batches=num_batches,
+                                                           current_batch=current_batch)
 
     @staticmethod
     def epoch_result_callback(experiment_status_logger: ExperimentStatusLogger, evaluation_result: EvaluationBatchResult,
                               current_epoch: int):
         experiment_status_logger.log_evaluation_results(evaluation_result, current_epoch)
 
-    def train_epoch_done_callback(self, num_epochs: int, current_epoch: int, model: NNModel):
-        evaluation_results = self._evaluation_step()
-        self.lr_scheduler.step()
+    def train_epoch_done_callback(self, num_epochs: int, current_epoch: int, model: NNModel, evaluation_step_routine: Callable):
+        evaluation_results = evaluation_step_routine()
+        if current_epoch > 0:
+            self.lr_scheduler.step()
         checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=num_epochs,
                                                                                                  current_epoch=current_epoch,
                                                                                                  evaluation_result=evaluation_results)
-        states = {"model": model, "optimizer": self.optimizer, "lr_scheduler": self.lr_scheduler, "statefule_components": self}
-        self.run_checkpointing(checkpointing_instruction, states)
+        self.run_checkpointing(checkpointing_instruction)
         if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=current_epoch,
                                                                         evaluation_results=evaluation_results):
             raise EarlyStoppingCriterionFulfilledError
+
+    def _evaluation_step(self, device: torch.device) -> List[EvaluationBatchResult]:
+        raise NotImplementedError
