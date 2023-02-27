@@ -35,6 +35,9 @@ class WorkerProcess(Process):
         except Exception as e:
             job.error = str(e)
             job.stacktrace = traceback.format_exc()
+            print(f"ERROR: Job {job.job_id} running experiment {job.experiment_id} failed.")
+            print(job.error)
+            print(job.stacktrace)
 
 
 class WorkerProcessWrapper:
