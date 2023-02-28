@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { RoutesMapping } from '../../app/RoutesMapping';
 import Button from '@mui/material/Button';
@@ -37,6 +37,20 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
         restApiUrlErrorText: ""
     })
 
+    const getSettingConfigs = useCallback(async (settingConfigsInStorage:string) => {
+        const data = await JSON.parse(settingConfigsInStorage);
+        return data
+      }, []);
+
+    useEffect(() => {
+        let settingConfigsInStorage = localStorage.getItem('SettingConfigs');
+        if(settingConfigsInStorage) {
+            getSettingConfigs(settingConfigsInStorage).then((settingConfigs) => {
+                setConfigTextState(settingConfigs);
+            });
+        }
+    },[])
+
     function changeText(key:string, text:string) {
         setConfigTextState({ ...configTextState, [key]: text });
         setErrorText({...errorTextState, [key+"ErrorText"]: ""});
@@ -45,11 +59,11 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
     function submitData() {
         let dataValidationResult = validateData();
         if (dataValidationResult.isDataValid) {
-            // localStorage.setItem('SettingConfigs', JSON.stringify({
-            //     gridSearchId: configTextState.gridSearchId,
-            //     socketConnectionUrl: configTextState.socketConnectionUrl,
-            //     restApiUrl: configTextState.restApiUrl
-            // }));
+            localStorage.setItem('SettingConfigs', JSON.stringify({
+                gridSearchId: configTextState.gridSearchId,
+                socketConnectionUrl: configTextState.socketConnectionUrl,
+                restApiUrl: configTextState.restApiUrl
+            }));
             sendDataToAPi();
         }
         else {
@@ -134,6 +148,7 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
                 label="Grid Search-id"
                 fullWidth
                 variant="standard"
+                value={configTextState.gridSearchId}
                 onChange={(e)=>changeText("gridSearchId", e.target.value)}
                 error={
                     errorTextState.gridSearchIdErrorText !== "" ?
@@ -153,6 +168,7 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
                 label="Socket Connection Url"
                 fullWidth
                 variant="standard"
+                value={configTextState.socketConnectionUrl}
                 onChange={(e)=>changeText("socketConnectionUrl", e.target.value)}
                 error={
                     errorTextState.socketConnectionUrlErrorText !== "" ?
@@ -172,6 +188,7 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
                 label="Rest API Url"
                 fullWidth
                 variant="standard"
+                value={configTextState.restApiUrl}
                 onChange={(e)=>changeText("restApiUrl", e.target.value)}
                 error={
                     errorTextState.restApiUrlErrorText !== "" ?

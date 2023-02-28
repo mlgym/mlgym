@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
 import { updateExperiment, upsertExperiment } from '../redux/experiments/yetAnotherExperimentSlice';
@@ -20,6 +20,44 @@ import TextField from '@mui/material/TextField';
 import styles from './App.module.css';
 import ConfigPopup from '../components/configPopup/ConfigPopup';
 
+interface settingConfigs {
+    gridSearchId: string,
+    socketConnectionUrl: string,
+    restApiUrl: string
+}
+
+async function saveUrlParamsToLocalStorage(searchParams: URLSearchParams) {
+    let gridSearchId = searchParams.get("run_id")
+    let socketConnectionUrl = searchParams.get("ws_endpoint")
+    let restApiUrl = searchParams.get("rest_endpoint")
+
+    let settingConfigs:settingConfigs = {
+        gridSearchId: "",
+        socketConnectionUrl: "",
+        restApiUrl: ""
+    };
+
+    let settingConfigsInStorage = localStorage.getItem('SettingConfigs');
+    if(settingConfigsInStorage) {
+        settingConfigs = await JSON.parse(settingConfigsInStorage);
+    }
+
+    if(gridSearchId !== null) {
+        settingConfigs.gridSearchId = gridSearchId;
+    }
+    
+    if(socketConnectionUrl !== null) {
+        settingConfigs.socketConnectionUrl = socketConnectionUrl;
+    }
+    
+    if(restApiUrl !== null) {
+        settingConfigs.restApiUrl = restApiUrl;
+    }
+
+    localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
+
+}
+
 export default function App() {
 
     const [filterText, setFilterText] = useState("")
@@ -28,6 +66,8 @@ export default function App() {
 
     const location = useLocation();
     const dispatch = useAppDispatch();
+    const [searchParams, setSearchParams] = useSearchParams();
+    saveUrlParamsToLocalStorage(searchParams);
 
     const urls: Array<string> = [];
     Object.keys(RoutesMapping).forEach((routeMapKey) => {
@@ -39,7 +79,7 @@ export default function App() {
     useEffect(() => {
         if(isConfigValidated)
         {
-        // TODO: is DedicatedWorker really needed? 
+            // TODO: is DedicatedWorker really needed? 
             const mlgymWorker = new DedicatedWorker(Object(workerOnMessageHandler));
             // NOTE: this is better than calling "useAppSelector(selectEvalResult)" as it will force the App function to get called everytime the state changes
             // TODO: maybe find a better way later other than starting the worker with the empty redux state?
@@ -49,7 +89,6 @@ export default function App() {
                 colors_mapped_to_exp_id: [[], []]
             }
             mlgymWorker.postMessage(evalResult);
-
             // TODO: close the worker here?
             // return () =>{ }
         }
@@ -123,17 +162,19 @@ export default function App() {
             {
                 // Floating Action Button (FAB) added for filter popup
                 // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar). Also hide it when user is on Settings Page (As - not needed to do filter when viewing/inserting/updating configurations)
-                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url &&
-                    <div className={styles.fab}>
-                        <Fab
-                            variant="extended"
-                            color="primary"
-                            aria-label="add"
-                            onClick={() => setFilterDrawer(true)}
-                        >
-                            <FilterAltIcon /> Filter
-                        </Fab>
-                    </div>
+                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url ?
+                <div className={styles.fab}>
+                    <Fab
+                        variant="extended"
+                        color="primary"
+                        aria-label="add"
+                        onClick={() => setFilterDrawer(true)}
+                    >
+                        <FilterAltIcon /> Filter
+                    </Fab>
+                </div>
+                :
+                null
             }
             {/* Filter Popup */}
             <React.Fragment>
@@ -161,7 +202,12 @@ export default function App() {
                     </div>
                 </Drawer>
             </React.Fragment>
-            <ConfigPopup validateConfigs={(value:boolean):void=>setConfigValidation(value)}/>
+            {
+                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url && isConfigValidated === false ?
+                <ConfigPopup validateConfigs={(value:boolean):void=>setConfigValidation(value)}/>
+                :
+                null
+            }
         </div>
     );
 }

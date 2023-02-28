@@ -1,5 +1,5 @@
 import { Box, Button, TextField, Toolbar } from "@mui/material";
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 // styles
@@ -21,13 +21,27 @@ function Settings() {
         gridSearchId: "",
         socketConnectionUrl: "",
         restApiUrl: ""
-    })
+    });
 
     const [errorTextState, setErrorText] = useState({
         gridSearchIdErrorText: "",
         socketConnectionUrlErrorText: "",
         restApiUrlErrorText: ""
-    })
+    });
+
+    const getSettingConfigs = useCallback(async (settingConfigsInStorage:string) => {
+        const data = await JSON.parse(settingConfigsInStorage);
+        return data
+      }, []);
+
+    useEffect(() => {
+        let settingConfigsInStorage = localStorage.getItem('SettingConfigs');
+        if(settingConfigsInStorage) {
+            getSettingConfigs(settingConfigsInStorage).then((settingConfigs) => {
+                setConfigTextState(settingConfigs);
+            });
+        }
+    },[])
 
     function changeText(key:string, text:string) {
         setConfigTextState({ ...configTextState, [key]: text });
@@ -45,6 +59,7 @@ function Settings() {
             socketConnectionUrlErrorText: "",
             restApiUrlErrorText: ""
         });
+        localStorage.removeItem("SettingConfigs")
     }
 
     function submitData() {        
