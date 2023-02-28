@@ -19,23 +19,24 @@ import Fab from '@mui/material/Fab';
 import TextField from '@mui/material/TextField';
 import styles from './App.module.css';
 import ConfigPopup from '../components/configPopup/ConfigPopup';
+import Settings from '../components/settings/Settings';
 
-interface settingConfigs {
+export interface settingConfigsInterface {
     gridSearchId: string,
     socketConnectionUrl: string,
     restApiUrl: string
 }
 
+let settingConfigs:settingConfigsInterface = {
+    gridSearchId: "",
+    socketConnectionUrl: "",
+    restApiUrl: ""
+};
+
 async function saveUrlParamsToLocalStorage(searchParams: URLSearchParams) {
     let gridSearchId = searchParams.get("run_id")
     let socketConnectionUrl = searchParams.get("ws_endpoint")
     let restApiUrl = searchParams.get("rest_endpoint")
-
-    let settingConfigs:settingConfigs = {
-        gridSearchId: "",
-        socketConnectionUrl: "",
-        restApiUrl: ""
-    };
 
     let settingConfigsInStorage = localStorage.getItem('SettingConfigs');
     if(settingConfigsInStorage) {
@@ -45,17 +46,25 @@ async function saveUrlParamsToLocalStorage(searchParams: URLSearchParams) {
     if(gridSearchId !== null) {
         settingConfigs.gridSearchId = gridSearchId;
     }
+    else if(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        settingConfigs.gridSearchId = "mlgym_event_subscribers";
+    }
     
     if(socketConnectionUrl !== null) {
         settingConfigs.socketConnectionUrl = socketConnectionUrl;
     }
-    
+    else if(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        settingConfigs.socketConnectionUrl = "http://"+window.location.hostname+":7000/";
+    }
+
     if(restApiUrl !== null) {
         settingConfigs.restApiUrl = restApiUrl;
     }
+    else if(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        settingConfigs.restApiUrl = "http://"+window.location.hostname+":5001/";
+    }
 
     localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
-
 }
 
 export default function App() {
@@ -80,7 +89,7 @@ export default function App() {
         if(isConfigValidated)
         {
             // TODO: is DedicatedWorker really needed? 
-            const mlgymWorker = new DedicatedWorker(Object(workerOnMessageHandler));
+            const mlgymWorker = new DedicatedWorker(workerOnMessageHandler);
             // NOTE: this is better than calling "useAppSelector(selectEvalResult)" as it will force the App function to get called everytime the state changes
             // TODO: maybe find a better way later other than starting the worker with the empty redux state?
             const evalResult = {
@@ -88,7 +97,7 @@ export default function App() {
                 experiments: {},
                 colors_mapped_to_exp_id: [[], []]
             }
-            mlgymWorker.postMessage(evalResult);
+            mlgymWorker.postMessage({evalResult, settingConfigs});
             // TODO: close the worker here?
             // return () =>{ }
         }
@@ -96,7 +105,7 @@ export default function App() {
     // recommended way: keeping the second condition blank, fires useEffect just once as there are no conditions to check to fire up useEffect again (just like componentDidMount of React Life cycle). 
 
     // TODO: maybe useCallback
-    const workerOnMessageHandler = (data: DataToRedux) => {
+    function workerOnMessageHandler (data: DataToRedux) {
         if (typeof (data) === "string") {
             // TODO: this is not correct, try running the frontend without a backend to connect to it would still say "Socket Connection Successful"
             // this is solved in the stash "DedicatedWorker redundancy" push it after solving the mystery of initial redux state!
@@ -149,13 +158,26 @@ export default function App() {
                     // Dynamic Routes added as a functionality. 
                     // Rendering Names as per routes helps in Menu also. So, to keep the Component and Route name mapping uniform, RoutesMapping.tsx is the single file to look at for any updates or changes to be made
                     Object.keys(RoutesMapping).map((routeMapKey, index) => {
-                        return (
-                            <Route
-                                key={index}
-                                path={RoutesMapping[routeMapKey].url}
-                                element={RoutesMapping[routeMapKey].component}
-                            />
-                        )
+                        if(routeMapKey === "Settings") {
+                            return (
+                                <Route
+                                    key={index}
+                                    path={RoutesMapping[routeMapKey].url}
+                                    element={
+                                        <Settings validateConfigs={(value:boolean)=>setConfigValidation(value)} />
+                                    }
+                                />
+                            )
+                        }
+                        else {
+                            return (
+                                <Route
+                                    key={index}
+                                    path={RoutesMapping[routeMapKey].url}
+                                    element={RoutesMapping[routeMapKey].component}
+                                />
+                            )
+                        }
                     })
                 }
             </Routes>
@@ -204,7 +226,7 @@ export default function App() {
             </React.Fragment>
             {
                 urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url && isConfigValidated === false ?
-                <ConfigPopup validateConfigs={(value:boolean):void=>setConfigValidation(value)}/>
+                <ConfigPopup validateConfigs={(value:boolean)=>setConfigValidation(value)} />
                 :
                 null
             }

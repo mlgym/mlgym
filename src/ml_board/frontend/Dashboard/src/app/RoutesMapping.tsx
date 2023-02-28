@@ -37,7 +37,7 @@ export const RoutesMapping:RoutesMappingInterface = {
     },
     Settings: {
         url: "settings",
-        component: <Settings />,
+        component: <></>,
         showInMenu: true,
         menuIcon: <SettingsIcon/>
     },

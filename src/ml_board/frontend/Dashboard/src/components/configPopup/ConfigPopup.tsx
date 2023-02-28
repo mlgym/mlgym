@@ -10,7 +10,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { dataValidationResult, defaultGridSearchIdHelperText, defaultSocketConnectionUrlHelperText, defaultRestApiUrlHelperText } from '../settings/Settings';
 
-interface FuncProps {
+export interface FuncProps {
     validateConfigs(value:boolean): void;
 }
 
@@ -105,7 +105,7 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
             restApiUrlErrorText: ""
         }
 
-        if(gridSearchId.trim().length > 0) {
+        if(gridSearchId.trim().length > 5) {
             if(socketConnectionUrl.trim().length > 0)
             {
                 if(restApiUrl.trim().length > 0)

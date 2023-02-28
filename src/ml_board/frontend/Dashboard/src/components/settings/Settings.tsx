@@ -2,6 +2,7 @@ import { Box, Button, TextField, Toolbar } from "@mui/material";
 import { useCallback, useEffect, useState } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
+import { FuncProps } from "../configPopup/ConfigPopup";
 // styles
 import styles from "./Settings.module.css";
 
@@ -15,7 +16,7 @@ export const defaultGridSearchIdHelperText = "eg: 2022-11-06--17-59-10";
 export const defaultSocketConnectionUrlHelperText = "eg: http://127.0.0.1:5002";
 export const defaultRestApiUrlHelperText = "eg: http://127.0.0.1:5001";
 
-function Settings() {
+const Settings: React.FC<FuncProps> = (props) => {
 
     const [configTextState, setConfigTextState] = useState({
         gridSearchId: "",
@@ -70,7 +71,7 @@ function Settings() {
                 socketConnectionUrl: configTextState.socketConnectionUrl,
                 restApiUrl: configTextState.restApiUrl
             }));
-            sendDataToAPi()
+            sendDataToAPi();
         }
         else {
             if (dataValidationResult.restApiUrlErrorText !== "") {
@@ -137,7 +138,7 @@ function Settings() {
     }
 
     function sendDataToAPi() {
-        
+        props.validateConfigs(true);
     }
 
     return (
