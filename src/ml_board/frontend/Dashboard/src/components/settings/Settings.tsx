@@ -2,19 +2,17 @@ import { Box, Button, TextField, Toolbar } from "@mui/material";
 import { useCallback, useEffect, useState } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
-import { FuncProps } from "../configPopup/ConfigPopup";
+import { settingConfigsInterface } from "../../app/App";
 // styles
 import styles from "./Settings.module.css";
 
-export interface dataValidationResult {
-    isDataValid: boolean;
-    gridSearchIdErrorText: string;
-    socketConnectionUrlErrorText: string;
-    restApiUrlErrorText: string;
-}
 export const defaultGridSearchIdHelperText = "eg: 2022-11-06--17-59-10";
 export const defaultSocketConnectionUrlHelperText = "eg: http://127.0.0.1:5002";
 export const defaultRestApiUrlHelperText = "eg: http://127.0.0.1:5001";
+export interface FuncProps {
+    validateConfigs(value:boolean): void;
+    setConfigData(configData:settingConfigsInterface): void;
+}
 
 const Settings: React.FC<FuncProps> = (props) => {
 
@@ -22,12 +20,6 @@ const Settings: React.FC<FuncProps> = (props) => {
         gridSearchId: "",
         socketConnectionUrl: "",
         restApiUrl: ""
-    });
-
-    const [errorTextState, setErrorText] = useState({
-        gridSearchIdErrorText: "",
-        socketConnectionUrlErrorText: "",
-        restApiUrlErrorText: ""
     });
 
     const getSettingConfigs = useCallback(async (settingConfigsInStorage:string) => {
@@ -46,7 +38,6 @@ const Settings: React.FC<FuncProps> = (props) => {
 
     function changeText(key:string, text:string) {
         setConfigTextState({ ...configTextState, [key]: text });
-        setErrorText({...errorTextState, [key+"ErrorText"]: ""});
     }
 
     function clearAllText() {
@@ -55,90 +46,30 @@ const Settings: React.FC<FuncProps> = (props) => {
             socketConnectionUrl: "",
             restApiUrl: "" 
         });
-        setErrorText({
-            gridSearchIdErrorText: "",
-            socketConnectionUrlErrorText: "",
-            restApiUrlErrorText: ""
-        });
         localStorage.removeItem("SettingConfigs")
     }
 
-    function submitData() {        
-        let dataValidationResult = validateData();
-        if (dataValidationResult.isDataValid) {
-            localStorage.setItem('SettingConfigs', JSON.stringify({
-                gridSearchId: configTextState.gridSearchId,
-                socketConnectionUrl: configTextState.socketConnectionUrl,
-                restApiUrl: configTextState.restApiUrl
-            }));
-            sendDataToAPi();
-        }
-        else {
-            if (dataValidationResult.restApiUrlErrorText !== "") {
-                setErrorText({ ...errorTextState, gridSearchIdErrorText: dataValidationResult.gridSearchIdErrorText });
-            }
-            if (dataValidationResult.restApiUrlErrorText !== "") {
-                setErrorText({ ...errorTextState, socketConnectionUrlErrorText: dataValidationResult.socketConnectionUrlErrorText });
-            }
-            if (dataValidationResult.restApiUrlErrorText !== "") {
-                setErrorText({ ...errorTextState, restApiUrlErrorText: dataValidationResult.restApiUrlErrorText });
-            }
-        }
-    }
-
-    function checkToKeepDisableBtn() {
-       if (errorTextState.gridSearchIdErrorText !== "" || errorTextState.socketConnectionUrlErrorText !== "" || errorTextState.restApiUrlErrorText !== "") {
-            return true;
-        }
-        else {
-            let dataValidationResult = validateData();
-            if (dataValidationResult.isDataValid) {
-                return false;
-            }
-            else {
-                return true;
-            }
-        }
+    function submitData() {  
+        let configData = {
+            gridSearchId: configTextState.gridSearchId,
+            socketConnectionUrl: configTextState.socketConnectionUrl,
+            restApiUrl: configTextState.restApiUrl
+        }      
+        props.validateConfigs(true);
+        props.setConfigData(configData);
     }
 
     function validateData() {
-        let gridSearchId = configTextState.gridSearchId
-        let socketConnectionUrl = configTextState.socketConnectionUrl
-        let restApiUrl = configTextState.restApiUrl
-        let dataValidationResult:dataValidationResult = {
-            isDataValid: false,
-            gridSearchIdErrorText: "",
-            socketConnectionUrlErrorText: "",
-            restApiUrlErrorText: ""
-        }
+        let gridSearchId = configTextState.gridSearchId;
+        let socketConnectionUrl = configTextState.socketConnectionUrl;
+        let restApiUrl = configTextState.restApiUrl;
+        let isDataInValid = true;
 
-        if(gridSearchId.trim().length > 0) {
-            if(socketConnectionUrl.trim().length > 0)
-            {
-                if(restApiUrl.trim().length > 0)
-                {
-                    dataValidationResult.isDataValid = true
-                    return dataValidationResult
-                }
-                else
-                {
-                    dataValidationResult.restApiUrlErrorText = "Please enter valid Rest Api Url"
-                }
-            }
-            else
-            {
-                dataValidationResult.socketConnectionUrlErrorText = "Please enter valid Socket Connection Url"
-            }
+        if(gridSearchId.trim().length > 0 && socketConnectionUrl.trim().length > 0 && restApiUrl.trim().length > 0 ) {
+            isDataInValid = false;
+            return isDataInValid;
         }
-        else
-        {
-            dataValidationResult.gridSearchIdErrorText = "Please enter valid Grid Search Id";
-        }
-        return dataValidationResult
-    }
-
-    function sendDataToAPi() {
-        props.validateConfigs(true);
+        return isDataInValid;
     }
 
     return (
@@ -152,16 +83,7 @@ const Settings: React.FC<FuncProps> = (props) => {
                     value={configTextState.gridSearchId}
                     onChange={(e)=>changeText("gridSearchId", e.target.value)}
                     className={styles.settings_text_box}
-                    error={
-                        errorTextState.gridSearchIdErrorText !== "" ?
-                        true
-                        :
-                        false
-                    }
                     helperText={
-                        errorTextState.gridSearchIdErrorText !== "" ?
-                        errorTextState.gridSearchIdErrorText
-                        :
                         defaultGridSearchIdHelperText
                     }
                 />
@@ -173,16 +95,7 @@ const Settings: React.FC<FuncProps> = (props) => {
                     value={configTextState.socketConnectionUrl}
                     onChange={(e)=>changeText("socketConnectionUrl", e.target.value)}
                     className={styles.settings_text_box}
-                    error={
-                        errorTextState.socketConnectionUrlErrorText !== "" ?
-                        true
-                        :
-                        false
-                    }
                     helperText={
-                        errorTextState.socketConnectionUrlErrorText !== "" ?
-                        errorTextState.socketConnectionUrlErrorText
-                        :
                         defaultSocketConnectionUrlHelperText
                     }
                 />
@@ -194,16 +107,7 @@ const Settings: React.FC<FuncProps> = (props) => {
                     value={configTextState.restApiUrl}
                     onChange={(e)=>changeText("restApiUrl", e.target.value)}
                     className={styles.settings_text_box}
-                    error={
-                        errorTextState.restApiUrlErrorText !== "" ?
-                        true
-                        :
-                        false
-                    }
                     helperText={
-                        errorTextState.restApiUrlErrorText !== "" ?
-                        errorTextState.restApiUrlErrorText
-                        :
                         defaultRestApiUrlHelperText
                     }
                 />
@@ -222,7 +126,7 @@ const Settings: React.FC<FuncProps> = (props) => {
                         size="large" 
                         endIcon={<SendIcon />}
                         onClick={()=>submitData()}
-                        disabled={checkToKeepDisableBtn()}
+                        disabled={validateData()}
                     >
                         Save
                     </Button>

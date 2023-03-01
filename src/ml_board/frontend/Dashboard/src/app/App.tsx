@@ -11,6 +11,7 @@ import { EvaluationResultPayload } from '../webworkers/event_handlers/evaluation
 import { DataToRedux } from '../webworkers/worker_utils';
 import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
+import { SOCKET_STATUS } from '../webworkers/socketEventConstants';
 
 // styles
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
@@ -20,6 +21,8 @@ import TextField from '@mui/material/TextField';
 import styles from './App.module.css';
 import ConfigPopup from '../components/configPopup/ConfigPopup';
 import Settings from '../components/settings/Settings';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 
 export interface settingConfigsInterface {
     gridSearchId: string,
@@ -27,13 +30,7 @@ export interface settingConfigsInterface {
     restApiUrl: string
 }
 
-let settingConfigs:settingConfigsInterface = {
-    gridSearchId: "",
-    socketConnectionUrl: "",
-    restApiUrl: ""
-};
-
-async function saveUrlParamsToLocalStorage(searchParams: URLSearchParams) {
+async function saveUrlParamsToLocalStorage(searchParams: URLSearchParams, settingConfigs: settingConfigsInterface) {
     let gridSearchId = searchParams.get("run_id")
     let socketConnectionUrl = searchParams.get("ws_endpoint")
     let restApiUrl = searchParams.get("rest_endpoint")
@@ -46,25 +43,25 @@ async function saveUrlParamsToLocalStorage(searchParams: URLSearchParams) {
     if(gridSearchId !== null) {
         settingConfigs.gridSearchId = gridSearchId;
     }
-    else if(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    else if(!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
         settingConfigs.gridSearchId = "mlgym_event_subscribers";
     }
     
     if(socketConnectionUrl !== null) {
         settingConfigs.socketConnectionUrl = socketConnectionUrl;
     }
-    else if(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    else if(!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
         settingConfigs.socketConnectionUrl = "http://"+window.location.hostname+":7000/";
     }
 
     if(restApiUrl !== null) {
         settingConfigs.restApiUrl = restApiUrl;
     }
-    else if(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    else if(!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
         settingConfigs.restApiUrl = "http://"+window.location.hostname+":5001/";
     }
 
-    localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
+    return settingConfigs;
 }
 
 export default function App() {
@@ -72,11 +69,23 @@ export default function App() {
     const [filterText, setFilterText] = useState("")
     const [filterDrawer, setFilterDrawer] = useState(false)
     const [isConfigValidated, setConfigValidation] = useState(false)
-
+    const [isSnackbarOpen, setSnackbarOpen] = useState(false)
+    const [snackBarText, setSnackBarText] = useState("")
     const location = useLocation();
     const dispatch = useAppDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
-    saveUrlParamsToLocalStorage(searchParams);
+    const [settingConfigs, setSettingConfigs] = useState({
+        gridSearchId: "",
+        socketConnectionUrl: "",
+        restApiUrl: ""
+    })
+
+    useEffect(() => {
+        saveUrlParamsToLocalStorage(searchParams, settingConfigs).then((settingConfigs)=>{
+            setSettingConfigs(settingConfigs);
+            localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
+        });
+    },[])
 
     const urls: Array<string> = [];
     Object.keys(RoutesMapping).forEach((routeMapKey) => {
@@ -88,6 +97,9 @@ export default function App() {
     useEffect(() => {
         if(isConfigValidated)
         {
+            console.log(settingConfigs)
+            localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
+
             // TODO: is DedicatedWorker really needed? 
             const mlgymWorker = new DedicatedWorker(workerOnMessageHandler);
             // NOTE: this is better than calling "useAppSelector(selectEvalResult)" as it will force the App function to get called everytime the state changes
@@ -110,6 +122,14 @@ export default function App() {
             // TODO: this is not correct, try running the frontend without a backend to connect to it would still say "Socket Connection Successful"
             // this is solved in the stash "DedicatedWorker redundancy" push it after solving the mystery of initial redux state!
             console.log(data);
+            if(data === SOCKET_STATUS.SOCKET_CONN_SUCCESS) {
+                setSnackBarText(SOCKET_STATUS.SOCKET_CONN_SUCCESS);
+                setSnackbarOpen(true);
+            }
+            else {
+                setSnackBarText(SOCKET_STATUS.SOCKET_CONN_FAIL);
+                setSnackbarOpen(true);
+            }
         }
         else {
             if (data && data.evaluationResultsData) {
@@ -164,7 +184,10 @@ export default function App() {
                                     key={index}
                                     path={RoutesMapping[routeMapKey].url}
                                     element={
-                                        <Settings validateConfigs={(value:boolean)=>setConfigValidation(value)} />
+                                        <Settings
+                                            validateConfigs={(value:boolean)=>setConfigValidation(value)} 
+                                            setConfigData={(settingConfigs: settingConfigsInterface)=>setSettingConfigs(settingConfigs)}
+                                        />
                                     }
                                 />
                             )
@@ -226,10 +249,26 @@ export default function App() {
             </React.Fragment>
             {
                 urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url && isConfigValidated === false ?
-                <ConfigPopup validateConfigs={(value:boolean)=>setConfigValidation(value)} />
+                <ConfigPopup 
+                    validateConfigs={(value:boolean)=>setConfigValidation(value)} 
+                    setConfigData={(settingConfigs:settingConfigsInterface)=>setSettingConfigs(settingConfigs)}
+                />
                 :
                 null
             }
+            <Snackbar
+                anchorOrigin={{ vertical:"bottom", horizontal:"center" }}
+                open={isSnackbarOpen}
+                onClose={()=>setSnackbarOpen(false)} 
+                autoHideDuration={4000}
+            >
+                <Alert 
+                    onClose={()=>setSnackbarOpen(false)} 
+                    severity={snackBarText===SOCKET_STATUS.SOCKET_CONN_SUCCESS? "success": "error"}
+                >
+                    {snackBarText}
+                </Alert>
+            </Snackbar>
         </div>
     );
 }
