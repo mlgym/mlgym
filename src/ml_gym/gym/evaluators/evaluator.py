@@ -26,17 +26,11 @@ class AbstractEvaluator(StatefulComponent):
 class Evaluator(AbstractEvaluator):
     def __init__(self, eval_component: 'EvalComponentIF'):
         self.eval_component = eval_component
-        self.current_epoch = -1
-        self.num_epochs = -1
 
-    def set_num_epochs(self, num_epochs: int):
-        self.num_epochs = num_epochs
-
-    def evaluate(self, model: NNModel, device: torch.device, current_epoch: int, num_epochs: int,
-                 epoch_result_callback_fun: Callable = None,
+    def evaluate(self, model: NNModel, device: torch.device, epoch_result_callback_fun: Callable = None,
                  batch_processed_callback_fun: Callable = None) -> List[EvaluationBatchResult]:
-        self.current_epoch = current_epoch
-        self.num_epochs = num_epochs
+        model = model.eval()
+
         # returns a EvaluationBatchResult for each split
         evaluation_batch_results = self.eval_component.evaluate(model, device, epoch_result_callback_fun=epoch_result_callback_fun,
                                                                 batch_processed_callback_fun=batch_processed_callback_fun)
@@ -83,8 +77,7 @@ class EvalComponent(EvalComponentIF):
                                dataset_loader: DatasetLoader, epoch_result_callback_fun: Callable = None,
                                batch_processed_callback_fun: Callable = None) -> EvaluationBatchResult:
         dataset_loader.device = device
-        dataset_loader_iterator = tqdm.tqdm(
-            dataset_loader, desc=f"Evaluating {dataset_loader.dataset_name} - {split_name}") if self.show_progress else dataset_loader
+        dataset_loader_iterator = tqdm.tqdm(dataset_loader, desc=f"Evaluating {dataset_loader.dataset_name} - {split_name}") if self.show_progress else dataset_loader
         post_processors = self.post_processors[split_name] + self.post_processors["default"]
 
         # calc losses
@@ -148,7 +141,7 @@ class EvalComponent(EvalComponentIF):
 
     def forward_batch(self, dataset_batch: DatasetBatch, model: NNModel, device: torch.device, postprocessors: List[PredictPostProcessingIF]) -> InferenceResultBatch:
         model = model.to(device)
-        dataset_batch.to_device(device)
+        dataset_batch.to(device)
         inference_result_batch = self.inference_component.predict(model, dataset_batch, postprocessors)
         return inference_result_batch
 

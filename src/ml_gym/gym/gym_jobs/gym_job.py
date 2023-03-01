@@ -37,7 +37,7 @@ class AbstractGymJob(StatefulComponent):
         self.run_mode = run_mode
         self.num_epochs = num_epochs
         self.num_batches_per_epoch = num_batches_per_epoch
-        self.current_epoch = warm_start_epoch
+        self.warm_start_epoch = warm_start_epoch
         if run_mode == RunMode.TRAIN:
             self._execution_method = self._execute_train
         elif run_mode == RunMode.WARM_START:
@@ -62,7 +62,7 @@ class AbstractGymJob(StatefulComponent):
     @staticmethod
     def batch_processed_callback(status: str, experiment_status_logger: ExperimentStatusLogger, num_batches: int,
                                  current_batch: int, splits: List[str], current_split: str, num_epochs: int, current_epoch: int):
-        if (current_batch % int(num_batches/10)) == 0:
+        if (current_batch % max(1, int(num_batches/10))) == 0:  # TODO make update period configurable
             experiment_status_logger.log_experiment_status(status=status,
                                                            num_epochs=num_epochs,
                                                            current_epoch=current_epoch,
@@ -77,7 +77,7 @@ class AbstractGymJob(StatefulComponent):
         experiment_status_logger.log_evaluation_results(evaluation_result, current_epoch)
 
     def train_epoch_done_callback(self, num_epochs: int, current_epoch: int, model: NNModel, evaluation_step_routine: Callable):
-        evaluation_results = evaluation_step_routine()
+        evaluation_results = evaluation_step_routine(current_epoch=current_epoch)
         if current_epoch > 0:
             self.lr_scheduler.step()
         checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=num_epochs,
