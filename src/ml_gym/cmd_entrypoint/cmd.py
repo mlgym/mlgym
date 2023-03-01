@@ -38,12 +38,14 @@ class TrainRunConfiguration:
     num_epochs: int
     gs_config_path: str
     validation_config_path = None
+    num_batches_per_epoch: int = None
 
 
 @dataclass
 class WarmStartRunConfiguration:
     gridsaerch_id: str
     num_epochs: int
+    num_batches_per_epoch: int = None
 
 
 @dataclass
@@ -56,23 +58,27 @@ def get_gym_from_environment_config(env_config: Union[MultiProcessingEnvironment
                                                       AccelerateEnvironmentConfig],
                                     logger_collection_constructable: LoggerConstructableIF,
                                     gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF,
-                                    num_epochs: int) -> Gym:
+                                    num_epochs: int,
+                                    num_batches_per_epoch: int = None) -> Gym:
 
     if isinstance(env_config, MainProcessEnvironmentConfig):
         gym = GymFactory.get_sequential_gym(logger_collection_constructable=logger_collection_constructable,
                                             gs_restful_api_client_constructable=gs_restful_api_client_constructable,
-                                            device_id=env_config.computation_device_id)
+                                            device_id=env_config.computation_device_id,
+                                            num_batches_per_epoch=num_batches_per_epoch)
     elif isinstance(env_config, AccelerateEnvironmentConfig):
         gym = GymFactory.get_sequential_gym(logger_collection_constructable=logger_collection_constructable,
                                             gs_restful_api_client_constructable=gs_restful_api_client_constructable,
-
-                                            run_accelereate_env=True)
+                                            num_epochs=num_epochs,
+                                            run_accelereate_env=True,
+                                            num_batches_per_epoch=num_batches_per_epoch)
     elif isinstance(env_config, MultiProcessingEnvironmentConfig):
         gym = GymFactory.get_parallel_single_node_gym(logger_collection_constructable=logger_collection_constructable,
                                                       gs_restful_api_client_constructable=gs_restful_api_client_constructable,
                                                       process_count=env_config.process_count,
                                                       num_epochs=num_epochs,
-                                                      device_ids=env_config.computation_device_ids)
+                                                      device_ids=env_config.computation_device_ids,
+                                                      num_batches_per_epoch=num_batches_per_epoch)
     else:
         raise GymError("Did not provide correct env_config")
 
@@ -161,7 +167,7 @@ def parse_run_configuration(run_configuration_file_path: str) -> Tuple[Union[Tra
     if environment_dict["type"] == "multiprocessing":
         environment_config = MultiProcessingEnvironmentConfig(**environment_dict["config"])
     elif environment_dict["type"] == "accelerate":
-        environment_config = AccelerateEnvironmentConfig(**environment_dict["config"])
+        environment_config = AccelerateEnvironmentConfig()
     else:
         environment_config = MainProcessEnvironmentConfig(**environment_dict["config"])
 
@@ -180,10 +186,12 @@ def get_logging_constructables(logging_config: LoggingConfiguration) -> Tuple[Lo
 def get_gym(env_config: Union[MultiProcessingEnvironmentConfig, AccelerateEnvironmentConfig, MainProcessEnvironmentConfig],
             logger_collection_constructable: LoggerConstructableIF,
             gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF,
-            num_epochs: int) -> Gym:
+            num_epochs: int,
+            num_batches_per_epoch: int = None) -> Gym:
 
     gym = get_gym_from_environment_config(env_config=env_config,
                                           num_epochs=num_epochs,
+                                          num_batches_per_epoch=num_batches_per_epoch,
                                           logger_collection_constructable=logger_collection_constructable,
                                           gs_restful_api_client_constructable=gs_restful_api_client_constructable)
 
@@ -195,7 +203,7 @@ def run(blueprint_class: BluePrint, run_configuration_file_path):
     run_config, env_config, logging_config = parse_run_configuration(run_configuration_file_path=run_configuration_file_path)
 
     logger_collection_constructable, gs_restful_api_client_constructable = get_logging_constructables(logging_config)
-    gym = get_gym(env_config, logger_collection_constructable, gs_restful_api_client_constructable, run_config.num_epochs)
+    gym = get_gym(env_config, logger_collection_constructable, gs_restful_api_client_constructable, run_config.num_epochs, run_config.num_batches_per_epoch)
 
     if isinstance(run_config, TrainRunConfiguration):
         gridsearch_id = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")

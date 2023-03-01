@@ -23,11 +23,13 @@ split_dataset_iterators:
   config:
     split_configs:
       train:
-        train: 0.0001
-        val: 0.0001
-        rest: 0.9998
+        val: 0.001
+        test: 0.001
+        train_lm: 0.998
+      train_lm:
+        rest: 0.999
+        train: 0.001
     seed: 2
-
 
 data_collator:
   component_type_key: DATA_COLLATOR
@@ -48,14 +50,16 @@ data_loaders:
   requirements:
     - name: iterators
       component_name: split_dataset_iterators
-      subscription: [train, val]
+      subscription: [train_lm, train, val, test]
     - name: data_collator
       component_name: data_collator
   config:
-    batch_size: 10
+    batch_size: 30
     seeds:
-      train: 0
-      val: 1
+      train_lm: 1
+      train: 2
+      val: 3
+      test: 4
 
 model_registry:
   component_type_key: MODEL_REGISTRY
@@ -92,7 +96,6 @@ lr_scheduler:
       num_warmup_steps: 0
       num_training_steps: 100
 
-
 loss_function_registry:
   component_type_key: LOSS_FUNCTION_REGISTRY
   variant_key: LM
@@ -107,14 +110,13 @@ prediction_postprocessing_registry:
 
 train_component:
   component_type_key: TRAIN_COMPONENT
-  variant_key: DEFAULT
+  variant_key: ACCELERATE
   requirements:
     - name: loss_function_registry
       component_name: loss_function_registry
     - name: prediction_postprocessing_registry
       component_name: prediction_postprocessing_registry
   config:
-    show_progress: true
     loss_fun_config:
       prediction_subscription_key: *model_prediction_key_anchor
       target_subscription_key: *target_key_anchor
@@ -124,7 +126,7 @@ train_component:
 
 trainer:
   component_type_key: TRAINER
-  variant_key: LM
+  variant_key: ACCELERATE
   requirements:
     - name: train_component
       component_name: train_component
@@ -134,19 +136,18 @@ trainer:
     - name: data_loaders
       component_name: data_loaders
       subscription: train
-  config: 
-    num_batches_per_epoch: 5
+  config: {}
 
 eval_component:
   component_type_key: EVAL_COMPONENT
-  variant_key: DEFAULT
+  variant_key: ACCELERATE
   requirements:
     - name: model
       component_name: model
       subscription: null
     - name: data_loaders
       component_name: data_loaders
-      subscription: [train, val]
+      subscription: [train, val, test]
     - name: loss_function_registry
       component_name: loss_function_registry
     - name: metric_registry
@@ -154,7 +155,7 @@ eval_component:
     - name: prediction_postprocessing_registry
       component_name: prediction_postprocessing_registry
   config:
-    cpu_target_subscription_keys: 
+    cpu_target_subscription_keys:
       - *target_key_anchor
     cpu_prediction_subscription_keys:
       # - *postprocessing_argmax_key_anchor
@@ -170,11 +171,10 @@ eval_component:
         key: MLMCrossEntropyLoss
         tag: mlm_entropy_loss
         vocab_size: 30522
-    show_progress: true
 
 evaluator:
   component_type_key: EVALUATOR
-  variant_key: DEFAULT
+  variant_key: ACCELERATE
   requirements:
     - name: eval_component
       component_name: eval_component
