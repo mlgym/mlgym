@@ -3,17 +3,15 @@ import Drawer from '@mui/material/Drawer';
 import Fab from '@mui/material/Fab';
 import TextField from '@mui/material/TextField';
 import Zoom from '@mui/material/Zoom';
-import * as React from 'react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
 import { updateExperiment, upsertExperiment } from '../redux/experiments/yetAnotherExperimentSlice';
 import { upsertJob } from '../redux/jobs/jobSlice';
-import { increamentReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
-import DedicatedWorker from '../webworkers/DedicatedWorker';
-import { EvaluationResultPayload } from '../webworkers/event_handlers/evaluationResultDataHandler';
-import { DataToRedux } from '../webworkers/worker_utils';
+import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
+import { DataToRedux } from '../worker_socket/DataTypes';
+import { EvaluationResultPayload } from '../worker_socket/event_handlers/evaluationResultDataHandler';
 import './App.scss';
 import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
@@ -35,8 +33,14 @@ export default function App() {
     });
 
     useEffect(() => {
-        // TODO: is DedicatedWorker really needed? 
-        const mlgymWorker = new DedicatedWorker(Object(workerOnMessageHandler));
+        // creating WebWorker
+        // NOTE:using URL because create-react-app throws error since it has not found the worker file during load/bundling
+        const workerSocket = new Worker(new URL('../worker_socket/WorkerSocket.ts', import.meta.url));
+        // setting the redux update methods on the incoming data from the worker thread
+        workerSocket.onmessage = ({ data }: MessageEvent) => workerOnMessageHandler(data as DataToRedux);
+        // // starting the worker
+        // workerSocket.postMessage("INIT");
+
         // NOTE: this is better than calling "useAppSelector(selectEvalResult)" as it will force the App function to get called everytime the state changes
         // TODO: maybe find a better way later other than starting the worker with the empty redux state?
         const evalResult = {
@@ -44,49 +48,49 @@ export default function App() {
             experiments: {},
             colors_mapped_to_exp_id: [[], []]
         }
-        mlgymWorker.postMessage(evalResult);
+        workerSocket.postMessage(evalResult);
 
-        // TODO: close the worker here?
-        // return () =>{ }
-    }, []) // recommended way: keeping the second condition blank, fires useEffect just once as there are no conditions to check to fire up useEffect again (just like componentDidMount of React Life cycle). 
+        // close the worker on Dismount to stop any memory leaks
+        return () => {
+            // ASK: not sure if this is useful, or if it gets handled before the termination???
+            workerSocket.postMessage("CLOSE_SOCKET");
+            workerSocket.terminate();
+        }
+
+    }, [dispatch]);
 
     // TODO: maybe useCallback
     const workerOnMessageHandler = (data: DataToRedux) => {
-        if (typeof (data) === "string") {
-            console.log(data);
+        if (data && data.evaluationResultsData) {
+            // update the Charts Slice
+            dispatch(saveEvalResultData(data.evaluationResultsData));
+            // save the latest metric in the Experiment Slice
+            const { epoch, experiment_id, metric_scores, loss_scores } = data.latest_split_metric as EvaluationResultPayload;
+            const changes: { [latest_split_metric_key: string]: number } = {};
+            for (const metric of metric_scores) {
+                changes[metric.split + "_" + metric.metric] = metric.score;
+            }
+            for (const loss of loss_scores) {
+                changes[loss.split + "_" + loss.loss] = loss.score;
+            }
+            //NOTE, I checked the epoch against the experiment's and that didn't work because of UseAppSelector! (can't be used here!)
+            dispatch(updateExperiment({ id: experiment_id, changes: changes }))
         }
-        else {
-            if (data && data.evaluationResultsData) {
-                // update the Charts Slice
-                dispatch(saveEvalResultData(data.evaluationResultsData));
-                // save the latest metric in the Experiment Slice
-                const { epoch, experiment_id, metric_scores, loss_scores } = data.latest_split_metric as EvaluationResultPayload;
-                const changes: { [latest_split_metric_key: string]: number } = {};
-                for (const metric of metric_scores) {
-                    changes[metric.split + "_" + metric.metric] = metric.score;
-                }
-                for (const loss of loss_scores) {
-                    changes[loss.split + "_" + loss.loss] = loss.score;
-                }
-                //NOTE, I checked the epoch against the experiment's and that didn't work because of UseAppSelector! (can't be used here!)
-                dispatch(updateExperiment({ id: experiment_id, changes: changes }))
-            }
-            else if (data && data.jobStatusData) {
-                dispatch(upsertJob(data.jobStatusData))
-            }
-            else if (data && data.experimentStatusData) {
-                dispatch(upsertExperiment(data.experimentStatusData))
-            }
-            else if (data && data.status) {
-                if (data.status === "msg_count_increment") {
-                    dispatch(increamentReceivedMsgCount())
-                } else if (data.status["ping"]) {
-                    dispatch(setLastPing(data.status["ping"]))
-                } else if (data.status["throughput"]) {
-                    dispatch(setThroughput(data.status["throughput"]))
-                } else if (data.status["isSocketConnected"]) {
-                    dispatch(setSocketConnection(data.status["isSocketConnected"]))
-                }
+        else if (data && data.jobStatusData) {
+            dispatch(upsertJob(data.jobStatusData))
+        }
+        else if (data && data.experimentStatusData) {
+            dispatch(upsertExperiment(data.experimentStatusData))
+        }
+        else if (data && data.status) {
+            if (data.status === "msg_count_increment") {
+                dispatch(incrementReceivedMsgCount())
+            } else if (data.status["ping"] !== undefined) {
+                dispatch(setLastPing(data.status["ping"]))
+            } else if (data.status["throughput"] !== undefined) {
+                dispatch(setThroughput(data.status["throughput"]))
+            } else if (data.status["isSocketConnected"] !== undefined) {
+                dispatch(setSocketConnection(data.status["isSocketConnected"]))
             }
         }
     }

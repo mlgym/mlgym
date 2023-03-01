@@ -41,7 +41,7 @@ export const statusSlice = createSlice({
     setLastPing: (state, action: PayloadAction<number>) => {
       state.ping = action.payload
     },
-    increamentReceivedMsgCount: (state) => {
+    incrementReceivedMsgCount: (state) => {
       state.received_msg_count++;
     },
     setThroughput: (state, { payload }: PayloadAction<number>) => {
@@ -58,7 +58,7 @@ export const statusSlice = createSlice({
   }
 });
 
-export const { changeFilter, changeTab, setSocketConnection, setLastPing, increamentReceivedMsgCount, setThroughput } = statusSlice.actions;
+export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput } = statusSlice.actions;
 export const selectFilter = (state: RootState) => state.status.currentFilter;
 export const selectTab = (state: RootState) => state.status.idTab;
 export const isConnected = (state: RootState) => state.status.wsConnected;
