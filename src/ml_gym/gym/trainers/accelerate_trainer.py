@@ -35,21 +35,22 @@ class AccelerateTrainComponent(StatefulComponent):
             num_batches_per_epoch = len(dataloader)
 
         num_total_batches = num_batches_per_epoch*num_epochs
-        num_dataloaders = np.ceil(num_total_batches/len(dataloader))
-        data_loaders = chain([dataloader]*num_dataloaders)
+        num_dataloaders = int(np.ceil(num_total_batches/len(dataloader)))
+        data_loaders = chain(*([dataloader]*num_dataloaders))
 
         for batch_id, batch in zip(range(num_total_batches), data_loaders):
-            if batch_id % num_batches_per_epoch == 0:  # when epoch done
-                current_epoch = int(batch_id / num_batches_per_epoch)
-                epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=current_epoch, model=model)
-
+            current_epoch = int(batch_id / num_batches_per_epoch)
             model = self._train_batch(accelerator=accelerator, batch=batch, model=model, optimizer=optimizer)
 
             batch_done_callback_fun(status="train",
                                     num_batches=num_batches_per_epoch,
                                     current_batch=batch_id % num_batches_per_epoch,
-                                    splits=[dataloader.dataset_tag],
-                                    current_split=dataloader.dataset_tag)
+                                    splits=[],  # TODO needs to be set properly
+                                    current_split="",  # TODO needs to be set properly
+                                    num_epochs=num_epochs,
+                                    current_epoch=current_epoch)
+            if (batch_id + 1) % num_batches_per_epoch == 0:  # when epoch done
+                epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=current_epoch, model=model)
 
         return model
 
@@ -68,44 +69,11 @@ class AccelerateTrainer:
               batch_done_callback_fun: Callable, epoch_done_callback: Callable, accelerator: Accelerator,
               num_batches_per_epoch: int = None) -> NNModel:
 
-        accelerate_train_loader = accelerator.prepare(self.train_loader)
+        model = model.train()
 
-        model = self.train_component.train(model=model, optimizer=optimizer, dataloaer=accelerate_train_loader, accelerator=accelerator,
+        # accelerate_train_loader = accelerator.prepare(self.train_loader)
+
+        model = self.train_component.train(model=model, optimizer=optimizer, dataloader=self.train_loader, accelerator=accelerator,
                                            batch_done_callback_fun=batch_done_callback_fun, epoch_done_callback_fun=epoch_done_callback,
                                            num_epochs=num_epochs, num_batches_per_epoch=num_batches_per_epoch)
         return model
-
-
-# class LMTrainer(AccelerateTrainer):
-#     """ Language Model Trainer
-#     Language models are generally trained using datasets of tremendous size, making the concept of "epochs" meaningless, as we tend to not iterate
-#     over the entire dataset multiple times. In this class, we set an epoch to be a subset of the entire dataset, e.g., 1000 batches.
-#     As a result, the first epoch consists of the first 1k batches in the dataset and the second epoch of the baches from position 1000 to 2000, and so on.
-#     This gives us the opportunity to calculate the validation loss scores after each epoch and track the training progress.
-
-#     """
-
-#     def __init__(self, train_component: TrainComponent, train_loader: DatasetLoader, num_batches_per_epoch: int):
-#         super().__init__(train_component=train_component, train_loader=train_loader)
-#         self.num_batches_per_epoch = num_batches_per_epoch
-
-#     def set_current_epoch(self, epoch: int):
-#         if self.num_epochs is None:
-#             raise TrainingStateCorruptError("Variable num_epochs must be set before setting current_epoch.")
-#         self.current_epoch = epoch
-
-#         self.train_loader_generator = GeneratorLMDatasetLoader(data_loader=self.train_loader,
-#                                                                num_batches_per_epoch=self.num_batches_per_epoch,
-#                                                                num_epochs=self.num_epochs,
-#                                                                current_epoch=self.current_epoch)
-
-#     def train_epoch(self, model: NNModel, optimizer: OptimizerAdapter, device: torch.device,
-#                     batch_processed_callback_fun: Callable = None) -> NNModel:
-#         if self.accelerator is None:
-#             raise TrainingStateCorruptError("Accelerator not initialized in trainer.")
-#         if self.current_epoch > self.num_epochs:
-#             raise ModelAlreadyFullyTrainedError(f"Model has been already trained for {self.current_epoch}/{self.num_epochs} epochs.")
-#         model = self.train_component.train_epoch(model, optimizer, self.train_loader_generator, device, self.current_epoch,
-#                                                  batch_processed_callback_fun)
-#         self.current_epoch += 1
-#         return model

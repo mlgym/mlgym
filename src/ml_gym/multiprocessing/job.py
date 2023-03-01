@@ -48,7 +48,10 @@ class Job(JobIF):
             return None
 
     def execute(self, device: torch.device = None):
-        return self.fun(blueprint=self.blueprint, device=device, **self.param_dict)
+        if device is not None:
+            return self.fun(blueprint=self.blueprint, device=device, **self.param_dict)
+        else:
+            return self.fun(blueprint=self.blueprint, **self.param_dict)
 
 
 class JobStatusSubscriberIF:
