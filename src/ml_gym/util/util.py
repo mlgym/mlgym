@@ -48,7 +48,7 @@ class ExportedModel:
         return result_batch
 
     def predict_dataset_batch(self, batch: DatasetBatch, no_grad: bool = True) -> InferenceResultBatch:
-        batch.to_device(self._device)
+        batch.to(self._device)
         if no_grad:
             with torch.no_grad():
                 forward_result = self.model.forward(batch.samples)
