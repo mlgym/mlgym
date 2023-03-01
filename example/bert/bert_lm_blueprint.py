@@ -46,7 +46,7 @@ class BERRTLMCollator(Collator):
                                                              mlm_probability=mlm_probability,
                                                              pad_to_multiple_of=pad_to_multiple_of)
 
-    def __call__(self, batch: List[torch.Tensor]):
+    def __call__(self, batch: List[torch.Tensor]) -> DatasetBatch:
         """
         :param batch: batch format [no_samples, height, width, channels]
         :return:
@@ -67,11 +67,10 @@ class MyModelRegistryConstructable(ModelRegistryConstructable):
 
 
 class BERTLMBluePrint(BluePrint):
-    def __init__(self, run_mode: RunMode, config: Dict, num_epochs: int, grid_search_id: str,
+    def __init__(self, run_mode: RunMode, config: Dict, grid_search_id: str,
                  experiment_id: str, external_injection: Dict[str, Any] = None,
                  warm_start_epoch: int = 0):
-        super().__init__(run_mode, num_epochs, config, grid_search_id,
-                         experiment_id, external_injection, warm_start_epoch)
+        super().__init__(run_mode, config, grid_search_id, experiment_id, external_injection, warm_start_epoch)
 
     @staticmethod
     def construct_components(config: Dict, component_names: List[str], device: torch.device,
