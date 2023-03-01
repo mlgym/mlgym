@@ -40,24 +40,20 @@ class StandardGymJob(AbstractGymJob):
 
     def _train_step(self, device: torch.device) -> NNModel:
         partial_batch_processed_callback = partial(AbstractGymJob.batch_processed_callback, num_epochs=self.num_epochs,
-                                                   current_epoch=self.current_epoch,
                                                    experiment_status_logger=self._experiment_status_logger)
         model = self.trainer.train_epoch(self.model, self.optimizer, device,
                                          batch_processed_callback_fun=partial_batch_processed_callback)
         return model
 
-    def _evaluation_step(self, device: torch.device) -> List[EvaluationBatchResult]:
-        self.model.to(device)
+    def _evaluation_step(self, current_epoch: int, device: torch.device) -> List[EvaluationBatchResult]:
         partial_batch_processed_callback = partial(AbstractGymJob.batch_processed_callback, num_epochs=self.num_epochs,
-                                                   current_epoch=self.current_epoch,
+                                                   current_epoch=current_epoch,
                                                    experiment_status_logger=self._experiment_status_logger)
-        partial_epoch_result_callback = partial(self.epoch_result_callback, current_epoch=self.current_epoch,
-                                                experiment_status_logger=self._experiment_status_logger)
+        partial_epoch_result_callback = partial(self.epoch_result_callback, experiment_status_logger=self._experiment_status_logger,
+                                                current_epoch=current_epoch)
 
         evaluation_results = self.evaluator.evaluate(model=self.model,
                                                      device=device,
-                                                     current_epoch=self.current_epoch,
-                                                     num_epochs=self.num_epochs,
                                                      batch_processed_callback_fun=partial_batch_processed_callback,
                                                      epoch_result_callback_fun=partial_epoch_result_callback)
 
@@ -86,36 +82,37 @@ class StandardGymJob(AbstractGymJob):
         self.lr_scheduler.register_optimizer(optimizer=self.optimizer)
 
         partial_batch_done_callback = partial(self.batch_processed_callback, experiment_status_logger=self._experiment_status_logger)
-        partial_train_epoch_done_callback = partial(self.train_epoch_done_callback, evaluation_step_routine=lambda: self._evaluation_step(device=device))
+        def evaluation_step_routine(current_epoch: int): return self._evaluation_step(device=device, current_epoch=current_epoch)
+        partial_train_epoch_done_callback = partial(self.train_epoch_done_callback, evaluation_step_routine=evaluation_step_routine)
+
         model = self.trainer.train(num_epochs=self.num_epochs, model=self.model, optimizer=self.optimizer, device=device,
                                    batch_done_callback_fun=partial_batch_done_callback,
                                    epoch_done_callback=partial_train_epoch_done_callback,
                                    num_batches_per_epoch=self.num_batches_per_epoch)
 
-    def _execute_warm_start(self, device: torch.device):
-        if self.current_epoch > 0:
-            model_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
+    def _execute_warm_start(self, device: torch.device, warm_start_epoch: int):
+        model_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
+                                                                              experiment_id=self.experiment_id,
+                                                                              checkpoint_id=warm_start_epoch,
+                                                                              checkpoint_resource=CheckpointResource.model))
+        self.model.load_state_dict(model_state)
+
+        optimizer_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
                                                                                   experiment_id=self.experiment_id,
-                                                                                  checkpoint_id=self.current_epoch,
-                                                                                  checkpoint_resource=CheckpointResource.model))
-            self.model.load_state_dict(model_state)
+                                                                                  checkpoint_id=warm_start_epoch,
+                                                                                  checkpoint_resource=CheckpointResource.optimizer))
+        self.optimizer.load_state_dict(optimizer_state)
 
-            optimizer_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                      experiment_id=self.experiment_id,
-                                                                                      checkpoint_id=self.current_epoch,
-                                                                                      checkpoint_resource=CheckpointResource.optimizer))
-            self.optimizer.load_state_dict(optimizer_state)
+        lr_scheduler_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
+                                                                                     experiment_id=self.experiment_id,
+                                                                                     checkpoint_id=warm_start_epoch,
+                                                                                     checkpoint_resource=CheckpointResource.lr_scheduler))
+        self.lr_scheduler.load_state_dict(lr_scheduler_state)
 
-            lr_scheduler_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                         experiment_id=self.experiment_id,
-                                                                                         checkpoint_id=self.current_epoch,
-                                                                                         checkpoint_resource=CheckpointResource.lr_scheduler))
-            self.lr_scheduler.load_state_dict(lr_scheduler_state)
-
-            stateful_component_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                               experiment_id=self.experiment_id,
-                                                                                               checkpoint_id=self.current_epoch,
-                                                                                               checkpoint_resource=CheckpointResource.stateful_components))
-            self.set_state(stateful_component_state)
+        stateful_component_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
+                                                                                           experiment_id=self.experiment_id,
+                                                                                           checkpoint_id=warm_start_epoch,
+                                                                                           checkpoint_resource=CheckpointResource.stateful_components))
+        self.set_state(stateful_component_state)
 
         self._execute_train(device)
