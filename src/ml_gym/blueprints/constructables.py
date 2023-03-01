@@ -8,6 +8,8 @@ from data_stack.io.storage_connectors import StorageConnectorFactory
 from data_stack.mnist.factory import MNISTFactory
 from ml_gym.data_handling.dataset_loader import DatasetLoader, DatasetLoaderFactory
 from ml_gym.early_stopping.early_stopping_strategies import EarlyStoppingIF, EarlyStoppingStrategyFactory
+from ml_gym.gym.evaluators.accelerate_evaluator import AccelerateEvalComponent, AccelerateEvaluator
+from ml_gym.gym.trainers.accelerate_trainer import AccelerateTrainComponent, AccelerateTrainer
 from ml_gym.optimizers.lr_scheduler_factory import LRSchedulerFactory
 from ml_gym.optimizers.lr_schedulers import LRSchedulerAdapter
 from ml_gym.optimizers.optimizer import OptimizerAdapter, OptimizerBundle
@@ -459,6 +461,23 @@ class TrainComponentConstructable(ComponentConstructable):
 
 
 @dataclass
+class AccelerateTrainComponentConstructable(ComponentConstructable):
+    loss_fun_config: Dict = field(default_factory=dict)
+    post_processors_config: List[Dict] = field(default_factory=list)
+
+    def _construct_impl(self) -> AccelerateTrainComponent:
+        prediction_post_processing_registry: ClassRegistry = self.get_requirement("prediction_postprocessing_registry")
+        loss_function_registry: ClassRegistry = self.get_requirement("loss_function_registry")
+        train_loss_fun = loss_function_registry.get_instance(**self.loss_fun_config)
+        postprocessors = [PredictPostProcessing(prediction_post_processing_registry.get_instance(config["key"], **config["params"]))
+                          for config in self.post_processors_config]
+
+        inference_component = InferenceComponent(no_grad=False)
+        train_component = AccelerateTrainComponent(inference_component, postprocessors, train_loss_fun)
+        return train_component
+
+
+@dataclass
 class TrainerConstructable(ComponentConstructable):
 
     def _construct_impl(self) -> Trainer:
@@ -468,16 +487,14 @@ class TrainerConstructable(ComponentConstructable):
         return trainer
 
 
-# @dataclass
-# class LMTrainerConstructable(ComponentConstructable):
-#     num_batches_per_epoch: int = None
+@dataclass
+class AccelerateTrainerConstructable(ComponentConstructable):
 
-#     def _construct_impl(self) -> Trainer:
-#         train_loader: DatasetLoader = self.get_requirement("data_loaders")
-#         train_component: TrainComponent = self.get_requirement("train_component")
-#         trainer = LMTrainer(train_component=train_component, train_loader=train_loader,
-#                             num_batches_per_epoch=self.num_batches_per_epoch, verbose=True)
-#         return trainer
+    def _construct_impl(self) -> AccelerateTrainer:
+        train_loader: DatasetLoader = self.get_requirement("data_loaders")
+        train_component: TrainComponent = self.get_requirement("train_component")
+        trainer = AccelerateTrainer(train_component=train_component, train_loader=train_loader)
+        return trainer
 
 
 @dataclass
@@ -526,6 +543,54 @@ class EvaluatorConstructable(ComponentConstructable):
     def _construct_impl(self) -> Evaluator:
         eval_component: EvalComponent = self.get_requirement("eval_component")
         evaluator = Evaluator(eval_component)
+        return evaluator
+
+
+@dataclass
+class AccelerateEvalComponentConstructable(ComponentConstructable):
+    metrics_config: List = field(default_factory=list)
+    loss_funs_config: List = field(default_factory=list)
+    post_processors_config: List[Dict] = field(default_factory=list)
+    cpu_target_subscription_keys: List[str] = field(default_factory=list)
+    cpu_prediction_subscription_keys: List[str] = field(default_factory=list)
+    metrics_computation_config: List[Dict] = None
+    loss_computation_config: List[Dict] = None
+
+    def _construct_impl(self) -> AccelerateEvalComponent:
+        dataset_loaders: Dict[str, DatasetLoader] = self.get_requirement("data_loaders")
+        loss_function_registry: ClassRegistry = self.get_requirement("loss_function_registry")
+        metric_registry: ClassRegistry = self.get_requirement("metric_registry")
+        prediction_post_processing_registry: ClassRegistry = self.get_requirement("prediction_postprocessing_registry")
+
+        loss_funs = {conf["tag"]: loss_function_registry.get_instance(**conf) for conf in self.loss_funs_config}
+        metric_funs = [metric_registry.get_instance(**conf) for conf in self.metrics_config]
+
+        postprocessors_dict = defaultdict(list)
+        for config in self.post_processors_config:
+            if "applicable_splits" in config:
+                for split in config["applicable_splits"]:
+                    postprocessors_dict[split].append(PredictPostProcessing(
+                        prediction_post_processing_registry.get_instance(config["key"], **config["params"])))
+            else:
+                if "params" in config:
+                    postprocessors_dict["default"].append(PredictPostProcessing(
+                        prediction_post_processing_registry.get_instance(config["key"], **config["params"])))
+                else:  # TODO this is the legacy version!
+                    postprocessors_dict["default"].append(PredictPostProcessing(prediction_post_processing_registry.get_instance(**config)))
+
+        inference_component = InferenceComponent(no_grad=True)
+        eval_component = AccelerateEvalComponent(inference_component, postprocessors_dict, metric_funs, loss_funs, dataset_loaders,
+                                                 self.cpu_target_subscription_keys, self.cpu_prediction_subscription_keys,
+                                                 self.metrics_computation_config, self.loss_computation_config)
+        return eval_component
+
+
+@dataclass
+class AccelerateEvaluatorConstructable(ComponentConstructable):
+
+    def _construct_impl(self) -> AccelerateEvaluator:
+        eval_component: AccelerateEvalComponent = self.get_requirement("eval_component")
+        evaluator = AccelerateEvaluator(eval_component)
         return evaluator
 
 
