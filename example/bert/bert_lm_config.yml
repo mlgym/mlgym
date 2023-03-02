@@ -26,10 +26,21 @@ split_dataset_iterators:
         val: 0.001
         test: 0.001
         train_lm: 0.998
+    seed: 2
+
+split_dataset_iterator_2:
+  component_type_key: SPLITTED_DATASET_ITERATORS
+  variant_key: RANDOM
+  requirements:
+    - name: iterators
+      component_name: split_dataset_iterators
+      subscription: [train_lm, val, test]
+  config:
+    split_configs:
       train_lm:
         rest: 0.999
-        train: 0.001
-    seed: 2
+        train_small: 0.001
+    seed: 3
 
 data_collator:
   component_type_key: DATA_COLLATOR
@@ -49,15 +60,15 @@ data_loaders:
   variant_key: DEFAULT
   requirements:
     - name: iterators
-      component_name: split_dataset_iterators
-      subscription: [train_lm, train, val, test]
+      component_name: split_dataset_iterator_2
+      subscription: [train_lm, train_small, val, test]
     - name: data_collator
       component_name: data_collator
   config:
-    batch_size: 30
+    batch_size: 20
     seeds:
       train_lm: 1
-      train: 2
+      train_small: 2
       val: 3
       test: 4
 
@@ -135,7 +146,7 @@ trainer:
       subscription: null
     - name: data_loaders
       component_name: data_loaders
-      subscription: train
+      subscription: train_lm
   config: {}
 
 eval_component:
@@ -147,7 +158,7 @@ eval_component:
       subscription: null
     - name: data_loaders
       component_name: data_loaders
-      subscription: [train, val, test]
+      subscription: [train_small, val, test]
     - name: loss_function_registry
       component_name: loss_function_registry
     - name: metric_registry
@@ -157,9 +168,9 @@ eval_component:
   config:
     cpu_target_subscription_keys:
       - *target_key_anchor
-    cpu_prediction_subscription_keys:
+    cpu_prediction_subscription_keys: []
       # - *postprocessing_argmax_key_anchor
-      - *model_prediction_key_anchor
+      # - *model_prediction_key_anchor
     # post_processors_config:
     #   - key: "ARG_MAX"
     #     prediction_subscription_key: *model_prediction_key_anchor
@@ -194,7 +205,7 @@ early_stopping_strategy:
     early_stopping_config:
       min_relative_improvement: 0.00001
       epochs_window: 50
-      split_name: train
+      split_name: val
       monitoring_key: "mlm_entropy_loss"
       is_increase_task: false
 

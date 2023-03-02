@@ -10,7 +10,6 @@ from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.metrics.metrics import Metric
 from ml_gym.models.nn.net import NNModel
 from ml_gym.loss_functions.loss_functions import Loss
-import numpy as np
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent
 from ml_gym.error_handling.exception import BatchStateError, EvaluationError, MetricCalculationError, LossCalculationError
 from accelerate import Accelerator
@@ -95,12 +94,13 @@ class AccelerateEvalComponent:
 
             inference_result_batches_cpu.append(irb_filtered)
             processed_batches += 1
-            splits = [d.dataset_tag for _, d in self.dataset_loaders.items()]
-            batch_processed_callback_fun(status="evaluation",
-                                         num_batches=num_batches,
-                                         current_batch=processed_batches,
-                                         splits=splits,
-                                         current_split=dataset_loader.dataset_tag)
+            splits = list(self.dataset_loaders.keys())
+            if accelerator.is_main_process:
+                batch_processed_callback_fun(status="evaluation",
+                                             num_batches=num_batches,
+                                             current_batch=processed_batches,
+                                             splits=splits,
+                                             current_split=split_name)
 
         # calc metrics
         try:
@@ -119,13 +119,13 @@ class AccelerateEvalComponent:
 
         # aggregate losses
         loss_keys = batch_losses[0].keys()
-        loss_scores = {key: [np.mean([l[key] for l in batch_losses])] for key in loss_keys}
+        loss_scores = {key: [torch.mean(torch.Tensor([l[key] for l in batch_losses])).item()] for key in loss_keys}
 
         evaluation_result = EvaluationBatchResult(losses=loss_scores,
                                                   metrics=metric_scores,
                                                   dataset_name=dataset_loader.dataset_name,
                                                   split_name=split_name)
-        if epoch_result_callback_fun is not None:
+        if epoch_result_callback_fun is not None and accelerator.is_main_process:
             epoch_result_callback_fun(evaluation_result=evaluation_result)
         return evaluation_result
 

@@ -166,7 +166,7 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
 
     def __init__(self, targets: Dict[str, torch.Tensor] = None, predictions: Dict[str, torch.Tensor] = None, tags: torch.Tensor = None):
         self._targets = targets if targets is not None else {}
-        self._tags = tags
+        self._tags = tags if tags is not None else torch.tensor()
         self._predictions = predictions if predictions is not None else {}
         self.to(self.device)
 
@@ -271,7 +271,7 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
 
     @staticmethod
     def combine_impl(batches: List['InferenceResultBatch']) -> 'InferenceResultBatch':
-        tags = [tag for batch in batches for tag in batch.tags]
+        tags = torch.tensor([tag for batch in batches for tag in batch.tags])
         predictions = Batch._combine_tensor_dicts([batch.predictions for batch in batches])
         targets = Batch._combine_tensor_dicts([batch.targets for batch in batches])
         return InferenceResultBatch(targets=targets, predictions=predictions, tags=tags)
