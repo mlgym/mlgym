@@ -41,14 +41,14 @@ class AccelerateTrainComponent(StatefulComponent):
         for batch_id, batch in zip(range(num_total_batches), data_loaders):
             current_epoch = int(batch_id / num_batches_per_epoch)
             model = self._train_batch(accelerator=accelerator, batch=batch, model=model, optimizer=optimizer)
-
-            batch_done_callback_fun(status="train",
-                                    num_batches=num_batches_per_epoch,
-                                    current_batch=batch_id % num_batches_per_epoch,
-                                    splits=[],  # TODO needs to be set properly
-                                    current_split="",  # TODO needs to be set properly
-                                    num_epochs=num_epochs,
-                                    current_epoch=current_epoch)
+            if accelerator.is_main_process:
+                batch_done_callback_fun(status="train",
+                                        num_batches=num_batches_per_epoch,
+                                        current_batch=batch_id % num_batches_per_epoch,
+                                        splits=[],  # TODO needs to be set properly
+                                        current_split="",  # TODO needs to be set properly
+                                        num_epochs=num_epochs,
+                                        current_epoch=current_epoch)
             if (batch_id + 1) % num_batches_per_epoch == 0:  # when epoch done
                 epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=current_epoch, model=model)
 
