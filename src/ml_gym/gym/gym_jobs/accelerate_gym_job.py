@@ -1,3 +1,4 @@
+from ml_gym.data_handling.dataset_loader import DatasetLoaderFactory
 from ml_gym.early_stopping.early_stopping_strategies import EarlyStoppingIF
 from ml_gym.error_handling.exception import EarlyStoppingCriterionFulfilledError
 from ml_gym.gym.gym_jobs.gym_job import AbstractGymJob
@@ -75,14 +76,20 @@ class AccelerateGymJob(AbstractGymJob):
         self.lr_scheduler.register_optimizer(optimizer=self.optimizer)
 
         accelerator = Accelerator()
-        self.model, self.optimizer, self.trainer, self.evaluator, self.lr_scheduler, self.trainer.train_loader = accelerator.prepare(self.model,
-                                                                                                                                     self.optimizer,
-                                                                                                                                     self.trainer,
-                                                                                                                                     self.evaluator,
-                                                                                                                                     self.lr_scheduler,
-                                                                                                                                     self.trainer.train_loader)
+        self.model, self.optimizer, self.trainer, self.evaluator, self.lr_scheduler, train_loader = accelerator.prepare(self.model,
+                                                                                                                        self.optimizer,
+                                                                                                                        self.trainer,
+                                                                                                                        self.evaluator,
+                                                                                                                        self.lr_scheduler,
+                                                                                                                        self.trainer.train_loader)
+        self.trainer.train_loader = DatasetLoaderFactory.get_data_loader_shard_wrapper(data_loader_shard=train_loader,
+                                                                                       dataset_name=self.trainer.train_loader.dataset_name,
+                                                                                       dataset_tag=self.trainer.train_loader.dataset_tag)
 
-        self.evaluator.eval_component.dataset_loaders = {key: accelerator.prepare(data_loader) for key, data_loader in self.evaluator.eval_component.dataset_loaders.items()}
+        self.evaluator.eval_component.dataset_loaders = {key: DatasetLoaderFactory.get_data_loader_shard_wrapper(
+            data_loader_shard=accelerator.prepare(data_loader),
+            dataset_name=data_loader.dataset_name,
+            dataset_tag=data_loader.dataset_tag) for key, data_loader in self.evaluator.eval_component.dataset_loaders.items()}
 
         partial_batch_done_callback = partial(self.batch_processed_callback, experiment_status_logger=self._experiment_status_logger)
         def evaluation_step_routine(current_epoch: int): return self._evaluation_step(current_epoch=current_epoch, accelerator=accelerator)
