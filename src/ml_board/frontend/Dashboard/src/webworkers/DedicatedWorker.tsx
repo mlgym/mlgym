@@ -1,4 +1,4 @@
-type DedicatedWorkerInterface = {
+interface DedicatedWorkerInterface {
     worker: Worker
     onMessageCtxNFunc: Function
 }
@@ -14,15 +14,15 @@ class DedicatedWorker implements DedicatedWorkerInterface{
             this.worker.onmessage = (e: MessageEvent) => {
                 this.onMessageCtxNFunc.apply(this.onMessageCtxNFunc, [e.data])
             }
-            this.onMessageCtxNFunc = onMessageCtxNFunc
+            this.onMessageCtxNFunc = onMessageCtxNFunc;
         }
         else {
             throw new Error('WebWorker not supported by browser. Please use an updated browser.');
         }
     }
 
-    postMessage(data = {}) {
-        this.worker.postMessage(data)
+    postMessage(data={}) {
+        this.worker.postMessage(data);
     }
 }
 
