@@ -30,7 +30,9 @@ export interface settingConfigsInterface {
     restApiUrl: string
 }
 
-async function saveUrlParamsToLocalStorage(searchParams: URLSearchParams, settingConfigs: settingConfigsInterface) {
+// function to get parameters from url or localstorage to show them populated on the popup or in the settings page.
+// function is made async as JSON parsing needs to be done asynchronously for fetching data from local storage and then set in `settingConfigs` key-values. Then if the url params are present, they will overwrite local storage values.
+async function getUrlParamsOrLocalStorageData(searchParams: URLSearchParams, settingConfigs: settingConfigsInterface) {
     let gridSearchId = searchParams.get("run_id")
     let socketConnectionUrl = searchParams.get("ws_endpoint")
     let restApiUrl = searchParams.get("rest_endpoint")
@@ -40,6 +42,7 @@ async function saveUrlParamsToLocalStorage(searchParams: URLSearchParams, settin
         settingConfigs = await JSON.parse(settingConfigsInStorage);
     }
 
+    // in the else parts below: for now, I kept default values if the server is localhost or 127.0.0.1 - so we have ease in development. Let me know if it needs to be changed.
     if(gridSearchId !== null) {
         settingConfigs.gridSearchId = gridSearchId;
     }
@@ -81,7 +84,8 @@ export default function App() {
     })
 
     useEffect(() => {
-        saveUrlParamsToLocalStorage(searchParams, settingConfigs).then((settingConfigs)=>{
+        // Await key used in this function - suspends execution of the code below it and assures that it does it's task and returns valaue -- this is called promise (from a function). So as the function is executed, it returns a promise with data which must be accessed like this:
+        getUrlParamsOrLocalStorageData(searchParams, settingConfigs).then((settingConfigs)=>{
             setSettingConfigs(settingConfigs);
             localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
         });
@@ -97,7 +101,9 @@ export default function App() {
     useEffect(() => {
         if(isConfigValidated)
         {
-            console.log(settingConfigs)
+            // save to local storage only after user clicks on submit button - either in popup or in settings page.
+            // after the used submits the values & after it is saved, then only we will connect to the socket with the values given by user.
+            // TODO:: after Vijul and Osama's code is merged, handle error message from the socket and show to user - so if the socket connection was not successful, user can update the values and try again.
             localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
 
             // TODO: is DedicatedWorker really needed? 
@@ -178,6 +184,7 @@ export default function App() {
                     // Dynamic Routes added as a functionality. 
                     // Rendering Names as per routes helps in Menu also. So, to keep the Component and Route name mapping uniform, RoutesMapping.tsx is the single file to look at for any updates or changes to be made
                     Object.keys(RoutesMapping).map((routeMapKey, index) => {
+                        // If the settings page is to render, we have to do it seperately from dynamic routing as we need to pass functions as props to settings page - so that when user submits the configured values, we can connect to websocket with the changed parameters.
                         if(routeMapKey === "Settings") {
                             return (
                                 <Route
@@ -248,6 +255,7 @@ export default function App() {
                 </Drawer>
             </React.Fragment>
             {
+                // here also, it is same as done above for Setting Component. We need to pass functions as props to the popup - so that when user submits the configured values, we can connect to websocket with the changed parameters.
                 urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url && isConfigValidated === false ?
                 <ConfigPopup 
                     validateConfigs={(value:boolean)=>setConfigValidation(value)} 
@@ -256,6 +264,7 @@ export default function App() {
                 :
                 null
             }
+            {/* Socket connection success / fail message temperory popup which will disappeaer in 4secs or when closed manually by user */}
             <Snackbar
                 anchorOrigin={{ vertical:"bottom", horizontal:"center" }}
                 open={isSnackbarOpen}

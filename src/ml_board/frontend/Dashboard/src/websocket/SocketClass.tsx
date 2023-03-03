@@ -40,7 +40,7 @@ class SocketClass implements SocketClassInterface {
     }
 
     init = (settingConfigs: settingConfigsInterface) => {
-
+        // settingConfigs - are the configurations sent by user for making socket connection request
         const socket = socketIO(settingConfigs.socketConnectionUrl, { autoConnect: true });
         const runId = settingConfigs.gridSearchId;
 

@@ -11,6 +11,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { FuncProps } from "../settings/Settings";
 import { defaultGridSearchIdHelperText, defaultSocketConnectionUrlHelperText, defaultRestApiUrlHelperText } from '../settings/Settings';
 
+// Settings file and Config popup file (except render part) might look exactly the same for now. But Settigns will have more functionality later. So we will add more things in Settings which will make it different from popup file.
 const ConfigPopup: React.FC<FuncProps> = (props) => {
 
     const navigate = useNavigate();
@@ -63,6 +64,7 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
         let restApiUrl = configTextState.restApiUrl;
         let isDataInValid = true;
 
+        // basic validation check: if any values are typed by user, then enable submit button or else keep it disabled - so that empty values are not sent for socket connection request
         if(gridSearchId.trim().length > 0 && socketConnectionUrl.trim().length > 0 && restApiUrl.trim().length > 0 ) {
             isDataInValid = false;
             return isDataInValid;
