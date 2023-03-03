@@ -61,7 +61,8 @@ const throughput_callback = (throughput: number) => {
 };
 
 onmessage = (e) => {
-    const reduxData = e.data
+    const reduxData = e.data.evalResult;
+    const settingConfigs = e.data.settingConfigs;
     let result = null;
     try {
         const webSocket = new SocketClass(
@@ -71,7 +72,7 @@ onmessage = (e) => {
             () => msgCounterInc_callback(),
             (throughput: number) => throughput_callback(throughput)
         );
-        webSocket.init();
+        webSocket.init(settingConfigs);
         result = SOCKET_STATUS.SOCKET_CONN_SUCCESS;
     }
     catch (e) {
