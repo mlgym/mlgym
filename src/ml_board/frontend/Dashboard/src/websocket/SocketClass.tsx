@@ -1,11 +1,11 @@
 import socketIO, { Socket } from 'socket.io-client';
+import { settingConfigsInterface } from "../app/App";
 
-const DEFAULT_URL = 'http://localhost:7000/'; // or http://127.0.0.1:7000/'
+// const DEFAULT_URL = 'http://localhost:7000/'; // or http://127.0.0.1:7000/'
 
 // export type PingPong = "PING" | "PONG"
 
 interface SocketClassInterface {
-    socketURL: string,
     interval: NodeJS.Timer;
     lastPing: number;
     lastPong: number;
@@ -31,20 +31,18 @@ class SocketClass implements SocketClassInterface {
         private connectionCb: (isConnected: boolean) => void,
         private pingCb: (time: number) => void,
         private msgCountIncCb: () => void,
-        private throughputCb: (throughput: number) => void,
-        public socketURL: string = '',
+        private throughputCb: (throughput: number) => void
     ) {
-        this.socketURL = socketURL || DEFAULT_URL
         this.dataCallback = dataCallback;
         this.connectionCb = connectionCb;
         this.pingCb = pingCb;
         this.msgCountIncCb = msgCountIncCb;
     }
 
-    init = () => {
-
-        const socket = socketIO(this.socketURL, { autoConnect: true });
-        const runId = "mlgym_event_subscribers";
+    init = (settingConfigs: settingConfigsInterface) => {
+        // settingConfigs - are the configurations sent by user for making socket connection request
+        const socket = socketIO(settingConfigs.socketConnectionUrl, { autoConnect: true });
+        const runId = settingConfigs.gridSearchId;
 
         socket.open();
 
