@@ -19,11 +19,15 @@ class DataAccessIF(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_raw_config_of_grid_search(self, grid_search_id: str, config_name: str):
-        raise NotImplementedError
-
-    @abstractmethod
     def add_config_to_experiment(self, grid_search_id: str, experiment_id: str, config_name: str, config: RawTextFile):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def get_grid_config_exec(self, grid_search_id: str):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def get_experiment_config_exec(self, grid_search_id: str, experiment_id: str):
         raise NotImplementedError
 
     @abstractmethod
@@ -134,9 +138,6 @@ class FileDataAccess(DataAccessIF):
             raise InvalidPathError(
                 f"File path {requested_full_path} is not safe.")
 
-    def get_raw_config_of_grid_search(self, grid_search_id: str, config_name: str):
-        raise NotImplementedError
-
     def add_config_to_experiment(self, grid_search_id: str, experiment_id: str, config_name: str, config: RawTextFile):
         requested_full_path = os.path.realpath(os.path.join(
             self.top_level_logging_path, str(grid_search_id), str(experiment_id), config_name))
@@ -146,6 +147,32 @@ class FileDataAccess(DataAccessIF):
             with open(requested_full_path, "w") as fp:
                 fp.writelines(config.content)
 
+        else:
+            raise InvalidPathError(
+                f"File path {requested_full_path} is not safe.")
+    
+    def get_grid_config_exec(self, grid_search_id: str):
+        requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id)))
+        if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
+            if not os.path.isfile(requested_full_path):
+                raise InvalidPathError(
+                    f"Resource {requested_full_path} not found.")
+
+            generator = FileDataAccess.iterfile(requested_full_path)
+            return generator
+        else:
+            raise InvalidPathError(
+                f"File path {requested_full_path} is not safe.")
+    
+    def get_experiment_config_exec(self, grid_search_id: str, experiment_id: str):
+        requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id)))
+        if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
+            if not os.path.isfile(requested_full_path):
+                raise InvalidPathError(
+                    f"Resource {requested_full_path} not found.")
+
+            generator = FileDataAccess.iterfile(requested_full_path)
+            return generator
         else:
             raise InvalidPathError(
                 f"File path {requested_full_path} is not safe.")

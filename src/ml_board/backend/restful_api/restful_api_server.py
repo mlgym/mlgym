@@ -23,6 +23,10 @@ class RestfulAPIServer:
         self.data_access = data_access
         self.app.add_api_route(path="/grid_searches/{grid_search_id}/experiments",
                                methods=["GET"], endpoint=self.get_experiment_statuses)
+        self.app.add_api_route(path="/grid_searches/{grid_search_id}/{experiment_id}/experiment_config",
+                               methods=["GET"], endpoint=self.get_experiment_config_exec)
+        self.app.add_api_route(path="/grid_searches/{grid_search_id}/grid_config",
+                               methods=["GET"], endpoint=self.get_grid_config_exec)
         self.app.add_api_route(path="/grid_searches/{grid_search_id}/{config_name}",
                                methods=["PUT"], endpoint=self.add_raw_config_to_grid_search)
         self.app.add_api_route(path="/grid_searches/{grid_search_id}/{experiment_id}/{config_name}",
@@ -47,6 +51,29 @@ class RestfulAPIServer:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail=f'Provided invalid grid_search_id {grid_search_id}') from e
 
+    def get_experiment_config_exec(self, grid_search_id: str, experiment_id: str):
+        try:
+            file_generator = self.data_access.get_experiment_config_exec(
+                grid_search_id=grid_search_id,
+                experiment_id=experiment_id)
+            response = StreamingResponse(
+                file_generator, media_type="application/octet-stream")
+            return response
+        except InvalidPathError as e:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f'Provided invalid grid_search_id {grid_search_id}') from e
+
+    def get_grid_config_exec(self, grid_search_id: str):
+        try:
+            file_generator = self.data_access.get_grid_config_exec(
+                grid_search_id = grid_search_id)
+            response = StreamingResponse(
+                file_generator, media_type="application/octet-stream")
+            return response
+        except InvalidPathError as e:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f'Provided invalid grid_search_id {grid_search_id}') from e
+
     # @app.get('/grid_searches/{grid_search_id}/gs_config')
     # def get_grid_search_config(grid_search_id: str):
     #     requested_full_path = os.path.realpath(os.path.join(top_level_logging_path, str(grid_search_id), "gs_config.yml"))
@@ -66,9 +93,6 @@ class RestfulAPIServer:
         except InvalidPathError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail=f'Provided invalid grid_search_id {grid_search_id} or config_name {config_name}') from e
-
-    def get_raw_config_of_grid_search(self, grid_search_id: str, config_name: str):
-        raise NotImplementedError
 
     def add_config_to_experiment(self, grid_search_id: str, experiment_id: str, config_name: str, config: RawTextFile):
         try:
