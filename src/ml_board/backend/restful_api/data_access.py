@@ -152,7 +152,7 @@ class FileDataAccess(DataAccessIF):
                 f"File path {requested_full_path} is not safe.")
     
     def get_grid_config_exec(self, grid_search_id: str):
-        requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id)))
+        requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), "grid_search_config.yml"))
         if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
             if not os.path.isfile(requested_full_path):
                 raise InvalidPathError(
@@ -165,7 +165,7 @@ class FileDataAccess(DataAccessIF):
                 f"File path {requested_full_path} is not safe.")
     
     def get_experiment_config_exec(self, grid_search_id: str, experiment_id: str):
-        requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id)))
+        requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id), "experiment_config.json"))
         if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
             if not os.path.isfile(requested_full_path):
                 raise InvalidPathError(
