@@ -10,6 +10,7 @@ from typing import Callable
 
 # from fastapi.staticfiles import StaticFiles
 
+
 class RestfulAPIServer:
     """
     RestAPI Server class
@@ -32,6 +33,8 @@ class RestfulAPIServer:
                                methods=["GET"], endpoint=self.get_checkpoint_dict_epoch)
         self.app.add_api_route(path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource}",
                                methods=["POST"], endpoint=self.post_checkpoint_resource_exec)
+        self.app.add_api_route(path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource}",
+                               methods=["DELETE"], endpoint=self.del_checkpoint_resource_exec)
 
         # self.app.mount("/", StaticFiles(directory="/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_board/frontend/dashboard/build/", html=True), name="static")
 
@@ -90,11 +93,26 @@ class RestfulAPIServer:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Provided invalid parameters for checkpoint resource.") from e
 
+    def del_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+        try:
+            self.data_access.del_checkpoint_resource_exec(grid_search_id=grid_search_id,
+                                                          experiment_id=experiment_id,
+                                                          epoch=epoch,
+                                                          checkpoint_resource=checkpoint_resource)
+
+        except InvalidPathError as e:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail="Provided invalid parameters for checkpoint resource.") from e
+
     def post_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, file: bytes = File(...)):
         try:
             payload_pickle = base64.b64decode(file)
             self.data_access.post_checkpoint_resource_exec(
-                grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch, checkpoint_resource=checkpoint_resource, payload_pickle=payload_pickle)
+                grid_search_id=grid_search_id,
+                experiment_id=experiment_id,
+                epoch=epoch,
+                checkpoint_resource=checkpoint_resource,
+                payload_pickle=payload_pickle)
         except InvalidPathError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail=f'Provided invalid payload or grid_search_id {grid_search_id}, experiment_id {experiment_id} or epoch {epoch}.') from e

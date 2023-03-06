@@ -27,7 +27,10 @@ class GridSearchAPIClientIF(ABC):
                                 checkpoint_resource: CheckpointResource):
         raise NotImplementedError
 
-    def post_checkpoint_resource_call(self, experiment_status_logger: ExperimentStatusLogger, payload: Dict):
+    def post_checkpoint_resource_call(self, grid_search_id: str, experiment_id: str, payload: Dict):
+        raise NotImplementedError
+
+    def del_checkpoint_resource_call(self, grid_search_id: str, experiment_id: str, epoch: int):
         raise NotImplementedError
 
     def get_full_checkpoint(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int):
@@ -68,7 +71,14 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
 
     def _set_binary_resource(url: str, payload) -> Dict:
         data = base64.b64encode(payload)
-        response = requests.post(url=url, data={'data': data , "msg":"insert checkpoint" ,"type" : "multipart/form-data"}, files = { "file" : data  })
+        response = requests.post(url=url, data={
+                                 'data': data, "msg": "insert checkpoint", "type": "multipart/form-data"}, files={"file": data})
+        if response.status_code != HTTPStatus.OK:
+            raise NetworkError(
+                f"Server responded with error code {response.status_code}")
+    
+    def _del_binary_resource(url: str) -> Dict:
+        response = requests.delete(url=url)
         if response.status_code != HTTPStatus.OK:
             raise NetworkError(
                 f"Server responded with error code {response.status_code}")
@@ -115,12 +125,13 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{checkpoint_id}/{checkpoint_resource}"
         return GridSearchRestfulAPIClient._get_binary_resource(url)
 
-    def post_checkpoint_resource_call(self, experiment_status_logger: ExperimentStatusLogger, payload: Dict):
+    def post_checkpoint_resource_call(self, grid_search_id: str, experiment_id: str, payload: Dict):
 
-        chekpoint_resources = [CheckpointResource.model, CheckpointResource.lr_scheduler, CheckpointResource.optimizer, CheckpointResource.stateful_components]
+        chekpoint_resources = [CheckpointResource.model, CheckpointResource.lr_scheduler,
+                               CheckpointResource.optimizer, CheckpointResource.stateful_components]
 
         for checkpoint in chekpoint_resources:
-            url = f"{self.endpoint}/checkpoints/{experiment_status_logger._grid_search_id}/{experiment_status_logger._experiment_id}/{payload['epoch']}/{checkpoint}"
+            url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{payload['epoch']}/{checkpoint}"
             payload_pick = pickle.dumps(payload[f"{checkpoint}"])
             GridSearchRestfulAPIClient._set_binary_resource(url, payload_pick)
 
@@ -130,6 +141,15 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         #     print(f"epoch to delete: {epoch}")
         #     GridSearchRestfulAPIClient._set_binary_resource(
         #         url, payload_dict)
+
+    def del_checkpoint_resource_call(self, grid_search_id: str, experiment_id: str, epoch: int):
+
+        chekpoint_resources = [CheckpointResource.model, CheckpointResource.lr_scheduler,
+                               CheckpointResource.optimizer, CheckpointResource.stateful_components]
+
+        for checkpoint in chekpoint_resources:
+            url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint}"
+            GridSearchRestfulAPIClient._del_binary_resource(url)
 
     def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
         url = f"{self.endpoint}/grid_searches/{grid_search_id}/experiments"

@@ -131,15 +131,19 @@ class GymJob(AbstractGymJob):
                             "stateful_components": self.get_state()}
 
             self.gs_api_client.post_checkpoint_resource_call(
-                experiment_status_logger=self._experiment_status_logger, payload=payload_dict)
+                grid_search_id=self.grid_search_id,
+                experiment_id=self.experiment_id,
+                payload=payload_dict)
 
         payload_dict["model_state"] = payload_dict["optimizer_state"] = payload_dict[
             "lr_scheduler"] = payload_dict["stateful_components"] = None
 
         for epoch in checkpoint_instruction.checkpoints_to_delete:
             print(f"epoch to delete: {epoch}")
-            self.gs_api_client.put_checkpoint_resource_call(
-                experiment_status_logger=self._experiment_status_logger, payload=payload_dict)
+            self.gs_api_client.del_checkpoint_resource_call(
+                grid_search_id=self.grid_search_id,
+                experiment_id=self.experiment_id,
+                epoch=epoch)
 
     def execute(self, device: torch.device):
         """ Executes the job

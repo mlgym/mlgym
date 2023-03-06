@@ -33,6 +33,10 @@ class DataAccessIF(ABC):
     @abstractmethod
     def post_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, payload_pickle: bytes):
         raise NotImplementedError
+    
+    @abstractmethod
+    def del_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+        raise NotImplementedError
 
     @abstractmethod
     def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str):
@@ -169,6 +173,17 @@ class FileDataAccess(DataAccessIF):
             os.makedirs(os.path.dirname(requested_full_path), exist_ok=True)
             with open(requested_full_path, "wb") as fd:
                 fd.write(payload_pickle)
+        else:
+            raise InvalidPathError(
+                f"File path {requested_full_path} is not safe.")
+    
+    def del_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+
+        requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id),
+                                                            str(epoch), f"{checkpoint_resource}.pickle"))
+
+        if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
+            os.remove(requested_full_path)
         else:
             raise InvalidPathError(
                 f"File path {requested_full_path} is not safe.")
