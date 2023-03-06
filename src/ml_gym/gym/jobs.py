@@ -130,7 +130,7 @@ class GymJob(AbstractGymJob):
                             "lr_scheduler": self.lr_scheduler.state_dict(),
                             "stateful_components": self.get_state()}
 
-            self.gs_api_client.put_checkpoint_resource_call(
+            self.gs_api_client.post_checkpoint_resource_call(
                 experiment_status_logger=self._experiment_status_logger, payload=payload_dict)
 
         payload_dict["model_state"] = payload_dict["optimizer_state"] = payload_dict[

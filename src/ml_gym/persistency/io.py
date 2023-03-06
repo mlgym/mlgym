@@ -27,7 +27,7 @@ class GridSearchAPIClientIF(ABC):
                                 checkpoint_resource: CheckpointResource):
         raise NotImplementedError
 
-    def put_checkpoint_resource_call(self, experiment_status_logger: ExperimentStatusLogger, payload: Dict):
+    def post_checkpoint_resource_call(self, experiment_status_logger: ExperimentStatusLogger, payload: Dict):
         raise NotImplementedError
 
     def get_full_checkpoint(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int):
@@ -115,7 +115,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{checkpoint_id}/{checkpoint_resource}"
         return GridSearchRestfulAPIClient._get_binary_resource(url)
 
-    def put_checkpoint_resource_call(self, experiment_status_logger: ExperimentStatusLogger, payload: Dict):
+    def post_checkpoint_resource_call(self, experiment_status_logger: ExperimentStatusLogger, payload: Dict):
 
         chekpoint_resources = [CheckpointResource.model, CheckpointResource.lr_scheduler, CheckpointResource.optimizer, CheckpointResource.stateful_components]
 
