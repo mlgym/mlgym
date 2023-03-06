@@ -1,12 +1,14 @@
-from fastapi import FastAPI
+import pickle
+import base64
+from fastapi import FastAPI, File
 from fastapi import status, HTTPException
 from fastapi.responses import StreamingResponse
 from ml_board.backend.restful_api.data_access import DataAccessIF
 from ml_gym.error_handling.exception import InvalidPathError
 from ml_board.backend.restful_api.data_models import RawTextFile, CheckpointResource
 from typing import Callable
-# from fastapi.staticfiles import StaticFiles
 
+# from fastapi.staticfiles import StaticFiles
 
 class RestfulAPIServer:
     """
@@ -28,12 +30,15 @@ class RestfulAPIServer:
                                methods=["GET"], endpoint=self.get_checkpoint_resource)
         self.app.add_api_route(path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}",
                                methods=["GET"], endpoint=self.get_checkpoint_dict_epoch)
+        self.app.add_api_route(path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource}",
+                               methods=["POST"], endpoint=self.post_checkpoint_resource_exec)
 
         # self.app.mount("/", StaticFiles(directory="/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_board/frontend/dashboard/build/", html=True), name="static")
 
     def get_experiment_statuses(self, grid_search_id: str):
         try:
-            experiment_statuses = self.data_access.get_experiment_statuses(grid_search_id)
+            experiment_statuses = self.data_access.get_experiment_statuses(
+                grid_search_id)
             return experiment_statuses
         except InvalidPathError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -78,11 +83,21 @@ class RestfulAPIServer:
                                                                       experiment_id=experiment_id,
                                                                       epoch=epoch,
                                                                       checkpoint_resource=checkpoint_resource)
-            response = StreamingResponse(file_generator, media_type="application/octet-stream")
+            response = StreamingResponse(
+                file_generator, media_type="application/octet-stream")
             return response
         except InvalidPathError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Provided invalid parameters for checkpoint resource.") from e
+
+    def post_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, file: bytes = File(...)):
+        try:
+            payload_pickle = base64.b64decode(file)
+            self.data_access.post_checkpoint_resource_exec(
+                grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch, checkpoint_resource=checkpoint_resource, payload_pickle=payload_pickle)
+        except InvalidPathError as e:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f'Provided invalid payload or grid_search_id {grid_search_id}, experiment_id {experiment_id} or epoch {epoch}.') from e
 
     def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str):
         try:

@@ -31,6 +31,10 @@ class DataAccessIF(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def post_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, payload_pickle: bytes):
+        raise NotImplementedError
+
+    @abstractmethod
     def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str):
         raise NotImplementedError
 
@@ -52,7 +56,8 @@ class FileDataAccess(DataAccessIF):
 
     @staticmethod
     def get_checkpoint_files(path: str, base_path: str):
-        full_paths = glob.glob(os.path.join(path, "**", "*.bin"), recursive=True)
+        full_paths = glob.glob(os.path.join(
+            path, "**", "*.bin"), recursive=True)
         return [os.path.relpath(full_path, base_path) for full_path in full_paths]
 
     @staticmethod
@@ -62,7 +67,8 @@ class FileDataAccess(DataAccessIF):
 
     def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
         def get_last_checkpoint_ids(top_level_logging_path: str, grid_search_id: str) -> Dict:
-            paths = glob.glob(os.path.join(top_level_logging_path, grid_search_id, '**/*'), recursive=True)
+            paths = glob.glob(os.path.join(
+                top_level_logging_path, grid_search_id, '**/*'), recursive=True)
             regex_checkpoints = r".*-\d\d\/(\d)\/(\d)$"
             regex_experiments = r".*-\d\d\/(\d)$"
 
@@ -78,23 +84,29 @@ class FileDataAccess(DataAccessIF):
                 # checkpoint match
                 match = re.match(regex_checkpoints, path)
                 if match is not None:
-                    experiment_id, checkpoint_id = int(match.groups()[0]), int(match.groups()[1])
+                    experiment_id, checkpoint_id = int(
+                        match.groups()[0]), int(match.groups()[1])
                     if experiment_id not in experiment_id_to_checkpoint_ids:
                         experiment_id_to_checkpoint_ids[experiment_id] = []
-                    experiment_id_to_checkpoint_ids[experiment_id].append(checkpoint_id)
-            epxeriment_id_to_last_checkpoint = {k: max(v) for k, v in experiment_id_to_checkpoint_ids.items()}
+                    experiment_id_to_checkpoint_ids[experiment_id].append(
+                        checkpoint_id)
+            epxeriment_id_to_last_checkpoint = {
+                k: max(v) for k, v in experiment_id_to_checkpoint_ids.items()}
             return epxeriment_id_to_last_checkpoint
 
         def load_experiment_config(top_level_logging_path: str, grid_search_id: str, experiment_id: int) -> Dict:
-            full_path = os.path.join(top_level_logging_path, grid_search_id, str(experiment_id), "experiment_config.json")
+            full_path = os.path.join(top_level_logging_path, grid_search_id, str(
+                experiment_id), "experiment_config.json")
             with open(full_path, "r") as fp:
                 experiment_config = json.load(fp)
             return experiment_config
 
-        requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, grid_search_id))
+        requested_full_path = os.path.realpath(
+            os.path.join(self.top_level_logging_path, grid_search_id))
 
         if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
-            epxeriment_id_to_last_checkpoint_id = get_last_checkpoint_ids(self.top_level_logging_path, grid_search_id)
+            epxeriment_id_to_last_checkpoint_id = get_last_checkpoint_ids(
+                self.top_level_logging_path, grid_search_id)
             response = [ExperimentStatus(**{"experiment_id": experiment_id,
                                             "last_checkpoint_id": last_checkpoint_id,
                                             "experiment_config": load_experiment_config(self.top_level_logging_path, grid_search_id,
@@ -103,23 +115,27 @@ class FileDataAccess(DataAccessIF):
             return response
 
         else:
-            raise InvalidPathError(f"File path {requested_full_path} is not safe.")
+            raise InvalidPathError(
+                f"File path {requested_full_path} is not safe.")
 
     def add_raw_config_to_grid_search(self, grid_search_id: str, config_name: str, config_file: RawTextFile):
-        requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), config_name))
+        requested_full_path = os.path.realpath(os.path.join(
+            self.top_level_logging_path, str(grid_search_id), config_name))
 
         if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
             os.makedirs(os.path.dirname(requested_full_path), exist_ok=True)
             with open(requested_full_path, "w") as fp:
                 fp.writelines(config_file.content)
         else:
-            raise InvalidPathError(f"File path {requested_full_path} is not safe.")
+            raise InvalidPathError(
+                f"File path {requested_full_path} is not safe.")
 
     def get_raw_config_of_grid_search(self, grid_search_id: str, config_name: str):
         raise NotImplementedError
 
     def add_config_to_experiment(self, grid_search_id: str, experiment_id: str, config_name: str, config: RawTextFile):
-        requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id), config_name))
+        requested_full_path = os.path.realpath(os.path.join(
+            self.top_level_logging_path, str(grid_search_id), str(experiment_id), config_name))
 
         if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
             os.makedirs(os.path.dirname(requested_full_path), exist_ok=True)
@@ -127,26 +143,45 @@ class FileDataAccess(DataAccessIF):
                 fp.writelines(config.content)
 
         else:
-            raise InvalidPathError(f"File path {requested_full_path} is not safe.")
+            raise InvalidPathError(
+                f"File path {requested_full_path} is not safe.")
 
     def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
         requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id),
                                                             str(epoch), f"{checkpoint_resource}.bin"))
         if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
             if not os.path.isfile(requested_full_path):
-                raise InvalidPathError(f"Resource {requested_full_path} not found.")
+                raise InvalidPathError(
+                    f"Resource {requested_full_path} not found.")
 
             generator = FileDataAccess.iterfile(requested_full_path)
             return generator
         else:
-            raise InvalidPathError(f"File path {requested_full_path} is not safe.")
+            raise InvalidPathError(
+                f"File path {requested_full_path} is not safe.")
 
-    def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str):
-        requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id), str(epoch)))
+    def post_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, payload_pickle: bytes):
+
+        requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id),
+                                                            str(epoch), f"{checkpoint_resource}.pickle"))
 
         if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
-            files = FileDataAccess.get_checkpoint_files(requested_full_path, base_path=self.top_level_logging_path)
+            os.makedirs(os.path.dirname(requested_full_path), exist_ok=True)
+            with open(requested_full_path, "wb") as fd:
+                fd.write(payload_pickle)
+        else:
+            raise InvalidPathError(
+                f"File path {requested_full_path} is not safe.")
+
+    def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str):
+        requested_full_path = os.path.realpath(os.path.join(
+            self.top_level_logging_path, str(grid_search_id), str(experiment_id), str(epoch)))
+
+        if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
+            files = FileDataAccess.get_checkpoint_files(
+                requested_full_path, base_path=self.top_level_logging_path)
             return {os.path.basename(file).split(".")[0]: file for file in files}
 
         else:
-            raise InvalidPathError(f"File path {requested_full_path} is not safe.")
+            raise InvalidPathError(
+                f"File path {requested_full_path} is not safe.")

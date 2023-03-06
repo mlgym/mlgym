@@ -55,7 +55,8 @@ class AbstractGymJob(StatefulComponent):
     @staticmethod
     def epoch_result_callback(experiment_status_logger: ExperimentStatusLogger, evaluation_result: EvaluationBatchResult,
                               current_epoch: int):
-        experiment_status_logger.log_evaluation_results(evaluation_result, current_epoch)
+        experiment_status_logger.log_evaluation_results(
+            evaluation_result, current_epoch)
 
 
 class GymJob(AbstractGymJob):
@@ -70,7 +71,8 @@ class GymJob(AbstractGymJob):
         self.run_mode = run_mode
         self.model = model
         self.optimizer = optimizer
-        self.lr_scheduler = lr_scheduler if lr_scheduler is not None else LRSchedulerFactory.get_lr_scheduler("dummy")
+        self.lr_scheduler = lr_scheduler if lr_scheduler is not None else LRSchedulerFactory.get_lr_scheduler(
+            "dummy")
         # self.optimizer.register_model_params(dict(self.model.named_parameters()))
         self.num_epochs = num_epochs
         self.current_epoch = warm_start_epoch
@@ -120,22 +122,24 @@ class GymJob(AbstractGymJob):
         return evaluation_results
 
     def run_checkpointing(self, checkpoint_instruction: CheckpointingInstruction):
-        # TODO use self.gs_api_client to make the calls. Note that some of the endpoints are also still missing for that...
-        
-        pass
-        # if checkpoint_instruction.save_current:
-        #     self._experiment_status_logger.log_checkpoint(epoch=self.current_epoch,
-        #                                                   model_state_dict=self.model.state_dict(),
-        #                                                   optimizer_state_dict=self.optimizer.state_dict(),
-        #                                                   lr_scheduler_state_dict=self.lr_scheduler.state_dict(),
-        #                                                   stateful_components_state_dict=self.get_state())
-        # for epoch in checkpoint_instruction.checkpoints_to_delete:
-        #     print(f"epoch to delete: {epoch}")
-        #     self._experiment_status_logger.log_checkpoint(epoch=epoch,
-        #                                                   model_state_dict=None,
-        #                                                   optimizer_state_dict=None,
-        #                                                   lr_scheduler_state_dict=None,
-        #                                                   stateful_components_state_dict=None)
+
+        if checkpoint_instruction.save_current:
+            payload_dict = {"epoch": self.current_epoch,
+                            "model": self.model.state_dict(),
+                            "optimizer": self.optimizer.state_dict(),
+                            "lr_scheduler": self.lr_scheduler.state_dict(),
+                            "stateful_components": self.get_state()}
+
+            self.gs_api_client.put_checkpoint_resource_call(
+                experiment_status_logger=self._experiment_status_logger, payload=payload_dict)
+
+        payload_dict["model_state"] = payload_dict["optimizer_state"] = payload_dict[
+            "lr_scheduler"] = payload_dict["stateful_components"] = None
+
+        for epoch in checkpoint_instruction.checkpoints_to_delete:
+            print(f"epoch to delete: {epoch}")
+            self.gs_api_client.put_checkpoint_resource_call(
+                experiment_status_logger=self._experiment_status_logger, payload=payload_dict)
 
     def execute(self, device: torch.device):
         """ Executes the job
@@ -146,7 +150,8 @@ class GymJob(AbstractGymJob):
         self._execution_method(device)
 
     def _execute_train(self, device: torch.device):
-        self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
+        self.optimizer.register_model_params(
+            model_params=dict(self.model.named_parameters()))
         self.lr_scheduler.register_optimizer(optimizer=self.optimizer)
 
         self.trainer.set_num_epochs(num_epochs=self.num_epochs)
