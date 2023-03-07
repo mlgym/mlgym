@@ -20,7 +20,11 @@ from ml_gym.checkpointing.checkpointing import CheckpointingIF, CheckpointingIns
 
 
 class AbstractGymJob(StatefulComponent):
+    """
+    Gym Job Abstract Class
 
+    Declare Abstract and Static methods to be used in Gym Job Class.
+    """
     def __init__(self, experiment_status_logger: ExperimentStatusLogger):
         super().__init__()
         self._experiment_status_logger = experiment_status_logger
@@ -60,6 +64,13 @@ class AbstractGymJob(StatefulComponent):
 
 
 class GymJob(AbstractGymJob):
+    """
+    GymJob Class
+
+    :params: AbstractGymJob object
+
+    The GymJob class is a CORE class in the mlGym which is responsible for running and logging jobs.
+    """
 
     def __init__(self, grid_search_id: str, experiment_id: int,  run_mode: RunMode, model: NNModel, optimizer: OptimizerAdapter,
                  trainer: Trainer, evaluator: Evaluator, num_epochs: int, checkpointing_strategy: CheckpointingIF,
@@ -122,6 +133,12 @@ class GymJob(AbstractGymJob):
         return evaluation_results
 
     def run_checkpointing(self, checkpoint_instruction: CheckpointingInstruction):
+        """ 
+        Create and Delete checkpoints for each epoch in experiments.
+
+        :params:
+            checkpoint_instruction: CheckpointingInstruction object
+        """
 
         if checkpoint_instruction.save_current:
             payload_dict = {"epoch": self.current_epoch,
@@ -148,12 +165,18 @@ class GymJob(AbstractGymJob):
     def execute(self, device: torch.device):
         """ Executes the job
 
-        Args:
+        :params:
             device: torch device either CPUs or a specified GPU
         """
         self._execution_method(device)
 
     def _execute_train(self, device: torch.device):
+        """ 
+        Executes training pipeline from scratch for a Job model.
+
+        :params:
+            device: torch device either CPUs or a specified GPU
+        """
         self.optimizer.register_model_params(
             model_params=dict(self.model.named_parameters()))
         self.lr_scheduler.register_optimizer(optimizer=self.optimizer)
@@ -194,6 +217,12 @@ class GymJob(AbstractGymJob):
             self.current_epoch += 1
 
     def _execute_warm_start(self, device: torch.device):
+        """ 
+        Executes training pipeline from last known checkpoint for a Job model.
+
+        :params:
+            device: torch device either CPUs or a specified GPU
+        """
         if self.current_epoch > 0:
             model_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
                                                                                   experiment_id=self.experiment_id,
@@ -222,6 +251,12 @@ class GymJob(AbstractGymJob):
         self._execute_train(device)
 
     def _execute_eval(self, device: torch.device):
+        """ 
+        Executes evalation pipeline for a Job model.
+
+        :params:
+            device: torch device either CPUs or a specified GPU
+        """
         for epoch in self.num_epochs:
             # TODO need to load model + stateful components for the respective epoch here
             self._evaluation_step(device, epoch=epoch)
