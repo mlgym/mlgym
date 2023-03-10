@@ -8,7 +8,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
 import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
-import { upsertOneRow } from '../redux/table/tableSlice';
+import { Row, upsertOneRow } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
 import './App.scss';
 import { useAppDispatch } from './hooks';
@@ -51,35 +51,11 @@ export default function App() {
         if (data && data.evaluationResultsData) {
             // update the Charts Slice
             dispatch(saveEvalResultData(data.evaluationResultsData));
-
-
-
-            // TODO: move to the background
-            // // save the latest metric in the Experiment Slice
-            // const { epoch, experiment_id, metric_scores, loss_scores } = data.latest_split_metric as EvaluationResultPayload;
-            // const changes: { [latest_split_metric_key: string]: number } = {};
-            // for (const metric of metric_scores) {
-            //     changes[metric.split + "_" + metric.metric] = metric.score;
-            // }
-            // for (const loss of loss_scores) {
-            //     changes[loss.split + "_" + loss.loss] = loss.score;
-            // }
-
-
-
-
-            // //NOTE, I checked the epoch against the experiment's and that didn't work because of UseAppSelector! (can't be used here!)
-            // dispatch(updateExperiment({ id: experiment_id, changes: changes }))
+            dispatch(upsertOneRow(data.tableData as Row));
         }
         else if (data && data.tableData) {
-            dispatch(upsertOneRow(data.tableData))
+            dispatch(upsertOneRow(data.tableData));
         }
-        // else if (data && data.jobStatusData) {
-        //     dispatch(upsertJob(data.jobStatusData))
-        // }
-        // else if (data && data.experimentStatusData) {
-        //     dispatch(upsertExperiment(data.experimentStatusData))
-        // }
         else if (data && data.status) {
             if (data.status === "msg_count_increment") {
                 dispatch(incrementReceivedMsgCount())

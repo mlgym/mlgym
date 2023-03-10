@@ -24,26 +24,30 @@ export const updateMTCb = (parsedSocketData: DataFromSocket) => {
     const dataToRedux: DataToRedux = {};
     switch (eventType) {
         case MLGYM_EVENT.JOB_STATUS:
-            // dataToRedux.jobStatusData = handleJobStatusData(parsedSocketData.payload);
             dataToRedux.tableData = handleJobStatusData(parsedSocketData.payload);
             break;
         case MLGYM_EVENT.JOB_SCHEDULED:
             console.log("Job scheduled found")
             break;
         case MLGYM_EVENT.EVALUATION_RESULT:
-            // TODO: get the "latest_split_metric" in the experimentsSlice too
-            dataToRedux.evaluationResultsData = handleEvaluationResultData(initialStateForGraphs, parsedSocketData.payload as unknown as EvaluationResultPayload);
-            // just save the value directly in the Experiment, since the table is being formed from there
-            // later decide if the column names are going to stay hard coded or inducted from the incoming messages 
             const evalResPayload = parsedSocketData.payload as unknown as EvaluationResultPayload;
             dataToRedux.evaluationResultsData = handleEvaluationResultData(initialStateForGraphs, evalResPayload);
-            dataToRedux.latest_split_metric = evalResPayload;
+            // TODO: if handleEvaluationResultData is gonna get improved, then move the following inside of it
+            // save the latest score values
+            const { experiment_id, metric_scores, loss_scores } = evalResPayload;
+            const scores: { [latest_split_metric_key: string]: number } = {};
+            for (const metric of metric_scores) {
+                scores[metric.split + "_" + metric.metric] = metric.score;
+            }
+            for (const loss of loss_scores) {
+                scores[loss.split + "_" + loss.loss] = loss.score;
+            }
+            dataToRedux.tableData = { experiment_id, ...scores }
             break;
         case MLGYM_EVENT.EXPERIMENT_CONFIG:
             console.log("Exp config found")
             break;
         case MLGYM_EVENT.EXPERIMENT_STATUS:
-            // dataToRedux.experimentStatusData = handleExperimentStatusData(parsedSocketData.payload);
             dataToRedux.tableData = handleExperimentStatusData(parsedSocketData.payload);
             break;
         default: throw new Error(MLGYM_EVENT.UNKNOWN_EVENT);
@@ -71,6 +75,6 @@ export const throughputMTCb = (throughput: number) => {
 // if the header doesn't exist push it before returning if it was already there or not.
 const check_if_header_exist = (header: string) => {
     const condition = metric_loss_header.includes(header);
-    if(!condition) metric_loss_header.push(header);
+    if (!condition) metric_loss_header.push(header);
     return condition;
 };
