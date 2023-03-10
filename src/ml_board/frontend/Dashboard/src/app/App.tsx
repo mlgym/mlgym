@@ -7,11 +7,9 @@ import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
-import { updateExperiment, upsertExperiment } from '../redux/experiments/yetAnotherExperimentSlice';
-import { upsertJob } from '../redux/jobs/jobSlice';
 import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
+import { upsertOneRow } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
-import { EvaluationResultPayload } from '../worker_socket/event_handlers/evaluationResultDataHandler';
 import './App.scss';
 import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
@@ -38,17 +36,6 @@ export default function App() {
         const workerSocket = new Worker(new URL('../worker_socket/WorkerSocket.ts', import.meta.url));
         // setting the redux update methods on the incoming data from the worker thread
         workerSocket.onmessage = ({ data }: MessageEvent) => workerOnMessageHandler(data as DataToRedux);
-        // // starting the worker
-        // workerSocket.postMessage("INIT");
-
-        // NOTE: this is better than calling "useAppSelector(selectEvalResult)" as it will force the App function to get called everytime the state changes
-        // TODO: maybe find a better way later other than starting the worker with the empty redux state?
-        const evalResult = {
-            grid_search_id: null,
-            experiments: {},
-            colors_mapped_to_exp_id: [[], []]
-        }
-        workerSocket.postMessage(evalResult);
 
         // close the worker on Dismount to stop any memory leaks
         return () => {
@@ -64,24 +51,35 @@ export default function App() {
         if (data && data.evaluationResultsData) {
             // update the Charts Slice
             dispatch(saveEvalResultData(data.evaluationResultsData));
-            // save the latest metric in the Experiment Slice
-            const { epoch, experiment_id, metric_scores, loss_scores } = data.latest_split_metric as EvaluationResultPayload;
-            const changes: { [latest_split_metric_key: string]: number } = {};
-            for (const metric of metric_scores) {
-                changes[metric.split + "_" + metric.metric] = metric.score;
-            }
-            for (const loss of loss_scores) {
-                changes[loss.split + "_" + loss.loss] = loss.score;
-            }
-            //NOTE, I checked the epoch against the experiment's and that didn't work because of UseAppSelector! (can't be used here!)
-            dispatch(updateExperiment({ id: experiment_id, changes: changes }))
+
+
+
+            // TODO: move to the background
+            // // save the latest metric in the Experiment Slice
+            // const { epoch, experiment_id, metric_scores, loss_scores } = data.latest_split_metric as EvaluationResultPayload;
+            // const changes: { [latest_split_metric_key: string]: number } = {};
+            // for (const metric of metric_scores) {
+            //     changes[metric.split + "_" + metric.metric] = metric.score;
+            // }
+            // for (const loss of loss_scores) {
+            //     changes[loss.split + "_" + loss.loss] = loss.score;
+            // }
+
+
+
+
+            // //NOTE, I checked the epoch against the experiment's and that didn't work because of UseAppSelector! (can't be used here!)
+            // dispatch(updateExperiment({ id: experiment_id, changes: changes }))
         }
-        else if (data && data.jobStatusData) {
-            dispatch(upsertJob(data.jobStatusData))
+        else if (data && data.tableData) {
+            dispatch(upsertOneRow(data.tableData))
         }
-        else if (data && data.experimentStatusData) {
-            dispatch(upsertExperiment(data.experimentStatusData))
-        }
+        // else if (data && data.jobStatusData) {
+        //     dispatch(upsertJob(data.jobStatusData))
+        // }
+        // else if (data && data.experimentStatusData) {
+        //     dispatch(upsertExperiment(data.experimentStatusData))
+        // }
         else if (data && data.status) {
             if (data.status === "msg_count_increment") {
                 dispatch(incrementReceivedMsgCount())
