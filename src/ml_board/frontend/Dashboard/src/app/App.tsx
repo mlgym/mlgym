@@ -72,6 +72,7 @@ export default function App() {
     const [filterText, setFilterText] = useState("")
     const [filterDrawer, setFilterDrawer] = useState(false)
     const [isConfigValidated, setConfigValidation] = useState(false)
+    const [configChangeDetectionCounter, setConigChangeDetectionCounter] = useState(0)
     const [isSnackbarOpen, setSnackbarOpen] = useState(false)
     const [snackBarText, setSnackBarText] = useState("")
     const location = useLocation();
@@ -99,7 +100,7 @@ export default function App() {
     });
 
     useEffect(() => {
-        if(isConfigValidated)
+        if(isConfigValidated && configChangeDetectionCounter !== 0)
         {
             // save to local storage only after user clicks on submit button - either in popup or in settings page.
             // after the used submits the values & after it is saved, then only we will connect to the socket with the values given by user.
@@ -119,7 +120,7 @@ export default function App() {
             // TODO: close the worker here?
             // return () =>{ }
         }
-    }, [isConfigValidated]) 
+    }, [isConfigValidated,configChangeDetectionCounter]) 
     // recommended way: keeping the second condition blank, fires useEffect just once as there are no conditions to check to fire up useEffect again (just like componentDidMount of React Life cycle). 
 
     // TODO: maybe useCallback
@@ -193,6 +194,7 @@ export default function App() {
                                     element={
                                         <Settings
                                             validateConfigs={(value:boolean)=>setConfigValidation(value)} 
+                                            setConfigChangeDetectionCounter={()=>setConigChangeDetectionCounter(configChangeDetectionCounter+1)}
                                             setConfigData={(settingConfigs: settingConfigsInterface)=>setSettingConfigs(settingConfigs)}
                                         />
                                     }
@@ -256,9 +258,10 @@ export default function App() {
             </React.Fragment>
             {
                 // here also, it is same as done above for Setting Component. We need to pass functions as props to the popup - so that when user submits the configured values, we can connect to websocket with the changed parameters.
-                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url && isConfigValidated === false ?
+                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url && isConfigValidated === false &&configChangeDetectionCounter === 0 ?
                 <ConfigPopup 
                     validateConfigs={(value:boolean)=>setConfigValidation(value)} 
+                    setConfigChangeDetectionCounter={()=>setConigChangeDetectionCounter(configChangeDetectionCounter+1)}
                     setConfigData={(settingConfigs:settingConfigsInterface)=>setSettingConfigs(settingConfigs)}
                 />
                 :

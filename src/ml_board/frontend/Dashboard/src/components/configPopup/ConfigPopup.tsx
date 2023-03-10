@@ -55,6 +55,7 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
         }      
         setOpen(false);
         props.validateConfigs(true);
+        props.setConfigChangeDetectionCounter();
         props.setConfigData(settingConfigs);
     }
 

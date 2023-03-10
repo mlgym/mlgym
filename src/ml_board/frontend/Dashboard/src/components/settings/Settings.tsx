@@ -11,6 +11,7 @@ export const defaultSocketConnectionUrlHelperText = "eg: http://127.0.0.1:5002";
 export const defaultRestApiUrlHelperText = "eg: http://127.0.0.1:5001";
 export interface FuncProps {
     validateConfigs(value:boolean): void;
+    setConfigChangeDetectionCounter(): void;
     setConfigData(configData:settingConfigsInterface): void;
 }
 
@@ -57,6 +58,7 @@ const Settings: React.FC<FuncProps> = (props) => {
             restApiUrl: configTextState.restApiUrl
         }      
         props.validateConfigs(true);
+        props.setConfigChangeDetectionCounter();
         props.setConfigData(configData);
     }
 
