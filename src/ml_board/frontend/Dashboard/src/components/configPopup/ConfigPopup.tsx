@@ -54,7 +54,6 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
             restApiUrl: configTextState.restApiUrl
         }      
         setOpen(false);
-        props.validateConfigs(true);
         props.setConfigChangeDetectionCounter();
         props.setConfigData(settingConfigs);
     }
