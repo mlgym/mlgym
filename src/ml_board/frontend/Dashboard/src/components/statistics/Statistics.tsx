@@ -2,9 +2,10 @@ import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import { useAppSelector } from "../../app/hooks";
 import { getLastPing, getReceivevMsgCount, getThroughput, isConnected } from "../../redux/status/statusSlice";
-import './throughput.css';
+// styles
+import styles from "./Statistics.module.css";
 
-export default function Throughput() {
+export default function Statistics() {
     // NOTE: for micro performance this component can be divide into smaller components to avoid unnecessary rerendering
     // left because of insignificance
     const ping = useAppSelector(getLastPing);
@@ -13,44 +14,37 @@ export default function Throughput() {
     const throughput = useAppSelector(getThroughput);
 
     return (
-        <Box sx={{
-            width: 250,
-            position: 'fixed',
-            display: "flex",
-            flexDirection: "column",
-            bottom: 0,
-        }}>
-            {/* Hardcoded will be replaced with redux values */}
-            <div className="throughput-containers">
+        <Box className={styles.main_container}>
+            <div className={styles.sub_container}>
                 Connected: {
                     isSocketConnected ?
-                        <span className="throughput-containers-span-connected">
+                        <span className={styles.span_connected}>
                             Yes
                         </span>
                         :
-                        <span className="throughput-containers-span-disconnected">
+                        <span className={styles.span_disconnected}>
                             No
                         </span>
                 }
             </div>
             <Divider />
-            <div className="throughput-containers">
+            <div className={styles.sub_container}>
                 Messages received:
-                <span className="throughput-containers-span-normal">
+                <span className={styles.span_general}>
                     {receivedMsgCount}
                 </span>
             </div>
             <Divider />
-            <div className="throughput-containers">
+            <div className={styles.sub_container}>
                 Ping:
-                <span className="throughput-containers-span-ping">
+                <span className={styles.span_ping}>
                     {ping} ms
                 </span>
             </div>
             <Divider />
-            <div className="throughput-containers">
+            <div className={styles.sub_container}>
                 Throughput:
-                <span className="throughput-containers-span-normal">
+                <span className={styles.span_general}>
                     {throughput}
                 </span>
             </div>

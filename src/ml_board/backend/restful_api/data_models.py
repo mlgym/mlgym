@@ -22,4 +22,5 @@ class ExperimentStatus(BaseModel):
 class CheckpointResource(str, Enum):
     model = "model"
     optimizer = "optimizer"
+    lr_scheduler = "lr_scheduler"
     stateful_components = "stateful_components"
