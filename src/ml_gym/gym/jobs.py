@@ -4,6 +4,8 @@ from ml_gym.models.nn.net import NNModel
 from ml_gym.gym.evaluator import Evaluator
 from ml_gym.gym.trainer import Trainer
 from ml_gym.modes import RunMode
+from ml_gym.optimizers.lr_scheduler_factory import LRSchedulerFactory
+from ml_gym.optimizers.lr_schedulers import LRSchedulerAdapter
 from ml_gym.optimizers.optimizer import OptimizerAdapter
 import torch
 from ml_gym.gym.stateful_components import StatefulComponent
@@ -61,13 +63,14 @@ class GymJob(AbstractGymJob):
     def __init__(self, grid_search_id: str, experiment_id: int,  run_mode: RunMode, model: NNModel, optimizer: OptimizerAdapter,
                  trainer: Trainer, evaluator: Evaluator, num_epochs: int, checkpointing_strategy: CheckpointingIF,
                  gs_api_client: GridSearchAPIClientIF, experiment_status_logger: ExperimentStatusLogger = None,
-                 early_stopping_strategy: EarlyStoppingIF = None, warm_start_epoch: int = 0):
+                 early_stopping_strategy: EarlyStoppingIF = None, warm_start_epoch: int = 0, lr_scheduler: LRSchedulerAdapter = None):
         super().__init__(experiment_status_logger)
         self.grid_search_id = grid_search_id
         self.experiment_id = experiment_id
         self.run_mode = run_mode
         self.model = model
         self.optimizer = optimizer
+        self.lr_scheduler = lr_scheduler if lr_scheduler is not None else LRSchedulerFactory.get_lr_scheduler("dummy")
         # self.optimizer.register_model_params(dict(self.model.named_parameters()))
         self.num_epochs = num_epochs
         self.current_epoch = warm_start_epoch
@@ -117,17 +120,22 @@ class GymJob(AbstractGymJob):
         return evaluation_results
 
     def run_checkpointing(self, checkpoint_instruction: CheckpointingInstruction):
-        if checkpoint_instruction.save_current:
-            self._experiment_status_logger.log_checkpoint(epoch=self.current_epoch,
-                                                          model_state_dict=self.model.state_dict(),
-                                                          optimizer_state_dict=self.optimizer.state_dict(),
-                                                          stateful_components_state_dict=self.get_state())
-        for epoch in checkpoint_instruction.checkpoints_to_delete:
-            print(f"epoch to delete: {epoch}")
-            self._experiment_status_logger.log_checkpoint(epoch=epoch,
-                                                          model_state_dict=None,
-                                                          optimizer_state_dict=None,
-                                                          stateful_components_state_dict=None)
+        # TODO use self.gs_api_client to make the calls. Note that some of the endpoints are also still missing for that...
+        
+        pass
+        # if checkpoint_instruction.save_current:
+        #     self._experiment_status_logger.log_checkpoint(epoch=self.current_epoch,
+        #                                                   model_state_dict=self.model.state_dict(),
+        #                                                   optimizer_state_dict=self.optimizer.state_dict(),
+        #                                                   lr_scheduler_state_dict=self.lr_scheduler.state_dict(),
+        #                                                   stateful_components_state_dict=self.get_state())
+        # for epoch in checkpoint_instruction.checkpoints_to_delete:
+        #     print(f"epoch to delete: {epoch}")
+        #     self._experiment_status_logger.log_checkpoint(epoch=epoch,
+        #                                                   model_state_dict=None,
+        #                                                   optimizer_state_dict=None,
+        #                                                   lr_scheduler_state_dict=None,
+        #                                                   stateful_components_state_dict=None)
 
     def execute(self, device: torch.device):
         """ Executes the job
@@ -139,6 +147,7 @@ class GymJob(AbstractGymJob):
 
     def _execute_train(self, device: torch.device):
         self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
+        self.lr_scheduler.register_optimizer(optimizer=self.optimizer)
 
         self.trainer.set_num_epochs(num_epochs=self.num_epochs)
 
@@ -163,6 +172,8 @@ class GymJob(AbstractGymJob):
             self.logger.log(LogLevel.INFO,  f"epoch: {self.current_epoch}")
             self._train_step(device)
             evaluation_results = self._evaluation_step(device)
+            self.lr_scheduler.step()
+
             checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=self.num_epochs,
                                                                                                      current_epoch=self.current_epoch,
                                                                                                      evaluation_result=evaluation_results)
@@ -186,6 +197,12 @@ class GymJob(AbstractGymJob):
                                                                                       checkpoint_id=self.current_epoch,
                                                                                       checkpoint_resource=CheckpointResource.optimizer))
             self.optimizer.load_state_dict(optimizer_state)
+
+            lr_scheduler_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
+                                                                                         experiment_id=self.experiment_id,
+                                                                                         checkpoint_id=self.current_epoch,
+                                                                                         checkpoint_resource=CheckpointResource.lr_scheduler))
+            self.lr_scheduler.load_state_dict(lr_scheduler_state)
 
             state_component_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
                                                                                             experiment_id=self.experiment_id,
