@@ -91,6 +91,11 @@ class OptimizerNotInitializedError(Exception):
     pass
 
 
+class LRSchedulerNotInitializedError(Exception):
+    """Raised when we want to run an operation on a lr scheduler, which was not instantiated, yet."""
+    pass
+
+
 class MetricCalculationError(Exception):
     """Raised when there was an error during metric calculation"""
     pass

@@ -1,50 +1,128 @@
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import Drawer from '@mui/material/Drawer';
-import Fab from '@mui/material/Fab';
-import TextField from '@mui/material/TextField';
-import Zoom from '@mui/material/Zoom';
 import React, { useEffect, useState } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
 import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
 import { Row, upsertOneRow } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
-import './App.scss';
 import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
 
+
+// styles
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import Alert from '@mui/material/Alert';
+import Drawer from '@mui/material/Drawer';
+import Fab from '@mui/material/Fab';
+import Snackbar from '@mui/material/Snackbar';
+import TextField from '@mui/material/TextField';
+import ConfigPopup from '../components/configPopup/ConfigPopup';
+import Settings from '../components/settings/Settings';
+import styles from './App.module.css';
+
+export interface settingConfigsInterface {
+    gridSearchId: string,
+    socketConnectionUrl: string,
+    restApiUrl: string
+}
+
+// function to get parameters from url or localstorage to show them populated on the popup or in the settings page.
+// function is made async as JSON parsing needs to be done asynchronously for fetching data from local storage and then set in `settingConfigs` key-values. Then if the url params are present, they will overwrite local storage values.
+async function getUrlParamsOrLocalStorageData(searchParams: URLSearchParams, settingConfigs: settingConfigsInterface) {
+    let gridSearchId = searchParams.get("run_id")
+    let socketConnectionUrl = searchParams.get("ws_endpoint")
+    let restApiUrl = searchParams.get("rest_endpoint")
+
+    let settingConfigsInStorage = localStorage.getItem('SettingConfigs');
+    if (settingConfigsInStorage) {
+        settingConfigs = await JSON.parse(settingConfigsInStorage);
+    }
+
+    // in the else parts below: for now, I kept default values if the server is localhost or 127.0.0.1 - so we have ease in development. Let me know if it needs to be changed.
+    if (gridSearchId !== null) {
+        settingConfigs.gridSearchId = gridSearchId;
+    }
+    else if (!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+        settingConfigs.gridSearchId = "mlgym_event_subscribers";
+    }
+
+    if (socketConnectionUrl !== null) {
+        settingConfigs.socketConnectionUrl = socketConnectionUrl;
+    }
+    else if (!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+        settingConfigs.socketConnectionUrl = "http://" + window.location.hostname + ":7000/";
+    }
+
+    if (restApiUrl !== null) {
+        settingConfigs.restApiUrl = restApiUrl;
+    }
+    else if (!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+        settingConfigs.restApiUrl = "http://" + window.location.hostname + ":5001/";
+    }
+
+    return settingConfigs;
+}
+
 export default function App() {
 
-    const [state, setState] = useState({
-        bottom: false,
-        filterText: ""
-    })
+    const [filterText, setFilterText] = useState("")
+    const [filterDrawer, setFilterDrawer] = useState(false)
+    const [isConfigValidated, setConfigValidation] = useState(false)
+    // const [isSnackbarOpen, setSnackbarOpen] = useState(false)
+    // const [snackBarText, setSnackBarText] = useState("")
+    const [connectionSnackBar, setConnectionSnackBar] = useState({
+        isOpen: false,
+        connection: false
+    });
     const location = useLocation();
     const dispatch = useAppDispatch();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [settingConfigs, setSettingConfigs] = useState({
+        gridSearchId: "",
+        socketConnectionUrl: "",
+        restApiUrl: ""
+    })
+
+    useEffect(() => {
+        // Await key used in this function - suspends execution of the code below it and assures that it does it's task and returns valaue -- this is called promise (from a function). So as the function is executed, it returns a promise with data which must be accessed like this:
+        getUrlParamsOrLocalStorageData(searchParams, settingConfigs).then((settingConfigs) => {
+            setSettingConfigs(settingConfigs);
+            localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
+        });
+    }, [])
 
     const urls: Array<string> = [];
-    Object.keys(RoutesMapping).map((routeMapKey) => {
+    Object.keys(RoutesMapping).forEach((routeMapKey) => {
         if (routeMapKey !== "ErrorComponent") {
             urls.push(RoutesMapping[routeMapKey].url);
         }
     });
 
     useEffect(() => {
-        // creating WebWorker
-        // NOTE:using URL because create-react-app throws error since it has not found the worker file during load/bundling
-        const workerSocket = new Worker(new URL('../worker_socket/WorkerSocket.ts', import.meta.url));
-        // setting the redux update methods on the incoming data from the worker thread
-        workerSocket.onmessage = ({ data }: MessageEvent) => workerOnMessageHandler(data as DataToRedux);
+        if (isConfigValidated) {
+            // save to local storage only after user clicks on submit button - either in popup or in settings page.
+            // after the used submits the values & after it is saved, then only we will connect to the socket with the values given by user.
+            // TODO:: after Vijul and Osama's code is merged, handle error message from the socket and show to user - so if the socket connection was not successful, user can update the values and try again.
+            localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
 
-        // close the worker on Dismount to stop any memory leaks
-        return () => {
-            // ASK: not sure if this is useful, or if it gets handled before the termination???
-            workerSocket.postMessage("CLOSE_SOCKET");
-            workerSocket.terminate();
+            // creating WebWorker
+            // NOTE:using URL because create-react-app throws error since it has not found the worker file during load/bundling
+            const workerSocket = new Worker(new URL('../worker_socket/WorkerSocket.ts', import.meta.url));
+            // setting the redux update methods on the incoming data from the worker thread
+            workerSocket.onmessage = ({ data }: MessageEvent) => workerOnMessageHandler(data as DataToRedux);
+            // starting the worker
+            workerSocket.postMessage(settingConfigs);
+
+            // close the worker on Dismount to stop any memory leaks
+            return () => {
+                // ASK: not sure if this is useful, or if it gets handled before the termination???
+                workerSocket.postMessage("CLOSE_SOCKET");
+                workerSocket.terminate();
+            }
         }
+    }, [isConfigValidated])
+    // recommended way: keeping the second condition blank, fires useEffect just once as there are no conditions to check to fire up useEffect again (just like componentDidMount of React Life cycle).
 
-    }, [dispatch]);
 
     // TODO: maybe useCallback
     const workerOnMessageHandler = (data: DataToRedux) => {
@@ -58,106 +136,133 @@ export default function App() {
         }
         else if (data && data.status) {
             if (data.status === "msg_count_increment") {
-                dispatch(incrementReceivedMsgCount())
+                dispatch(incrementReceivedMsgCount());
             } else if (data.status["ping"] !== undefined) {
-                dispatch(setLastPing(data.status["ping"]))
+                dispatch(setLastPing(data.status["ping"]));
             } else if (data.status["throughput"] !== undefined) {
-                dispatch(setThroughput(data.status["throughput"]))
+                dispatch(setThroughput(data.status["throughput"]));
             } else if (data.status["isSocketConnected"] !== undefined) {
-                dispatch(setSocketConnection(data.status["isSocketConnected"]))
+                dispatch(setSocketConnection(data.status["isSocketConnected"]));
+                setConnectionSnackBar({
+                    isOpen: true,
+                    connection: data.status["isSocketConnected"]
+                });
+                // setSnackBarText(`Socket Connection ${data.status["isSocketConnected"] ? "Successful" : "Failed"}`);
+                // setSnackbarOpen(true);
             }
         }
     }
 
-    const toggleDrawer = (anchor: string, open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
-        if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')) {
-            return;
-        }
-        setState({ ...state, [anchor]: open });
-    }
-
-    function changeFilterText(text: string) {
-        setState({ ...state, ["filterText"]: text });
-    }
-
     return (
-        <div className="App">
+        <div className={styles.main_container}>
             {
-                urls.includes(location.pathname.split("/")[1]) ?
-                    // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't the TopBar
-                    <TopBarWithDrawer />
-                    :
-                    null
+                // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
+                urls.includes(location.pathname.split("/")[1]) && <TopBarWithDrawer />
             }
             <Routes>
                 {
                     // Dynamic Routes added as a functionality. 
                     // Rendering Names as per routes helps in Menu also. So, to keep the Component and Route name mapping uniform, RoutesMapping.tsx is the single file to look at for any updates or changes to be made
                     Object.keys(RoutesMapping).map((routeMapKey, index) => {
-                        return (
-                            <Route
-                                key={index}
-                                path={RoutesMapping[routeMapKey].url}
-                                element={RoutesMapping[routeMapKey].component}
-                            />
-                        )
+                        // If the settings page is to render, we have to do it seperately from dynamic routing as we need to pass functions as props to settings page - so that when user submits the configured values, we can connect to websocket with the changed parameters.
+                        if (routeMapKey === "Settings") {
+                            return (
+                                <Route
+                                    key={index}
+                                    path={RoutesMapping[routeMapKey].url}
+                                    element={
+                                        <Settings
+                                            validateConfigs={(value: boolean) => setConfigValidation(value)}
+                                            setConfigData={(settingConfigs: settingConfigsInterface) => setSettingConfigs(settingConfigs)}
+                                        />
+                                    }
+                                />
+                            )
+                        }
+                        else {
+                            return (
+                                <Route
+                                    key={index}
+                                    path={RoutesMapping[routeMapKey].url}
+                                    element={RoutesMapping[routeMapKey].component}
+                                />
+                            )
+                        }
                     })
                 }
             </Routes>
             {
                 // Floating Action Button (FAB) added for filter popup
-                // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar)
-                urls.includes(location.pathname.split("/")[1]) ?
-                    <Zoom in={true}>
+                // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar). Also hide it when user is on Settings Page (As - not needed to do filter when viewing/inserting/updating configurations)
+                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url ?
+                    <div className={styles.fab}>
                         <Fab
-                            sx={{
-                                position: "fixed",
-                                bottom: (theme) => theme.spacing(6),
-                                right: (theme) => theme.spacing(3),
-                                opacity: 0.5,
-                                ":hover": { opacity: 1 }
-                            }}
                             variant="extended"
                             color="primary"
                             aria-label="add"
-                            onClick={toggleDrawer("bottom", true)}
+                            onClick={() => setFilterDrawer(true)}
                         >
                             <FilterAltIcon /> Filter
                         </Fab>
-                    </Zoom>
+                    </div>
                     :
                     null
             }
             {/* Filter Popup */}
             <React.Fragment>
                 <Drawer
-                    anchor={"bottom"}
-                    open={state["bottom"]}
-                    onClose={toggleDrawer("bottom", false)}
-                    PaperProps={{
-                        style: {
-                            borderTopLeftRadius: "10px",
-                            borderTopRightRadius: "10px",
-                            paddingLeft: "20px",
-                            paddingRight: "20px",
-                            paddingBottom: "30px"
-                        }
-                    }}
+                    anchor={"bottom"} // MUI-Drawer property: tells from which side of the screen, the drawer should appear
+                    open={filterDrawer}
+                    onClose={() => setFilterDrawer(false)}
+                    // Drawer wraps your content inside a <Paper /> component. A Materiaul-UI paper component has shadows and a non-transparent background.
+                    classes={{ paper: styles.filter_drawer_container }}
                 >
-                    <h3>
-                        Filter Your Results
-                    </h3>
-                    <TextField
-                        id="outlined-multiline-flexible"
-                        label="Filter"
-                        placeholder="Filter your experiments here!..."
-                        multiline
-                        maxRows={4}
-                        value={state["filterText"]}
-                        onChange={(e) => changeFilterText(e.target.value)}
-                    />
+                    <div className={styles.filter_container}>
+                        <h3>
+                            Filter Your Results
+                        </h3>
+                        <TextField
+                            id="outlined-multiline-flexible"
+                            label="Filter"
+                            placeholder="Filter your experiments here!..."
+                            multiline
+                            maxRows={4}
+                            value={filterText}
+                            onChange={(e) => setFilterText(e.target.value)}
+                            className={styles.filter_textfield}
+                        />
+                    </div>
                 </Drawer>
             </React.Fragment>
+            {
+                // here also, it is same as done above for Setting Component. We need to pass functions as props to the popup - so that when user submits the configured values, we can connect to websocket with the changed parameters.
+                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url && isConfigValidated === false ?
+                    <ConfigPopup
+                        validateConfigs={(value: boolean) => setConfigValidation(value)}
+                        setConfigData={(settingConfigs: settingConfigsInterface) => setSettingConfigs(settingConfigs)}
+                    />
+                    :
+                    null
+            }
+            {/* Socket connection success / fail message temperory popup which will disappeaer in 4secs or when closed manually by user */}
+            <Snackbar
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                // open={isSnackbarOpen}
+                open={connectionSnackBar.isOpen}
+                // onClose={() => setSnackbarOpen(false)}
+                onClose={() => setConnectionSnackBar({ ...connectionSnackBar, isOpen: false })}
+                autoHideDuration={4000}
+                >
+                <Alert
+                    // onClose={() => setSnackbarOpen(false)}
+                    onClose={() => setConnectionSnackBar({ ...connectionSnackBar, isOpen: false })}
+                    // severity={snackBarText === SOCKET_STATUS.SOCKET_CONN_SUCCESS ? "success" : "error"}
+                    severity={connectionSnackBar.connection ? "success" : "error"}
+                >
+                    {/* {snackBarText} */}
+                    {`Socket Connection ${connectionSnackBar.connection ? "Successful" : "Failed"}`}
+                </Alert>
+            </Snackbar>
         </div>
     );
 }

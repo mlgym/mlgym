@@ -4,7 +4,7 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from ml_gym.error_handling.exception import ComponentConstructionError, InjectMappingNotFoundError, DependentComponentNotFoundError
 from ml_gym.blueprints.constructables import ComponentConstructable, DatasetIteratorConstructable, \
-    DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, EarlyStoppingRegistryConstructable, EarlyStoppingStrategyConstructable, OptimizerBundleConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
+    DatasetIteratorSplitsConstructable, DeprecatedDataLoadersConstructable, EarlyStoppingRegistryConstructable, EarlyStoppingStrategyConstructable, LRSchedulerConstructable, OptimizerBundleConstructable, Requirement, DataLoadersConstructable, DatasetRepositoryConstructable, \
     OptimizerConstructable, ModelRegistryConstructable, ModelConstructable, LossFunctionRegistryConstructable, \
     MetricFunctionRegistryConstructable, TrainerConstructable, EvaluatorConstructable, MappedLabelsIteratorConstructable, \
     FilteredLabelsIteratorConstructable, FeatureEncodedIteratorConstructable, CombinedDatasetIteratorConstructable, \
@@ -125,6 +125,7 @@ class ComponentFactory:
             ComponentVariant("DATA_LOADER", "FUTURE", DataLoadersConstructable),
             ComponentVariant("OPTIMIZER", "DEFAULT", OptimizerConstructable),
             ComponentVariant("OPTIMIZER", "BUNDLE", OptimizerBundleConstructable),
+            ComponentVariant("LR_SCHEDULER", "DEFAULT", LRSchedulerConstructable),
             ComponentVariant("MODEL_REGISTRY", "DEFAULT", ModelRegistryConstructable),
             ComponentVariant("LOSS_FUNCTION_REGISTRY", "DEFAULT", LossFunctionRegistryConstructable),
             ComponentVariant("METRIC_REGISTRY", "DEFAULT", MetricFunctionRegistryConstructable),

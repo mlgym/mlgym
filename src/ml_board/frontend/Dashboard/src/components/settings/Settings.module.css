@@ -1,0 +1,19 @@
+.settings_main_box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 5%;
+}
+
+.settings_text_box {
+    width: 60%;
+}
+
+.setting_form_btns_box {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 60%;
+    gap: 40px
+}
