@@ -10,7 +10,6 @@ import { EvaluationResultPayload } from '../worker_socket/event_handlers/evaluat
 import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
 
-
 // styles
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import Alert from '@mui/material/Alert';
@@ -40,26 +39,16 @@ async function getUrlParamsOrLocalStorageData(searchParams: URLSearchParams, set
         settingConfigs = await JSON.parse(settingConfigsInStorage);
     }
 
-    // in the else parts below: for now, I kept default values if the server is localhost or 127.0.0.1 - so we have ease in development. Let me know if it needs to be changed.
     if (gridSearchId !== null) {
         settingConfigs.gridSearchId = gridSearchId;
-    }
-    else if (!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-        settingConfigs.gridSearchId = "mlgym_event_subscribers";
     }
 
     if (socketConnectionUrl !== null) {
         settingConfigs.socketConnectionUrl = socketConnectionUrl;
     }
-    else if (!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-        settingConfigs.socketConnectionUrl = "http://" + window.location.hostname + ":7000/";
-    }
 
     if (restApiUrl !== null) {
         settingConfigs.restApiUrl = restApiUrl;
-    }
-    else if (!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-        settingConfigs.restApiUrl = "http://" + window.location.hostname + ":5001/";
     }
 
     return settingConfigs;
