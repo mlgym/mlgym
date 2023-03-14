@@ -32,10 +32,10 @@ class GridSearchAPIClientIF(ABC):
                                 checkpoint_resource: CheckpointResource):
         raise NotImplementedError
 
-    def post_checkpoint_resource_call(self, grid_search_id: str, experiment_id: str, payload: Dict):
+    def add_checkpoint_resource(self, grid_search_id: str, experiment_id: str, payload: Dict):
         raise NotImplementedError
 
-    def del_checkpoint_resource_call(self, grid_search_id: str, experiment_id: str, epoch: int):
+    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: int):
         raise NotImplementedError
 
     def get_full_checkpoint(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int):
@@ -96,7 +96,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         else:
             return response.content
 
-    def _set_binary_resource(url: str, payload: bytes) -> Dict:
+    def _post_binary_resource(url: str, payload: bytes) -> Dict:
         """
         ``HTTP POST Call`` Send bytes data.
 
@@ -123,7 +123,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
             raise NetworkError(
                 f"Server responded with error code {response.status_code}")
 
-    def _set_raw_text_file_resource(url: str, payload: Dict) -> Dict:
+    def _put_raw_text_file_resource(url: str, payload: Dict) -> Dict:
         """
         ``HTTP PUT Call`` Send bytes data.
 
@@ -151,7 +151,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
 
     # def add_grid_search_config(self, grid_search_id: str, grid_search_config: Dict) -> Dict:
     #     url = f"{self.endpoint}/grid_searches/{grid_search_id}/gs_config"
-    #     return GridSearchRestfulAPIClient._set_raw_text_file_resource(url, grid_search_config)
+    #     return GridSearchRestfulAPIClient._put_raw_text_file_resource(url, grid_search_config)
 
     def add_config_string(self, grid_search_id: str, config_name: str, config: str, file_format: FileFormat,
                           experiment_id: int = None) -> Dict:
@@ -172,11 +172,11 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         else:
             url = f"{self.endpoint}/grid_searches/{grid_search_id}/{experiment_id}/{config_name}"
 
-        return GridSearchRestfulAPIClient._set_raw_text_file_resource(url, payload_dict)
+        return GridSearchRestfulAPIClient._put_raw_text_file_resource(url, payload_dict)
 
     def get_validation_config(self, grid_search_id: str):
         """
-        ``HTTP GET Call Request`` Fecth validation
+        ``HTTP GET Call Request`` Fetch validation
           given the grid search ID over HTTP call.
 
         :params: 
@@ -189,7 +189,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
 
     def get_experiments(self, grid_search_id: str):
         """
-        ``HTTP GET Call Request`` Fecth experiments
+        ``HTTP GET Call Request`` Fetch experiments
           given the grid search ID over HTTP call.
 
         :params: 
@@ -202,7 +202,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
 
     def get_full_checkpoint(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int):
         """
-        ``HTTP GET Call Request`` Fecth full checkpoint
+        ``HTTP GET Call Request`` Fetch full checkpoint
           given the grid search ID, experiment ID & checkpoint ID over HTTP call.
 
         :params: 
@@ -218,7 +218,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
     def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str,  checkpoint_id: int,
                                 checkpoint_resource: CheckpointResource):
         """
-        ``HTTP GET Call Request`` Fecth checkpoint resource
+        ``HTTP GET Call Request`` Fetch checkpoint resource
           given the grid search ID, experiment ID & checkpoint ID over HTTP call.
 
         :params: 
@@ -232,7 +232,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{checkpoint_id}/{checkpoint_resource}"
         return GridSearchRestfulAPIClient._get_binary_resource(url)
 
-    def post_checkpoint_resource_call(self, grid_search_id: str, experiment_id: str, payload: Dict):
+    def add_checkpoint_resource(self, grid_search_id: str, experiment_id: str, payload: Dict):
         """
         ``HTTP POST Call Request`` Send all checkpoint resource pickle files
           given the epoch, experiment ID & grid search ID over HTTP call.
@@ -249,9 +249,9 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         for checkpoint in chekpoint_resources:
             url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{payload['epoch']}/{checkpoint}"
             payload_pick = pickle.dumps(payload[f"{checkpoint}"])
-            GridSearchRestfulAPIClient._set_binary_resource(url, payload_pick)
+            GridSearchRestfulAPIClient._post_binary_resource(url, payload_pick)
 
-    def del_checkpoint_resource_call(self, grid_search_id: str, experiment_id: str, epoch: int):
+    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: int):
         """
         ``HTTP DELETE Call Request`` Delete all checkpoint resource pickle files
           given the epoch, experiment ID & grid search ID over HTTP call.
@@ -271,7 +271,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
 
     def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
         """
-        ``HTTP GET Call Request`` Fecth Experiment status
+        ``HTTP GET Call Request`` Fetch Experiment status
           given the grid search ID over HTTP call.
 
         :params: 
@@ -289,7 +289,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
 
 class GridSearchAPIClientConstructableIF(ABC):
 
-    @ abstractmethod
+    @abstractmethod
     def construct(self) -> GridSearchAPIClientIF:
         raise NotImplementedError
 
@@ -298,13 +298,13 @@ class GridSearchAPIClientType(Enum):
     GRID_SEARCH_RESTFUL_API_CLIENT = GridSearchRestfulAPIClient
 
 
-@ dataclass
+@dataclass
 class GridSearchAPIClientConfig:
     api_client_type: GridSearchAPIClientType
     api_client_config: Dict
 
 
-@ dataclass
+@dataclass
 class GridSearchAPIClientConstructable(GridSearchAPIClientConstructableIF):
     config: GridSearchAPIClientConfig
 

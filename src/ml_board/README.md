@@ -89,7 +89,7 @@ _GET /grid_searches/<grid_search_id>/experiments_
 
 **Checkpointing**
 
-Get all checkpoints:
+Get all resources for single checkpoint:
 
 _GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>_
 

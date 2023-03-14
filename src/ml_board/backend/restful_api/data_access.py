@@ -28,11 +28,11 @@ class DataAccessIF(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    def get_grid_config_exec(self, grid_search_id: str, config_name: str):
+    def get_grid_config(self, grid_search_id: str, config_name: str):
         raise NotImplementedError
     
     @abstractmethod
-    def get_experiment_config_exec(self, grid_search_id: str, experiment_id: str, config_name: str):
+    def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str):
         raise NotImplementedError
 
     @abstractmethod
@@ -40,11 +40,11 @@ class DataAccessIF(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def post_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, payload_pickle: bytes):
+    def add_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, payload_pickle: bytes):
         raise NotImplementedError
     
     @abstractmethod
-    def del_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
         raise NotImplementedError
 
     @abstractmethod
@@ -191,7 +191,7 @@ class FileDataAccess(DataAccessIF):
             raise InvalidPathError(
                 f"File path {requested_full_path} is not safe.")
     
-    def get_grid_config_exec(self, grid_search_id: str, config_name: str):
+    def get_grid_config(self, grid_search_id: str, config_name: str):
         """
         Fetch grid config for a Grid Search ID from the event storage.
 
@@ -213,7 +213,7 @@ class FileDataAccess(DataAccessIF):
             raise InvalidPathError(
                 f"File path {requested_full_path} is not safe.")
     
-    def get_experiment_config_exec(self, grid_search_id: str, experiment_id: str, config_name: str):
+    def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str):
         """
         `Fetch experiment config given the experiment ID & grid search ID from event storage.
 
@@ -238,7 +238,7 @@ class FileDataAccess(DataAccessIF):
 
     def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
         """
-        `Fecth checkpoint resource pickle file given the experiment ID & grid search ID from event storage.
+        `Fetch checkpoint resource pickle file given the experiment ID & grid search ID from event storage.
 
         :params: 
              grid_search_id (str): Grid Search ID
@@ -261,7 +261,7 @@ class FileDataAccess(DataAccessIF):
             raise InvalidPathError(
                 f"File path {requested_full_path} is not safe.")
 
-    def post_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, payload_pickle: bytes):
+    def add_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, payload_pickle: bytes):
         """
         Add a checkpoint resource pickle file given the epoch, experiment ID & grid search ID to event storage.
 
@@ -286,7 +286,7 @@ class FileDataAccess(DataAccessIF):
             raise InvalidPathError(
                 f"File path {requested_full_path} is not safe.")
     
-    def del_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
         """
         Delete checkpoint resource pickle file from the event storage 
         given the epoch, experiment ID & grid search ID.
@@ -304,8 +304,8 @@ class FileDataAccess(DataAccessIF):
         if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
             os.remove(requested_full_path)
         else:
-            raise InvalidPathError(
-                f"File path {requested_full_path} is not safe.")
+            raise FileNotFoundError(
+                f"File in path {requested_full_path} not found.")
 
     def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str):
         """

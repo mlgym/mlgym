@@ -24,9 +24,9 @@ class RestfulAPIServer:
         self.app.add_api_route(path="/grid_searches/{grid_search_id}/experiments",
                                methods=["GET"], endpoint=self.get_experiment_statuses)
         self.app.add_api_route(path="/grid_searches/{grid_search_id}/{experiment_id}/{config_name}",
-                               methods=["GET"], endpoint=self.get_experiment_config_exec)
+                               methods=["GET"], endpoint=self.get_experiment_config)
         self.app.add_api_route(path="/grid_searches/{grid_search_id}/{config_name}",
-                               methods=["GET"], endpoint=self.get_grid_config_exec)
+                               methods=["GET"], endpoint=self.get_grid_config)
         self.app.add_api_route(path="/grid_searches/{grid_search_id}/{config_name}",
                                methods=["PUT"], endpoint=self.add_raw_config_to_grid_search)
         self.app.add_api_route(path="/grid_searches/{grid_search_id}/{experiment_id}/{config_name}",
@@ -36,9 +36,9 @@ class RestfulAPIServer:
         self.app.add_api_route(path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}",
                                methods=["GET"], endpoint=self.get_checkpoint_dict_epoch)
         self.app.add_api_route(path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource}",
-                               methods=["POST"], endpoint=self.post_checkpoint_resource_exec)
+                               methods=["POST"], endpoint=self.add_checkpoint_resource)
         self.app.add_api_route(path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource}",
-                               methods=["DELETE"], endpoint=self.del_checkpoint_resource_exec)
+                               methods=["DELETE"], endpoint=self.delete_checkpoint_resource)
 
         # self.app.mount("/", StaticFiles(directory="/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_board/frontend/dashboard/build/", html=True), name="static")
 
@@ -52,14 +52,13 @@ class RestfulAPIServer:
         :returns: JSON object - experiment_statuses
         """
         try:
-            experiment_statuses = self.data_access.get_experiment_statuses(
-                grid_search_id)
+            experiment_statuses = self.data_access.get_experiment_statuses(grid_search_id)
             return experiment_statuses
         except InvalidPathError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail=f'Provided invalid grid_search_id {grid_search_id}') from e
 
-    def get_experiment_config_exec(self, grid_search_id: str, experiment_id: str, config_name: str):
+    def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str):
         """
         ``HTTP GET`` Fetch specific experiment config
           given the experiment ID & grid search ID.
@@ -72,10 +71,10 @@ class RestfulAPIServer:
         :returns: JSON stream response 
         """
         try:
-            file_generator = self.data_access.get_experiment_config_exec(
+            file_generator = self.data_access.get_experiment_config(
                 grid_search_id=grid_search_id,
                 experiment_id=experiment_id,
-                config_name = config_name)
+                config_name=config_name)
             response = StreamingResponse(
                 file_generator, media_type="application/json")
             return response
@@ -83,7 +82,7 @@ class RestfulAPIServer:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail=f'Provided invalid grid_search_id {grid_search_id}') from e
 
-    def get_grid_config_exec(self, grid_search_id: str, config_name: str):
+    def get_grid_config(self, grid_search_id: str, config_name: str):
         """
         ``HTTP GET`` Fetch grid config for a Grid Search ID.
 
@@ -94,9 +93,9 @@ class RestfulAPIServer:
         :returns: YML stream response 
         """
         try:
-            file_generator = self.data_access.get_grid_config_exec(
-                grid_search_id = grid_search_id,
-                config_name = config_name)
+            file_generator = self.data_access.get_grid_config(
+                grid_search_id=grid_search_id,
+                config_name=config_name)
             response = StreamingResponse(
                 file_generator, media_type="application/yml")
             return response
@@ -156,7 +155,7 @@ class RestfulAPIServer:
 
     def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
         """
-        ``HTTP GET`` Fecth checkpoint resource pickle file
+        ``HTTP GET`` Fetch checkpoint resource pickle file
           given the experiment ID & grid search ID.
 
         :params: 
@@ -179,7 +178,7 @@ class RestfulAPIServer:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Provided invalid parameters for checkpoint resource.") from e
 
-    def del_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
         """
         ``HTTP DELETE`` Delete checkpoint resource pickle file 
           given the epoch, experiment ID & grid search ID.
@@ -191,7 +190,7 @@ class RestfulAPIServer:
              checkpoint_resource (CheckpointResource) : CheckpointResource type    
         """
         try:
-            self.data_access.del_checkpoint_resource_exec(grid_search_id=grid_search_id,
+            self.data_access.delete_checkpoint_resource(grid_search_id=grid_search_id,
                                                           experiment_id=experiment_id,
                                                           epoch=epoch,
                                                           checkpoint_resource=checkpoint_resource)
@@ -200,7 +199,7 @@ class RestfulAPIServer:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Provided invalid parameters for checkpoint resource.") from e
 
-    def post_checkpoint_resource_exec(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, file: bytes = File(...)):
+    def add_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, file: bytes = File(...)):
         """
         ``HTTP POST`` Add a checkpoint resource pickle file 
           given the epoch, experiment ID & grid search ID.
@@ -216,7 +215,7 @@ class RestfulAPIServer:
         """
         try:
             payload_pickle = base64.b64decode(file)
-            self.data_access.post_checkpoint_resource_exec(
+            self.data_access.add_checkpoint_resource(
                 grid_search_id=grid_search_id,
                 experiment_id=experiment_id,
                 epoch=epoch,
