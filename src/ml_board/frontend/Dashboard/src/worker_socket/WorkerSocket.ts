@@ -1,71 +1,71 @@
 import socketIO, { Socket } from 'socket.io-client';
 import { settingConfigsInterface } from '../app/App';
 import { DataFromSocket } from './DataTypes';
-import { connectionMTCb, msgCounterIncMTCb, pingMTCb, throughputMTCb, updateMTCb } from './MainThreadCallbacks';
+import { connectionMainThreadCallback, msgCounterIncMainThreadCallback, pingMainThreadCallback, throughputMainThreadCallback, updateMainThreadCallback } from './MainThreadCallbacks';
 
 
 // ========================= variables ============================//
 
-// const DEFAULT_URL = 'http://localhost:7000/'; // or http://127.0.0.1:7000/'
-
-let interval: NodeJS.Timer;
+let pinging_interval: NodeJS.Timer; // for idealy pinging the server
+const period: number = 10; // specifying how long the pinging_interval in seconds
 let lastPing: number = -1;
-let lastPong: number = -1;
-const period: number = 10;
+let lastPong: number = -1; // the actual ping is calculated = lastPong - lastPing
 let msgCountPerPeriod: number = 0;
-let socket: Socket;
+let socket: Socket; // 'let' to initialize on funciton call
 
 
 // =~=~=~=~=~=~=~=~=~=~=~=~=~= ~WebSocket~ =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=//
 const initSocket = (settingConfigs: settingConfigsInterface) => {
     socket = socketIO(settingConfigs.socketConnectionUrl, { autoConnect: true });
     console.log("WebSocket initialized");
-    socket.on('connect', () => connect(socket, settingConfigs.gridSearchId));
-    socket.on('disconnect', disconnect);
-    socket.on('connect_error', connect_error);
-    socket.on('mlgym_event', mlgym_event);
-    socket.on('pong', pong);
+    socket.on('connect', () => onConnect(socket, settingConfigs.gridSearchId));
+    socket.on('disconnect', onDisconnect);
+    socket.on('connect_error', onError);
+    socket.on('mlgym_event', process_mlgym_event);
+    socket.on('pong', onPongReceivedfromWebsocketServer);
 };
 
 
 // ========================= connection events ============================//
-const connect = (socket: Socket, runId: string) => {
+const onConnect = (socket: Socket, runId: string) => {
     // TODO:ASK how exactly should the join happen? and this was in the old code const runId = "mlgym_event_subscribers";
     // Max added bug report here: https://github.com/mlgym/mlgym/issues/134
     socket.emit('join', { rooms: [runId] });
     // start periodic server pining
-    interval = setInterval(pinging, period * 1000, socket);
+    pinging_interval = setInterval(send_ping_to_websocket_server, period * 1000, socket);
     // flag main thread that connection is on
-    connectionMTCb(true);
+    connectionMainThreadCallback(true);
 };
 
-const disconnect = (reason: Socket.DisconnectReason) => stop(reason);
+const onDisconnect = (reason: Socket.DisconnectReason) => stop(reason);
 
-const connect_error = (err: Error) => stop(err);
+const onError = (err: Error) => stop(err);
 
 
 // ========================= data driven events ============================//
-// const mlgym_event = (msg:JSON) => {
-const mlgym_event = (msg: string) => {
+// const process_mlgym_event = (msg:JSON) => {
+const process_mlgym_event = (msg: string) => {
     const parsedMsg: DataFromSocket = JSON.parse(msg);
     // update the redux state on the main thread
-    updateMTCb(parsedMsg);
+    updateMainThreadCallback (parsedMsg);
     // message count for calculating the throughput
     msgCountPerPeriod++;
     // flag main thread to increment the number of incoming messages
-    msgCounterIncMTCb();
+    msgCounterIncMainThreadCallback();
 };
 
-const pong = () => {
+// ASK MAX: renaming to onPong or onPongReceived
+const onPongReceivedfromWebsocketServer = () => {
     // on Pong , save time of receiving 
     lastPong = new Date().getTime();
     // calculate the ping and send it to the MainThread
-    pingMTCb(lastPong - lastPing);
+    pingMainThreadCallback(lastPong - lastPing);
 };
 
 // ========================= helper methods ============================//
 
-const pinging = (socket: Socket) => {
+// ASK MAX: sendPingToServer or sendPing or pingToServer or pingingServer or pinging
+const send_ping_to_websocket_server = (socket: Socket) => {
     // if Pong was received after sending a Ping 
     // if no Ping was sent before
     if (lastPong > lastPing || lastPing === -1) {
@@ -75,7 +75,7 @@ const pinging = (socket: Socket) => {
         socket.emit('ping');
     }
     // calculate throughput and send it to the main thread
-    throughputMTCb(msgCountPerPeriod / period)
+    throughputMainThreadCallback(msgCountPerPeriod / period)
     // reset message count to calculate throughput
     msgCountPerPeriod = 0;
 };
@@ -83,13 +83,13 @@ const pinging = (socket: Socket) => {
 const stop = (why: Error | Socket.DisconnectReason) => {
     console.log(`${why instanceof Error ? "connection" /* error */ : "disconnected"} : ${why}`);
     // halt periodic server pining
-    clearInterval(interval);
+    clearInterval(pinging_interval);
     // flag main thread that connection is off
-    connectionMTCb(false);
+    connectionMainThreadCallback(false);
     // force throughput back to 0, as it won't update when the interval is cleared
-    throughputMTCb(0);
+    throughputMainThreadCallback(0);
     // force ping back to 0, it doesn't make sense to update it accurately if the connection is down anyways
-    pingMTCb(0);
+    pingMainThreadCallback(0);
 };
 
 
