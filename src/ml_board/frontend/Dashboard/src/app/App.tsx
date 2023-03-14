@@ -8,7 +8,6 @@ import { DataToRedux } from '../worker_socket/DataTypes';
 import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
 
-
 // styles
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import Alert from '@mui/material/Alert';
@@ -38,26 +37,16 @@ async function getUrlParamsOrLocalStorageData(searchParams: URLSearchParams, set
         settingConfigs = await JSON.parse(settingConfigsInStorage);
     }
 
-    // in the else parts below: for now, I kept default values if the server is localhost or 127.0.0.1 - so we have ease in development. Let me know if it needs to be changed.
     if (gridSearchId !== null) {
         settingConfigs.gridSearchId = gridSearchId;
-    }
-    else if (!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-        settingConfigs.gridSearchId = "mlgym_event_subscribers";
     }
 
     if (socketConnectionUrl !== null) {
         settingConfigs.socketConnectionUrl = socketConnectionUrl;
     }
-    else if (!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-        settingConfigs.socketConnectionUrl = "http://" + window.location.hostname + ":7000/";
-    }
 
     if (restApiUrl !== null) {
         settingConfigs.restApiUrl = restApiUrl;
-    }
-    else if (!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-        settingConfigs.restApiUrl = "http://" + window.location.hostname + ":5001/";
     }
 
     return settingConfigs;
@@ -126,15 +115,17 @@ export default function App() {
 
     // TODO: maybe useCallback
     const workerOnMessageHandler = (data: DataToRedux) => {
-        if (data && data.evaluationResultsData) {
+        //  abstract equality operator, so null == undefined
+        if (data == undefined) return;
+        if (data.evaluationResultsData) {
             // update the Charts Slice
             dispatch(saveEvalResultData(data.evaluationResultsData));
             dispatch(upsertOneRow(data.tableData as Row));
         }
-        else if (data && data.tableData) {
+        else if (data.tableData) {
             dispatch(upsertOneRow(data.tableData));
         }
-        else if (data && data.status) {
+        else if (data.status) {
             if (data.status === "msg_count_increment") {
                 dispatch(incrementReceivedMsgCount());
             } else if (data.status["ping"] !== undefined) {
