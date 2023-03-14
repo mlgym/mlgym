@@ -8,7 +8,6 @@ import { DataToRedux } from '../worker_socket/DataTypes';
 import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
 
-
 // styles
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import Alert from '@mui/material/Alert';
@@ -38,26 +37,16 @@ async function getUrlParamsOrLocalStorageData(searchParams: URLSearchParams, set
         settingConfigs = await JSON.parse(settingConfigsInStorage);
     }
 
-    // in the else parts below: for now, I kept default values if the server is localhost or 127.0.0.1 - so we have ease in development. Let me know if it needs to be changed.
     if (gridSearchId !== null) {
         settingConfigs.gridSearchId = gridSearchId;
-    }
-    else if (!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-        settingConfigs.gridSearchId = "mlgym_event_subscribers";
     }
 
     if (socketConnectionUrl !== null) {
         settingConfigs.socketConnectionUrl = socketConnectionUrl;
     }
-    else if (!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-        settingConfigs.socketConnectionUrl = "http://" + window.location.hostname + ":7000/";
-    }
 
     if (restApiUrl !== null) {
         settingConfigs.restApiUrl = restApiUrl;
-    }
-    else if (!settingConfigsInStorage && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-        settingConfigs.restApiUrl = "http://" + window.location.hostname + ":5001/";
     }
 
     return settingConfigs;
@@ -112,15 +101,6 @@ export default function App() {
             workerSocket.onmessage = ({ data }: MessageEvent) => workerOnMessageHandler(data as DataToRedux);
             // starting the worker
             workerSocket.postMessage(settingConfigs);
-
-            // // NOTE: this is better than calling "useAppSelector(selectEvalResult)" as it will force the App function to get called everytime the state changes
-            // // TODO: maybe find a better way later other than starting the worker with the empty redux state?
-            // const evalResult = {
-            //     grid_search_id: null,
-            //     experiments: {},
-            //     colors_mapped_to_exp_id: [[], []]
-            // }
-            // workerSocket.postMessage(evalResult);
 
             // close the worker on Dismount to stop any memory leaks
             return () => {
