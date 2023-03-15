@@ -1,5 +1,5 @@
 export interface evalResultCustomData {
-    grid_search_id: string, //TODO: move it to the statusSlice?
+    grid_search_id: string | null, //TODO: move it to the statusSlice?
     experiments: {
         [key: string]: {
             data: {

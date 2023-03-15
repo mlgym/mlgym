@@ -59,6 +59,7 @@ export default function Dashboard() {
     // NOTE: assumption is if the experiment is there then all it's values exist as well
     if (experiment !== undefined) {
       // calc the progresses here for better code readablity 
+      // TODO: epochs can appear as they are not in % but rather just the epoch's number
       let epoch_progress = experiment.current_epoch / experiment.num_epochs;
       let batch_progress = experiment.current_batch / experiment.num_batches;
 
@@ -77,7 +78,7 @@ export default function Dashboard() {
   }
   // console.log(rows.at(-1));
 
-  // TODO: get the colNames from the redux state ???
+  // TODO: get the names of the metric and the loss only, as the rest stays the same!
   // IMPORTANT NOTE: these names have to match the keys of the row object exactly in order to appear in the table
   const colNames = ["job_id", "job_type", "job_status", "experiment_id", "starting_time", "finishing_time",
     "epoch_progress", "batch_progress", "model_status", "current_split", "splits", "error",
