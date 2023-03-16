@@ -1,7 +1,10 @@
-from flask import Flask, render_template, request, copy_current_request_context
-from flask_socketio import SocketIO, emit, join_room, rooms, disconnect
-from typing import List
+import json
+import sys
 from collections import defaultdict
+from typing import List
+
+from flask import Flask, copy_current_request_context, render_template, request
+from flask_socketio import SocketIO, disconnect, emit, join_room, rooms
 
 
 class EventSubscriberIF:
@@ -12,7 +15,7 @@ class EventSubscriberIF:
 
 class WebSocketServer:
 
-    def __init__(self, host: str, port: int, message_delay: int, log_file_path: str, async_mode: str, app: Flask):
+    def __init__(self, host: str, port: int, message_delay: int, log_file_path: str, how_many_lines:int, async_mode: str, app: Flask):
         self._host = host
         self._port = port
         self._message_delay = message_delay
@@ -23,6 +26,7 @@ class WebSocketServer:
         # load the log file
         with open(log_file_path, encoding="utf-8") as fp:
             self.log_list = fp.readlines()
+        self._how_many_lines = how_many_lines # if how_many_lines != -1 else len(fp)
 
     def run(self, app: Flask):
         self._socketio.run(app, host=self._host, port=self._port)
@@ -41,8 +45,11 @@ class WebSocketServer:
 
             @copy_current_request_context
             def _send_event_history_to_client(log_list):
-                for msg in log_list:
-                    emit('mlgym_event', msg)
+                for i,msg in enumerate(log_list):
+                    if i == self._how_many_lines:
+                        print("DONE!")
+                        break
+                    emit('mlgym_event', json.loads(msg))
                     self._socketio.sleep(self._message_delay)
 
             # save the sids of the new client
@@ -87,7 +94,6 @@ class WebSocketServer:
 
 
 if __name__ == '__main__':
-    async_mode = None
 
     app = Flask(__name__, template_folder="template")
     app.config['SECRET_KEY'] = 'secret!'
@@ -96,12 +102,14 @@ if __name__ == '__main__':
     host = "localhost"
     async_mode = None
 
-    log_file_path = "./event_storage_less_data.log"
+    # log_file_path = "./event_storage_less_data.log"
+    log_file_path = sys.argv[1] if sys.argv[1] else "./log.txt"
+    how_many_lines = int(sys.argv[2]) if sys.argv[2] else -1
 
+    # message_delay = 0.001  # in seconds
+    message_delay = 0.1  # in seconds
 
-    message_delay = 0.001  # in seconds
-
-    ws = WebSocketServer(host=host, port=port, message_delay=message_delay, log_file_path=log_file_path, async_mode=async_mode, app=app)
+    ws = WebSocketServer(host=host, port=port, message_delay=message_delay, log_file_path=log_file_path, how_many_lines=how_many_lines, async_mode=async_mode, app=app)
 
     @app.route('/')
     def index():

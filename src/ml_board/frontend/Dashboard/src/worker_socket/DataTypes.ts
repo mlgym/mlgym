@@ -5,7 +5,7 @@ import { evalResultCustomData, EvaluationResultPayload } from "./event_handlers/
 
 // ========================= data types ============================//
 
-export interface DataFromSocket {
+export interface DataFromSocket extends JSON {
     event_type: string,
     creation_ts: number,
     payload: JSON // | EvaluationResultPayload // JSON because the some types have a key renamed :(
