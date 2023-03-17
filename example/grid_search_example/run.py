@@ -13,6 +13,12 @@ from pathlib import Path
 
 
 def get_logger_constructable(websocket_logging_servers: List) -> LoggerConstructableIF:
+    """
+    Create config object for websocket server used for logging events.
+
+    :params: websocket_logging_servers (list) : socket server config from CLI ``Ex: --websocket_logging_servers``
+
+    """
     websocket_logging_servers = [(f"{protocol}:{ip}", int(port)) for protocol, ip, port in [
         connection.split(":") for connection in websocket_logging_servers]]
 
@@ -23,6 +29,12 @@ def get_logger_constructable(websocket_logging_servers: List) -> LoggerConstruct
 
 
 def get_grid_search_restful_api_client_constructable(endpoint: str) -> GridSearchAPIClientConstructableIF:
+    """
+    Create config object for grid search RestAPI used for communicating with websocket server using HTTP APIs.
+
+    :params: endpoint (str) : rest API endpoint config from CLI ``Ex: --gs_rest_api_endpoint``
+
+    """
     client_config = GridSearchAPIClientConfig(api_client_type=GridSearchAPIClientType.GRID_SEARCH_RESTFUL_API_CLIENT,
                                               api_client_config={"endpoint": endpoint})
     client_constructable = GridSearchAPIClientConstructable(client_config)
@@ -30,6 +42,12 @@ def get_grid_search_restful_api_client_constructable(endpoint: str) -> GridSearc
 
 
 def entry_train(args):
+    """
+    Start mlGym and create job which starts grid search from scratch.
+
+    :params: args : config from CLI ``Ex: --process_count``
+
+    """
     logger_collection_constructable = get_logger_constructable(args.websocket_logging_servers)
     gs_restful_api_client_constructable = get_grid_search_restful_api_client_constructable(endpoint=args.gs_rest_api_endpoint)
     blueprint_class = ConvNetBluePrint
@@ -62,6 +80,12 @@ def entry_train(args):
 
 
 def entry_warm_start(args):
+    """
+    Start mlGym and create job which resumes from previously started grid search.
+
+    :params: args : config from CLI ``Ex: --process_count``
+
+    """
     blueprint_class = ConvNetBluePrint
     logger_collection_constructable = get_logger_constructable(args.websocket_logging_servers)
     gs_restful_api_client_constructable = get_grid_search_restful_api_client_constructable(endpoint=args.gs_rest_api_endpoint)
@@ -80,6 +104,12 @@ def entry_warm_start(args):
 
 
 def parse_args_and_run():
+    """
+    Extract args from Command line and decides whether to train model from scratch or resume from previously started grid search.
+
+    Extracts websocket and grid search API from command line and create configuration to communicate with it for logging in event_storage path.
+
+    """
     parser = argparse.ArgumentParser(description='Run a grid search on CPUs or distributed over multiple GPUs')
 
     subparsers = parser.add_subparsers(help='Mutually exclusive arguments for TRAIN and WARM_START')
