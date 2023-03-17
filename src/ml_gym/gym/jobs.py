@@ -25,6 +25,7 @@ class AbstractGymJob(StatefulComponent):
 
     Declare Abstract and Static methods to be used in Gym Job Class.
     """
+
     def __init__(self, experiment_status_logger: ExperimentStatusLogger):
         super().__init__()
         self._experiment_status_logger = experiment_status_logger
@@ -38,7 +39,7 @@ class AbstractGymJob(StatefulComponent):
         raise NotImplementedError
 
     @staticmethod
-    def from_blue_print(blue_print, device: torch.device) -> 'AbstractGymJob':
+    def from_blue_print(blue_print, device: torch.device) -> "AbstractGymJob":
         return blue_print.construct(device)
 
     # def restore_state_in_stateful_components(self, measurement_id: int):
@@ -46,21 +47,31 @@ class AbstractGymJob(StatefulComponent):
     #     self.set_state(state)
 
     @staticmethod
-    def batch_processed_callback(status: str, experiment_status_logger: ExperimentStatusLogger, num_batches: int,
-                                 current_batch: int, splits: List[str], current_split: str, num_epochs: int, current_epoch: int):
-        experiment_status_logger.log_experiment_status(status=status,
-                                                       num_epochs=num_epochs,
-                                                       current_epoch=current_epoch,
-                                                       splits=splits,
-                                                       current_split=current_split,
-                                                       num_batches=num_batches,
-                                                       current_batch=current_batch)
+    def batch_processed_callback(
+        status: str,
+        experiment_status_logger: ExperimentStatusLogger,
+        num_batches: int,
+        current_batch: int,
+        splits: List[str],
+        current_split: str,
+        num_epochs: int,
+        current_epoch: int,
+    ):
+        experiment_status_logger.log_experiment_status(
+            status=status,
+            num_epochs=num_epochs,
+            current_epoch=current_epoch,
+            splits=splits,
+            current_split=current_split,
+            num_batches=num_batches,
+            current_batch=current_batch,
+        )
 
     @staticmethod
-    def epoch_result_callback(experiment_status_logger: ExperimentStatusLogger, evaluation_result: EvaluationBatchResult,
-                              current_epoch: int):
-        experiment_status_logger.log_evaluation_results(
-            evaluation_result, current_epoch)
+    def epoch_result_callback(
+        experiment_status_logger: ExperimentStatusLogger, evaluation_result: EvaluationBatchResult, current_epoch: int
+    ):
+        experiment_status_logger.log_evaluation_results(evaluation_result, current_epoch)
 
 
 class GymJob(AbstractGymJob):
@@ -72,18 +83,30 @@ class GymJob(AbstractGymJob):
     The GymJob class is a CORE class in the mlGym which is responsible for running and logging jobs.
     """
 
-    def __init__(self, grid_search_id: str, experiment_id: int,  run_mode: RunMode, model: NNModel, optimizer: OptimizerAdapter,
-                 trainer: Trainer, evaluator: Evaluator, num_epochs: int, checkpointing_strategy: CheckpointingIF,
-                 gs_api_client: GridSearchAPIClientIF, experiment_status_logger: ExperimentStatusLogger = None,
-                 early_stopping_strategy: EarlyStoppingIF = None, warm_start_epoch: int = 0, lr_scheduler: LRSchedulerAdapter = None):
+    def __init__(
+        self,
+        grid_search_id: str,
+        experiment_id: int,
+        run_mode: RunMode,
+        model: NNModel,
+        optimizer: OptimizerAdapter,
+        trainer: Trainer,
+        evaluator: Evaluator,
+        num_epochs: int,
+        checkpointing_strategy: CheckpointingIF,
+        gs_api_client: GridSearchAPIClientIF,
+        experiment_status_logger: ExperimentStatusLogger = None,
+        early_stopping_strategy: EarlyStoppingIF = None,
+        warm_start_epoch: int = 0,
+        lr_scheduler: LRSchedulerAdapter = None,
+    ):
         super().__init__(experiment_status_logger)
         self.grid_search_id = grid_search_id
         self.experiment_id = experiment_id
         self.run_mode = run_mode
         self.model = model
         self.optimizer = optimizer
-        self.lr_scheduler = lr_scheduler if lr_scheduler is not None else LRSchedulerFactory.get_lr_scheduler(
-            "dummy")
+        self.lr_scheduler = lr_scheduler if lr_scheduler is not None else LRSchedulerFactory.get_lr_scheduler("dummy")
         # self.optimizer.register_model_params(dict(self.model.named_parameters()))
         self.num_epochs = num_epochs
         self.current_epoch = warm_start_epoch
@@ -108,32 +131,40 @@ class GymJob(AbstractGymJob):
         # optimizer_state = DashifyReader.load_optimizer_state(self._experiment_info, epoch - 1)
         # self.optimizer.load_state_dict(optimizer_state)
         # train
-        partial_batch_processed_callback = partial(self.batch_processed_callback, num_epochs=self.num_epochs,
-                                                   current_epoch=self.current_epoch,
-                                                   experiment_status_logger=self._experiment_status_logger)
-        model = self.trainer.train_epoch(self.model, self.optimizer, device,
-                                         batch_processed_callback_fun=partial_batch_processed_callback)
+        partial_batch_processed_callback = partial(
+            self.batch_processed_callback,
+            num_epochs=self.num_epochs,
+            current_epoch=self.current_epoch,
+            experiment_status_logger=self._experiment_status_logger,
+        )
+        model = self.trainer.train_epoch(self.model, self.optimizer, device, batch_processed_callback_fun=partial_batch_processed_callback)
         return model
 
     def _evaluation_step(self, device: torch.device) -> List[EvaluationBatchResult]:
         self.model.to(device)
-        partial_batch_processed_callback = partial(self.batch_processed_callback, num_epochs=self.num_epochs,
-                                                   current_epoch=self.current_epoch,
-                                                   experiment_status_logger=self._experiment_status_logger)
-        partial_epoch_result_callback = partial(self.epoch_result_callback, current_epoch=self.current_epoch,
-                                                experiment_status_logger=self._experiment_status_logger)
+        partial_batch_processed_callback = partial(
+            self.batch_processed_callback,
+            num_epochs=self.num_epochs,
+            current_epoch=self.current_epoch,
+            experiment_status_logger=self._experiment_status_logger,
+        )
+        partial_epoch_result_callback = partial(
+            self.epoch_result_callback, current_epoch=self.current_epoch, experiment_status_logger=self._experiment_status_logger
+        )
 
-        evaluation_results = self.evaluator.evaluate(model=self.model,
-                                                     device=device,
-                                                     current_epoch=self.current_epoch,
-                                                     num_epochs=self.num_epochs,
-                                                     batch_processed_callback_fun=partial_batch_processed_callback,
-                                                     epoch_result_callback_fun=partial_epoch_result_callback)
+        evaluation_results = self.evaluator.evaluate(
+            model=self.model,
+            device=device,
+            current_epoch=self.current_epoch,
+            num_epochs=self.num_epochs,
+            batch_processed_callback_fun=partial_batch_processed_callback,
+            epoch_result_callback_fun=partial_epoch_result_callback,
+        )
 
         return evaluation_results
 
     def run_checkpointing(self, checkpoint_instruction: CheckpointingInstruction):
-        """ 
+        """
         Create and Delete checkpoints for each epoch in experiments.
 
         :params:
@@ -141,26 +172,24 @@ class GymJob(AbstractGymJob):
         """
 
         if checkpoint_instruction.save_current:
-            payload_dict = {"epoch": self.current_epoch,
-                            "model": self.model.state_dict(),
-                            "optimizer": self.optimizer.state_dict(),
-                            "lr_scheduler": self.lr_scheduler.state_dict(),
-                            "stateful_components": self.get_state()}
+            payload_dict = {
+                "epoch": self.current_epoch,
+                "model": self.model.state_dict(),
+                "optimizer": self.optimizer.state_dict(),
+                "lr_scheduler": self.lr_scheduler.state_dict(),
+                "stateful_components": self.get_state(),
+            }
 
             self.gs_api_client.add_checkpoint_resource(
-                grid_search_id=self.grid_search_id,
-                experiment_id=self.experiment_id,
-                payload=payload_dict)
+                grid_search_id=self.grid_search_id, experiment_id=self.experiment_id, payload=payload_dict
+            )
 
         for epoch in checkpoint_instruction.checkpoints_to_delete:
             print(f"epoch to delete: {epoch}")
-            self.gs_api_client.delete_checkpoint_resource(
-                grid_search_id=self.grid_search_id,
-                experiment_id=self.experiment_id,
-                epoch=epoch)
+            self.gs_api_client.delete_checkpoint_resource(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id, epoch=epoch)
 
     def execute(self, device: torch.device):
-        """ Executes the job
+        """Executes the job
 
         :params:
             device: torch device either CPUs or a specified GPU
@@ -168,14 +197,13 @@ class GymJob(AbstractGymJob):
         self._execution_method(device)
 
     def _execute_train(self, device: torch.device):
-        """ 
+        """
         Executes training pipeline from scratch for a Job model.
 
         :params:
             device: torch device either CPUs or a specified GPU
         """
-        self.optimizer.register_model_params(
-            model_params=dict(self.model.named_parameters()))
+        self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
         self.lr_scheduler.register_optimizer(optimizer=self.optimizer)
 
         self.trainer.set_num_epochs(num_epochs=self.num_epochs)
@@ -184,71 +212,89 @@ class GymJob(AbstractGymJob):
         evaluation_results = self._evaluation_step(device)
 
         # we store the initial model / last warmup model again
-        checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=self.num_epochs,
-                                                                                                 current_epoch=self.current_epoch,
-                                                                                                 evaluation_result=evaluation_results)
+        checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(
+            num_epochs=self.num_epochs, current_epoch=self.current_epoch, evaluation_result=evaluation_results
+        )
         self.run_checkpointing(checkpointing_instruction)
 
         # if early stopping criterion is fulfilled we can stop the training progress
-        if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=self.current_epoch,
-                                                                        evaluation_results=evaluation_results):
+        if self.early_stopping_strategy.is_stopping_criterion_fulfilled(
+            current_epoch=self.current_epoch, evaluation_results=evaluation_results
+        ):
             return
 
         # start the actual training loop
         self.current_epoch += 1
         self.trainer.set_current_epoch(self.current_epoch)
         while not self.trainer.is_done():
-            self.logger.log(LogLevel.INFO,  f"epoch: {self.current_epoch}")
+            self.logger.log(LogLevel.INFO, f"epoch: {self.current_epoch}")
             self._train_step(device)
             evaluation_results = self._evaluation_step(device)
             self.lr_scheduler.step()
 
-            checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=self.num_epochs,
-                                                                                                     current_epoch=self.current_epoch,
-                                                                                                     evaluation_result=evaluation_results)
+            checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(
+                num_epochs=self.num_epochs, current_epoch=self.current_epoch, evaluation_result=evaluation_results
+            )
             self.run_checkpointing(checkpointing_instruction)
-            if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=self.current_epoch,
-                                                                            evaluation_results=evaluation_results):
+            if self.early_stopping_strategy.is_stopping_criterion_fulfilled(
+                current_epoch=self.current_epoch, evaluation_results=evaluation_results
+            ):
                 break
 
             self.current_epoch += 1
 
     def _execute_warm_start(self, device: torch.device):
-        """ 
+        """
         Executes training pipeline from last known checkpoint for a Job model.
 
         :params:
             device: torch device either CPUs or a specified GPU
         """
         if self.current_epoch > 0:
-            model_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                  experiment_id=self.experiment_id,
-                                                                                  checkpoint_id=self.current_epoch,
-                                                                                  checkpoint_resource=CheckpointResource.model))
+            model_state = pickle.loads(
+                self.gs_api_client.get_checkpoint_resource(
+                    grid_search_id=self.grid_search_id,
+                    experiment_id=self.experiment_id,
+                    checkpoint_id=self.current_epoch,
+                    checkpoint_resource=CheckpointResource.model,
+                )
+            )
             self.model.load_state_dict(model_state)
 
-            optimizer_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                      experiment_id=self.experiment_id,
-                                                                                      checkpoint_id=self.current_epoch,
-                                                                                      checkpoint_resource=CheckpointResource.optimizer))
+            optimizer_state = pickle.loads(
+                self.gs_api_client.get_checkpoint_resource(
+                    grid_search_id=self.grid_search_id,
+                    experiment_id=self.experiment_id,
+                    checkpoint_id=self.current_epoch,
+                    checkpoint_resource=CheckpointResource.optimizer,
+                )
+            )
             self.optimizer.load_state_dict(optimizer_state)
 
-            lr_scheduler_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                         experiment_id=self.experiment_id,
-                                                                                         checkpoint_id=self.current_epoch,
-                                                                                         checkpoint_resource=CheckpointResource.lr_scheduler))
+            lr_scheduler_state = pickle.loads(
+                self.gs_api_client.get_checkpoint_resource(
+                    grid_search_id=self.grid_search_id,
+                    experiment_id=self.experiment_id,
+                    checkpoint_id=self.current_epoch,
+                    checkpoint_resource=CheckpointResource.lr_scheduler,
+                )
+            )
             self.lr_scheduler.load_state_dict(lr_scheduler_state)
 
-            state_component_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                            experiment_id=self.experiment_id,
-                                                                                            checkpoint_id=self.current_epoch,
-                                                                                            checkpoint_resource=CheckpointResource.stateful_components))
+            state_component_state = pickle.loads(
+                self.gs_api_client.get_checkpoint_resource(
+                    grid_search_id=self.grid_search_id,
+                    experiment_id=self.experiment_id,
+                    checkpoint_id=self.current_epoch,
+                    checkpoint_resource=CheckpointResource.stateful_components,
+                )
+            )
             self.set_state(state_component_state)
 
         self._execute_train(device)
 
     def _execute_eval(self, device: torch.device):
-        """ 
+        """
         Executes evalation pipeline for a Job model.
 
         :params:
@@ -261,9 +307,23 @@ class GymJob(AbstractGymJob):
 
 class GymJobFactory:
     @staticmethod
-    def get_gym_job(grid_search_id: str, experiment_id: int, run_mode: RunMode, num_epochs: int, gs_api_client: GridSearchAPIClientIF,
-                    experiment_status_logger: ExperimentStatusLogger = None, warm_start_epoch: int = 0,
-                    **components: Dict[str, Any]) -> AbstractGymJob:
-        return GymJob(grid_search_id=grid_search_id, experiment_id=experiment_id, run_mode=run_mode, num_epochs=num_epochs,
-                      gs_api_client=gs_api_client, experiment_status_logger=experiment_status_logger,
-                      warm_start_epoch=warm_start_epoch, **components)
+    def get_gym_job(
+        grid_search_id: str,
+        experiment_id: int,
+        run_mode: RunMode,
+        num_epochs: int,
+        gs_api_client: GridSearchAPIClientIF,
+        experiment_status_logger: ExperimentStatusLogger = None,
+        warm_start_epoch: int = 0,
+        **components: Dict[str, Any],
+    ) -> AbstractGymJob:
+        return GymJob(
+            grid_search_id=grid_search_id,
+            experiment_id=experiment_id,
+            run_mode=run_mode,
+            num_epochs=num_epochs,
+            gs_api_client=gs_api_client,
+            experiment_status_logger=experiment_status_logger,
+            warm_start_epoch=warm_start_epoch,
+            **components,
+        )

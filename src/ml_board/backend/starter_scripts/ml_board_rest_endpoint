@@ -11,15 +11,13 @@ def parse_args():
     """
     Extract args from Command line
 
-    :return: 
+    :return:
              port: port number on which websocket will run
              event_storage_path: path of folder where logs are stored
     """
-    parser = argparse.ArgumentParser(description='Websocket server')
-    parser.add_argument('--event_storage_path', type=str,
-                        help='Path to the event storage', required=True)
-    parser.add_argument(
-        '--port', type=int, help='Port on which the websocket server runs', required=True)
+    parser = argparse.ArgumentParser(description="Websocket server")
+    parser.add_argument("--event_storage_path", type=str, help="Path to the event storage", required=True)
+    parser.add_argument("--port", type=int, help="Port on which the websocket server runs", required=True)
     args = parser.parse_args()
     port = args.port
     event_storage_path = abspath(args.event_storage_path)
@@ -30,7 +28,7 @@ def run_restful_api_server(port: int, event_storage_path: str):
     """
     Main function creating Uvicorn server running FastAPI Framework
 
-    :params: 
+    :params:
              port (int): port number on which websocket will run
              event_storage_path (str): path of folder where logs will be stored
     """
