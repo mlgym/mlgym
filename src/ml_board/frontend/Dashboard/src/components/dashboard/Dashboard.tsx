@@ -73,18 +73,21 @@ export default function Dashboard() {
       // add the experiment to the row
       row = { ...row, ...experiment, epoch_progress, batch_progress }
     }
-
+    
     rows.push(row);
   }
   // console.log(rows.at(-1));
 
   // TODO: get the names of the metric and the loss only, as the rest stays the same!
   // IMPORTANT NOTE: these names have to match the keys of the row object exactly in order to appear in the table
-  const colNames = ["job_id", "job_type", "job_status", "experiment_id", "starting_time", "finishing_time",
+  const colNames_old = ["job_id", "job_type", "job_status", "experiment_id", "starting_time", "finishing_time",
     "epoch_progress", "batch_progress", "model_status", "current_split", "splits", "error",
     "stacktrace", "device", "current_epoch", "num_epochs", "train_F1_SCORE_macro", "train_PRECISION_macro",
     "train_RECALL_macro", "train_cross_entropy_loss", "val_F1_SCORE_macro", "val_PRECISION_macro", "val_RECALL_macro",
     "val_cross_entropy_loss", "test_F1_SCORE_macro", "test_PRECISION_macro", "test_RECALL_macro", "test_cross_entropy_loss"];
+
+  const colNames = ["job_id", "job_status", "experiment_id", "starting_time", "finishing_time",
+  "train_cross_entropy_loss", "val_cross_entropy_loss", "test_cross_entropy_loss"];
 
   return (<Table colNames={colNames.filter((colName: string) => re.test(colName))} rows={rows} />);
 }

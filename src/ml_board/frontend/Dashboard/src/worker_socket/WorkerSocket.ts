@@ -3,7 +3,6 @@ import { settingConfigsInterface } from '../app/App';
 import { DataFromSocket } from './DataTypes';
 import { connectionMainThreadCallback, msgCounterIncMainThreadCallback, pingMainThreadCallback, throughputMainThreadCallback, updateMainThreadCallback } from './MainThreadCallbacks';
 
-
 // ========================= variables ============================//
 
 let pinging_interval: NodeJS.Timer; // for idealy pinging the server
@@ -16,8 +15,8 @@ let socket: Socket; // 'let' to initialize on funciton call
 
 // =~=~=~=~=~=~=~=~=~=~=~=~=~= ~WebSocket~ =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=//
 const initSocket = (settingConfigs: settingConfigsInterface) => {
+    console.log("WebSocket initializing...");
     socket = socketIO(settingConfigs.socketConnectionUrl, { autoConnect: true });
-    console.log("WebSocket initialized");
     socket.on('connect', () => onConnect(socket, settingConfigs.gridSearchId));
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onError);
@@ -28,8 +27,6 @@ const initSocket = (settingConfigs: settingConfigsInterface) => {
 
 // ========================= connection events ============================//
 const onConnect = (socket: Socket, runId: string) => {
-    // TODO:ASK how exactly should the join happen? and this was in the old code const runId = "mlgym_event_subscribers";
-    // Max added bug report here: https://github.com/mlgym/mlgym/issues/134
     socket.emit('join', { rooms: [runId] });
     // start periodic server pining
     pinging_interval = setInterval(send_ping_to_websocket_server, period * 1000, socket);
@@ -41,13 +38,12 @@ const onDisconnect = (reason: Socket.DisconnectReason) => stop(reason);
 
 const onError = (err: Error) => stop(err);
 
-
 // ========================= data driven events ============================//
 // const process_mlgym_event = (msg:JSON) => {
 const process_mlgym_event = (msg: string) => {
     const parsedMsg: DataFromSocket = JSON.parse(msg);
     // update the redux state on the main thread
-    updateMainThreadCallback (parsedMsg);
+    updateMainThreadCallback(parsedMsg);
     // message count for calculating the throughput
     msgCountPerPeriod++;
     // flag main thread to increment the number of incoming messages
