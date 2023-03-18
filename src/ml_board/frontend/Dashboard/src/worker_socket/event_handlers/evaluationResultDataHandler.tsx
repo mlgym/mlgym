@@ -55,41 +55,62 @@ export interface EvaluationResultPayload {
     epoch: number,
     grid_search_id: string,
     experiment_id: number,
-    metric_scores: Array<{
-        metric: string,
-        split: string,
-        score: number
-    }>,
-    loss_scores: Array<{
-        loss: string,
-        split: string,
-        score: number
-    }>
+    metric_scores: Array<Score>,
+    loss_scores: Array<Score>
+}
+
+interface Score {
+    metric?: string,
+    loss?: string,
+    split: string,
+    score: number
 }
 
 export default function handleEvaluationResultData(evalResultCustomData: evalResultCustomData, evalResultSocketData: EvaluationResultPayload) {
+    // exp holds all experiments 
+    // if grid_search_id isn't null point to or copy the experiments else {} 
     let exp = undefined;
     if (evalResultCustomData.grid_search_id !== null) {
         exp = evalResultCustomData.experiments;
-    }
-    else {
+    } else {
+        // TODO: Don't set the grid_search_id here!
         evalResultCustomData.grid_search_id = evalResultSocketData.grid_search_id;
         exp = {}
     }
 
+    // if the incoming experiment doesn't have a color set a new random color for it
     if (evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id] === undefined) {
-        let random_color = getRandomColor();
-        evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id] = random_color;
+        evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id] = getRandomColor();
     }
 
-    for (let i = 0; i < evalResultSocketData.loss_scores.length; i++) {
-        let d = evalResultSocketData.loss_scores[i]
-        if (exp[d.split + "_" + d.loss] === undefined) {
-            exp[d.split + "_" + d.loss] = {
+    LooP(evalResultSocketData.loss_scores, (score: Score) => score.loss as string, exp, evalResultCustomData, evalResultSocketData);
+
+    LooP(evalResultSocketData.metric_scores, (score: Score) => score.metric as string, exp, evalResultCustomData, evalResultSocketData);
+
+    // copy the final object back into the experiments
+    evalResultCustomData.experiments = exp;
+    // console.log("In Handle Exp evalResultCustomData = ",evalResultCustomData);
+
+    return evalResultCustomData;
+
+}
+
+
+function LooP(scores: Array<Score>, get_metric_or_loss: (score: Score) => string, exp:any, evalResultCustomData: evalResultCustomData, evalResultSocketData: EvaluationResultPayload) {
+    // loop over the array of scores
+    for (let i = 0; i < scores.length; i++) {
+        // score element
+        const score = scores[i];
+        const metric_or_loss = get_metric_or_loss(score);
+        // if Graph of this score isn't already there 
+        if (exp[score.split + "_" + metric_or_loss] === undefined) {
+            exp[score.split + "_" + metric_or_loss] = {
+                // create new empty graph
                 data: {
                     labels: [],
                     datasets: []
                 },
+                // with fixed options
                 options: {
                     animation: {
                         duration: 300,
@@ -103,7 +124,8 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                     plugins: {
                         title: {
                             display: true,
-                            text: (d.split + " " + d.loss.split("_").join(" ")).toLowerCase(),
+                            // except here 
+                            text: (score.split + " " + metric_or_loss.split("_").join(" ")).toLowerCase(),
                             color: 'black',
                             font: {
                                 weight: 'bold',
@@ -124,112 +146,38 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
         }
 
         let prevIndex = null;
-        if (exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.includes(evalResultSocketData.experiment_id)) {
-            prevIndex = exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.indexOf(evalResultSocketData.experiment_id)
+        // IF a Graph for this score already exists get the index of experiment_id in it ELSE add it
+        if (exp[score.split + "_" + metric_or_loss].ids_to_track_and_find_exp_id.includes(evalResultSocketData.experiment_id)) {
+            prevIndex = exp[score.split + "_" + metric_or_loss].ids_to_track_and_find_exp_id.indexOf(evalResultSocketData.experiment_id)
         }
         else {
-            exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.push(evalResultSocketData.experiment_id);
+            exp[score.split + "_" + metric_or_loss].ids_to_track_and_find_exp_id.push(evalResultSocketData.experiment_id);
         }
 
-        if (!exp[d.split + "_" + d.loss].data.labels.includes(evalResultSocketData.epoch)) {
-            exp[d.split + "_" + d.loss].data.labels.push(evalResultSocketData.epoch);
+        // if this epoch isn't yet in this Graph score add it
+        if (!exp[score.split + "_" + metric_or_loss].data.labels.includes(evalResultSocketData.epoch)) {
+            exp[score.split + "_" + metric_or_loss].data.labels.push(evalResultSocketData.epoch);
         }
 
+        // add the new score point to the Graph if it exits
         if (prevIndex !== null) {
-            exp[d.split + "_" + d.loss].data.datasets[prevIndex].data = [...exp[d.split + "_" + d.loss].data.datasets[prevIndex].data, d.score]
+            exp[score.split + "_" + metric_or_loss].data.datasets[prevIndex].data = [...exp[score.split + "_" + metric_or_loss].data.datasets[prevIndex].data, score.score]
         }
         else {
-            exp[d.split + "_" + d.loss].data.datasets.push({
+            // ELSE 
+            exp[score.split + "_" + metric_or_loss].data.datasets.push({
                 exp_id: evalResultSocketData.experiment_id,
                 label: "experiment_" + evalResultSocketData.experiment_id.toString(),
-                data: [d.score],
+                data: [score.score],
                 fill: false,
                 backgroundColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
                 borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
                 tension: 0
             });
         }
-        exp[d.split + "_" + d.loss].data.datasets.sort((a, b) => (a.exp_id > b.exp_id) ? 1 : -1)
-        exp[d.split + "_" + d.loss].ids_to_track_and_find_exp_id.sort((a, b) => (a > b) ? 1 : -1)
+        exp[score.split + "_" + metric_or_loss].data.datasets.sort((a: { exp_id: number }, b: { exp_id: number }) => (a.exp_id > b.exp_id) ? 1 : -1)
+        exp[score.split + "_" + metric_or_loss].ids_to_track_and_find_exp_id.sort((a: number, b: number) => (a > b) ? 1 : -1)
     }
-
-    for (let i = 0; i < evalResultSocketData.metric_scores.length; i++) {
-        let d = evalResultSocketData.metric_scores[i]
-        if (exp[d.split + "_" + d.metric] === undefined) {
-            exp[d.split + "_" + d.metric] = {
-                data: {
-                    labels: [],
-                    datasets: []
-                },
-                options: {
-                    animation: {
-                        duration: 300,
-                        easing: 'linear'
-                    },
-                    radius: 3,
-                    hoverRadius: 12,
-                    hitRadius: 20,
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: (d.split + " " + d.metric.split("_").join(" ")).toLowerCase(),
-                            color: 'black',
-                            font: {
-                                weight: 'bold',
-                                size: '20px'
-                            }
-                        },
-                        legend: {
-                           display: true,
-                           labels: {
-                                usePointStyle: true,
-                                pointStyle: 'circle'
-                            }
-                        }
-                    }
-                },
-                ids_to_track_and_find_exp_id: []
-            }
-        }
-
-        let prevIndex = null;
-        if (exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.includes(evalResultSocketData.experiment_id)) {
-            prevIndex = exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.indexOf(evalResultSocketData.experiment_id)
-        }
-        else {
-            exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.push(evalResultSocketData.experiment_id);
-        }
-
-        if (!exp[d.split + "_" + d.metric].data.labels.includes(evalResultSocketData.epoch)) {
-            exp[d.split + "_" + d.metric].data.labels.push(evalResultSocketData.epoch);
-        }
-
-        if (prevIndex !== null) {
-            exp[d.split + "_" + d.metric].data.datasets[prevIndex].data = [...exp[d.split + "_" + d.metric].data.datasets[prevIndex].data, d.score]
-        }
-        else {
-            exp[d.split + "_" + d.metric].data.datasets.push({
-                exp_id: evalResultSocketData.experiment_id,
-                label: "experiment_" + evalResultSocketData.experiment_id.toString(),
-                data: [d.score],
-                fill: false,
-                backgroundColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
-                borderColor: evalResultCustomData.colors_mapped_to_exp_id[evalResultSocketData.experiment_id],
-                tension: 0
-            });
-        }
-
-        exp[d.split + "_" + d.metric].data.datasets.sort((a, b) => (a.exp_id > b.exp_id) ? 1 : -1)
-        exp[d.split + "_" + d.metric].ids_to_track_and_find_exp_id.sort((a, b) => (a > b) ? 1 : -1)
-    }
-
-    evalResultCustomData.experiments = exp;
-    // console.log("In Handle Exp evalResultCustomData = ",evalResultCustomData);
-
-    return evalResultCustomData;
-
 }
 
 // TODO: should be moved to the statusSlice maybe ?
