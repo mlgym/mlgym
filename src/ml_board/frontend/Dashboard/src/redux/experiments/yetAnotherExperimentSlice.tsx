@@ -10,8 +10,6 @@ export interface Experiment {
     current_epoch: number;
     num_batches: number;
     current_batch: number;
-    // this is the lastest metric value per split (number, the rest is to avoid compilation error)
-    [latest_split_metric: string]: number | string | string[];
 }
 
 const experimentsAdapter = createEntityAdapter<Experiment>({
