@@ -15,16 +15,16 @@ const initialStateForGraphs: evalResultCustomData = {
 };
 
 // Hashing is faster instead of switching over the the eventType
-const MapEventToProcess = {
-    [MLGYM_EVENT.JOB_STATUS]: (dataToRedux: DataToRedux, data: JSON) => { dataToRedux.jobStatusData = handleJobStatusData(data) },
-    [MLGYM_EVENT.JOB_SCHEDULED]: (dataToRedux: DataToRedux, data: JSON) => console.log("Job scheduled found"),
-    [MLGYM_EVENT.EVALUATION_RESULT]: (dataToRedux: DataToRedux, data: JSON) => {
+const MapEventToProcess: { [event: string]: (output: DataToRedux, input: JSON) => void } = {
+    [MLGYM_EVENT.JOB_STATUS]: (dataToRedux: DataToRedux, data: JSON): void => { dataToRedux.tableData = handleJobStatusData(data) },
+    [MLGYM_EVENT.JOB_SCHEDULED]: (dataToRedux: DataToRedux, data: JSON): void => console.log("Job scheduled found"),
+    [MLGYM_EVENT.EVALUATION_RESULT]: (dataToRedux: DataToRedux, data: JSON): void => {
         const evalResPayload = data as unknown as EvaluationResultPayload;
         dataToRedux.evaluationResultsData = handleEvaluationResultData(initialStateForGraphs, evalResPayload);
         dataToRedux.latest_split_metric = evalResPayload;
     },
-    [MLGYM_EVENT.EXPERIMENT_CONFIG]: (dataToRedux: DataToRedux, data: JSON) => console.log("Exp config found"),
-    [MLGYM_EVENT.EXPERIMENT_STATUS]: (dataToRedux: DataToRedux, data: JSON) => { dataToRedux.experimentStatusData = handleExperimentStatusData(data) },
+    [MLGYM_EVENT.EXPERIMENT_CONFIG]: (dataToRedux: DataToRedux, data: JSON): void => console.log("Exp config found"),
+    [MLGYM_EVENT.EXPERIMENT_STATUS]: (dataToRedux: DataToRedux, data: JSON): void => { dataToRedux.tableData = handleExperimentStatusData(data) },
 };
 
 // ========================= Callbacks to update the MainThread ============================//

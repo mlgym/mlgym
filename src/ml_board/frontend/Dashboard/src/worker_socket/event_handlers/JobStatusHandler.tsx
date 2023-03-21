@@ -1,4 +1,4 @@
-import { Job } from "../../redux/jobs/jobSlice";
+import { Row } from "../../redux/table/tableSlice";
 
 interface JobStatusPayload extends JSON {
     "job_id": string; // "2022-11-23--20-08-38-17",
@@ -13,10 +13,9 @@ interface JobStatusPayload extends JSON {
     "stacktrace": string; // null
 }
 
-// transform JSON data into Job:
-export default function handleJobStatusData(data: JSON): Job {
-    // 1. key renaming "status" to "job_status"
-    // 2. remove grid_search_id
-    const { grid_search_id, status, ...rest } = data as JobStatusPayload;
-    return { job_status: status, ...rest };
+// transform JSON data into Row (the Job part):
+export default function handleJobStatusData(jobData: JSON): Row {
+    // remove grid_search_id + key renaming "status" to "job_status"
+    const { grid_search_id, status: job_status, ...rest } = jobData as JobStatusPayload;
+    return { job_status, ...rest } as Row;
 }

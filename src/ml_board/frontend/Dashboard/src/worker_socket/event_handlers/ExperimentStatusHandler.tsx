@@ -1,4 +1,4 @@
-import { Experiment } from "../../redux/experiments/yetAnotherExperimentSlice";
+import { Row } from "../../redux/table/tableSlice";
 
 interface ExperimentStatusPayload extends JSON {
     "grid_search_id": string;// "2022-11-23--20-08-38",
@@ -12,18 +12,18 @@ interface ExperimentStatusPayload extends JSON {
     "current_batch": number;// 840
 }
 
-// transform JSON data into Experiment:
-export default function handleExperimentStatusData(data: JSON): Experiment {
-    // 1. key renaming "status" to "model_status"
-    // 2. remove grid_search_id
-    const { grid_search_id, status, ...rest } = data as ExperimentStatusPayload;
+// transform JSON data into Row (the Experiment part):
+export default function handleExperimentStatusData(expData: JSON): Row {
+    // 1. remove grid_search_id
+    const { grid_search_id, status, splits, ...rest } = expData as ExperimentStatusPayload;
     return {
+        // 2. key renaming "status" to "model_status"
         model_status: status,
         // 3. (extra) progresses calculating & storing them 
-        // splits: splits.join(), // TODO: after extracting splits from data
+        splits: splits.join(),
         // 4. (extra) turn the split array into string
-        // TODO: epoch_progress = rest.current_epoch / rest.num_epochs,
-        // TODO: batch_progress = rest.current_batch / rest.num_batches,
+        epoch_progress: rest.current_epoch / rest.num_epochs,
+        batch_progress: rest.current_batch / rest.num_batches,
         ...rest
-    };
+    } as Row;
 }
