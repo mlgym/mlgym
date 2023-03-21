@@ -80,7 +80,7 @@ class WebSocketWrapper:
     def _load_log_file(self, log_file_path: str, how_many_lines: int):
         with open(log_file_path, encoding="utf-8") as fp:
             self._log_list = fp.readlines()
-        self._how_many_lines = how_many_lines if how_many_lines != -1 else len(fp)
+        self._how_many_lines = how_many_lines if how_many_lines != -1 else len(self._log_list)
 
     # def _emit_server_log_message(self, data):
     #     emit("server_log_message", data)
