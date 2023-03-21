@@ -25,8 +25,8 @@ class WebSocketServer:
 
         # load the log file
         with open(log_file_path, encoding="utf-8") as fp:
-            self.log_list = fp.readlines()
-        self._how_many_lines = how_many_lines # if how_many_lines != -1 else len(fp)
+            self._log_list = fp.readlines()
+        self._how_many_lines = how_many_lines if how_many_lines != -1 else len(self._log_list)
 
     def run(self, app: Flask):
         self._socketio.run(app, host=self._host, port=self._port)
@@ -68,7 +68,7 @@ class WebSocketServer:
 
             # send the history of log messages to the client
             if "mlgym_event_subscribers" in rooms_to_join:
-                self._socketio.start_background_task(lambda: _send_event_history_to_client(self.log_list))
+                self._socketio.start_background_task(lambda: _send_event_history_to_client(self._log_list))
 
         @self._socketio.on("leave")
         def on_leave():
