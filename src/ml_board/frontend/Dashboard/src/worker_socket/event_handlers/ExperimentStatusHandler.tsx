@@ -12,7 +12,18 @@ interface ExperimentStatusPayload extends JSON {
     "current_batch": number;// 840
 }
 
+// transform JSON data into Experiment:
 export default function handleExperimentStatusData(data: JSON): Experiment {
-    const { status, ...rest } = data as ExperimentStatusPayload;
-    return { model_status: status, ...rest };
+    // 1. key renaming "status" to "model_status"
+    // 2. remove grid_search_id
+    const { grid_search_id, status, ...rest } = data as ExperimentStatusPayload;
+    return {
+        model_status: status,
+        // 3. (extra) progresses calculating & storing them 
+        // splits: splits.join(), // TODO: after extracting splits from data
+        // 4. (extra) turn the split array into string
+        // TODO: epoch_progress = rest.current_epoch / rest.num_epochs,
+        // TODO: batch_progress = rest.current_batch / rest.num_batches,
+        ...rest
+    };
 }

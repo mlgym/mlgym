@@ -13,8 +13,10 @@ interface JobStatusPayload extends JSON {
     "stacktrace": string; // null
 }
 
-// data should be like Job but I'm chaning the key name from "status" to "job_status"
+// transform JSON data into Job:
 export default function handleJobStatusData(data: JSON): Job {
-    const { status, ...rest } = data as JobStatusPayload;
+    // 1. key renaming "status" to "job_status"
+    // 2. remove grid_search_id
+    const { grid_search_id, status, ...rest } = data as JobStatusPayload;
     return { job_status: status, ...rest };
 }
