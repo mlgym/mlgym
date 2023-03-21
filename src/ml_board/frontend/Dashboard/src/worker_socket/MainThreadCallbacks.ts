@@ -29,7 +29,19 @@ const MapEventToProcess = {
     [MLGYM_EVENT.EXPERIMENT_STATUS]: (dataToRedux: DataToRedux, data: any) => { dataToRedux.tableData = handleExperimentStatusData(data) },
 };
 
+const BUFFER_WINDOW_LIMIT_IN_SECONDS = 30;
+let bufferWindow = 0;
+
+setInterval(() => {
+    bufferWindow++;
+
+    if (bufferWindow >= BUFFER_WINDOW_LIMIT_IN_SECONDS) {
+        bufferWindow = 0
+    }
+}, 1000);
+
 // ========================= Callbacks to update the MainThread ============================//
+let bufferQueue: Array<DataToRedux> = [];
 
 export const updateMainThreadCallback = (parsedSocketData: DataFromSocket) => {
     const eventType = parsedSocketData.event_type.toLowerCase();
@@ -38,24 +50,30 @@ export const updateMainThreadCallback = (parsedSocketData: DataFromSocket) => {
     MapEventToProcess[eventType as keyof typeof MapEventToProcess](dataToRedux, parsedSocketData.payload);
 
     // this is sent as a reply ONLY AFTER the first time
-    postMessage(dataToRedux);
+    bufferQueue.push(dataToRedux);
+
+    if (bufferQueue.length > 0  && (bufferQueue.length >= 1000 || bufferWindow === 0)) {
+        postMessage(bufferQueue);
+        bufferQueue = [];
+    }
 };
 
 export const pingMainThreadCallback = (ping: number) => {
-    postMessage({ status: { ping } } as DataToRedux);
+    postMessage([{ status: { ping } }]);
 };
 
 export const connectionMainThreadCallback = (isSocketConnected: boolean) => {
-    postMessage({ status: { isSocketConnected } } as DataToRedux);
+    postMessage([{ status: { isSocketConnected } }]);
 };
 
 export const msgCounterIncMainThreadCallback = () => {
-    postMessage({ status: "msg_count_increment" } as DataToRedux);
+    postMessage([{ status: "msg_count_increment" }]);
 };
 
 export const throughputMainThreadCallback = (throughput: number) => {
-    postMessage({ status: { throughput } } as DataToRedux);
+    postMessage([{ status: { throughput } }]);
 };
+
 // ========================= helper methods ============================//
 // if the header doesn't exist push it before returning if it was already there or not.
 const check_if_header_exist = (header: string) => {

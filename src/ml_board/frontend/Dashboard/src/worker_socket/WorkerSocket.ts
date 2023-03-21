@@ -103,5 +103,5 @@ onmessage = ({ data }: MessageEvent) => {
         // data is settingConfigs
         initSocket(data);
     }
-    console.log(data);
+    // console.log(data);
 };

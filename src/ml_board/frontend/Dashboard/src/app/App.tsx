@@ -98,7 +98,7 @@ export default function App() {
             // NOTE:using URL because create-react-app throws error since it has not found the worker file during load/bundling
             const workerSocket = new Worker(new URL('../worker_socket/WorkerSocket.ts', import.meta.url));
             // setting the redux update methods on the incoming data from the worker thread
-            workerSocket.onmessage = ({ data }: MessageEvent) => workerOnMessageHandler(data as DataToRedux);
+            workerSocket.onmessage = ({ data }: MessageEvent) => workerOnMessageHandler(data as Array<DataToRedux>);
             // starting the worker
             workerSocket.postMessage(settingConfigs);
 
@@ -114,7 +114,9 @@ export default function App() {
 
 
     // TODO: maybe useCallback
-    const workerOnMessageHandler = (data: DataToRedux) => {
+    const workerOnMessageHandler = (d: Array<DataToRedux>) => {
+        let data = d[0];
+        
         if (data && data.evaluationResultsData) {
             // update the Charts Slice
             dispatch(saveEvalResultData(data.evaluationResultsData));
@@ -136,12 +138,6 @@ export default function App() {
         else if (data && data.tableData) {
             dispatch(upsertOneRow(data.tableData))
         }
-        // else if (data && data.jobStatusData) {
-        //     dispatch(upsertJob(data.jobStatusData))
-        // }
-        // else if (data && data.experimentStatusData) {
-        //     dispatch(upsertExperiment(data.experimentStatusData))
-        // }
         else if (data && data.status) {
             if (data.status === "msg_count_increment") {
                 dispatch(incrementReceivedMsgCount());
@@ -155,8 +151,6 @@ export default function App() {
                     isOpen: true,
                     connection: data.status["isSocketConnected"]
                 });
-                // setSnackBarText(`Socket Connection ${data.status["isSocketConnected"] ? "Successful" : "Failed"}`);
-                // setSnackbarOpen(true);
             }
         }
     }
@@ -259,7 +253,7 @@ export default function App() {
                 open={connectionSnackBar.isOpen}
                 // onClose={() => setSnackbarOpen(false)}
                 onClose={() => setConnectionSnackBar({ ...connectionSnackBar, isOpen: false })}
-                autoHideDuration={4000}
+                autoHideDuration={3000}
                 >
                 <Alert
                     // onClose={() => setSnackbarOpen(false)}

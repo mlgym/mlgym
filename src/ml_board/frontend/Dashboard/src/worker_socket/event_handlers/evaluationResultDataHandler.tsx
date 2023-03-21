@@ -92,7 +92,7 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                 },
                 options: {
                     animation: {
-                        duration: 300,
+                        duration: 0,
                         easing: 'linear'
                     },
                     radius: 3,
@@ -163,7 +163,7 @@ export default function handleEvaluationResultData(evalResultCustomData: evalRes
                 },
                 options: {
                     animation: {
-                        duration: 300,
+                        duration: 0,
                         easing: 'linear'
                     },
                     radius: 3,
