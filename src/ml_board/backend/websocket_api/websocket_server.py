@@ -18,7 +18,19 @@ class EventSubscriberIF:
 
 
 class WebSocketServer:
+    """
+    Websocket Server class
 
+    Creates websocket Object with socket connection for given host and port.
+    :params: 
+             host (str): Host Srver IP
+             port (int): port number on which websocket will run
+             async_mode (str):  Sync mode
+             app (Flask Obj): Flask server object
+             top_level_logging_path (str): path of folder where logs will be stored
+             cors_allowed_origins (List[str]): the IPs who will be allowed to communicate with the websocket.
+
+    """
     def __init__(self, host: str, port: int, async_mode: str, app: Flask,
                  top_level_logging_path: str, cors_allowed_origins: List[str]):
         self._port = port
