@@ -2,8 +2,7 @@ import { Toolbar } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAppSelector } from "../../../app/hooks";
-import { selectExperiments } from '../../../redux/experiments/yetAnotherExperimentSlice';
-import { selectAllJobs } from '../../../redux/jobs/jobSlice';
+import { selectAllRows } from '../../../redux/table/tableSlice';
 import { TableRow } from '../Dashboard';
 import HalfDonoughtGraph from '../graphs/HalfDonoughtGraph';
 import { CategoryScale, Chart as ChartJS, Filler, LinearScale, LineElement, PointElement, Title, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -14,7 +13,6 @@ import MuiAccordionSummary, {
   AccordionSummaryProps,
 } from '@mui/material/AccordionSummary';
 import MuiAccordionDetails from '@mui/material/AccordionDetails';
-import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import styles from './ExperimentPage.module.css';
@@ -74,27 +72,19 @@ function ExperimentPage() {
 
     const [selectedExperiment, setSelectedExperiment] = useState(obj)
     const [searchParams, setSearchParams] = useSearchParams();
-    const jobs = useAppSelector(selectAllJobs);
-    const experiments = useAppSelector(selectExperiments);
+    const allTableRows = useAppSelector(selectAllRows);
     const [showMore, setShowMore] = useState(false);
     const [experiment_training_data, setExperimentTrainingData] = useState(obj)
 
     useEffect(() => {
         let experiment_id = searchParams.get("experiment_id");
         if (experiment_id !== null) {
-            let filteredJob = jobs.filter(job => {
-                return job.experiment_id === Number(experiment_id);
+            let filteredExp = allTableRows.filter(row => {
+                return row.experiment_id === Number(experiment_id);
             })[0];
-            if(filteredJob !== undefined) {
-                let selectedExperiment: TableRow = { ...filteredJob };
-                let experiment = experiments[experiment_id];
-                if (experiment !== undefined) {
-                    let epoch_progress = experiment.current_epoch / experiment.num_epochs;
-                    let batch_progress = experiment.current_batch / experiment.num_batches;
-                    selectedExperiment = { ...selectedExperiment, ...experiment, epoch_progress, batch_progress }
-                }
-                console.log("selectedExperiment: ",selectedExperiment)
-                setSelectedExperiment(selectedExperiment);
+            console.log("filteredExp: ",filteredExp)
+            if (filteredExp) {
+                setSelectedExperiment(filteredExp);
             }
         }
     },[])
@@ -107,15 +97,15 @@ function ExperimentPage() {
             </div> */}
             <Accordion defaultExpanded={true}>
                 <AccordionSummary>
-                    <Typography className={styles.accordian_heading}>Details</Typography>
+                    <div className={styles.accordian_heading}>Details</div>
                 </AccordionSummary>
                 <AccordionDetails className={styles.accordian_details}>
                     <div className={styles.cardview}>
                         <Card className={styles.card}>
                             <CardContent>
-                                <Typography  className={styles.card_content_typography} gutterBottom>
+                                <div className={styles.card_content_typography}>
                                     Overview
-                                </Typography>
+                                </div>
                                 <div className={styles.cardcontent}>
                                     <div className={styles.cardcontent_key}>
                                         Experiment ID
@@ -144,9 +134,9 @@ function ExperimentPage() {
                         </Card>
                         <Card className={styles.card}>
                             <CardContent>
-                                <Typography className={styles.card_content_typography} gutterBottom>
+                                <div className={styles.card_content_typography}>
                                     Times
-                                </Typography>
+                                </div>
                                 <div className={styles.cardcontent}>
                                     <div className={styles.cardcontent_key}>
                                         Start
@@ -160,22 +150,38 @@ function ExperimentPage() {
                                         End
                                     </div>
                                     <div className={styles.cardcontent_value}>
-                                        {moment(new Date(selectedExperiment.finishing_time)).format("YYYY-MM-DD hh:MM:SS")}
+                                        {
+                                            selectedExperiment.finishing_time !== -1 ?
+                                            moment(new Date(selectedExperiment.finishing_time)).format("YYYY-MM-DD hh:MM:SS")
+                                            :
+                                            "--"
+                                        }
                                     </div>
                                 </div>
                             </CardContent>
                         </Card>
                         <Card className={styles.card}>
                             <CardContent>
-                                <Typography className={styles.card_content_typography} gutterBottom>
+                                <div className={styles.card_content_typography}>
                                 State
-                                </Typography>
+                                </div>
                                 <div className={styles.cardcontent}>
                                     <div className={styles.cardcontent_key}>
                                         Job Status
                                     </div>
                                     <div className={styles.cardcontent_value}>
-                                        {selectedExperiment.job_status}
+                                    {
+                                        selectedExperiment.hasOwnProperty("error") && selectedExperiment.error !== null ?
+                                        "FAILED"
+                                        :
+                                        selectedExperiment.job_status === "DONE" ?
+                                        "COMPLETED"
+                                        :
+                                        selectedExperiment.job_status === "INIT" ?
+                                        "INITIALIZING"
+                                        :
+                                        selectedExperiment.job_status
+                                    }
                                     </div>
                                 </div>
                                 <div className={styles.cardcontent}>
@@ -195,13 +201,13 @@ function ExperimentPage() {
                         </Card>
                     </div>
                     {
-                        selectedExperiment.error !== null ?
+                        selectedExperiment.hasOwnProperty("error") && selectedExperiment.error !== null ?
                         <div className={styles.error_card}>
                             <Card className={styles.card}>
                                 <CardContent>
-                                    <Typography className={styles.card_content_typography_error} gutterBottom>
+                                    <div className={styles.card_content_typography_error} >
                                         Error
-                                    </Typography>
+                                    </div>
                                     <div className={styles.cardcontent_key}>
                                         {selectedExperiment.error}
                                     </div>
@@ -209,9 +215,9 @@ function ExperimentPage() {
                                         selectedExperiment.hasOwnProperty("stacktrace") && selectedExperiment.stacktrace !== (null||undefined) ?
                                         <div>
                                             <br/>
-                                            <Typography className={styles.card_content_typography} gutterBottom>
+                                            <div className={styles.card_content_typography} >
                                                 Stacktrace
-                                            </Typography>
+                                            </div>
                                             <div className={styles.cardcontent_key}>
                                                 {
                                                     showMore ? 
@@ -243,13 +249,13 @@ function ExperimentPage() {
             </Accordion>
             <Accordion defaultExpanded={true}>
                 <AccordionSummary aria-controls="panel2d-content" id="panel2d-header">
-                    <Typography className={styles.accordian_heading}>Progress</Typography>
+                    <div className={styles.accordian_heading}>Progress</div>
                 </AccordionSummary>
                 <AccordionDetails>
                     <div className={styles.cardview}>
                         <Card className={styles.card}>
                             <CardContent>
-                                <Typography className={styles.card_content_typography} gutterBottom>
+                                <div className={styles.card_content_typography} >
                                     <div className={styles.cardcontent_typography}>
                                         <div>
                                             Epoch Details: 
@@ -263,23 +269,28 @@ function ExperimentPage() {
                                             <div>--</div>
                                         }
                                     </div>
-                                </Typography>
+                                </div>
                                 <div className={styles.donought_container}>
                                     {
-                                        selectedExperiment.hasOwnProperty("epoch_progress") && selectedExperiment.epoch_progress !== undefined?
+                                        selectedExperiment.hasOwnProperty("epoch_progress") && selectedExperiment.epoch_progress ?
                                         <HalfDonoughtGraph 
                                             graph_data={
                                                 [
                                                     selectedExperiment.epoch_progress,
                                                     1-selectedExperiment.epoch_progress
                                                 ]
-                                            } 
-                                            progress_text={selectedExperiment.epoch_progress*100+"%"}
+                                            }
+                                            label_data={
+                                                [
+                                                    selectedExperiment.epoch_progress*100+"%",
+                                                    (1-selectedExperiment.epoch_progress)*100+"%"
+                                                ]
+                                            }
                                         />
                                         :
                                         <HalfDonoughtGraph 
                                             graph_data={[0,100]}
-                                            progress_text={"--"}
+                                            label_data={["--","--"]}
                                         />
                                     }
                                 </div>
@@ -287,7 +298,7 @@ function ExperimentPage() {
                         </Card>
                         <Card className={styles.card}>
                             <CardContent>
-                                <Typography className={styles.card_content_typography} gutterBottom>
+                                <div className={styles.card_content_typography} >
                                     <div className={styles.cardcontent_typography}>
                                         <div>
                                             Batch Details: 
@@ -301,23 +312,28 @@ function ExperimentPage() {
                                             <div>--</div>
                                         }
                                     </div>
-                                </Typography>
+                                </div>
                                 <div className={styles.donought_container}>
                                     {
-                                        selectedExperiment.hasOwnProperty("batch_progress") && selectedExperiment.batch_progress !== undefined?
+                                        selectedExperiment.hasOwnProperty("batch_progress") && selectedExperiment.batch_progress ?
                                         <HalfDonoughtGraph
                                             graph_data={
                                                 [
                                                     selectedExperiment.batch_progress,
                                                     1-selectedExperiment.batch_progress
                                                 ]
-                                            } 
-                                            progress_text={selectedExperiment.batch_progress*100+"%"}
+                                            }
+                                            label_data={
+                                                [
+                                                    selectedExperiment.batch_progress*100+"%",
+                                                    (1-selectedExperiment.batch_progress)*100+"%"
+                                                ]
+                                            }
                                         />
                                         :
                                         <HalfDonoughtGraph 
                                             graph_data={[0,100]}
-                                            progress_text={"--"}
+                                            label_data={["--","--"]}
                                         />
                                     }
                                 </div>
@@ -328,7 +344,7 @@ function ExperimentPage() {
             </Accordion>
             <Accordion defaultExpanded={true}>
                 <AccordionSummary>
-                    <Typography className={styles.accordian_heading}>Losses & Metrics</Typography>
+                    <div className={styles.accordian_heading}>Losses & Metrics</div>
                 </AccordionSummary>
                 <AccordionDetails>
                     {

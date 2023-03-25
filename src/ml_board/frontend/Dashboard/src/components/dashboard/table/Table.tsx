@@ -1,4 +1,3 @@
-import { Toolbar } from '@mui/material';
 import { CellClickedEvent, SelectionChangedEvent } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
 import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
@@ -10,11 +9,9 @@ import styles from './Table.module.css';
 
 interface columnDefinition {
   field: string;
-  sortable?: boolean;
-  filter?: boolean
 }
 
-
+// TODO: Maybe merge table and Dashboard?
 function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
 
   const navigate = useNavigate();
@@ -40,7 +37,6 @@ function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
 
   return (
     <div className="ag-theme-alpine" id={styles.ag_grid_container_table}>
-      <Toolbar />
       <AgGridReact
         defaultColDef={defaultColDef}
         columnDefs={colDefs}
@@ -51,6 +47,7 @@ function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
         rowSelection={"single"}
         // onCellClicked={onCellClicked}
         onSelectionChanged={(event)=>onSelectionChanged(event)}
+        rowStyle={{ cursor: "pointer" }}
       >
       </AgGridReact>
     </div>

@@ -11,7 +11,7 @@ ChartJS.register(
 
 interface HalfDonoughtGraphDataProps {
     graph_data: Array<Number>;
-    progress_text: string;
+    label_data: Array<String>;
 }
 
 const HalfDonoughtGraph: React.FC<HalfDonoughtGraphDataProps> = (props) => {
@@ -20,7 +20,7 @@ const HalfDonoughtGraph: React.FC<HalfDonoughtGraphDataProps> = (props) => {
         <Doughnut
             className={styles.donought}
             data={{
-                // labels: ['Blue'],
+                labels: props.label_data,
                 datasets: [
                     {
                         data: props.graph_data,
@@ -54,13 +54,17 @@ const HalfDonoughtGraph: React.FC<HalfDonoughtGraphDataProps> = (props) => {
             }}
             plugins={[{
                 id: "textCenter",
-                beforeDatasetDraw(chart, args, pluginOptions) {
+                beforeDraw: function(chart) {
                     const {ctx, data} = chart;
-                    ctx.save();
+                    let text:any = "";
+                    if (data.labels) {
+                        text = data.labels[0];
+                    }
                     ctx.font = 'bolder 40px sans-serif';
                     ctx.fillStyle = '#36A2EB';
                     ctx.textAlign = 'center';
-                    ctx.fillText(props.progress_text, chart.getDatasetMeta(0).data[0].x, chart.getDatasetMeta(0).data[0].y)
+                    ctx.fillText(text, chart.getDatasetMeta(0).data[0].x, chart.getDatasetMeta(0).data[0].y);
+                    ctx.save();
                 }
             }]}
         />        

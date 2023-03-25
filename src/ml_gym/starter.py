@@ -17,6 +17,19 @@ class MLGymStarter:
     @staticmethod
     def _create_gym(job_id_prefix: str, process_count: int, device_ids, log_std_to_file: bool,
                     logger_collection_constructable: MLgymStatusLoggerCollectionConstructable) -> Gym:
+        """
+        Creates Gym job Object
+
+        :params: 
+                job_id_prefix (str): unique ID
+                process_count (int): number of processors on which job will run
+                device_ids : GPU or CPU
+                log_std_to_file (bool): True or false based on config
+                logger_collection_constructable (MLgymStatusLoggerCollectionConstructable) : Websocket Server
+
+        :return: gym: Gym job object with config ready to be executed.
+
+        """
         gym = Gym(job_id_prefix=job_id_prefix, process_count=process_count, device_ids=device_ids, log_std_to_file=log_std_to_file,
                   logger_collection_constructable=logger_collection_constructable)
         return gym
