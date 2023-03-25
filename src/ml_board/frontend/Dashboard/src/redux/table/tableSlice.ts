@@ -64,6 +64,7 @@ export const { upsertOneRow, upsertManyRows } = tableSlice.actions;
 // create a set of memoized selectors
 export const {
     selectAll: selectAllRows,
+    selectById: selectRowById,
 } = rowsAdapter.getSelectors((state: RootState) => state.table)
 
 export default tableSlice.reducer;

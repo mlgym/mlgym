@@ -2,10 +2,8 @@ import { Toolbar } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAppSelector } from "../../../app/hooks";
-import { selectAllRows } from '../../../redux/table/tableSlice';
-import { TableRow } from '../Dashboard';
+import { selectRowById } from '../../../redux/table/tableSlice';
 import HalfDonoughtGraph from '../graphs/HalfDonoughtGraph';
-import { CategoryScale, Chart as ChartJS, Filler, LinearScale, LineElement, PointElement, Title, ArcElement, Tooltip, Legend } from 'chart.js';
 import { styled } from '@mui/material/styles';
 import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
 import MuiAccordion, { AccordionProps } from '@mui/material/Accordion';
@@ -18,21 +16,11 @@ import CardContent from '@mui/material/CardContent';
 import styles from './ExperimentPage.module.css';
 import styles_graphs from "../../graphs/Graphs.module.css";
 import moment from 'moment';
-import { useSelector } from 'react-redux';
 import LineGraph from '../graphs/LineGraph';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    ArcElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler
-)
+import { getRandomColor } from '../../../worker_socket/event_handlers/evaluationResultDataHandler';
+
 interface expObj {
     [key: string]: any
 }
@@ -67,27 +55,62 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
     paddingTop: theme.spacing(0),
     // borderTop: '1px solid rgba(0, 0, 0, .125)',
 }));
-  
+
+interface loss_or_metric_interface {
+    [key: string]: Array<{
+        exp_id: number,
+        label: string,
+        data: Array<number>,
+        fill: Boolean,
+        backgroundColor: string,
+        borderColor: string,
+        tension: number,
+        pointRadius: Number,
+        pointHitRadius: Number,
+        pointHoverRadius: Number
+    }>
+}
+
 function ExperimentPage() {
-
-    const [selectedExperiment, setSelectedExperiment] = useState(obj)
     const [searchParams, setSearchParams] = useSearchParams();
-    const allTableRows = useAppSelector(selectAllRows);
+    let experiment_id = searchParams.get("experiment_id") as string;
+    const [selectedExperiment, setSelectedExperiment] = useState(obj)
+    const filteredExp = useAppSelector(state => selectRowById(state, experiment_id));
     const [showMore, setShowMore] = useState(false);
-    const [experiment_training_data, setExperimentTrainingData] = useState(obj)
-
+    const [loss_or_metric_data, setLossOrMetricData] = useState(obj)
+    
     useEffect(() => {
-        let experiment_id = searchParams.get("experiment_id");
-        if (experiment_id !== null) {
-            let filteredExp = allTableRows.filter(row => {
-                return row.experiment_id === Number(experiment_id);
-            })[0];
-            console.log("filteredExp: ",filteredExp)
-            if (filteredExp) {
-                setSelectedExperiment(filteredExp);
-            }
+        console.log("filteredExp: ",filteredExp);
+        if (filteredExp) {
+            setSelectedExperiment(filteredExp);
+            let loss_or_metric:loss_or_metric_interface = {};
+            // TODO: replace any type with the interface of filteredExp (i.e <Row> as defined in redux)
+            let selectedExp:any = filteredExp;
+            let split_arrays = selectedExp.splits.split(",");
+            split_arrays.map((split_type:string) => {
+                Object.keys(selectedExp).map((key) => {
+                    if (key.includes(split_type)) {
+                        let color = getRandomColor();
+                        loss_or_metric[key] = [{
+                            exp_id: selectedExp.experiment_id,
+                            label: "experiment_"+selectedExp.experiment_id,
+                            // TODO: replace this::[selectedExp[key]] with selectedExp[key]
+                            data: [selectedExp[key]],
+                            fill: false,
+                            backgroundColor: color,
+                            borderColor: color,
+                            tension: 0,
+                            pointRadius: 3,
+                            pointHitRadius: 20,
+                            pointHoverRadius: 12
+                        }];
+                    }
+                });
+            });
+            console.log("loss_or_metric: ",loss_or_metric);
+            setLossOrMetricData(loss_or_metric);
         }
-    },[])
+    },[filteredExp])
 
     return(
         <div className={styles.main}>
@@ -348,18 +371,17 @@ function ExperimentPage() {
                 </AccordionSummary>
                 <AccordionDetails>
                     {
-                        Object.keys(experiment_training_data).length > 0 ?
+                        Object.keys(loss_or_metric_data).length > 0 ?
                         <Grid container rowSpacing={1} spacing={{ xs: 2, md: 3 }} className={styles_graphs.grid_container}>
                             {
-                                Object.keys(experiment_training_data).map((loss_or_metric, index) => {
+                                Object.keys(loss_or_metric_data).map((loss_or_metric_key, index) => {
                                     return(
                                         <Grid item={true} xs={12} sm={12} md={6} key={index}>
                                             <Card className={styles_graphs.grid_card}>
                                                 <Box className={styles_graphs.graphs_chart_container}>
                                                     <LineGraph
-                                                        graph_labels={experiment_training_data[loss_or_metric].labels}
-                                                        graph_data={experiment_training_data[loss_or_metric].data}
-                                                        title_text={loss_or_metric}
+                                                        graph_data={loss_or_metric_data[loss_or_metric_key]}
+                                                        title_text={loss_or_metric_key.split("_").join(" ")}
                                                     />
                                                 </Box>
                                             </Card>

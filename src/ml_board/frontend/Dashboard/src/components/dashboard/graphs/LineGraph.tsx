@@ -11,7 +11,6 @@ ChartJS.register(
     Filler
 )
 interface LineGraphDataProps {
-    graph_labels: Array<number>,
     graph_data: Array<{
         exp_id: number,
         label: string,
@@ -29,7 +28,7 @@ const LineGraph: React.FC<LineGraphDataProps> = (props) => {
     return (
         <Line
             data={{
-                labels: props.graph_labels,
+                labels: Array.from(Array(props.graph_data).keys()),
                 datasets: props.graph_data,
             }}
             options={{
@@ -37,9 +36,6 @@ const LineGraph: React.FC<LineGraphDataProps> = (props) => {
                     duration: 0,
                     easing: 'linear'
                 },
-                // radius: 3,
-                // hoverRadius: 12,
-                // hitRadius: 20,
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
@@ -49,7 +45,7 @@ const LineGraph: React.FC<LineGraphDataProps> = (props) => {
                         color: 'black',
                         font: {
                             weight: 'bold',
-                            // size: '20px'
+                            size: 20
                         }
                     },
                     legend: {

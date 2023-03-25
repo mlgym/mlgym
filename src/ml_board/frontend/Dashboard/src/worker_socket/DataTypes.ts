@@ -17,6 +17,6 @@ export interface DataToRedux {
     // experimentStatusData?: Experiment,
     tableData?: Row,
     evaluationResultsData?: evalResultCustomData,
-    latest_split_metric?: EvaluationResultPayload,
+    // latest_split_metric?: EvaluationResultPayload,
     status?: any,
 }
