@@ -6,9 +6,6 @@ import handleJobStatusData from "./event_handlers/JobStatusHandler";
 
 // Note: I don't like having anything here other than the callbacks but it is what it is :')
 // ========================= variables ============================//
-// TODO: in #145 #147 this has been done with out the need of this, check if still needed (check #150)
-// to check for metric and loss headers
-const metric_loss_header: string[] = [];
 // TODO: temporary until the mystery why this is even used be solved
 const initialStateForGraphs: evalResultCustomData = {
     grid_search_id: null,
@@ -65,9 +62,3 @@ export const throughputMainThreadCallback = (throughput: number) => {
     postMessage({ status: { throughput } } as DataToRedux);
 };
 // ========================= helper methods ============================//
-// if the header doesn't exist push it before returning if it was already there or not.
-const check_if_header_exist = (header: string) => {
-    const condition = metric_loss_header.includes(header);
-    if (!condition) metric_loss_header.push(header);
-    return condition;
-};

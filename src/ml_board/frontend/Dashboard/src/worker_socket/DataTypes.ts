@@ -1,5 +1,3 @@
-// import { Experiment } from "../redux/experiments/yetAnotherExperimentSlice";
-// import { Job } from "../redux/jobs/jobSlice";
 import { Row } from "../redux/table/tableSlice";
 import { evalResultCustomData } from "./event_handlers/evaluationResultDataHandler";
 
@@ -13,10 +11,7 @@ export interface DataFromSocket {
 }
 
 export interface DataToRedux {
-    // jobStatusData?: Job,
-    // experimentStatusData?: Experiment,
     tableData?: Row,
     evaluationResultsData?: evalResultCustomData,
-    // latest_split_metric?: EvaluationResultPayload,
     status?: any,
 }
