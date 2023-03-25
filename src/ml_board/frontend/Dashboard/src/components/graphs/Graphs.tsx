@@ -20,7 +20,6 @@ ChartJS.register(
 )
 
 function Graphs () {
-    // TODO Vijul: alway useAppSelector never useSelector
     const evalResult = useSelector((state: any) => state.experimentsSlice.evalResult);
 
     // TODO: const chartIds = useAppSelector(selectChartIds);

@@ -28,14 +28,13 @@ function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
 
   const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), []);
 
-  const onCellClicked = useCallback((event: CellClickedEvent) => { console.log(event) }, []);
+  // const onCellClicked = useCallback((event: CellClickedEvent) => { console.log(event) }, []);
 
   const onSelectionChanged = useCallback((event:SelectionChangedEvent) => {
-    const selectedRow = event.api.getSelectedRows();
-    console.log("selected Row: ",selectedRow)
+    let selectedRowData = event.api.getSelectedRows()[0];
     navigate({
       pathname: '/experiment',
-      search: '?testparam1=abc&otestparam2=xyz',
+      search: '?experiment_id='+selectedRowData.experiment_id,
     })
   }, []);
 
@@ -50,7 +49,7 @@ function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
         getRowId={(params: any) => params.data.job_id}
         animateRows={true}
         rowSelection={"single"}
-        onCellClicked={onCellClicked}
+        // onCellClicked={onCellClicked}
         onSelectionChanged={(event)=>onSelectionChanged(event)}
       >
       </AgGridReact>

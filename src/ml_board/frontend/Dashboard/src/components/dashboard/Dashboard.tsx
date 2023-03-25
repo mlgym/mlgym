@@ -5,7 +5,7 @@ import { selectColorMap, selectFilter } from "../../redux/status/statusSlice";
 import Table from "./table/Table";
 
 
-interface TableRow {
+export interface TableRow {
   // Job
   job_id: string; // format <grid_search_id>-<job index>
   job_type: string; // <CALC, TERMINATE>

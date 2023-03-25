@@ -1,5 +1,3 @@
-import Box from '@mui/material/Box';
-
 // Error 404 Page to show if the entered URL is not valid
 function PageNotFound() {
     return(
