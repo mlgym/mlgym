@@ -6,9 +6,6 @@ import handleJobStatusData from "./event_handlers/JobStatusHandler";
 
 // Note: I don't like having anything here other than the callbacks but it is what it is :')
 // ========================= variables ============================//
-// TODO: in #145 #147 this has been done with out the need of this, check if still needed (check the TODO drafts)
-// to check for metric and loss headers
-const metric_loss_header: string[] = [];
 // TODO: temporary until the mystery why this is even used be solved
 const initialStateForGraphs: evalResultCustomData = {
     grid_search_id: null,
@@ -23,7 +20,17 @@ const MapEventToProcess = {
     [MLGYM_EVENT.EVALUATION_RESULT]: (dataToRedux: DataToRedux, data: any) => {
         const evalResPayload = data as unknown as EvaluationResultPayload;
         dataToRedux.evaluationResultsData = handleEvaluationResultData(initialStateForGraphs, evalResPayload);
-        dataToRedux.latest_split_metric = evalResPayload;
+        // TODO: if handleEvaluationResultData is gonna get improved, then move the following inside of it
+        // save the latest score values
+        const { experiment_id, metric_scores, loss_scores } = evalResPayload;
+        const scores: { [latest_split_metric_key: string]: number } = {};
+        for (const metric of metric_scores) {
+            scores[metric.split + "_" + metric.metric] = metric.score;
+        }
+        for (const loss of loss_scores) {
+            scores[loss.split + "_" + loss.loss] = loss.score;
+        }
+        dataToRedux.tableData = { experiment_id, ...scores }
     },
     [MLGYM_EVENT.EXPERIMENT_CONFIG]: () => console.log("Exp config found"),
     [MLGYM_EVENT.EXPERIMENT_STATUS]: (dataToRedux: DataToRedux, data: any) => { dataToRedux.tableData = handleExperimentStatusData(data) },
@@ -34,9 +41,7 @@ const MapEventToProcess = {
 export const updateMainThreadCallback = (parsedSocketData: DataFromSocket) => {
     const eventType = parsedSocketData.event_type.toLowerCase();
     const dataToRedux: DataToRedux = {};
-    
     MapEventToProcess[eventType as keyof typeof MapEventToProcess](dataToRedux, parsedSocketData.payload);
-
     // this is sent as a reply ONLY AFTER the first time
     postMessage(dataToRedux);
 };
@@ -57,9 +62,3 @@ export const throughputMainThreadCallback = (throughput: number) => {
     postMessage({ status: { throughput } } as DataToRedux);
 };
 // ========================= helper methods ============================//
-// if the header doesn't exist push it before returning if it was already there or not.
-const check_if_header_exist = (header: string) => {
-    const condition = metric_loss_header.includes(header);
-    if(!condition) metric_loss_header.push(header);
-    return condition;
-};
