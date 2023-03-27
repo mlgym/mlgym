@@ -1,21 +1,21 @@
 import { configureStore } from '@reduxjs/toolkit';
 // import { ThunkAction    } from '@reduxjs/toolkit';
 // import { Action         } from '@reduxjs/toolkit';
-import { evalResultCustomData } from '../webworkers/event_handlers/evaluationResultDataHandler';
+import { evalResultCustomData } from '../worker_socket/event_handlers/evaluationResultDataHandler';
 import charts from './charts/chatsSlice';
 import experimentsSlice from './experiments/experimentsSlice';
-import experiments from './experiments/yetAnotherExperimentSlice';
-import jobs from './jobs/jobSlice';
 import status from './status/statusSlice';
+import table from './table/tableSlice';
 
 
 export const store = configureStore({
   reducer: {
     status,
     experimentsSlice,
-    jobs,
-    experiments,
+    // jobs,
+    // experiments,
     charts,
+    table
   }
 });
 

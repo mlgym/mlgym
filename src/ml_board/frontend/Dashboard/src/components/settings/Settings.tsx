@@ -10,7 +10,7 @@ export const defaultGridSearchIdHelperText = "eg: 2022-11-06--17-59-10";
 export const defaultSocketConnectionUrlHelperText = "eg: http://127.0.0.1:5002";
 export const defaultRestApiUrlHelperText = "eg: http://127.0.0.1:5001";
 export interface FuncProps {
-    setConfigChangeDetectionCounter(): void;
+    validateConfigs(value:boolean): void;
     setConfigData(configData:settingConfigsInterface): void;
 }
 
@@ -56,7 +56,7 @@ const Settings: React.FC<FuncProps> = (props) => {
             socketConnectionUrl: configTextState.socketConnectionUrl,
             restApiUrl: configTextState.restApiUrl
         }
-        props.setConfigChangeDetectionCounter();
+        props.validateConfigs(true);
         props.setConfigData(configData);
     }
 

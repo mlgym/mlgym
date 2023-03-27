@@ -9,11 +9,9 @@ import styles from './Table.module.css';
 
 interface columnDefinition {
   field: string;
-  sortable?: boolean;
-  filter?: boolean
 }
 
-
+// TODO: Maybe merge table and Dashboard?
 function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
 
   // change the array of strings to array of colum definitions
