@@ -3,7 +3,7 @@ import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
 import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
-import { upsertOneRow } from '../redux/table/tableSlice';
+import { Row, upsertOneRow } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
 import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
@@ -113,28 +113,16 @@ export default function App() {
 
     // TODO: maybe useCallback
     const workerOnMessageHandler = (data: DataToRedux) => {
-        if (data && data.evaluationResultsData) {
+        // NOTE: data is alway created as an empty object and then populated before being passed to this method, so no need to check for null or undefined!
+        if (data.evaluationResultsData) {
             // update the Charts Slice
             dispatch(saveEvalResultData(data.evaluationResultsData));
-
-            // TODO: move to the background
-            // // save the latest metric in the Experiment Slice
-            // const { epoch, experiment_id, metric_scores, loss_scores } = data.latest_split_metric as EvaluationResultPayload;
-            // const changes: { [latest_split_metric_key: string]: number } = {};
-            // for (const metric of metric_scores) {
-            //     changes[metric.split + "_" + metric.metric] = metric.score;
-            // }
-            // for (const loss of loss_scores) {
-            //     changes[loss.split + "_" + loss.loss] = loss.score;
-            // }
-
-            // //NOTE, I checked the epoch against the experiment's and that didn't work because of UseAppSelector! (can't be used here!)
-            // dispatch(updateExperiment({ id: experiment_id, changes: changes }));
+            dispatch(upsertOneRow(data.tableData as Row));
         }
-        else if (data && data.tableData) {
-            dispatch(upsertOneRow(data.tableData))
+        else if (data.tableData) {
+            dispatch(upsertOneRow(data.tableData));
         }
-        else if (data && data.status) {
+        else if (data.status) {
             if (data.status === "msg_count_increment") {
                 dispatch(incrementReceivedMsgCount());
             } else if (data.status["ping"] !== undefined) {
@@ -245,19 +233,14 @@ export default function App() {
             {/* Socket connection success / fail message temperory popup which will disappeaer in 4secs or when closed manually by user */}
             <Snackbar
                 anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                // open={isSnackbarOpen}
                 open={connectionSnackBar.isOpen}
-                // onClose={() => setSnackbarOpen(false)}
                 onClose={() => setConnectionSnackBar({ ...connectionSnackBar, isOpen: false })}
                 autoHideDuration={4000}
             >
                 <Alert
-                    // onClose={() => setSnackbarOpen(false)}
                     onClose={() => setConnectionSnackBar({ ...connectionSnackBar, isOpen: false })}
-                    // severity={snackBarText === SOCKET_STATUS.SOCKET_CONN_SUCCESS ? "success" : "error"}
                     severity={connectionSnackBar.connection ? "success" : "error"}
                 >
-                    {/* {snackBarText} */}
                     {`Socket Connection ${connectionSnackBar.connection ? "Successful" : "Failed"}`}
                 </Alert>
             </Snackbar>

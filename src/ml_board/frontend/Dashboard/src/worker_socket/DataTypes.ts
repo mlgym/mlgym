@@ -1,5 +1,5 @@
 import { Row } from "../redux/table/tableSlice";
-import { evalResultCustomData, EvaluationResultPayload } from "./event_handlers/evaluationResultDataHandler";
+import { evalResultCustomData } from "./event_handlers/evaluationResultDataHandler";
 
 
 // ========================= data types ============================//
@@ -13,6 +13,5 @@ export interface DataFromSocket extends JSON {
 export interface DataToRedux {
     tableData?: Row,
     evaluationResultsData?: evalResultCustomData,
-    latest_split_metric?: EvaluationResultPayload,
     status?: any,
 }
