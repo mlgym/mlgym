@@ -45,8 +45,8 @@ class AccelerateTrainComponent(StatefulComponent):
                 batch_done_callback_fun(status="train",
                                         num_batches=num_batches_per_epoch,
                                         current_batch=batch_id % num_batches_per_epoch,
-                                        splits=[],  # TODO needs to be set properly
-                                        current_split="",  # TODO needs to be set properly
+                                        splits=[dataloader.dataset_tag],
+                                        current_split=dataloader.dataset_tag,
                                         num_epochs=num_epochs,
                                         current_epoch=current_epoch)
             if (batch_id + 1) % num_batches_per_epoch == 0:  # when epoch done

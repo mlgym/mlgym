@@ -104,8 +104,8 @@ lr_scheduler:
     lr_scheduler_key: hugging_face_scheduler
     params:
       name: linear
-      num_warmup_steps: 0
-      num_training_steps: 100
+      num_warmup_steps: 50
+      num_training_steps: 1000
 
 loss_function_registry:
   component_type_key: LOSS_FUNCTION_REGISTRY
