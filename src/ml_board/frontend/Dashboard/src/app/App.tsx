@@ -58,8 +58,6 @@ export default function App() {
     const [filterText, setFilterText] = useState("")
     const [filterDrawer, setFilterDrawer] = useState(false)
     const [isConfigValidated, setConfigValidation] = useState(false)
-    // const [isSnackbarOpen, setSnackbarOpen] = useState(false)
-    // const [snackBarText, setSnackBarText] = useState("")
     const [connectionSnackBar, setConnectionSnackBar] = useState({
         isOpen: false,
         connection: false
@@ -116,8 +114,7 @@ export default function App() {
 
     // TODO: maybe useCallback
     const workerOnMessageHandler = (data: DataToRedux) => {
-        //  abstract equality operator, so null == undefined
-        if (data == undefined) return;
+        // NOTE: data is alway created as an empty object and then populated before being passed to this method, so no need to check for null or undefined!
         if (data.chartsUpdates) {
             // update the Charts Slice
             // dispatch(saveEvalResultData(data.evaluationResultsData));
@@ -140,8 +137,6 @@ export default function App() {
                     isOpen: true,
                     connection: data.status["isSocketConnected"]
                 });
-                // setSnackBarText(`Socket Connection ${data.status["isSocketConnected"] ? "Successful" : "Failed"}`);
-                // setSnackbarOpen(true);
             }
         }
     }
@@ -240,19 +235,14 @@ export default function App() {
             {/* Socket connection success / fail message temperory popup which will disappeaer in 4secs or when closed manually by user */}
             <Snackbar
                 anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                // open={isSnackbarOpen}
                 open={connectionSnackBar.isOpen}
-                // onClose={() => setSnackbarOpen(false)}
                 onClose={() => setConnectionSnackBar({ ...connectionSnackBar, isOpen: false })}
                 autoHideDuration={4000}
             >
                 <Alert
-                    // onClose={() => setSnackbarOpen(false)}
                     onClose={() => setConnectionSnackBar({ ...connectionSnackBar, isOpen: false })}
-                    // severity={snackBarText === SOCKET_STATUS.SOCKET_CONN_SUCCESS ? "success" : "error"}
                     severity={connectionSnackBar.connection ? "success" : "error"}
                 >
-                    {/* {snackBarText} */}
                     {`Socket Connection ${connectionSnackBar.connection ? "Successful" : "Failed"}`}
                 </Alert>
             </Snackbar>

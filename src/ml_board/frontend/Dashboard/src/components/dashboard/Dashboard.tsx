@@ -1,14 +1,13 @@
 import { useAppSelector } from "../../app/hooks";
-import { selectColorMap, selectFilter } from "../../redux/status/statusSlice";
+import { selectFilter } from "../../redux/status/statusSlice";
 import { selectAllRows } from "../../redux/table/tableSlice";
 import Table from "./table/Table";
 
 
-// TODO: Maybe merge table and Dashboard?
 export default function Dashboard() {
   // filter them based on the regEx in the status slice
   const re = new RegExp(useAppSelector(selectFilter));
-  const colorMap = useAppSelector(selectColorMap);
+  // const colorMap = useAppSelector(selectColorMap);
   const rows = useAppSelector(selectAllRows);
   const colNames: string[] = [];
 

@@ -22,11 +22,15 @@ export interface Row {
     // current_epoch?: number;
     // num_batches?: number;
     // current_batch?: number;
-    // // calculations
+    // // progresses calculations
     // epoch_progress?: number;
     // batch_progress?: number;
+    // // special Experiment keys for "latest_split_metric"
 
-    // NOTE: and other special dynamic keys for "latest_split_metric"
+
+    // NOTE: newKey encompasses all of the above and more if need be!!!
+    // [newKey: string]: number | string;
+    // But unfortunately it create errors if used! (exposing only experiment_id is the current fix)
 }
 
 const rowsAdapter = createEntityAdapter<Row>({
