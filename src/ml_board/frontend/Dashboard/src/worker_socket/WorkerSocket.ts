@@ -1,6 +1,6 @@
 import socketIO, { Socket } from 'socket.io-client';
 import { settingConfigsInterface } from '../app/App';
-import { DataFromSocket } from './DataTypes';
+import { RawDataFromSocket } from './DataTypes';
 import { connectionMainThreadCallback, msgCounterIncMainThreadCallback, pingMainThreadCallback, throughputMainThreadCallback, updateMainThreadCallback } from './MainThreadCallbacks';
 
 
@@ -43,11 +43,9 @@ const onError = (err: Error) => stop(err);
 
 
 // ========================= data driven events ============================//
-// const process_mlgym_event = (msg:JSON) => {
-const process_mlgym_event = (msg: string) => {
-    const parsedMsg: DataFromSocket = JSON.parse(msg); //  test
+const process_mlgym_event = (msg: RawDataFromSocket) => {
     // update the redux state on the main thread
-    updateMainThreadCallback (parsedMsg);
+    updateMainThreadCallback(msg.data);
     // message count for calculating the throughput
     msgCountPerPeriod++;
     // flag main thread to increment the number of incoming messages
