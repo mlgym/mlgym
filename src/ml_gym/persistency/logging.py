@@ -150,7 +150,7 @@ class ExperimentStatusLogger:
                       'optimizer': optimizer_state_dict,
                       'lr_scheduler': lr_scheduler_state_dict,
                       'stateful_components': stateful_components_state_dict}
-
+        data_streams = {}
         # Iterate over state dicts
         for key, state_dict in data_dicts.items():
             # If dict is not None call torch.save()
