@@ -90,7 +90,7 @@ class WebSocketWrapper:
                 if i == self._how_many_lines:
                     print("DONE!")
                     break
-                self._socketio.emit('mlgym_event', json.loads(msg))
+                self._socketio.emit('mlgym_event', {'event_id': i, 'data': json.loads(msg)})
                 self._socketio.sleep(self._message_delay)
 
         # save the sids of the new client
@@ -130,13 +130,16 @@ params = ["path", "line_count", "port", "delay", "cors_ports"]
 # sys.argv EXAMPLE: path=event_storage.log line_count=500 port=7000 delay=0.1 cors_ports=3000,7000,8080
 if __name__ == '__main__':
 
-    # remove the app name, as it doesn't come with the =, for easier handling in the next step
-    sys.argv.pop(0)
-    # create the dictionary out of the zipped list [(key, value), ...]
-    args = dict(arg.split('=') for arg in sys.argv)
-    # check if all the provided parameters are defined(A.k.a exits in params)!
-    check = all(arg in params for arg in args)
-    print(f"{args}\n{'Valid parameters!' if check else 'Invalid parameters!'}")
+    try:
+        # remove the app name, as it doesn't come with the =, for easier handling in the next step
+        sys.argv.pop(0)
+        # create the dictionary out of the zipped list [(key, value), ...]
+        args = dict(arg.split('=') for arg in sys.argv)
+        # check if all the provided parameters are defined(A.k.a exits in params)!
+        check = all(arg in params for arg in args)
+        print(f"{args}\n{'Valid parameters!' if check else 'Invalid parameters!'}")
+    except ValueError as e:
+        terminate("args follow the pattern '[parameter]=[value]' and are separated with whitespace!")
     
     # if any of the provided parameters isn't a defined one show it and exit, same with the path parameter as it's not optional!
     if not check:
