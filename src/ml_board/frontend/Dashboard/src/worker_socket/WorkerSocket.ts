@@ -43,16 +43,16 @@ const onError = (err: Error) => stop(err);
 
 
 // ========================= data driven events ============================//
-const process_mlgym_event = (msg: RawDataFromSocket) => {
+const process_mlgym_event = (msg: JSON) => {
     // update the redux state on the main thread
-    updateMainThreadCallback(msg.data);
+    const rawData = msg as unknown as RawDataFromSocket;
+    updateMainThreadCallback(rawData.data);
     // message count for calculating the throughput
     msgCountPerPeriod++;
     // flag main thread to increment the number of incoming messages
     msgCounterIncMainThreadCallback();
 };
 
-// ASK MAX: renaming to onPong or onPongReceived
 const onPongReceivedfromWebsocketServer = () => {
     // on Pong , save time of receiving 
     lastPong = new Date().getTime();
@@ -62,7 +62,6 @@ const onPongReceivedfromWebsocketServer = () => {
 
 // ========================= helper methods ============================//
 
-// ASK MAX: sendPingToServer or sendPing or pingToServer or pingingServer or pinging
 const send_ping_to_websocket_server = (socket: Socket) => {
     // if Pong was received after sending a Ping 
     // if no Ping was sent before
