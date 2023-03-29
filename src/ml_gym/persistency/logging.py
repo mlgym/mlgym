@@ -6,7 +6,7 @@ from ml_gym.multiprocessing.states import JobStatus, JobType
 from ml_gym.io.websocket_client import ClientFactory, BufferedClient
 import time
 import torch
-import pickle
+import io
 import math
 
 
@@ -146,12 +146,24 @@ class ExperimentStatusLogger:
             chunks = [binary_stream[i*binary_stream_chunk_size: (i+1)*binary_stream_chunk_size] for i in range(num_chunks)]
             return chunks
 
-        data_streams = {
-            "model": pickle.dumps(model_state_dict) if model_state_dict is not None else None,
-            "optimizer": pickle.dumps(optimizer_state_dict) if optimizer_state_dict is not None else None,
-            "lr_scheduler": pickle.dumps(lr_scheduler_state_dict) if lr_scheduler_state_dict is not None else None,
-            "stateful_components": pickle.dumps(stateful_components_state_dict) if stateful_components_state_dict is not None else None
-        }
+        # Initialize data streams as None
+        data_streams = {'model': None,
+                        'optimizer': None,
+                        'lr_scheduler': None,
+                        'stateful_components': None}
+
+        data_dicts = {'model': model_state_dict,
+                      'optimizer': optimizer_state_dict,
+                      'lr_scheduler': lr_scheduler_state_dict,
+                      'stateful_components': stateful_components_state_dict}
+
+        # Iterate over state dicts
+        for key, state_dict in data_dicts.items():
+            # If dict is not None call torch.save()
+            if state_dict is not None:
+                buffer = io.BytesIO()
+                torch.save(state_dict, buffer)
+                data_streams['key'] = buffer.getvalue()
 
         for entity_id, binary_stream in data_streams.items():
             if binary_stream is not None:  # new checkpoint message
