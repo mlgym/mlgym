@@ -146,12 +146,6 @@ class ExperimentStatusLogger:
             chunks = [binary_stream[i*binary_stream_chunk_size: (i+1)*binary_stream_chunk_size] for i in range(num_chunks)]
             return chunks
 
-        # Initialize data streams as None
-        data_streams = {'model': None,
-                        'optimizer': None,
-                        'lr_scheduler': None,
-                        'stateful_components': None}
-
         data_dicts = {'model': model_state_dict,
                       'optimizer': optimizer_state_dict,
                       'lr_scheduler': lr_scheduler_state_dict,
@@ -161,9 +155,11 @@ class ExperimentStatusLogger:
         for key, state_dict in data_dicts.items():
             # If dict is not None call torch.save()
             if state_dict is not None:
-                buffer = io.BytesIO()
-                torch.save(state_dict, buffer)
-                data_streams['key'] = buffer.getvalue()
+                with io.BytesIO() as buffer:
+                    torch.save(state_dict, buffer)
+                    data_streams[key] = buffer.getvalue()
+            else:
+                data_streams[key] = None                
 
         for entity_id, binary_stream in data_streams.items():
             if binary_stream is not None:  # new checkpoint message
