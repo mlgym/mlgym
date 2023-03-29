@@ -39,14 +39,12 @@ const MapEventToProcess: { [event: string]: (output: DataToRedux, input: JSON) =
 // ========================= Callbacks to update the MainThread ============================//
 
 export const updateMainThreadCallback = (socketData: JSON) => {
-    // parse data from socket
-    const parsedSocketData = socketData as DataFromSocket;
-    // parse the event type 
-    const eventType = parsedSocketData.data.event_type.toLowerCase() as keyof typeof MapEventToProcess;
+    // parse data from socket then extract event_type and payload
+    const { data: { event_type, payload } } = socketData as DataFromSocket;
     // place holder for redux data
     const dataToRedux: DataToRedux = {};
     // process the parse socket msg
-    MapEventToProcess[eventType](dataToRedux, parsedSocketData.data.payload);
+    MapEventToProcess[event_type as keyof typeof MapEventToProcess](dataToRedux, payload);
     // sending Data to the Main thread to store it in Redux
     postMessage(dataToRedux);
 };
