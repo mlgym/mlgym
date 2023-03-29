@@ -45,7 +45,7 @@ const onError = (err: Error) => stop(err);
 // ========================= data driven events ============================//
 // const process_mlgym_event = (msg:JSON) => {
 const process_mlgym_event = (msg: string) => {
-    const parsedMsg: DataFromSocket = JSON.parse(msg);
+    const parsedMsg: DataFromSocket = JSON.parse(msg); //  test
     // update the redux state on the main thread
     updateMainThreadCallback (parsedMsg);
     // message count for calculating the throughput
