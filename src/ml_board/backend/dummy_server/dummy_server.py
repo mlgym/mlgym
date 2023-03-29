@@ -121,18 +121,28 @@ class WebSocketWrapper:
 ####################################################################################################
 # main (starting point)
 
+def terminate(text:str) -> None:
+    print(text)
+    sys.exit(0)
 
+# The accepted parameters:
 params = ["path", "line_count", "port", "delay", "cors_ports"]
 # sys.argv EXAMPLE: path=event_storage.log line_count=500 port=7000 delay=0.1 cors_ports=3000,7000,8080
 if __name__ == '__main__':
 
+    # remove the app name, as it doesn't come with the =, for easier handling in the next step
     sys.argv.pop(0)
-    args = dict([arg.split('=') for arg in sys.argv])
-    print(f"{args}\n{'Valid parameters ✔' if all(arg in params for arg in args) else 'Invalid parameters ✗'}")
+    # create the dictionary out of the zipped list [(key, value), ...]
+    args = dict(arg.split('=') for arg in sys.argv)
+    # check if all the provided parameters are defined(A.k.a exits in params)!
+    check = all(arg in params for arg in args)
+    print(f"{args}\n{'Valid parameters ✔' if check else 'Invalid parameters ✗'}")
     
-    if params[0] not in args:
-        print(f"missing [path], must be provided!!!")
-        sys.exit(0)
+    # if any of the provided parameters isn't a defined one show it and exit, same with the path parameter as it's not optional!
+    if not check:
+        terminate(f"✗ problem with: {[arg for arg in args if arg not in params]}")
+    elif params[0] not in args:
+        terminate(f"✗ missing [path], must be provided!!!")
 
     try:
         # run the Server
@@ -147,4 +157,4 @@ if __name__ == '__main__':
             cors_ports= args.get('cors_ports', "3000,7000,8080").split(',')
         )
     except Exception as e:
-        print(">>>:", e, str(e))
+        print(">>> ✗ :", e, str(e))
