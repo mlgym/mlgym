@@ -113,7 +113,7 @@ export default function App() {
 
     // TODO: maybe useCallback
     const workerOnMessageHandler = (data: DataToRedux) => {
-        // data is alway created as an empty object and then populated before being passed to this method, so no need to check for null or undefined!
+        // NOTE: data is alway created as an empty object and then populated before being passed to this method, so no need to check for null or undefined!
         if (data.evaluationResultsData) {
             // update the Charts Slice
             dispatch(saveEvalResultData(data.evaluationResultsData));
@@ -236,7 +236,7 @@ export default function App() {
                 open={connectionSnackBar.isOpen}
                 onClose={() => setConnectionSnackBar({ ...connectionSnackBar, isOpen: false })}
                 autoHideDuration={4000}
-                >
+            >
                 <Alert
                     onClose={() => setConnectionSnackBar({ ...connectionSnackBar, isOpen: false })}
                     severity={connectionSnackBar.connection ? "success" : "error"}

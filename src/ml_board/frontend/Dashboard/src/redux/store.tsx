@@ -12,8 +12,6 @@ export const store = configureStore({
   reducer: {
     status,
     experimentsSlice,
-    // jobs,
-    // experiments,
     charts,
     table
   }

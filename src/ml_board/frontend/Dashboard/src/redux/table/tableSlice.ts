@@ -4,7 +4,7 @@ import { RootState } from "../store";
 
 // Row = JobStatusPayload + ExperimentStatusPayload
 export interface Row {
-    // Job
+    // // Job
     // job_id?: string; // format <grid_search_id>-<job index>
     // job_type?: string; // <CALC, TERMINATE>
     // job_status?: string; // <INIT, RUNNING, DONE>
@@ -22,14 +22,13 @@ export interface Row {
     // current_epoch?: number;
     // num_batches?: number;
     // current_batch?: number;
-    // // calculations
+    // // progresses calculations
     // epoch_progress?: number;
     // batch_progress?: number;
+    // // special Experiment keys for "latest_split_metric"
 
-    // special Experiment keys for "latest_split_metric"
-    // F1?: string;
-    // Precision?: string;
-    // Recall?: string;
+    // // NOTE: newKey encompasses all of the above and more if need be!!!
+    // [newKey: string]: number | string;
 }
 
 const rowsAdapter = createEntityAdapter<Row>({
