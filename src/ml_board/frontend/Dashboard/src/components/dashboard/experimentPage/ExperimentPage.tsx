@@ -1,4 +1,4 @@
-import { Button, FormControlLabel, IconButton, Switch, Toolbar } from '@mui/material';
+import { Button, FormControlLabel, IconButton, Skeleton, Switch, TextField, Toolbar } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAppSelector } from "../../../app/hooks";
@@ -21,6 +21,9 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import { getRandomColor } from '../../../worker_socket/event_handlers/evaluationResultDataHandler';
 import { Download } from '@mui/icons-material';
+import Send from '@mui/icons-material/Send';
+import DoNotDisturbAltIcon from '@mui/icons-material/DoNotDisturbAlt';
+import DescriptionIcon from '@mui/icons-material/Description';
 
 interface expObj {
     [key: string]: any
@@ -78,8 +81,14 @@ function ExperimentPage() {
     const [selectedExperiment, setSelectedExperiment] = useState(obj)
     const filteredExp = useAppSelector(state => selectRowById(state, experiment_id));
     const [showMore, setShowMore] = useState(false);
-    const [loss_or_metric_data, setLossOrMetricData] = useState(obj)
-    
+    const [loss_or_metric_data, setLossOrMetricData] = useState(obj);
+    const [isLoadingCheckpointData, setIsLoadingCheckpointData] = useState(false);
+    const [isErrorInCheckpointData, setIsErrorInCheckpointData] = useState(false);
+    const [checkpointId, setCheckpointId] = useState("");
+    const [checkpointData, setCheckpointData] = useState(obj);
+    const [configFileName, setConfigFileName] = useState("");
+    const [configFileData, setConfigFileData] = useState(obj);
+
     useEffect(() => {
         console.log("filteredExp: ",filteredExp);
         if (filteredExp) {
@@ -116,12 +125,18 @@ function ExperimentPage() {
         }
     },[filteredExp])
 
+    function changeText(key:string, text:string) {
+        if (key === "checkpointId") {
+            setCheckpointId(text);            
+        }
+        else if (key === "configFileName") {
+            setConfigFileName(text);
+        }
+    }
+
     return(
         <div className={styles.main}>
             <Toolbar />
-            {/* <div className={styles.main_heading}>
-                Experiment: {selectedExperiment.experiment_id}
-            </div> */}
             <Accordion defaultExpanded={true}>
                 <AccordionSummary>
                     <div className={styles.accordian_heading}>Details</div>
@@ -385,46 +400,145 @@ function ExperimentPage() {
                 <AccordionDetails>
                     <Grid container rowSpacing={1} spacing={{ xs: 1, md: 2 }}>
                         <Grid item={true} xs={12} sm={12} md={3}>
-                            <Card className={styles.card_download_btn}>
+                            <Card className={styles.card}>
                                 <CardContent>
-                                    <div className={styles.card_content_typography}>
-                                        Model
+                                    <div className={styles.cardcontent}>
+                                        <div className={styles.cardcontent_key}>
+                                            <TextField
+                                                label="Enter Checkpoint Id" 
+                                                variant="standard" 
+                                                value={checkpointId}
+                                                onChange={(e)=>changeText("checkpointId", e.target.value)}
+                                            />
+                                        </div>
+                                        <div className={styles.cardcontent_value}>
+                                            <IconButton size="large">
+                                                <Send /> 
+                                            </IconButton>
+                                        </div>
                                     </div>
-                                    <div className={styles.cardcontent_with_download_btn}>
-                                        <Button 
-                                            variant="contained" 
-                                            size="large"
-                                            startIcon={<Download />}
-                                        >
-                                            Download 
-                                        </Button>
-                                    </div>
+                                    <br/>
+                                    {
+                                        isLoadingCheckpointData ?
+                                        <div>
+                                            <Skeleton animation="wave" height={60} />
+                                            <Skeleton animation="wave" height={60} />
+                                            <Skeleton animation="wave" height={60} />
+                                            <Skeleton animation="wave" height={60} />
+                                        </div>
+                                        :
+                                        !isLoadingCheckpointData && isErrorInCheckpointData ?
+                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                                            <DoNotDisturbAltIcon style={{ height: '200px', width: '200px'}}/>
+                                            <h3>No Data Available</h3>
+                                        </div>
+                                        :
+                                        !isLoadingCheckpointData && !checkpointData ?
+                                        <div>
+                                            <div>
+                                                <div className={styles.cardcontent}>
+                                                    <div className={styles.cardcontent_key}>
+                                                        Model
+                                                    </div>
+                                                    <div className={styles.cardcontent_value}>
+                                                        <IconButton size="large">
+                                                            <Download /> 
+                                                        </IconButton>
+                                                    </div>
+                                                </div>
+                                                <div className={styles.cardcontent}>
+                                                    <div className={styles.cardcontent_key}>
+                                                        Optimizer
+                                                    </div>
+                                                    <div className={styles.cardcontent_value}>
+                                                        <IconButton size="large">
+                                                            <Download /> 
+                                                        </IconButton>
+                                                    </div>
+                                                </div>
+                                                <div className={styles.cardcontent}>
+                                                    <div className={styles.cardcontent_key}>
+                                                        Stateful Components
+                                                    </div>
+                                                    <div className={styles.cardcontent_value}>
+                                                        <IconButton size="large">
+                                                            <Download /> 
+                                                        </IconButton>
+                                                    </div>
+                                                </div>
+                                                <div className={styles.cardcontent}>
+                                                    <div className={styles.cardcontent_key}>
+                                                        LR Scheduler
+                                                    </div>
+                                                    <div className={styles.cardcontent_value}>
+                                                        <IconButton size="large">
+                                                            <Download /> 
+                                                        </IconButton>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        :
+                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                                            <DescriptionIcon style={{ height: '200px', width: '200px'}}/>
+                                            <h3>Enter Checkpoint Id</h3>
+                                        </div>
+                                    }
                                 </CardContent>
                             </Card>
                         </Grid>
                         <Grid item={true} xs={12} sm={12} md={9}>
                             <Card className={styles.card}>
                                 <CardContent>
-                                    <div className={styles.card_content_typography}>
-                                        Config File
+                                    <div className={styles.cardcontent}>
+                                        <div className={styles.cardcontent_key} style={{ width: "80%"}}>
+                                            <div className={styles.cardcontent}>
+                                                <div className={styles.cardcontent_key}>
+                                                    <TextField
+                                                        label="Enter Config File Name" 
+                                                        variant="standard"
+                                                        style={{ width: "800px" }}
+                                                        value={configFileName}
+                                                        onChange={(e)=>changeText("configFileName", e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className={styles.cardcontent_value}>
+                                                    <IconButton size="large">
+                                                        <Send /> 
+                                                    </IconButton>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className={styles.cardcontent_key} style={{ width: "20%" }}>
+                                            <div className={styles.cardcontent}>
+                                                <div className={styles.cardcontent_key}>
+                                                    <IconButton size="large" style={{ marginRight: "20px" }}>
+                                                        <Download /> 
+                                                    </IconButton>
+                                                </div>
+                                                <div className={styles.cardcontent_key}>
+                                                    <FormControlLabel
+                                                        sx={{
+                                                            display: 'block',
+                                                        }}
+                                                        control={
+                                                        <Switch
+                                                            checked={true}
+                                                            // onChange={() => setLoading(!loading)}
+                                                            name="loading"
+                                                            color="primary"
+                                                        />
+                                                        }
+                                                        label="View / Hide"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <IconButton size="large">
-                                        <Download /> 
-                                    </IconButton>
-                                    <FormControlLabel
-                                        sx={{
-                                        display: 'block',
-                                        }}
-                                        control={
-                                        <Switch
-                                            checked={true}
-                                            // onChange={() => setLoading(!loading)}
-                                            name="loading"
-                                            color="primary"
-                                        />
-                                        }
-                                        label="View / Hide"
-                                    />
+                                    <div style={{ marginTop: "-80px" }}>
+                                        <Skeleton animation="wave" height={400} />
+                                    </div>
                                 </CardContent>
                             </Card>
                         </Grid>
