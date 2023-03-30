@@ -61,8 +61,6 @@ export const tableSlice = createSlice({
     reducers: {
         upsertOneRow: rowsAdapter.upsertOne,
         upsertManyRows: rowsAdapter.upsertMany,
-        // updateOneRow: rowsAdapter.updateOne,
-        // updateManyRows: rowsAdapter.updateMany,
     }
 });
 

@@ -1,5 +1,3 @@
-// import { useSelector } from 'react-redux';
-// import { reduxState } from "../../redux/store";
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Toolbar from '@mui/material/Toolbar';
@@ -23,7 +21,6 @@ ChartJS.register(
 
 
 export default function Graphs() {
-    // const evalResult = useSelector((state: any) => state.experimentsSlice.evalResult);
     const chartIds = useAppSelector(selectChartIds);
     const chartsCount = useAppSelector(selectChartsCount);
 
@@ -31,12 +28,10 @@ export default function Graphs() {
         <Box component="main" className={styles.graphs_main_container}>
             <Toolbar />
             {
-                // Object.keys(evalResult.experiments).length > 0 ?
                 chartsCount > 0 ?
                     <Grid container rowSpacing={1} spacing={{ xs: 2, md: 3 }} className={styles.grid_container}>
                         {
                             chartIds.map(chart_id => <Graph chart_id={chart_id.toString()} key={chart_id.toString()} />)
-                            // Object.keys(evalResult.experiments).map((loss_or_metric, index) => Graph(evalResult.experiments[loss_or_metric].data, evalResult.experiments[loss_or_metric].options, index))
                         }
                     </Grid>
                     :

@@ -1,5 +1,4 @@
 import { Row } from "../redux/table/tableSlice";
-// import { evalResultCustomData } from "./event_handlers/evaluationResultDataHandler";
 import { ChartUpdate } from "./event_handlers/EvaluationResultHandler";
 
 

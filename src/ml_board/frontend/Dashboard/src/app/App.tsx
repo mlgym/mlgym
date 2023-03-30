@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
-// import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
 import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
 import { Row, upsertOneRow } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
@@ -117,7 +116,6 @@ export default function App() {
         // NOTE: data is alway created as an empty object and then populated before being passed to this method, so no need to check for null or undefined!
         if (data.chartsUpdates) {
             // update the Charts Slice
-            // dispatch(saveEvalResultData(data.evaluationResultsData));
             dispatch(upsertCharts(data.chartsUpdates));
             dispatch(upsertOneRow(data.tableData as Row));
         }

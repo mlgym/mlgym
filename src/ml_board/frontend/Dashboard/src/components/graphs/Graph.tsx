@@ -9,7 +9,6 @@ import styles from "./Graphs.module.css";
 
 // https://www.chartjs.org/docs/latest/general/data-structures.html
 
-// export default function Graph(data: any, options: any, index: number) {
 export default function Graph({ chart_id }: { chart_id: string }) {
 
     const chartLabels = useAppSelector(state => selectChartLabelsById(state, chart_id));

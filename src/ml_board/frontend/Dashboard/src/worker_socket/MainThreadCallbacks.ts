@@ -1,7 +1,6 @@
 import { DataFromSocket, DataToRedux } from "./DataTypes";
 import { MLGYM_EVENT } from "./EventsTypes";
 import handleEvaluationResultData from "./event_handlers/EvaluationResultHandler";
-// import handleEvaluationResultData, { evalResultCustomData, EvaluationResultPayload } from "./event_handlers/evaluationResultDataHandler";
 import handleExperimentStatusData from "./event_handlers/ExperimentStatusHandler";
 import handleJobStatusData from "./event_handlers/JobStatusHandler";
 
