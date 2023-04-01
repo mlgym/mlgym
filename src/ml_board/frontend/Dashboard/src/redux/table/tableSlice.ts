@@ -2,7 +2,7 @@ import { createEntityAdapter, createSlice, EntityState } from "@reduxjs/toolkit"
 import { RootState } from "../store";
 
 
-// Row = JobStatusPayload + ExperimentStatusPayload
+// NOTE: Row = JobStatusPayload + ExperimentStatusPayload + scores
 export interface Row {
     // // Job
     // job_id?: string; // format <grid_search_id>-<job index>
@@ -27,8 +27,10 @@ export interface Row {
     // batch_progress?: number;
     // // special Experiment keys for "latest_split_metric"
 
-    // // NOTE: newKey encompasses all of the above and more if need be!!!
+
+    // NOTE: newKey encompasses all of the above and more if need be!!!
     // [newKey: string]: number | string;
+    // But unfortunately it create errors if used! (exposing only experiment_id is the current fix)
 }
 
 const rowsAdapter = createEntityAdapter<Row>({
@@ -59,8 +61,6 @@ export const tableSlice = createSlice({
     reducers: {
         upsertOneRow: rowsAdapter.upsertOne,
         upsertManyRows: rowsAdapter.upsertMany,
-        updateOneRow: rowsAdapter.updateOne,
-        updateManyRows: rowsAdapter.updateMany,
     }
 });
 
@@ -70,6 +70,7 @@ export const { upsertOneRow, upsertManyRows } = tableSlice.actions;
 // create a set of memoized selectors
 export const {
     selectAll: selectAllRows,
+    selectById: selectRowById
 } = rowsAdapter.getSelectors((state: RootState) => state.table)
 
 export default tableSlice.reducer;

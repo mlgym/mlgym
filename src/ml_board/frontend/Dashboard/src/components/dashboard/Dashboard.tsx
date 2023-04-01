@@ -11,7 +11,7 @@ export default function Dashboard() {
   const rows = useAppSelector(selectAllRows);
   const colNames: string[] = [];
 
-  // TODO: get them from the Redux store
+  // TODO: get them from the Redux store better, otherwise this checks the first row ONLY!!!
   // getting the columns' headers dynamically
   if (rows.length > 1) {
     colNames.push(...Object.keys(rows[0]).filter((colName: string) => re.test(colName)));

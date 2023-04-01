@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
-import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
 import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
 import { Row, upsertOneRow } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
@@ -17,6 +16,7 @@ import Snackbar from '@mui/material/Snackbar';
 import TextField from '@mui/material/TextField';
 import ConfigPopup from '../components/configPopup/ConfigPopup';
 import Settings from '../components/settings/Settings';
+import { upsertCharts } from '../redux/charts/chartsSlice';
 import styles from './App.module.css';
 
 export interface settingConfigsInterface {
@@ -114,9 +114,9 @@ export default function App() {
     // TODO: maybe useCallback
     const workerOnMessageHandler = (data: DataToRedux) => {
         // NOTE: data is alway created as an empty object and then populated before being passed to this method, so no need to check for null or undefined!
-        if (data.evaluationResultsData) {
+        if (data.chartsUpdates) {
             // update the Charts Slice
-            dispatch(saveEvalResultData(data.evaluationResultsData));
+            dispatch(upsertCharts(data.chartsUpdates));
             dispatch(upsertOneRow(data.tableData as Row));
         }
         else if (data.tableData) {
