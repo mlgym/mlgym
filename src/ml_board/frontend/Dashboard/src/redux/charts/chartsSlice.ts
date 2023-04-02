@@ -30,6 +30,7 @@ export const chartsSlice = createSlice({
     initialState,
     reducers: {
         upsertCharts(state, { payload }: PayloadAction<ChartUpdate[]>) {
+            // TODO: avoid this big loop !!!
             for (const chartUpdate of payload) {
                 const { chart_id, exp_id, epoch, score } = chartUpdate;
                 if (state.ids.includes(chart_id)) {
