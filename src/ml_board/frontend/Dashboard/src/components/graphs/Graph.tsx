@@ -12,15 +12,15 @@ import styles from "./Graphs.module.css";
 export default function Graph({ chart_id }: { chart_id: string }) {
 
     const chartLabels = useAppSelector(state => selectChartLabelsById(state, chart_id));
-    const experimentsDic = useAppSelector(state => selectExperimentsPerChartById(state, chart_id));
+    const experimentsDict = useAppSelector(state => selectExperimentsPerChartById(state, chart_id));
     const colors = useAppSelector(selectColorMap);
 
     // prepare data (Warning Looping!)
     const data = {
         labels: chartLabels, // the X-axis:Array<number>
-        datasets: !experimentsDic ? [] :
+        datasets: !experimentsDict ? [] :
             // loop over the experiments in the ChartF
-            Object.values(experimentsDic).map(exp => ({
+            Object.values(experimentsDict).map(exp => ({
                 label: "experiment_" + exp!.exp_id, // exp_name
                 data: exp!.data, // exp_values:Array<number>, Y-axis, same size as X-axis
                 fill: false,
@@ -50,13 +50,10 @@ export default function Graph({ chart_id }: { chart_id: string }) {
                 }
             }
         },
-        animation: {
-            duration: 0,
-            easing: 'linear'
-        },
-        radius: 3,  // radius of the label tag
-        hoverRadius: 12, // on hover:: change of data point radius size
-        hitRadius: 20, // radius of mouse to show the label values when mouse is near a datapoint
+        animation: false,
+        radius: 1,  // radius of the label tag
+        hoverRadius: 5, // on hover:: change of data point radius size
+        hitRadius: 10, // radius of mouse to show the label values when mouse is near a datapoint
         responsive: true,
         maintainAspectRatio: false,
     };
