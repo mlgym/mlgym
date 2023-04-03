@@ -1,4 +1,4 @@
-import { Button, FormControlLabel, IconButton, Skeleton, Switch, TextField, Toolbar } from '@mui/material';
+import { Button, FormControlLabel, IconButton, LinearProgress, Skeleton, Switch, TextField, Toolbar } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAppSelector } from "../../../app/hooks";
@@ -22,8 +22,9 @@ import Grid from '@mui/material/Grid';
 import { getRandomColor } from '../../../worker_socket/event_handlers/evaluationResultDataHandler';
 import { Download } from '@mui/icons-material';
 import Send from '@mui/icons-material/Send';
-import DoNotDisturbAltIcon from '@mui/icons-material/DoNotDisturbAlt';
-import DescriptionIcon from '@mui/icons-material/Description';
+import axios from 'axios';
+import api from '../../../app/ApiMaster';
+import { JsonViewer } from '@textea/json-viewer';
 
 interface expObj {
     [key: string]: any
@@ -75,6 +76,26 @@ interface loss_or_metric_interface {
     }>
 }
 
+const JSON_DUMMY_DATA = {
+    "id": 9,
+    "title": "Infinix INBOOK",
+    "description": "Infinix Inbook X1 Ci3 10th 8GB...",
+    "price": 1099,
+    "discountPercentage": 11.83,
+    "rating": 4.54,
+    "stock": 96,
+    "brand": "Infinix",
+    "category": "laptops",
+    "thumbnail": "https://i.dummyjson.com/data/products/9/thumbnail.jpg",
+    "images": [
+      "https://i.dummyjson.com/data/products/9/1.jpg",
+      "https://i.dummyjson.com/data/products/9/2.png",
+      "https://i.dummyjson.com/data/products/9/3.png",
+      "https://i.dummyjson.com/data/products/9/4.jpg",
+      "https://i.dummyjson.com/data/products/9/thumbnail.jpg"
+    ]
+}
+
 function ExperimentPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     let experiment_id = searchParams.get("experiment_id") as string;
@@ -83,14 +104,17 @@ function ExperimentPage() {
     const [showMore, setShowMore] = useState(false);
     const [loss_or_metric_data, setLossOrMetricData] = useState(obj);
     const [isLoadingCheckpointData, setIsLoadingCheckpointData] = useState(false);
-    const [isErrorInCheckpointData, setIsErrorInCheckpointData] = useState(false);
+    const [errorInCheckpointData, setErrorInCheckpointData] = useState("");
     const [checkpointId, setCheckpointId] = useState("");
     const [checkpointData, setCheckpointData] = useState(obj);
     const [configFileName, setConfigFileName] = useState("");
     const [configFileData, setConfigFileData] = useState(obj);
+    const [isLoadingExpConfigFile, setIsLoadingExpConfigFile] = useState(false);
+    const [errorInExpConfigFileData, setErrorInExpConfigFileData] = useState("");
 
     useEffect(() => {
         console.log("filteredExp: ",filteredExp);
+        // setConfigFileData(JSON_DUMMY_DATA);
         if (filteredExp) {
             setSelectedExperiment(filteredExp);
             let loss_or_metric:loss_or_metric_interface = {};
@@ -127,10 +151,67 @@ function ExperimentPage() {
 
     function changeText(key:string, text:string) {
         if (key === "checkpointId") {
-            setCheckpointId(text);            
+            setCheckpointId(text);
+            setErrorInCheckpointData("");
         }
         else if (key === "configFileName") {
             setConfigFileName(text);
+            setErrorInExpConfigFileData("");
+        }
+    }
+
+    function get_checkpoint_data() {
+        if (checkpointId && checkpointId.length > 0) {
+        
+            let checkpoint_url = api.checkpoint_url.replace("<grid_search_id>", "");
+            let experiment_id = filteredExp?.experiment_id;
+            if (experiment_id) {
+                checkpoint_url = checkpoint_url.replace("<experiment_id>", experiment_id.toString());
+            }
+            checkpoint_url = checkpoint_url.replace("<checkpoint_id>", checkpointId);
+            
+            setErrorInCheckpointData("");            
+            setIsLoadingCheckpointData(true);
+
+            axios(checkpoint_url).then((data) => {
+                console.log("Got get_checkpoint_data: ", data);
+                setIsLoadingCheckpointData(false);
+            })
+            .catch((error) => {
+                console.log("Error in get_checkpoint_data: ", error);
+                setIsLoadingCheckpointData(false);
+                setErrorInCheckpointData("Oops! something went wrong in getting checkpoint data");
+            });
+        }
+        else {
+            console.log("Please enter check point id");
+        }
+    }
+
+    function get_experiment_config_file() {
+        if (configFileName && configFileName.length > 0) {
+            let experiment_config_file = api.experiment_config_file.replace("<grid_search_id>", "");
+            let experiment_id = filteredExp?.experiment_id;
+            if (experiment_id) {
+                experiment_config_file = experiment_config_file.replace("<experiment_id>", experiment_id.toString());
+            }
+            experiment_config_file = experiment_config_file.replace("<config_file_name>", configFileName);
+            
+            setErrorInExpConfigFileData("");
+            setIsLoadingExpConfigFile(true);
+
+            axios(experiment_config_file).then((data) => {
+                console.log("Got experiment_config_file: ", data);
+                setIsLoadingExpConfigFile(false);
+            })
+            .catch((error) => {
+                console.log("Error in experiment_config_file: ", error);
+                setIsLoadingExpConfigFile(false);
+                setErrorInExpConfigFileData("Oops! something went wrong in getting Experiment Config File");
+            });   
+        }
+        else {
+            console.log("Please enter config file name");
         }
     }
 
@@ -187,7 +268,12 @@ function ExperimentPage() {
                                             Start
                                         </div>
                                         <div className={styles.cardcontent_value}>
-                                            {moment(new Date(selectedExperiment.starting_time*1000)).format("YYYY-MM-DD hh:MM:SS")}
+                                            {
+                                                selectedExperiment.starting_time !== -1 ?
+                                                moment(new Date(selectedExperiment.starting_time*1000)).format("YYYY-MM-DD hh:MM:SS")
+                                                :
+                                                "--"
+                                            }
                                         </div>
                                     </div>
                                     <div className={styles.cardcontent}>
@@ -320,18 +406,18 @@ function ExperimentPage() {
                                     </div>
                                     <div className={styles.donought_container}>
                                         {
-                                            selectedExperiment.hasOwnProperty("epoch_progress") && selectedExperiment.epoch_progress ?
+                                            selectedExperiment.hasOwnProperty("current_epoch") ?
                                             <HalfDonoughtGraph 
                                                 graph_data={
                                                     [
-                                                        selectedExperiment.epoch_progress,
-                                                        1-selectedExperiment.epoch_progress
+                                                        selectedExperiment.current_epoch,
+                                                        selectedExperiment.num_epochs-selectedExperiment.current_epoch
                                                     ]
                                                 }
                                                 label_data={
                                                     [
-                                                        selectedExperiment.epoch_progress*100+"%",
-                                                        (1-selectedExperiment.epoch_progress)*100+"%"
+                                                        selectedExperiment.current_epoch+"%",
+                                                        (selectedExperiment.num_epochs-selectedExperiment.current_epoch)+"%"
                                                     ]
                                                 }
                                             />
@@ -400,38 +486,38 @@ function ExperimentPage() {
                 <AccordionDetails>
                     <Grid container rowSpacing={1} spacing={{ xs: 1, md: 2 }}>
                         <Grid item={true} xs={12} sm={12} md={3}>
-                            <Card className={styles.card}>
+                            <Card className={styles.cardcontent_with_download_btn}>
                                 <CardContent>
                                     <div className={styles.cardcontent}>
                                         <div className={styles.cardcontent_key}>
                                             <TextField
+                                                error={errorInCheckpointData.length > 0}
+                                                helperText={errorInCheckpointData.length > 0? errorInCheckpointData : ""}
                                                 label="Enter Checkpoint Id" 
                                                 variant="standard" 
                                                 value={checkpointId}
+                                                disabled={isLoadingCheckpointData}
                                                 onChange={(e)=>changeText("checkpointId", e.target.value)}
                                             />
                                         </div>
                                         <div className={styles.cardcontent_value}>
-                                            <IconButton size="large">
+                                            <IconButton 
+                                                disabled={isLoadingCheckpointData || checkpointId.length === 0}
+                                                size="large" 
+                                                onClick={()=>get_checkpoint_data()}
+                                            >
                                                 <Send /> 
                                             </IconButton>
                                         </div>
                                     </div>
-                                    <br/>
                                     {
                                         isLoadingCheckpointData ?
-                                        <div>
-                                            <Skeleton animation="wave" height={60} />
-                                            <Skeleton animation="wave" height={60} />
-                                            <Skeleton animation="wave" height={60} />
-                                            <Skeleton animation="wave" height={60} />
-                                        </div>
+                                        <Box sx={{ width: '100%' }}>
+                                            <LinearProgress />
+                                        </Box>
                                         :
-                                        !isLoadingCheckpointData && isErrorInCheckpointData ?
-                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                                            <DoNotDisturbAltIcon style={{ height: '200px', width: '200px'}}/>
-                                            <h3>No Data Available</h3>
-                                        </div>
+                                        !isLoadingCheckpointData && errorInCheckpointData.length > 0 ?
+                                        null
                                         :
                                         !isLoadingCheckpointData && !checkpointData ?
                                         <div>
@@ -471,7 +557,7 @@ function ExperimentPage() {
                                                         LR Scheduler
                                                     </div>
                                                     <div className={styles.cardcontent_value}>
-                                                        <IconButton size="large">
+                                                        <IconButton size="large" onClick={()=>get_checkpoint_data()}>
                                                             <Download /> 
                                                         </IconButton>
                                                     </div>
@@ -479,10 +565,7 @@ function ExperimentPage() {
                                             </div>
                                         </div>
                                         :
-                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                                            <DescriptionIcon style={{ height: '200px', width: '200px'}}/>
-                                            <h3>Enter Checkpoint Id</h3>
-                                        </div>
+                                        null
                                     }
                                 </CardContent>
                             </Card>
@@ -491,54 +574,81 @@ function ExperimentPage() {
                             <Card className={styles.card}>
                                 <CardContent>
                                     <div className={styles.cardcontent}>
-                                        <div className={styles.cardcontent_key} style={{ width: "80%"}}>
+                                        <div className={styles.cardcontent_key}>
                                             <div className={styles.cardcontent}>
                                                 <div className={styles.cardcontent_key}>
                                                     <TextField
+                                                        error={errorInExpConfigFileData.length > 0}
+                                                        helperText={errorInExpConfigFileData.length > 0? errorInExpConfigFileData : ""}
                                                         label="Enter Config File Name" 
                                                         variant="standard"
-                                                        style={{ width: "800px" }}
                                                         value={configFileName}
+                                                        disabled={isLoadingExpConfigFile}
                                                         onChange={(e)=>changeText("configFileName", e.target.value)}
                                                     />
                                                 </div>
                                                 <div className={styles.cardcontent_value}>
-                                                    <IconButton size="large">
+                                                    <IconButton 
+                                                        size="large"
+                                                        disabled={isLoadingExpConfigFile ||configFileName.length === 0}
+                                                        onClick={()=>get_experiment_config_file()}
+                                                    >
                                                         <Send /> 
                                                     </IconButton>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div className={styles.cardcontent_key} style={{ width: "20%" }}>
-                                            <div className={styles.cardcontent}>
-                                                <div className={styles.cardcontent_key}>
-                                                    <IconButton size="large" style={{ marginRight: "20px" }}>
-                                                        <Download /> 
-                                                    </IconButton>
-                                                </div>
-                                                <div className={styles.cardcontent_key}>
-                                                    <FormControlLabel
-                                                        sx={{
-                                                            display: 'block',
-                                                        }}
-                                                        control={
-                                                        <Switch
-                                                            checked={true}
-                                                            // onChange={() => setLoading(!loading)}
-                                                            name="loading"
-                                                            color="primary"
+                                        {
+                                            Object.keys(configFileData).length > 0 ?
+                                            <div className={styles.cardcontent_key}>
+                                                <div className={styles.cardcontent}>
+                                                    <div className={styles.cardcontent_key}>
+                                                        <IconButton 
+                                                            size="large"
+                                                            style={{ marginRight: "20px" }} 
+                                                        >
+                                                            <Download /> 
+                                                        </IconButton>
+                                                    </div>
+                                                    <div className={styles.cardcontent_key}>
+                                                        <FormControlLabel
+                                                            sx={{
+                                                                display: 'block',
+                                                            }}
+                                                            disabled={isLoadingExpConfigFile ||configFileName.length === 0}
+                                                            control={
+                                                            <Switch
+                                                                checked={true}
+                                                                // onChange={() => setLoading(!loading)}
+                                                                name="loading"
+                                                                color="primary"
+                                                            />
+                                                            }
+                                                            label="View / Hide"
                                                         />
-                                                        }
-                                                        label="View / Hide"
-                                                    />
+                                                    </div>
                                                 </div>
                                             </div>
+                                            :
+                                            null
+                                        }
+                                    </div>
+                                    {
+                                        isLoadingExpConfigFile ?
+                                        <Box sx={{ width: '100%' }}>
+                                            <LinearProgress />
+                                        </Box>
+                                        :
+                                        !isLoadingExpConfigFile && errorInExpConfigFileData.length > 0 ?
+                                        null
+                                        :
+                                        !isLoadingExpConfigFile && !configFileData ?
+                                        <div>
+                                            <JsonViewer value={configFileData} />
                                         </div>
-                                    </div>
-                                    <div style={{ marginTop: "-80px" }}>
-                                        <Skeleton animation="wave" height={400} />
-                                    </div>
+                                        :
+                                        null
+                                    }
                                 </CardContent>
                             </Card>
                         </Grid>

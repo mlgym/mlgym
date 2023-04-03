@@ -13,12 +13,12 @@
 }
 
 .cardcontent_with_download_btn {
-    display: flex;
-    flex-direction: row;
+    /* display: flex;
+    flex-direction: row; */
+    width: 100%;
     margin-top: 5px;
     margin-bottom: 10px;
-    align-items: center;
-    justify-content: center;
+    
 }
 
 .cardcontent_typography {

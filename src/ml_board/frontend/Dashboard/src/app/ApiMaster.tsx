@@ -1,0 +1,15 @@
+const GRID_SEARCH_BASE_URL = "/grid_searches/<grid_search_id>/";
+const CHECKPOINT_BASE_URL = "/checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>";
+
+let api = {
+    gridsearch_config_file: GRID_SEARCH_BASE_URL + "/<config_file_name>",
+    experiment_config_file: GRID_SEARCH_BASE_URL + "/<experiment_id>/<config_file_name>",
+    experiments: GRID_SEARCH_BASE_URL + "/experiments",
+    checkpoint_url: CHECKPOINT_BASE_URL,
+    checkpoint_model: CHECKPOINT_BASE_URL + "/model",
+    checkpoint_optimizer: CHECKPOINT_BASE_URL + "/optimizer",
+    checkpoint_stateful_component: CHECKPOINT_BASE_URL + "/stateful_component",
+    checkpoint_lr_scheduler: CHECKPOINT_BASE_URL + "/lr_scheduler"
+}
+
+export default api;

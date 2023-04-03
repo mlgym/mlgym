@@ -7,12 +7,10 @@ import { useNavigate } from 'react-router-dom';
 // styles
 import styles from './Table.module.css';
 
-interface columnDefinition {
-  field: string;
-}
+interface columnDefinition { field: string; }
 
-// TODO: Maybe merge table and Dashboard?
-function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
+// TODO: Maybe merge Table and Dashboard?
+export default function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
 
   const navigate = useNavigate();
   
@@ -53,5 +51,3 @@ function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
     </div>
   )
 }
-
-export default Table;

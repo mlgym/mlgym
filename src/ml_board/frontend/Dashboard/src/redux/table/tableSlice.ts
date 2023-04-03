@@ -2,9 +2,9 @@ import { createEntityAdapter, createSlice, EntityState } from "@reduxjs/toolkit"
 import { RootState } from "../store";
 
 
-// Row = JobStatusPayload + ExperimentStatusPayload
+// NOTE: Row = JobStatusPayload + ExperimentStatusPayload + scores
 export interface Row {
-    // Job
+    // // Job
     // job_id?: string; // format <grid_search_id>-<job index>
     // job_type?: string; // <CALC, TERMINATE>
     // job_status?: string; // <INIT, RUNNING, DONE>
@@ -22,14 +22,15 @@ export interface Row {
     // current_epoch?: number;
     // num_batches?: number;
     // current_batch?: number;
-    // // calculations
+    // // progresses calculations
     // epoch_progress?: number;
     // batch_progress?: number;
+    // // special Experiment keys for "latest_split_metric"
 
-    // special Experiment keys for "latest_split_metric"
-    // F1?: string;
-    // Precision?: string;
-    // Recall?: string;
+
+    // NOTE: newKey encompasses all of the above and more if need be!!!
+    // [newKey: string]: number | string;
+    // But unfortunately it create errors if used! (exposing only experiment_id is the current fix)
 }
 
 const rowsAdapter = createEntityAdapter<Row>({
@@ -53,8 +54,6 @@ export const tableSlice = createSlice({
     reducers: {
         upsertOneRow: rowsAdapter.upsertOne,
         upsertManyRows: rowsAdapter.upsertMany,
-        updateOneRow: rowsAdapter.updateOne,
-        updateManyRows: rowsAdapter.updateMany,
     }
 });
 
@@ -64,7 +63,7 @@ export const { upsertOneRow, upsertManyRows } = tableSlice.actions;
 // create a set of memoized selectors
 export const {
     selectAll: selectAllRows,
-    selectById: selectRowById,
+    selectById: selectRowById
 } = rowsAdapter.getSelectors((state: RootState) => state.table)
 
 export default tableSlice.reducer;

@@ -1,5 +1,5 @@
 import { useAppSelector } from "../../app/hooks";
-import { selectColorMap, selectFilter } from "../../redux/status/statusSlice";
+import { selectFilter } from "../../redux/status/statusSlice";
 import { selectAllRows } from "../../redux/table/tableSlice";
 import Table from "./table/Table";
 import { Toolbar } from '@mui/material';
@@ -37,7 +37,7 @@ export interface TableRow {
 export default function Dashboard() {
   // filter them based on the regEx in the status slice
   const re = new RegExp(useAppSelector(selectFilter));
-  const colorMap = useAppSelector(selectColorMap);
+  // const colorMap = useAppSelector(selectColorMap);
   const rows = useAppSelector(selectAllRows);
   const colNames: string[] = [];
 
@@ -45,6 +45,7 @@ export default function Dashboard() {
   // const colNames = ["experiment_id", "job_status", "starting_time", "finishing_time",
   // "model_status", "epoch_progress", "batch_progress"];
 
+  // TODO: get them from the Redux store better, otherwise this checks the first row ONLY!!!
   // getting the columns' headers dynamically
   if (rows.length > 1) {
     colNames.push(...Object.keys(rows[0]).filter((colName: string) => re.test(colName)));
