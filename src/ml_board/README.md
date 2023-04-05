@@ -142,6 +142,16 @@ Delete Checkpoint Resources: _model, optimiyer, stateful_component and lr_schedu
 
 _DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>_
 
+Delete specific Checkpoint Resource:
+
+_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/model_
+
+_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/optimizer_
+
+_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/stateful_component_
+
+_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/lr_scheduler_
+
 ## Websocket API
 
 Every event message has the following structure:
