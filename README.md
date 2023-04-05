@@ -154,6 +154,6 @@ Similarly, for the analysis board we consider:
 
 ## Copyright
 
-Copyright (c) 2020 Max Lübbering
+Copyright (c) 2023
 
 For license see: https://github.com/mlgym/mlgym/blob/master/LICENSE

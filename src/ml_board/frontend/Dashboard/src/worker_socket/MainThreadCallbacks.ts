@@ -1,43 +1,34 @@
 import { DataFromSocket, DataToRedux } from "./DataTypes";
 import { MLGYM_EVENT } from "./EventsTypes";
-import handleEvaluationResultData, { evalResultCustomData, EvaluationResultPayload } from "./event_handlers/evaluationResultDataHandler";
+import handleEvaluationResultData from "./event_handlers/EvaluationResultHandler";
 import handleExperimentStatusData from "./event_handlers/ExperimentStatusHandler";
 import handleJobStatusData from "./event_handlers/JobStatusHandler";
 
-// Note: I don't like having anything here other than the callbacks but it is what it is :')
 // ========================= variables ============================//
-// TODO: in #145 #147 this has been done with out the need of this, check if still needed (check the TODO drafts)
-// to check for metric and loss headers
-const metric_loss_header: string[] = [];
-// TODO: temporary until the mystery why this is even used be solved
-const initialStateForGraphs: evalResultCustomData = {
-    grid_search_id: null,
-    experiments: {},
-    colors_mapped_to_exp_id: {}
-};
 
 // Hashing is faster instead of switching over the the eventType
-const MapEventToProcess = {
-    [MLGYM_EVENT.JOB_STATUS]: (dataToRedux: DataToRedux, data: any) => { dataToRedux.tableData = handleJobStatusData(data) },
-    [MLGYM_EVENT.JOB_SCHEDULED]: () => console.log("Job scheduled found"),
-    [MLGYM_EVENT.EVALUATION_RESULT]: (dataToRedux: DataToRedux, data: any) => {
-        const evalResPayload = data as unknown as EvaluationResultPayload;
-        dataToRedux.evaluationResultsData = handleEvaluationResultData(initialStateForGraphs, evalResPayload);
-        dataToRedux.latest_split_metric = evalResPayload;
+const MapEventToProcess: { [event: string]: (output: DataToRedux, input: JSON) => void } = {
+    [MLGYM_EVENT.JOB_STATUS]: (dataToRedux: DataToRedux, data: JSON): void => { dataToRedux.tableData = handleJobStatusData(data) },
+    [MLGYM_EVENT.JOB_SCHEDULED]: (dataToRedux: DataToRedux, data: JSON): void => console.log("Job scheduled found"),
+    [MLGYM_EVENT.EVALUATION_RESULT]: (dataToRedux: DataToRedux, data: JSON): void => {
+        const { experiment_id, charts_updates, table_scores } = handleEvaluationResultData(data);
+        dataToRedux.chartsUpdates = charts_updates;
+        dataToRedux.tableData = { experiment_id, ...table_scores };
     },
-    [MLGYM_EVENT.EXPERIMENT_CONFIG]: () => console.log("Exp config found"),
-    [MLGYM_EVENT.EXPERIMENT_STATUS]: (dataToRedux: DataToRedux, data: any) => { dataToRedux.tableData = handleExperimentStatusData(data) },
+    [MLGYM_EVENT.EXPERIMENT_CONFIG]: (dataToRedux: DataToRedux, data: JSON): void => console.log("Exp config found"),
+    [MLGYM_EVENT.EXPERIMENT_STATUS]: (dataToRedux: DataToRedux, data: JSON): void => { dataToRedux.tableData = handleExperimentStatusData(data) },
 };
 
 // ========================= Callbacks to update the MainThread ============================//
 
-export const updateMainThreadCallback = (parsedSocketData: DataFromSocket) => {
-    const eventType = parsedSocketData.event_type.toLowerCase();
+export const updateMainThreadCallback = (socketData: JSON) => {
+    // parse data from socket then extract event_type and payload
+    const { data: { event_type, payload } } = socketData as DataFromSocket;
+    // place holder for redux data
     const dataToRedux: DataToRedux = {};
-    
-    MapEventToProcess[eventType as keyof typeof MapEventToProcess](dataToRedux, parsedSocketData.payload);
-
-    // this is sent as a reply ONLY AFTER the first time
+    // process the parse socket msg
+    MapEventToProcess[event_type as keyof typeof MapEventToProcess](dataToRedux, payload);
+    // sending Data to the Main thread to store it in Redux
     postMessage(dataToRedux);
 };
 
@@ -55,11 +46,4 @@ export const msgCounterIncMainThreadCallback = () => {
 
 export const throughputMainThreadCallback = (throughput: number) => {
     postMessage({ status: { throughput } } as DataToRedux);
-};
-// ========================= helper methods ============================//
-// if the header doesn't exist push it before returning if it was already there or not.
-const check_if_header_exist = (header: string) => {
-    const condition = metric_loss_header.includes(header);
-    if(!condition) metric_loss_header.push(header);
-    return condition;
 };
