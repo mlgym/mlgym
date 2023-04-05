@@ -138,15 +138,9 @@ payload:
 }
 ```
 
-Delete Checkpoint Resources:
+Delete Checkpoint Resources: _model, optimiyer, stateful_component and lr_scheduler_ for a checkpoint ID in the experiment  :
 
-_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/model_
-
-_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/optimizer_
-
-_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/stateful_component_
-
-_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/lr_scheduler_
+_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>_
 
 ## Websocket API
 
