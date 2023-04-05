@@ -7,14 +7,10 @@ import { useCallback, useMemo } from 'react';
 // styles
 import styles from './Table.module.css';
 
-interface columnDefinition {
-  field: string;
-  sortable?: boolean;
-  filter?: boolean
-}
+interface columnDefinition { field: string; }
 
-
-function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
+// TODO: Maybe merge Table and Dashboard?
+export default function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
 
   // change the array of strings to array of colum definitions
   const colDefs: columnDefinition[] = colNames.map(
@@ -62,5 +58,3 @@ function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
     </div>
   )
 }
-
-export default Table;

@@ -1,23 +1,23 @@
 # MLboard
 
-MLboard is a solution for tracking model training progress, logging evaluations and respective models. The package comes with a frontend to visualize these different aspects.   
+MLboard is a solution for tracking model training progress, logging evaluations and respective models. The package comes with a frontend to visualize these different aspects.
 
 ## General structure
 
-The central backend server based on a REST API and a websocket API acts as a hub between MLgym message publishers (log training progress, evaluations and job statuses) and message subscribers (e.g., frontend). 
+The central backend server based on a REST API and a websocket API acts as a hub between MLgym message publishers (log training progress, evaluations and job statuses) and message subscribers (e.g., frontend).
 
-The backend server uses event sourcing meaning, the history of all messages describing the system at any point in time are being recorded and can be played back to the subscribers. This way, a newly connected client can consume all the training progress messages, even if the training has already started. 
+The backend server uses event sourcing meaning, the history of all messages describing the system at any point in time are being recorded and can be played back to the subscribers. This way, a newly connected client can consume all the training progress messages, even if the training has already started.
 
 ## Getting started
 
-To run the websocket server run 
+To run the websocket server run
 
 ```sh
 cd src/ml_gym/backend/streaming
 python websocket_server.py
 ```
 
-To run the frontend 
+To run the frontend
 
 ```sh
 cd src/ml_gym/frontend/dashboard
@@ -35,30 +35,44 @@ The messages received by the websocket server can be analyzed in `event_storage/
 
 ## Template Endpoints
 
-
 ## RESTful API
-
 
 **Raw Configuration Files**
 
 e.g., grid search or evaluation YAML config
 
-*GET /grid_searches/<grid_search_id>/<config_file_name>*
+_GET /grid_searches/<grid_search_id>/<config_file_name>_
 
+Return:
 
-*PUT /grid_searches/<grid_search_id>/<config_file_name>*
+```
+<YAML file as string>
+```
+
+_GET /grid_searches/<grid_search_id>/<experiment_id>/<config_file_name>_
+
+Return:
+
+```
+<JSON file as string>
+```
+
+_PUT /grid_searches/<grid_search_id>/<config_file_name>_
+
+_PUT /grid_searches/<grid_search_id>/<experiment_id>/<config_file_name>_
 
 payload:
+
 ```json
-{   
-    file_format: <e.g., YAML>
-    content: <YAML file as string>
+{
+    "file_format": <e.g. YAML>,
+    "content": <YAML file as string>
 }
 ```
 
 **Experiments**
 
-*GET /grid_searches/<grid_search_id>/experiments*
+_GET /grid_searches/<grid_search_id>/experiments_
 
 TODO need to check "experiments" in URL  
 ```json
@@ -74,10 +88,11 @@ TODO need to check "experiments" in URL
 ]
 ```
 
-**Checkpoints**
+**Checkpointing**
 
-*GET /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>*
+Get all resources for single checkpoint:
 
+_GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>_
 
 ```json
 {
@@ -88,22 +103,54 @@ TODO need to check "experiments" in URL
 
 ```
 
-*GET /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>/model*
+Get Checkpoint Resource:
 
-*GET /checkpoints/<grid_search_id>/<experiment_id><checkpoint_id>/optimizer*
+_GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/model_
 
-*GET /checkpoints/<grid_search_id>/<experiment_id><checkpoint_id>/stateful_component*
+_GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/optimizer_
 
-*PUT /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>/<model, optimizer, lr_scheduler, stateful_component>*
-```json
-{
-        "<model, optimizer, lr_scheduler, stateful_component>": <binary stream>,
-        "chunk_id": <chunk_id>,
-        "num_chunks": <num_chunks>
+_GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/stateful_component_
+
+_GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/lr_scheduler_
+
+Return:
+
+```
+<binary stream>
 ```
 
-*DELETE /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>*
+Insert Checkpoint Resources:
 
+_POST /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/model_
+
+_POST /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/optimizer_
+
+_POST /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/stateful_component_
+
+_POST /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/lr_scheduler_
+
+payload:
+
+```json
+{
+    "data": <binary stream>,
+    "msg": "insert checkpoint",
+    "type": "multipart/form-data"
+}
+```
+
+Delete Checkpoint Resources:
+
+_DELETE /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>_
+
+_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/model_
+
+
+_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/optimizer_
+
+_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/stateful_component_
+
+_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/lr_scheduler_
 
 ## Websocket API
 
@@ -122,7 +169,7 @@ Dispatched when a job is scheduled within the gym
 {
     "event_type": "job_scheduled",
     "creation_ts": "1",
-    "payload": { 
+    "payload": {
         "job_id": 1,
         "config": <YAML config as JSON for a single model, i.e., one single instance of the grid search>
     }
@@ -137,11 +184,11 @@ tracks the job status from within Pool.
 {
     "event_type": "job_status",
     "creation_ts": "1",
-    "payload": { 
+    "payload": {
         "job_id":1,
         "job_type": <CALC, TERMINATE>
         "status": <INIT, RUNNING, DONE>,
-        "grid_search_id": <timestamp>, 
+        "grid_search_id": <timestamp>,
         "experiment_id": <int>,
         "starting_time": 123,
         "finishing_time": 123,
@@ -160,8 +207,8 @@ tracks the model training status from within GymJob.
 {
     "event_type": "experiment_status",
     "creation_ts": "1",
-    "payload": { 
-        "grid_search_id": <timestamp>, 
+    "payload": {
+        "grid_search_id": <timestamp>,
         "experiment_id": <int>,
         "status": <TRAINING, EVALUATING>,
         "num_epochs": 200,
@@ -182,8 +229,8 @@ specifies the configuration of a single experiment
 {
     "event_type": "experiment_config",
     "creation_ts": "1",
-    "payload": { 
-        "grid_search_id": <timestamp>, 
+    "payload": {
+        "grid_search_id": <timestamp>,
         "experiment_id": <int>,
         "job_id": <int>,
         "config": {<YAML config casted to JSON>},
@@ -201,19 +248,19 @@ metric scores of a model at a specific epoch.
     "creation_ts": "1",
     "payload": {
         "epoch": 100,
-        "grid_search_id": <timestamp>, 
+        "grid_search_id": <timestamp>,
         "experiment_id": <int>,
         "metric_scores": [
             {
-                "metric": "f1_score", 
+                "metric": "f1_score",
                 "split": "train",
                 "score": 0.9
-            }, 
+            },
             {...}
         ],
         "loss_scores": [
             {
-                "loss": "bce_loss", 
+                "loss": "bce_loss",
                 "split": "train",
                 "score": 0.1
             },
@@ -223,57 +270,11 @@ metric scores of a model at a specific epoch.
 }
 ```
 
-**Checkpointing (legacy)**:
+# Implementation idea:
 
-After each epoch and if condition is fulfilled (based on strategy), the model is binarized and sent to the server as a checkpoint.
-
-Create checkpoint:
-
-```json
-{
-    "event_type": "checkpoint",
-    "creation_ts": "1",
-    "payload": {
-        "grid_search_id": <timestamp>, 
-        "experiment_id": <int>,
-        "checkpoint_id": <int>, # epoch
-        "entity_id": <str> # <model, optimizer, stateful_components>
-        "chunk_data": <chunk of binary stream>,
-        "chunk_id": <int> # id identifying the chunk,
-        "final_num_chunks": <int> # 
-    }
-}
-```
-
-The files received by the websocket server are stored in 
-`event_storage/mlgym_event_subscribers/<grid_search_id/event_storage_id><experiment_id>/checkpointing/<checkpoint_id>` as `model.pt`, `optimizer.pt` and `stateful_components.pt`. These files are available via the RESTful API to the clients and are not streamed.
-
-Delete checkpoint:
-
-```json
-{
-    "event_type": "checkpoint",
-    "creation_ts": "1",
-    "payload": {
-        "grid_search_id": <timestamp>, 
-        "experiment_id": <int>,
-        "checkpoint_id": <int>, # epoch
-        "entity_id": <str> # <model, optimizer, stateful_components>
-        "chunk_data": None,
-        "chunk_id": -1,
-        "final_num_chunks": 0 
-    }
-}
-```
-
-
-# Implementation idea: 
-
-Add subscribers to trainer, evaluator and gymjob. We need to inject them via 
+Add subscribers to trainer, evaluator and gymjob. We need to inject them via
 For trainer and evaluator we add the subscribers within the blueprints. E.g., trainer.add_subscriber(subscriber)
 
 We add the subscriber constructable to the blueprint via the GridSearchValidator.create_blueprints().
 
 Subscriber constructable that we parameterize within the Gym and then pass down to trainer, evaluator via gymjob. The idea is that the constructable has a unique interface for construction and the constructed object always has the same interface for logging. Due to that we can implement various types of loggers (local, websocket etc.)
-
-
