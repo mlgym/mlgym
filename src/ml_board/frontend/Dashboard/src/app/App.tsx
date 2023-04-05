@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
-import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
-import { saveEvalResultData } from '../redux/experiments/experimentsSlice';
+import { upsertCharts } from '../redux/charts/chartsSlice';
 import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
-import { upsertOneRow } from '../redux/table/tableSlice';
+import { upsertManyRows } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
 import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
 
-// styles
+// components & styles
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import Alert from '@mui/material/Alert';
 import Drawer from '@mui/material/Drawer';
@@ -17,6 +16,7 @@ import Snackbar from '@mui/material/Snackbar';
 import TextField from '@mui/material/TextField';
 import ConfigPopup from '../components/configPopup/ConfigPopup';
 import Settings from '../components/settings/Settings';
+import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import styles from './App.module.css';
 
 export interface settingConfigsInterface {
@@ -57,8 +57,6 @@ export default function App() {
     const [filterText, setFilterText] = useState("")
     const [filterDrawer, setFilterDrawer] = useState(false)
     const [isConfigValidated, setConfigValidation] = useState(false)
-    // const [isSnackbarOpen, setSnackbarOpen] = useState(false)
-    // const [snackBarText, setSnackBarText] = useState("")
     const [connectionSnackBar, setConnectionSnackBar] = useState({
         isOpen: false,
         connection: false
@@ -114,35 +112,9 @@ export default function App() {
 
 
     // TODO: maybe useCallback
+    // NOTE: data is alway created with 2 empty buffers and then populated before being passed to this method, so no need to check for null or undefined!
     const workerOnMessageHandler = (data: DataToRedux) => {
-        if (data && data.evaluationResultsData) {
-            // update the Charts Slice
-            dispatch(saveEvalResultData(data.evaluationResultsData));
-
-            // TODO: move to the background
-            // // save the latest metric in the Experiment Slice
-            // const { epoch, experiment_id, metric_scores, loss_scores } = data.latest_split_metric as EvaluationResultPayload;
-            // const changes: { [latest_split_metric_key: string]: number } = {};
-            // for (const metric of metric_scores) {
-            //     changes[metric.split + "_" + metric.metric] = metric.score;
-            // }
-            // for (const loss of loss_scores) {
-            //     changes[loss.split + "_" + loss.loss] = loss.score;
-            // }
-
-            // //NOTE, I checked the epoch against the experiment's and that didn't work because of UseAppSelector! (can't be used here!)
-            // dispatch(updateExperiment({ id: experiment_id, changes: changes }));
-        }
-        else if (data && data.tableData) {
-            dispatch(upsertOneRow(data.tableData))
-        }
-        // else if (data && data.jobStatusData) {
-        //     dispatch(upsertJob(data.jobStatusData))
-        // }
-        // else if (data && data.experimentStatusData) {
-        //     dispatch(upsertExperiment(data.experimentStatusData))
-        // }
-        else if (data && data.status) {
+        if (data.status) { // for better readablilty and performace
             if (data.status === "msg_count_increment") {
                 dispatch(incrementReceivedMsgCount());
             } else if (data.status["ping"] !== undefined) {
@@ -155,9 +127,14 @@ export default function App() {
                     isOpen: true,
                     connection: data.status["isSocketConnected"]
                 });
-                // setSnackBarText(`Socket Connection ${data.status["isSocketConnected"] ? "Successful" : "Failed"}`);
-                // setSnackbarOpen(true);
             }
+        } else if (data.chartsUpdates.length > 0) {
+            // update the Charts Slice
+            // dispatch(upsertSingleExperimentCharts(data.chartsUpdates!));
+            dispatch(upsertCharts(data.chartsUpdates!));
+            dispatch(upsertManyRows(data.tableData!));
+        } else if (data.tableData.length > 0) {
+            dispatch(upsertManyRows(data.tableData!));
         }
     }
 
@@ -255,19 +232,14 @@ export default function App() {
             {/* Socket connection success / fail message temperory popup which will disappeaer in 4secs or when closed manually by user */}
             <Snackbar
                 anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-                // open={isSnackbarOpen}
                 open={connectionSnackBar.isOpen}
-                // onClose={() => setSnackbarOpen(false)}
                 onClose={() => setConnectionSnackBar({ ...connectionSnackBar, isOpen: false })}
                 autoHideDuration={4000}
-                >
+            >
                 <Alert
-                    // onClose={() => setSnackbarOpen(false)}
                     onClose={() => setConnectionSnackBar({ ...connectionSnackBar, isOpen: false })}
-                    // severity={snackBarText === SOCKET_STATUS.SOCKET_CONN_SUCCESS ? "success" : "error"}
                     severity={connectionSnackBar.connection ? "success" : "error"}
                 >
-                    {/* {snackBarText} */}
                     {`Socket Connection ${connectionSnackBar.connection ? "Successful" : "Failed"}`}
                 </Alert>
             </Snackbar>
