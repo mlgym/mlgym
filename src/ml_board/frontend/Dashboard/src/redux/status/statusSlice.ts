@@ -1,8 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { upsertCharts } from '../charts/chartsSlice';
 import { RootState } from '../store';
 
-// TODO: ASK MAX, renaming to GlobalConfigSlice
 export interface StatusState {
   currentFilter: string;
   idTab: string;
@@ -17,14 +15,14 @@ export interface StatusState {
 
 const initialState: StatusState = {
   currentFilter: '.*',
-  idTab: "Dashboard", //TODO: redundant??
+  idTab: "Dashboard",
   wsConnected: false,
   ping: -1,
   received_msg_count: 0,
   throughput: 0,
   grid_search_id: "",
   color_map: {},
-  metric_loss: [] //TODO: redundant??
+  metric_loss: []
 };
 
 export const statusSlice = createSlice({
@@ -57,14 +55,7 @@ export const statusSlice = createSlice({
     upsertMetricOrLoss: (state, { payload }: PayloadAction<string[]>) => {
       state.metric_loss.push(...payload);
     }
-  }, extraReducers(builder) {
-    builder.addCase(upsertCharts, (state, { payload }) => {
-      if (!state.color_map.hasOwnProperty(payload[0].exp_id)) {
-        // one can only hope that it doesn't produce a blue blue blue blue blue... pattern :')
-        state.color_map[payload[0].exp_id] = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-      }
-    })
-  },
+  }
 });
 
 export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput } = statusSlice.actions;

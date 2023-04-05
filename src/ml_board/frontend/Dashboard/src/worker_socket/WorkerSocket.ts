@@ -1,5 +1,6 @@
 import socketIO, { Socket } from 'socket.io-client';
 import { settingConfigsInterface } from '../app/App';
+import { DataFromSocket } from './DataTypes';
 import { connectionMainThreadCallback, msgCounterIncMainThreadCallback, pingMainThreadCallback, throughputMainThreadCallback, updateMainThreadCallback } from './MainThreadCallbacks';
 
 
@@ -27,7 +28,7 @@ const initSocket = (settingConfigs: settingConfigsInterface) => {
 
 // ========================= connection events ============================//
 const onConnect = (socket: Socket, runId: string) => {
-    //NOTE: for testing with the dummy_server.py set runId = "mlgym_event_subscribers";
+    // TODO:ASK how exactly should the join happen? and this was in the old code const runId = "mlgym_event_subscribers";
     // Max added bug report here: https://github.com/mlgym/mlgym/issues/134
     socket.emit('join', { rooms: [runId] });
     // start periodic server pining
@@ -42,9 +43,11 @@ const onError = (err: Error) => stop(err);
 
 
 // ========================= data driven events ============================//
-const process_mlgym_event = (msg: JSON) => {
+// const process_mlgym_event = (msg:JSON) => {
+const process_mlgym_event = (msg: string) => {
+    const parsedMsg: DataFromSocket = JSON.parse(msg);
     // update the redux state on the main thread
-    updateMainThreadCallback(msg);
+    updateMainThreadCallback (parsedMsg);
     // message count for calculating the throughput
     msgCountPerPeriod++;
     // flag main thread to increment the number of incoming messages
@@ -91,16 +94,14 @@ const stop = (why: Error | Socket.DisconnectReason) => {
 
 
 // =~=~=~=~=~=~=~=~=~=~=~=~=~= ~WebWorker~ =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=//
-// in the beginning and at the end
+// TODO: Remove this after handling the current situation with evaluation_result
+// TODO: OR MAYBE! it is useful for sending the URL to the socket ????
 onmessage = ({ data }: MessageEvent) => {
-    // for closing the socket!
     if (data === "CLOSE_SOCKET")
         socket.close();
-    // sending the URL to the socket and other initialization parameters!
-    else if (data.gridSearchId !== undefined && data.socketConnectionUrl !== undefined)
+    else if (data.gridSearchId !== undefined && data.socketConnectionUrl !== undefined) {
         // data is settingConfigs
         initSocket(data);
-    // Debugging purposes 
-    else
-        console.log(data);
+    }
+    console.log(data);
 };
