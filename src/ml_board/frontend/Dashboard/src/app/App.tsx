@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
-import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
+import { upsertCharts } from '../redux/charts/chartsSlice';
 import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
-import { Row, upsertOneRow } from '../redux/table/tableSlice';
+import { upsertManyRows } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
 import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
 
-// styles
+// components & styles
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import Alert from '@mui/material/Alert';
 import Drawer from '@mui/material/Drawer';
@@ -16,7 +16,7 @@ import Snackbar from '@mui/material/Snackbar';
 import TextField from '@mui/material/TextField';
 import ConfigPopup from '../components/configPopup/ConfigPopup';
 import Settings from '../components/settings/Settings';
-import { upsertCharts } from '../redux/charts/chartsSlice';
+import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import styles from './App.module.css';
 
 export interface settingConfigsInterface {
@@ -112,17 +112,9 @@ export default function App() {
 
 
     // TODO: maybe useCallback
+    // NOTE: data is alway created with 2 empty buffers and then populated before being passed to this method, so no need to check for null or undefined!
     const workerOnMessageHandler = (data: DataToRedux) => {
-        // NOTE: data is alway created as an empty object and then populated before being passed to this method, so no need to check for null or undefined!
-        if (data.chartsUpdates) {
-            // update the Charts Slice
-            dispatch(upsertCharts(data.chartsUpdates));
-            dispatch(upsertOneRow(data.tableData as Row));
-        }
-        else if (data.tableData) {
-            dispatch(upsertOneRow(data.tableData));
-        }
-        else if (data.status) {
+        if (data.status) { // for better readablilty and performace
             if (data.status === "msg_count_increment") {
                 dispatch(incrementReceivedMsgCount());
             } else if (data.status["ping"] !== undefined) {
@@ -136,6 +128,13 @@ export default function App() {
                     connection: data.status["isSocketConnected"]
                 });
             }
+        } else if (data.chartsUpdates.length > 0) {
+            // update the Charts Slice
+            // dispatch(upsertSingleExperimentCharts(data.chartsUpdates!));
+            dispatch(upsertCharts(data.chartsUpdates!));
+            dispatch(upsertManyRows(data.tableData!));
+        } else if (data.tableData.length > 0) {
+            dispatch(upsertManyRows(data.tableData!));
         }
     }
 
