@@ -15,7 +15,7 @@ export interface DataFromSocket extends JSON {
 }
 
 export interface DataToRedux {
-    tableData?: Row,
-    chartsUpdates?: ChartUpdate[],
+    tableData: Row[],
+    chartsUpdates: ChartUpdate[],
     status?: any,
 }
