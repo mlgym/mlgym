@@ -9,16 +9,18 @@ interface Experiment {
 
 export interface Chart {
     chart_id: string,
-    x_axis: Array<number>,
+    x_axis: Array<number>, // Array<string>, // in Graph.tsx parsing: false, 
     experiments: EntityState<Experiment>,
 }
 
 const chartsAdapter = createEntityAdapter<Chart>({
     selectId: ({ chart_id }: Chart) => chart_id,
+    sortComparer: ({ chart_id: id1 }: Chart, { chart_id: id2 }: Chart) => id1.localeCompare(id2)
 });
 
 const experimentsAdapter = createEntityAdapter<Experiment>({
     selectId: ({ exp_id }: Experiment) => exp_id,
+    sortComparer: ({ exp_id: id1 }: Experiment, { exp_id: id2 }: Experiment) => id1 - id2
 });
 
 const initialState: EntityState<Chart> = chartsAdapter.getInitialState({});
@@ -28,6 +30,7 @@ export const chartsSlice = createSlice({
     initialState,
     reducers: {
         upsertCharts(state, { payload }: PayloadAction<ChartUpdate[]>) {
+            // TODO: avoid this big loop !!!
             for (const chartUpdate of payload) {
                 const { chart_id, exp_id, epoch, score } = chartUpdate;
                 if (state.ids.includes(chart_id)) {
@@ -39,35 +42,22 @@ export const chartsSlice = createSlice({
                     if (chart.experiments.ids.includes(exp_id)) {
                         (chart.experiments.entities[exp_id] as Experiment).data.push(score);
                     } else {
-                        const experiment: Experiment = {
+                        chart.experiments = experimentsAdapter.addOne(chart.experiments, {
                             exp_id: exp_id,
                             data: [score]
-                        };
-                        experimentsAdapter.addOne(chart.experiments, experiment);
+                        } as Experiment);
                     }
                 } else {
                     const chart: Chart = {
                         chart_id: chart_id,
                         x_axis: [epoch],
-                        experiments: experimentsAdapter.getInitialState({
-                            // adding the experiment manually because "experimentsAdapter.addOne" didn't work!
-                            ids: [exp_id],
-                            entities: {
-                                [exp_id]: {
-                                    exp_id: exp_id,
-                                    data: [score]
-                                }
-                            },
-                        })
+                        experiments: experimentsAdapter.getInitialState()
                     };
                     chartsAdapter.addOne(state, chart);
-                    // NOTE: "experimentsAdapter.addOne" didn't work and I couldn't figure out why?
-                    // const experiment: Experiment = {
-                    //     exp_id: exp_id,
-                    //     data: [score]
-                    // };
-                    // experimentsAdapter.addOne(state.entities[chart_id]!.experiments, experiment);
-                    // console.log(state.entities[chart_id]!.experiments, experiment); //Testing shows it doesn't get added!
+                    chart.experiments = experimentsAdapter.addOne(chart.experiments, {
+                        exp_id: exp_id,
+                        data: [score]
+                    } as Experiment);
                 }
             }
         },

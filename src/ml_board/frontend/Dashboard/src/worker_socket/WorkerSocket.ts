@@ -4,14 +4,19 @@ import { connectionMainThreadCallback, msgCounterIncMainThreadCallback, pingMain
 
 
 // ========================= variables ============================//
-
+let socket: Socket; // 'let' to initialize on funciton call
+// Ping to measure Round Trip Time (RTT)
 let pinging_interval: NodeJS.Timer; // for idealy pinging the server
-const period: number = 10; // specifying how long the pinging_interval in seconds
+const period: number = 1; // specifying how long the pinging_interval in seconds
 let lastPing: number = -1;
 let lastPong: number = -1; // the actual ping is calculated = lastPong - lastPing
+// A counter to measure the throughput
 let msgCountPerPeriod: number = 0;
-let socket: Socket; // 'let' to initialize on funciton call
-
+// Buffering Window
+const BUFFER_WINDOW_LIMIT_IN_SECONDS = 1;
+const BUFFER_WINDOW_LIMIT_IN_MESSAGES = 1000;
+const bufferQueue: Array<JSON> = []; //NOTE: no fear of a race conditions as JS runs on a single thread!
+let buffering_interval: NodeJS.Timer;
 
 // =~=~=~=~=~=~=~=~=~=~=~=~=~= ~WebSocket~ =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=//
 const initSocket = (settingConfigs: settingConfigsInterface) => {
@@ -34,6 +39,8 @@ const onConnect = (socket: Socket, runId: string) => {
     pinging_interval = setInterval(send_ping_to_websocket_server, period * 1000, socket);
     // flag main thread that connection is on
     connectionMainThreadCallback(true);
+    // start periodic buffer flushing
+    buffering_interval = setInterval(() => { bufferQueue.length > 0 && flushBufferingWindow() }, BUFFER_WINDOW_LIMIT_IN_SECONDS * 1000);
 };
 
 const onDisconnect = (reason: Socket.DisconnectReason) => stop(reason);
@@ -43,8 +50,13 @@ const onError = (err: Error) => stop(err);
 
 // ========================= data driven events ============================//
 const process_mlgym_event = (msg: JSON) => {
-    // update the redux state on the main thread
-    updateMainThreadCallback(msg);
+    // TODO: maybe here instead of just pushing, insert based on the "event_id" or "creation_ts"
+    // push in the buffer
+    bufferQueue.push(msg);
+    // flush if bufferQueue is full
+    if (bufferQueue.length >= BUFFER_WINDOW_LIMIT_IN_MESSAGES) {
+        flushBufferingWindow();
+    }
     // message count for calculating the throughput
     msgCountPerPeriod++;
     // flag main thread to increment the number of incoming messages
@@ -72,7 +84,7 @@ const send_ping_to_websocket_server = (socket: Socket) => {
         socket.emit('ping');
     }
     // calculate throughput and send it to the main thread
-    throughputMainThreadCallback(msgCountPerPeriod / period)
+    throughputMainThreadCallback(msgCountPerPeriod / period);
     // reset message count to calculate throughput
     msgCountPerPeriod = 0;
 };
@@ -81,6 +93,10 @@ const stop = (why: Error | Socket.DisconnectReason) => {
     console.log(`${why instanceof Error ? "connection" /* error */ : "disconnected"} : ${why}`);
     // halt periodic server pining
     clearInterval(pinging_interval);
+    // halt periodic buffering
+    clearInterval(buffering_interval);
+    // flush just in case something is still in the buffer
+    bufferQueue.length > 0 && flushBufferingWindow();
     // flag main thread that connection is off
     connectionMainThreadCallback(false);
     // force throughput back to 0, as it won't update when the interval is cleared
@@ -89,6 +105,13 @@ const stop = (why: Error | Socket.DisconnectReason) => {
     pingMainThreadCallback(0);
 };
 
+// flush regardless whether the bufferQueue is full or not
+const flushBufferingWindow = () => {
+    // update the redux state on the main thread
+    updateMainThreadCallback(bufferQueue);
+    // clear the buffer
+    bufferQueue.length = 0;
+};
 
 // =~=~=~=~=~=~=~=~=~=~=~=~=~= ~WebWorker~ =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=//
 // in the beginning and at the end
