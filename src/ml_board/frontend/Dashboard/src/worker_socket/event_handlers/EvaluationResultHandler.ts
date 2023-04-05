@@ -24,7 +24,7 @@
 
 // ============================ Input shape ================================
 interface EvaluationResultPayload extends JSON {
-    epoch: number,
+    epoch: number, // string, // in Graph.tsx parsing: false, 
     grid_search_id: string,
     experiment_id: number,
     metric_scores: Array<Score>,
@@ -42,7 +42,7 @@ interface Score {
 export interface ChartUpdate {
     chart_id: string,
     exp_id: number,
-    epoch: number,
+    epoch: number, //string, // in Graph.tsx parsing: false, 
     score: number
 }
 

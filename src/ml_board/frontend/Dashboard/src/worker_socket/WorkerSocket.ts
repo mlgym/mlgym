@@ -7,14 +7,14 @@ import { connectionMainThreadCallback, msgCounterIncMainThreadCallback, pingMain
 let socket: Socket; // 'let' to initialize on funciton call
 // Ping to measure Round Trip Time (RTT)
 let pinging_interval: NodeJS.Timer; // for idealy pinging the server
-const period: number = 10; // specifying how long the pinging_interval in seconds
+const period: number = 1; // specifying how long the pinging_interval in seconds
 let lastPing: number = -1;
 let lastPong: number = -1; // the actual ping is calculated = lastPong - lastPing
 // A counter to measure the throughput
 let msgCountPerPeriod: number = 0;
 // Buffering Window
-const BUFFER_WINDOW_LIMIT_IN_SECONDS = 5;
-const BUFFER_WINDOW_LIMIT_IN_MESSAGES = 100;
+const BUFFER_WINDOW_LIMIT_IN_SECONDS = 1;
+const BUFFER_WINDOW_LIMIT_IN_MESSAGES = 1000;
 const bufferQueue: Array<JSON> = []; //NOTE: no fear of a race conditions as JS runs on a single thread!
 let buffering_interval: NodeJS.Timer;
 

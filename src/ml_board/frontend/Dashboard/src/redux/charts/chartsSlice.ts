@@ -9,7 +9,7 @@ interface Experiment {
 
 export interface Chart {
     chart_id: string,
-    x_axis: Array<number>,
+    x_axis: Array<number>, // Array<string>, // in Graph.tsx parsing: false, 
     experiments: EntityState<Experiment>,
 }
 
