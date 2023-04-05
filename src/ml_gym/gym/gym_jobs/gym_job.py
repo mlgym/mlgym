@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Callable, List
 from ml_gym.batching.batch import EvaluationBatchResult
-from ml_gym.checkpointing.checkpointing import CheckpointingIF
+from ml_gym.checkpointing.checkpointing import CheckpointingIF, CheckpointingInstruction
 from ml_gym.early_stopping.early_stopping_strategies import EarlyStoppingIF
 from ml_gym.error_handling.exception import EarlyStoppingCriterionFulfilledError
 from ml_gym.gym.evaluators.evaluator import Evaluator
@@ -58,6 +58,30 @@ class AbstractGymJob(StatefulComponent):
     @abstractmethod
     def execute(self, device: torch.device):
         raise NotImplementedError
+
+    def run_checkpointing(self, checkpoint_instruction: CheckpointingInstruction):
+        """
+        Create and delete checkpoints for each epoch in experiments.
+
+        :params:
+            checkpoint_instruction: CheckpointingInstruction object
+        """
+
+        if checkpoint_instruction.save_current:
+            payload_dict = {
+                "epoch": self.current_epoch,
+                "model": self.model.state_dict(),
+                "optimizer": self.optimizer.state_dict(),
+                "lr_scheduler": self.lr_scheduler.state_dict(),
+                "stateful_components": self.get_state(),
+            }
+
+            self.gs_api_client.add_checkpoint_resource(
+                grid_search_id=self.grid_search_id, experiment_id=self.experiment_id, payload=payload_dict
+            )
+
+        for epoch in checkpoint_instruction.checkpoints_to_delete:
+            self.gs_api_client.delete_checkpoint_resource(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id, epoch=epoch)
 
     @staticmethod
     def batch_processed_callback(status: str, experiment_status_logger: ExperimentStatusLogger, num_batches: int,

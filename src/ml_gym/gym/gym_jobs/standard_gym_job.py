@@ -59,24 +59,6 @@ class StandardGymJob(AbstractGymJob):
 
         return evaluation_results
 
-    def run_checkpointing(self, checkpoint_instruction: CheckpointingInstruction):
-        # TODO use self.gs_api_client to make the calls. Note that some of the endpoints are also still missing for that...
-
-        pass
-        # if checkpoint_instruction.save_current:
-        #     self._experiment_status_logger.log_checkpoint(epoch=self.current_epoch,
-        #                                                   model_state_dict=self.model.state_dict(),
-        #                                                   optimizer_state_dict=self.optimizer.state_dict(),
-        #                                                   lr_scheduler_state_dict=self.lr_scheduler.state_dict(),
-        #                                                   stateful_components_state_dict=self.get_state())
-        # for epoch in checkpoint_instruction.checkpoints_to_delete:
-        #     print(f"epoch to delete: {epoch}")
-        #     self._experiment_status_logger.log_checkpoint(epoch=epoch,
-        #                                                   model_state_dict=None,
-        #                                                   optimizer_state_dict=None,
-        #                                                   lr_scheduler_state_dict=None,
-        #                                                   stateful_components_state_dict=None)
-
     def _execute_train(self, device: torch.device):
         self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
         self.lr_scheduler.register_optimizer(optimizer=self.optimizer)
