@@ -203,7 +203,8 @@ def run(blueprint_class: BluePrint, run_configuration_file_path):
     run_config, env_config, logging_config = parse_run_configuration(run_configuration_file_path=run_configuration_file_path)
 
     logger_collection_constructable, gs_restful_api_client_constructable = get_logging_constructables(logging_config)
-    gym = get_gym(env_config, logger_collection_constructable, gs_restful_api_client_constructable, run_config.num_epochs, run_config.num_batches_per_epoch)
+    gym = get_gym(env_config, logger_collection_constructable, gs_restful_api_client_constructable,
+                  run_config.num_epochs, run_config.num_batches_per_epoch)
 
     if isinstance(run_config, TrainRunConfiguration):
         gridsearch_id = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")

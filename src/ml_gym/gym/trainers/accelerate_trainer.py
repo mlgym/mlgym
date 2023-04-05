@@ -23,8 +23,26 @@ class AccelerateTrainComponent(StatefulComponent):
     def _train_batch(self, accelerator: Accelerator, batch: DatasetBatch, model: NNModel, optimizer: OptimizerAdapter) -> NNModel:
         model.zero_grad()
         loss = self.calc_loss(model, batch).sum()
+
+        # if accelerator.is_main_process:
+        #     w = model.module.fc_layers[0].weight
+        #     print(f"\n\nBefore Update main thread: {w}")
+        #     accelerator.backward(loss)
+        #     optimizer.step()
+        #     w = model.module.fc_layers[0].weight
+        #     print(f"\n\nAfter Update main thread: {w}")
+        # else:
+        #     w = model.module.fc_layers[0].weight
+        #     print(f"\n\nBefore 2nd thread: {w}")
+        #     accelerator.backward(loss)
+        #     optimizer.step()
+        #     w = model.module.fc_layers[0].weight
+        #     print(f"\n\nAfter 2nd thread: {w}")
+        #     print("\n")
+
         accelerator.backward(loss)
         optimizer.step()
+
         return model
 
     def train(self, model: NNModel, optimizer: OptimizerAdapter, dataloader: DatasetLoader,
