@@ -39,6 +39,9 @@ class BufferedClient:
         BufferedClient._register_callback_funs(self._sio_client)
         self.emit("join", {"client_id": self._client_id, "rooms": [*self.rooms, self._client_id]})
 
+    def disconnect(self):
+        self._sio_client.disconnect()
+
     def leave(self):
         self.emit("leave", None)
 

@@ -15,7 +15,7 @@ from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 import tqdm
-from ml_gym.gym.jobs import AbstractGymJob
+from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 
 
@@ -48,7 +48,7 @@ class ExportedModel:
         return result_batch
 
     def predict_dataset_batch(self, batch: DatasetBatch, no_grad: bool = True) -> InferenceResultBatch:
-        batch.to_device(self._device)
+        batch.to(self._device)
         if no_grad:
             with torch.no_grad():
                 forward_result = self.model.forward(batch.samples)

@@ -6,7 +6,7 @@ from ml_gym.blueprints.constructables import TrainComponentConstructable, LossFu
     PredictionPostProcessingRegistryConstructable, Requirement,  DataLoadersConstructable, \
     MetricFunctionRegistryConstructable
 from ml_gym.gym.post_processing import ArgmaxPostProcessorImpl
-from ml_gym.gym.trainer import TrainComponent
+from ml_gym.gym.trainers.standard_trainer import TrainComponent
 from ml_gym.loss_functions.loss_functions import CrossEntropyLoss
 from pytests.blueprints.constructables.test_data_loader_constructable import CollatorFixture
 
