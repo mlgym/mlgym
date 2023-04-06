@@ -24,7 +24,7 @@
 
 // ============================ Input shape ================================
 interface EvaluationResultPayload extends JSON {
-    epoch: number,
+    epoch: number, // string, // in Graph.tsx parsing: false, 
     grid_search_id: string,
     experiment_id: number,
     metric_scores: Array<Score>,
@@ -42,38 +42,38 @@ interface Score {
 export interface ChartUpdate {
     chart_id: string,
     exp_id: number,
-    epoch: number,
+    epoch: number, //string, // in Graph.tsx parsing: false, 
     score: number
 }
 
 // ============================ Main function ==============================
 export default function handleEvaluationResultData(data: JSON) {
-    // parse the incoming data to match EvaluationResultPayload
-    const parsedData = data as EvaluationResultPayload;
+    // parse the incoming data to EvaluationResultPayload and destruct it
+    const { experiment_id, epoch, metric_scores, loss_scores } = data as EvaluationResultPayload;
     // to append to experiment values in the charts
     const charts_updates: ChartUpdate[] = [];
     // for saving the latest score values to update the table
     const table_scores: { [latest_split_metric_key: string]: number } = {};
 
     // loop over the metrics and another over the losses
-    for (const scoreObj of parsedData.metric_scores) {
+    for (const scoreObj of metric_scores) {
         table_scores[scoreObj.split + "_" + scoreObj.metric] = scoreObj.score;
         charts_updates.push({
             chart_id: scoreObj.split + "_" + scoreObj.metric,
-            exp_id: parsedData.experiment_id,
-            epoch: parsedData.epoch,
+            exp_id: experiment_id,
+            epoch: epoch,
             score: scoreObj.score
         });
     }
-    for (const scoreObj of parsedData.loss_scores) {
+    for (const scoreObj of loss_scores) {
         table_scores[scoreObj.split + "_" + scoreObj.loss] = scoreObj.score;
         charts_updates.push({
             chart_id: scoreObj.split + "_" + scoreObj.loss,
-            exp_id: parsedData.experiment_id,
-            epoch: parsedData.epoch,
+            exp_id: experiment_id,
+            epoch: epoch,
             score: scoreObj.score
         });
     }
 
-    return { experiment_id: parsedData.experiment_id, charts_updates, table_scores };
+    return { experiment_id, charts_updates, table_scores };
 }
