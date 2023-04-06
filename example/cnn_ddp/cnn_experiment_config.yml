@@ -110,7 +110,9 @@ optimizer:
   config:
     optimizer_key: ADAM
     params:
-      lr: 0.00003
+      lr: 
+        sweep: absolute
+        values: [1, 0.1, 0.01, 0.001, 0.0001, 0.00001] # [1, 0.1, 0.01, 0.001, 0.0001]
 
 lr_scheduler:
   component_type_key: LR_SCHEDULER
