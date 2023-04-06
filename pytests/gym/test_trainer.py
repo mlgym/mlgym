@@ -6,7 +6,7 @@ from ml_gym.batching.batch import DatasetBatch
 from ml_gym.data_handling.dataset_loader import DatasetLoader
 from ml_gym.gym.inference_component import InferenceComponent
 from ml_gym.gym.post_processing import PredictPostProcessingIF
-from ml_gym.gym.trainer import TrainComponent, Trainer
+from ml_gym.gym.trainers.standard_trainer import TrainComponent, Trainer
 from ml_gym.loss_functions.loss_functions import Loss
 from ml_gym.models.nn.net import NNModel
 from ml_gym.optimizers.optimizer import OptimizerAdapter

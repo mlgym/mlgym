@@ -22,13 +22,13 @@ class TestInferenceResultBatch:
 
     # test device operations
     def test_to_device(self, inference_batch_result: InferenceResultBatch):
-        inference_batch_result.to_device(torch.device("cpu"))
+        inference_batch_result.to(torch.device("cpu"))
 
     def test_to_cpu(self, inference_batch_result: InferenceResultBatch):
         inference_batch_result.to_cpu()
 
     def test_get_device(self, inference_batch_result: InferenceResultBatch):
-        inference_batch_result.to_device(torch.device("cpu"))
+        inference_batch_result.to(torch.device("cpu"))
         assert inference_batch_result.get_device() == torch.device("cpu")
 
     def test_detach(self, inference_batch_result: InferenceResultBatch):
@@ -61,13 +61,13 @@ class TestDatasetBatch:
 
     # test device operations
     def test_to_device(self, dataset_batch: DatasetBatch):
-        dataset_batch.to_device(torch.device("cpu"))
+        dataset_batch.to(torch.device("cpu"))
 
     def test_to_cpu(self, dataset_batch: DatasetBatch):
         dataset_batch.to_cpu()
 
     def test_get_device(self, dataset_batch: DatasetBatch):
-        dataset_batch.to_device(torch.device("cpu"))
+        dataset_batch.to(torch.device("cpu"))
         assert dataset_batch.get_device() == torch.device("cpu")
 
     def test_detach(self, dataset_batch: DatasetBatch):

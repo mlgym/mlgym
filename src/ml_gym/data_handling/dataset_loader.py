@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+from itertools import chain
 from ml_gym.error_handling.exception import SamplerNotFoundError
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import RandomSampler, WeightedRandomSampler, Sampler, SequentialSampler
@@ -7,6 +9,7 @@ from collections import Counter
 import torch
 from ml_gym.data_handling.postprocessors.collator import Collator
 from enum import Enum
+from accelerate.data_loader import DataLoaderShard
 
 
 class DatasetLoaderFactory:
@@ -58,6 +61,12 @@ class DatasetLoaderFactory:
                                                      drop_last=drop_last)
         return data_loaders
 
+    @staticmethod
+    def get_data_loader_shard_wrapper(data_loader_shard: DataLoaderShard, dataset_name: str,
+                                      dataset_tag: str) -> "DataLoaderShardWrapper":
+        data_loader = DataLoaderShardWrapper(data_loader_shard=data_loader_shard, dataset_name=dataset_name, dataset_tag=dataset_tag)
+        return data_loader
+
 
 class SamplerFactory:
 
@@ -96,7 +105,20 @@ class SamplerFactory:
         return SequentialSampler(data_source=dataset)
 
 
-class DatasetLoader(DataLoader):
+class DatsetLoaderMetaInfoIF(ABC):
+
+    @property
+    @abstractmethod
+    def dataset_name(self) -> str:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def dataset_tag(self) -> str:
+        raise NotImplementedError
+
+
+class DatasetLoader(DatsetLoaderMetaInfoIF, DataLoader):
     def __init__(self, dataset_iterator: InformedDatasetIteratorIF, batch_size: int, sampler: Sampler,
                  collate_fn: Collator = None, drop_last: bool = False):
         super().__init__(dataset=dataset_iterator, sampler=sampler, batch_size=batch_size, collate_fn=collate_fn, drop_last=drop_last)
@@ -117,3 +139,24 @@ class DatasetLoader(DataLoader):
     def device(self, d: torch.device):
         if self.collate_fn is not None:
             self.collate_fn.device = d
+
+
+class DataLoaderShardWrapper(DatsetLoaderMetaInfoIF, DataLoader):
+    def __init__(self, data_loader_shard: DataLoaderShard, dataset_name: str, dataset_tag: str):
+        self._dataset_name = dataset_name
+        self._dataset_tag = dataset_tag
+        self.data_loader_shard = data_loader_shard
+
+    def __iter__(self):
+        return iter(self.data_loader_shard)
+
+    def __len__(self) -> int:
+        return len(self.data_loader_shard)
+
+    @property
+    def dataset_name(self) -> str:
+        return self._dataset_name
+
+    @property
+    def dataset_tag(self) -> str:
+        return self._dataset_tag

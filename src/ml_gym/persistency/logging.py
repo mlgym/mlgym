@@ -33,10 +33,14 @@ class MLgymStatusLoggerIF(ABC):
     def log_raw_message(self, raw_log_message: Dict):
         raise NotImplementedError
 
+    @abstractmethod
+    def disconnect(self):
+        raise NotImplementedError
+
 
 class LoggerCollection(MLgymStatusLoggerIF):
 
-    def __init__(self, loggers: MLgymStatusLoggerIF):
+    def __init__(self, loggers: List[MLgymStatusLoggerIF]):
         self._loggers = loggers
 
     # def log_job_status(self, job_id: int, job_type: JobType, status: JobStatus, experiment_id: str, starting_time: int, finishing_time: int, device: torch.device,
@@ -55,6 +59,10 @@ class LoggerCollection(MLgymStatusLoggerIF):
     def log_raw_message(self, raw_log_message: Dict):
         for logger in self._loggers:
             logger.log_raw_message(raw_log_message)
+
+    def disconnect(self):
+        for logger in self._loggers:
+            logger.disconnect()
 
 
 class DiscLogger(MLgymStatusLoggerIF):
@@ -80,6 +88,9 @@ class StreamedLogger(MLgymStatusLoggerIF):
     def log_raw_message(self, raw_log_message: Dict):
         self._sio_client.emit(message_key="mlgym_event", message=raw_log_message)
 
+    def disconnect(self):
+        self._sio_client.disconnect()
+
 
 class JobStatusLoggerIF(ABC):
 
@@ -90,16 +101,19 @@ class JobStatusLoggerIF(ABC):
     def log_experiment_config(self, grid_search_id: str, experiment_id: str, job_id: str, config: Dict[str, Any]):
         raise NotImplementedError
 
+    def disconnect(self):
+        raise NotImplementedError
+
 
 class JobStatusLogger(JobStatusLoggerIF):
     def __init__(self, logger: MLgymStatusLoggerIF) -> None:
         self._logger = logger
 
-    def log_job_status(self, job_id: str, job_type: JobType, status: JobStatus, grid_search_id: str, experiment_id: str, starting_time: int, finishing_time: int,
-                       device: torch.device, error: str = "", stacktrace: str = ""):
+    def log_job_status(self, job_id: str, job_type: JobType, status: JobStatus, grid_search_id: str, experiment_id: str,
+                       starting_time: int, finishing_time: int, error: str = "", stacktrace: str = ""):
         message = {"event_type": "job_status", "creation_ts": get_timestamp()}
-        payload = {"job_id": job_id, "job_type": job_type.value, "status": status.value, "grid_search_id": grid_search_id, "experiment_id": experiment_id,
-                   "starting_time": starting_time, "finishing_time": finishing_time, "device": str(device), "error": error,
+        payload = {"job_id": job_id, "job_type": job_type.value, "status": status.value, "grid_search_id": grid_search_id,
+                   "experiment_id": experiment_id, "starting_time": starting_time, "finishing_time": finishing_time, "error": error,
                    "stacktrace": stacktrace}
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
@@ -109,6 +123,9 @@ class JobStatusLogger(JobStatusLoggerIF):
         payload = {"grid_search_id": grid_search_id, "experiment_id": experiment_id, "job_id": job_id, "config": config}
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
+
+    def disconnect(self):
+        self._logger.disconnect()
 
 
 class ExperimentStatusLogger:
@@ -186,6 +203,9 @@ class ExperimentStatusLogger:
                 message = {"event_type": "checkpoint", "creation_ts": get_timestamp()}
                 message["payload"] = payload
                 self._logger.log_raw_message(raw_log_message=message)
+
+    def disconnect(self):
+        self._logger.disconnect()
 
 
 class MLgymStatusLoggerTypes(Enum):
