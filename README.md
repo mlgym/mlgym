@@ -76,7 +76,6 @@ The parameter `process_count` specifies the number of experiments that we run in
 cd mlgym/example/grid_search_example
 
 python run.py --process_count 3 \
-              --text_logging_path general_logging/ \
               --num_epochs 10 \
               --websocket_logging_servers http://127.0.0.1:5002 \
               --gs_rest_api_endpoint http://127.0.0.1:5001 \
@@ -154,6 +153,6 @@ Similarly, for the analysis board we consider:
 
 ## Copyright
 
-Copyright (c) 2020 Max Lübbering
+Copyright (c) 2023
 
 For license see: https://github.com/mlgym/mlgym/blob/master/LICENSE

@@ -9,5 +9,10 @@ class ValidationMode(Enum):
 
 class RunMode(Enum):
     TRAIN = "train"
-    # RE_EVAL = "re_eval"
     WARM_START = "warm_start"
+
+
+class ParallelizationMode(Enum):
+
+    PARALLEL_GS_SINGLE_NODE_MULTI_GPU = "PARALLEL_GS_SINGLE_NODE_MULTI_GPU"
+    SEQUENTIAL_GS_SINGLE_NODE_DISTRIBUTED = "SEQUENTIAL_GS_SINGLE_NODE_DISTRIBUTED"

@@ -5,7 +5,6 @@
 python run.py --validation_mode GRID_SEARCH \
               --run_mode TRAIN \
               --process_count 1 \
-              --text_logging_path general_logging/ \
               --gs_config_path grid_search/gs_config.yml \
               --num_epochs 20 \
               --gpus 0 1 2 3 \

@@ -28,12 +28,13 @@ class TorchDeviceMixin(ABC):
             return [TorchDeviceMixin.traverse_apply(d, apply_fun) for d in ds]
         return apply_fun(ds)
 
+    @property
     @abstractmethod
-    def get_device(self) -> torch.device:
+    def device(self) -> torch.device:
         raise NotImplementedError
 
     @abstractmethod
-    def to_device(self, device: torch.device):
+    def to(self, device: torch.device) -> "Batch":
         raise NotImplementedError
 
     @abstractmethod
@@ -119,15 +120,18 @@ class DatasetBatch(Batch, TorchDeviceMixin):
         self._tags = self._tags.detach()
         self._samples = self._samples.detach()
 
-    def to_device(self, device: torch.device):
+    def to(self, device: torch.device) -> "DatasetBatch":
         self._samples = self._samples.to(device)
         self._targets = {k: v.to(device) for k, v in self._targets.items()}
         self._tags = self._tags.to(device)
+        return self
 
-    def to_cpu(self):
-        self.to_device(device=torch.device("cpu"))
+    def to_cpu(self) -> "DatasetBatch":
+        self.to(device=torch.device("cpu"))
+        return self
 
-    def get_device(self) -> torch.device:
+    @property
+    def device(self) -> torch.device:
         return self._samples.device
 
     @staticmethod
@@ -162,19 +166,23 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
 
     def __init__(self, targets: Dict[str, torch.Tensor] = None, predictions: Dict[str, torch.Tensor] = None, tags: torch.Tensor = None):
         self._targets = targets if targets is not None else {}
-        self._tags = tags
+        self._tags = tags if tags is not None else torch.tensor()
         self._predictions = predictions if predictions is not None else {}
+        self.to(self.device)
 
     def to_cpu(self):
-        self.to_device(device=torch.device("cpu"))
+        self.to(device=torch.device("cpu"))
 
-    def get_device(self) -> torch.device:
-        return self._tags.device
+    @property
+    def device(self) -> torch.device:
+        key = list(self._targets.keys())[0]
+        return self._targets[key].device
 
-    def to_device(self, device: torch.device):
+    def to(self, device: torch.device) -> "InferenceResultBatch":
         self._predictions = TorchDeviceMixin._dict_tensor_to_device(self._predictions, device)
         self._targets = {k: v.to(device) for k, v in self._targets.items()}
         self._tags = self._tags.to(device)
+        return self
 
     def detach(self):
         self._targets = {k: v.detach() for k, v in self._targets.items()}
@@ -263,7 +271,7 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
 
     @staticmethod
     def combine_impl(batches: List['InferenceResultBatch']) -> 'InferenceResultBatch':
-        tags = [tag for batch in batches for tag in batch.tags]
+        tags = torch.tensor([tag for batch in batches for tag in batch.tags])
         predictions = Batch._combine_tensor_dicts([batch.predictions for batch in batches])
         targets = Batch._combine_tensor_dicts([batch.targets for batch in batches])
         return InferenceResultBatch(targets=targets, predictions=predictions, tags=tags)

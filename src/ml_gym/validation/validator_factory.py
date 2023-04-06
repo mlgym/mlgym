@@ -7,6 +7,7 @@ from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.error_handling.exception import ValidationModeNotValidError
 import torch
 
+
 class ValidatorFactory:
 
     @staticmethod

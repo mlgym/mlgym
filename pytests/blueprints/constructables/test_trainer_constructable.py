@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 import pytest
-from ml_gym.gym.trainer import Trainer
+from ml_gym.gym.trainers.standard_trainer import Trainer
 from pytests.blueprints.constructables.test_train_component_constructable import RegistryFixture, DataLoaderFixture, TrainConfigFixture
 from ml_gym.blueprints.constructables import Requirement, TrainerConstructable,  \
     TrainComponentConstructable

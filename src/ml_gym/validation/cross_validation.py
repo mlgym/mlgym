@@ -3,11 +3,9 @@ from data_stack.dataset.iterator import DatasetIteratorIF
 from ml_gym.blueprints.blue_prints import BluePrint
 from data_stack.dataset.splitter import SplitterFactory
 from ml_gym.modes import RunMode
-from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable
 from ml_gym.validation.validator import ValidatorIF
 from ml_gym.blueprints.component_factory import Injector
 from ml_gym.util.grid_search import GridSearch
-from ml_gym.persistency.io import GridSearchAPIClientConstructableIF
 
 
 class CrossValidation(ValidatorIF):
@@ -52,9 +50,7 @@ class CrossValidation(ValidatorIF):
             splits.append(split)
         return splits
 
-    def create_blue_prints(self, grid_search_id: str, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any], num_epochs: int,
-                           gs_api_client_constructable: GridSearchAPIClientConstructableIF,
-                           logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List[Type[BluePrint]]:
+    def create_blue_prints(self, grid_search_id: str, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any]) -> List[Type[BluePrint]]:
 
         run_id_to_config_dict = {run_id: config for run_id, config in enumerate(GridSearch.create_gs_from_config_dict(gs_config))}
 
@@ -75,20 +71,12 @@ class CrossValidation(ValidatorIF):
                                                 run_mode=self.run_mode,
                                                 experiment_id=experiment_id,
                                                 experiment_config=experiment_config_injected,
-                                                num_epochs=num_epochs,
-                                                grid_search_id=grid_search_id,
-                                                logger_collection_constructable=logger_collection_constructable,
-                                                gs_api_client_constructable=gs_api_client_constructable)
+                                                grid_search_id=grid_search_id)
                 blueprints.append(bp)
                 experiment_id = experiment_id + 1
         return blueprints
 
-    def create_blueprints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any], num_epochs: int,
-                          gs_api_client_constructable: GridSearchAPIClientConstructableIF,
-                          logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None) -> List[BluePrint]:
+    def create_blueprints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any]) -> List[BluePrint]:
         blueprints = self.create_blue_prints(blue_print_type=blue_print_type,
-                                             gs_config=gs_config,
-                                             num_epochs=num_epochs,
-                                             logger_collection_constructable=logger_collection_constructable,
-                                             gs_api_client_constructable=gs_api_client_constructable)
+                                             gs_config=gs_config)
         return blueprints

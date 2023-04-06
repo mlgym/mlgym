@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from ml_gym.gym.jobs import AbstractGymJob
+from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob
 
 
 class WorkerIF(ABC):
