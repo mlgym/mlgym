@@ -5,6 +5,7 @@ from ml_gym.gym.gym_jobs.standard_gym_job import StandardGymJob
 from ml_gym.persistency.io import GridSearchAPIClientConstructable
 from ml_gym.persistency.logging import ExperimentStatusLogger, MLgymStatusLoggerCollectionConstructable
 import torch
+from accelerate import Accelerator
 
 
 class GymJobFactory:
@@ -36,6 +37,7 @@ class GymJobFactory:
     def get_accelerate_gymjob_from_blueprint(blueprint: BluePrint, num_epochs: int,
                                              logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
                                              gs_restful_api_client_constructable: GridSearchAPIClientConstructable,
+                                             accelerator: Accelerator,
                                              num_batches_per_epoch: int = None) -> AbstractGymJob:
         components = blueprint.construct()
 
@@ -52,5 +54,6 @@ class GymJobFactory:
                                    experiment_status_logger=experiment_status_logger,
                                    gs_api_client=gs_api_client,
                                    num_batches_per_epoch=num_batches_per_epoch,
+                                   accelerator=accelerator,
                                    **components)
         return gym_job

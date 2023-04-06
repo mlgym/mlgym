@@ -13,7 +13,8 @@ from ml_gym.persistency.logging import ExperimentStatusLogger
 from functools import partial
 from ml_gym.persistency.io import GridSearchAPIClientIF, CheckpointResource
 import pickle
-from ml_gym.checkpointing.checkpointing import CheckpointingIF, CheckpointingInstruction
+from ml_gym.checkpointing.checkpointing import CheckpointingIF
+from ml_gym.error_handling.exception import EarlyStoppingCriterionFulfilledError
 
 
 class StandardGymJob(AbstractGymJob):
@@ -67,10 +68,13 @@ class StandardGymJob(AbstractGymJob):
         def evaluation_step_routine(current_epoch: int): return self._evaluation_step(device=device, current_epoch=current_epoch)
         partial_train_epoch_done_callback = partial(self.train_epoch_done_callback, evaluation_step_routine=evaluation_step_routine)
 
-        model = self.trainer.train(num_epochs=self.num_epochs, model=self.model, optimizer=self.optimizer, device=device,
-                                   batch_done_callback_fun=partial_batch_done_callback,
-                                   epoch_done_callback=partial_train_epoch_done_callback,
-                                   num_batches_per_epoch=self.num_batches_per_epoch)
+        try:
+            model = self.trainer.train(num_epochs=self.num_epochs, model=self.model, optimizer=self.optimizer, device=device,
+                                       batch_done_callback_fun=partial_batch_done_callback,
+                                       epoch_done_callback=partial_train_epoch_done_callback,
+                                       num_batches_per_epoch=self.num_batches_per_epoch)
+        except EarlyStoppingCriterionFulfilledError:
+            print(f"Early stopping criterion matched. Stopping training.")
 
     def _execute_warm_start(self, device: torch.device, warm_start_epoch: int):
         model_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,

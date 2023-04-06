@@ -68,7 +68,7 @@ class AccelerateTrainComponent(StatefulComponent):
                                         num_epochs=num_epochs,
                                         current_epoch=current_epoch)
             if (batch_id + 1) % num_batches_per_epoch == 0:  # when epoch done
-                epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=current_epoch, model=model)
+                epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=current_epoch, model=model, accelerator=accelerator)
 
         return model
 

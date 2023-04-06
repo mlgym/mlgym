@@ -11,6 +11,7 @@ from ml_gym.util.devices import get_devices
 import tqdm
 from abc import ABC, abstractmethod
 from enum import Enum
+from accelerate import Accelerator
 
 torch.multiprocessing.set_start_method('spawn', force=True)
 
@@ -85,12 +86,13 @@ class GymFactory:
     @staticmethod
     def get_sequential_gym(logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
                            gs_restful_api_client_constructable: GridSearchAPIClientConstructable,
-                           num_epochs: int, device_id: int = None, run_accelereate_env: bool = False,
-                           num_batches_per_epoch: int = None) -> Gym:
-        if run_accelereate_env:
+                           num_epochs: int, device_id: int = None,
+                           num_batches_per_epoch: int = None,
+                           accelerator: Accelerator = None) -> Gym:
+        if accelerator is not None:
             exec_fun = partial(GymFactory._run_accelerate_gym_job, logger_collection_constructable=logger_collection_constructable,
                                gs_restful_api_client_constructable=gs_restful_api_client_constructable,
-                               num_epochs=num_epochs, num_batches_per_epoch=num_batches_per_epoch)
+                               num_epochs=num_epochs, num_batches_per_epoch=num_batches_per_epoch, accelerator=accelerator)
             if device_id is not None:
                 raise GymError("You cannot run the accelerate env on a specific device id")
         else:
@@ -130,10 +132,11 @@ class GymFactory:
     def _run_accelerate_gym_job(blueprint: BluePrint, num_epochs: int,
                                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
                                 gs_restful_api_client_constructable: GridSearchAPIClientConstructable,
-                                num_batches_per_epoch: int = None):
+                                accelerator: Accelerator, num_batches_per_epoch: int = None):
         gym_job = GymJobFactory.get_accelerate_gymjob_from_blueprint(blueprint,
                                                                      num_epochs=num_epochs,
                                                                      logger_collection_constructable=logger_collection_constructable,
                                                                      gs_restful_api_client_constructable=gs_restful_api_client_constructable,
-                                                                     num_batches_per_epoch=num_batches_per_epoch)
+                                                                     num_batches_per_epoch=num_batches_per_epoch,
+                                                                     accelerator=accelerator)
         return gym_job.execute()

@@ -15,6 +15,7 @@ from ml_gym.optimizers.optimizer import OptimizerAdapter
 from ml_gym.persistency.io import GridSearchAPIClientIF
 from ml_gym.persistency.logging import ExperimentStatusLogger
 import torch
+from accelerate import Accelerator
 
 
 class AbstractGymJob(StatefulComponent):
@@ -59,7 +60,7 @@ class AbstractGymJob(StatefulComponent):
     def execute(self, device: torch.device):
         raise NotImplementedError
 
-    def run_checkpointing(self, checkpoint_instruction: CheckpointingInstruction):
+    def run_checkpointing(self, checkpoint_instruction: CheckpointingInstruction, current_epoch: int):
         """
         Create and delete checkpoints for each epoch in experiments.
 
@@ -69,7 +70,7 @@ class AbstractGymJob(StatefulComponent):
 
         if checkpoint_instruction.save_current:
             payload_dict = {
-                "epoch": self.current_epoch,
+                "epoch": current_epoch,
                 "model": self.model.state_dict(),
                 "optimizer": self.optimizer.state_dict(),
                 "lr_scheduler": self.lr_scheduler.state_dict(),
@@ -100,14 +101,16 @@ class AbstractGymJob(StatefulComponent):
                               current_epoch: int):
         experiment_status_logger.log_evaluation_results(evaluation_result, current_epoch)
 
-    def train_epoch_done_callback(self, num_epochs: int, current_epoch: int, model: NNModel, evaluation_step_routine: Callable):
+    def train_epoch_done_callback(self, num_epochs: int, current_epoch: int, model: NNModel, evaluation_step_routine: Callable,
+                                  accelerator: Accelerator = None):
         evaluation_results = evaluation_step_routine(current_epoch=current_epoch)
         if current_epoch > 0:
             self.lr_scheduler.step()
-        checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=num_epochs,
-                                                                                                 current_epoch=current_epoch,
-                                                                                                 evaluation_result=evaluation_results)
-        self.run_checkpointing(checkpointing_instruction)
+        if accelerator is not None and accelerator.is_main_process:
+            checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=num_epochs,
+                                                                                                     current_epoch=current_epoch,
+                                                                                                     evaluation_result=evaluation_results)
+            self.run_checkpointing(checkpointing_instruction, current_epoch=current_epoch)
         if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=current_epoch,
                                                                         evaluation_results=evaluation_results):
             raise EarlyStoppingCriterionFulfilledError

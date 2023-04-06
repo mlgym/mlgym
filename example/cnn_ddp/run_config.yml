@@ -1,7 +1,7 @@
 run_configuration:
   type: train # train, warmstart
   config:
-    num_epochs: 1000 # Number of epochs
+    num_epochs: 10 # Number of epochs
     # num_batches_per_epoch: 100
     gs_config_path: /scratch/max/mlgym/example/cnn_ddp/cnn_experiment_config.yml
 
