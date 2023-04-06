@@ -32,6 +32,8 @@ setup(
         "eventlet",
         "python-socketio[client]",
         "gunicorn",
+        "flask-socketio",
+        "datasets",
         "transformers"
     ],
     python_requires=">=3.7",

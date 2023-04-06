@@ -12,7 +12,6 @@ from ml_gym.metrics.metrics import Metric
 from ml_gym.models.nn.net import NNModel
 from ml_gym.loss_functions.loss_functions import Loss
 import tqdm
-from ml_gym.util.logger import ConsoleLogger
 import numpy as np
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent
 from ml_gym.error_handling.exception import BatchStateError, EvaluationError, MetricCalculationError, LossCalculationError
@@ -27,17 +26,11 @@ class AbstractEvaluator(StatefulComponent):
 class Evaluator(AbstractEvaluator):
     def __init__(self, eval_component: 'EvalComponentIF'):
         self.eval_component = eval_component
-        self.current_epoch = -1
-        self.num_epochs = -1
 
-    def set_num_epochs(self, num_epochs: int):
-        self.num_epochs = num_epochs
-
-    def evaluate(self, model: NNModel, device: torch.device, current_epoch: int, num_epochs: int,
-                 epoch_result_callback_fun: Callable = None,
+    def evaluate(self, model: NNModel, device: torch.device, epoch_result_callback_fun: Callable = None,
                  batch_processed_callback_fun: Callable = None) -> List[EvaluationBatchResult]:
-        self.current_epoch = current_epoch
-        self.num_epochs = num_epochs
+        model = model.eval()
+
         # returns a EvaluationBatchResult for each split
         evaluation_batch_results = self.eval_component.evaluate(model, device, epoch_result_callback_fun=epoch_result_callback_fun,
                                                                 batch_processed_callback_fun=batch_processed_callback_fun)
@@ -56,7 +49,7 @@ class EvalComponent(EvalComponentIF):
     """This thing always comes with batteries included, i.e., datasets, loss functions etc. are all already stored in here."""
 
     def __init__(self, inference_component: InferenceComponent, post_processors: Dict[str, PredictPostprocessingComponent], metrics: List[Metric],
-                 loss_funs: Dict[str, Loss], dataset_loaders: Dict[str, DatasetLoader], train_split_name: str, show_progress: bool = False,
+                 loss_funs: Dict[str, Loss], dataset_loaders: Dict[str, DatasetLoader], show_progress: bool = False,
                  cpu_target_subscription_keys: List[str] = None, cpu_prediction_subscription_keys: List[Union[str, List]] = None,
                  metrics_computation_config: List[Dict] = None, loss_computation_config: List[Dict] = None):
         self.loss_funs = loss_funs
@@ -65,11 +58,9 @@ class EvalComponent(EvalComponentIF):
         self.post_processors = post_processors
         self.metrics = metrics
         self.dataset_loaders = dataset_loaders
-        self.train_split_name = train_split_name
         self.show_progress = show_progress
         self.cpu_target_subscription_keys = cpu_target_subscription_keys
         self.cpu_prediction_subscription_keys = cpu_prediction_subscription_keys
-        self.logger = ConsoleLogger("logger_eval_component")
         # determines which metrics are applied to which splits (metric_key to split list)
         self.metrics_computation_config = None if metrics_computation_config is None else {
             m["metric_tag"]: m["applicable_splits"] for m in metrics_computation_config}
@@ -86,8 +77,7 @@ class EvalComponent(EvalComponentIF):
                                dataset_loader: DatasetLoader, epoch_result_callback_fun: Callable = None,
                                batch_processed_callback_fun: Callable = None) -> EvaluationBatchResult:
         dataset_loader.device = device
-        dataset_loader_iterator = tqdm.tqdm(
-            dataset_loader, desc=f"Evaluating {dataset_loader.dataset_name} - {split_name}") if self.show_progress else dataset_loader
+        dataset_loader_iterator = tqdm.tqdm(dataset_loader, desc=f"Evaluating {dataset_loader.dataset_name} - {split_name}") if self.show_progress else dataset_loader
         post_processors = self.post_processors[split_name] + self.post_processors["default"]
 
         # calc losses
@@ -102,7 +92,6 @@ class EvalComponent(EvalComponentIF):
         inference_result_batches_cpu = []
         num_batches = len(dataset_loader_iterator)
         processed_batches = 0
-        update_lag = max(1, int(num_batches/10))
         for batch in dataset_loader_iterator:
             inference_result_batch = self.forward_batch(dataset_batch=batch, model=model, device=device, postprocessors=post_processors)
             batch_loss = self._calculate_loss_scores(inference_result_batch, split_loss_funs)
@@ -112,13 +101,12 @@ class EvalComponent(EvalComponentIF):
                                                                 device=torch.device("cpu"))
             inference_result_batches_cpu.append(irb_filtered)
             processed_batches += 1
-            if batch_processed_callback_fun is not None and (processed_batches % update_lag == 0 or processed_batches == num_batches):
-                splits = [d.dataset_tag for _, d in self.dataset_loaders.items()]
-                batch_processed_callback_fun(status="evaluation",
-                                             num_batches=num_batches,
-                                             current_batch=processed_batches,
-                                             splits=splits,
-                                             current_split=dataset_loader.dataset_tag)
+            splits = [d.dataset_tag for _, d in self.dataset_loaders.items()]
+            batch_processed_callback_fun(status="evaluation",
+                                         num_batches=num_batches,
+                                         current_batch=processed_batches,
+                                         splits=splits,
+                                         current_split=dataset_loader.dataset_tag)
 
         # calc metrics
         try:
@@ -153,7 +141,7 @@ class EvalComponent(EvalComponentIF):
 
     def forward_batch(self, dataset_batch: DatasetBatch, model: NNModel, device: torch.device, postprocessors: List[PredictPostProcessingIF]) -> InferenceResultBatch:
         model = model.to(device)
-        dataset_batch.to_device(device)
+        dataset_batch.to(device)
         inference_result_batch = self.inference_component.predict(model, dataset_batch, postprocessors)
         return inference_result_batch
 
