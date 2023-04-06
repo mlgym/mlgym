@@ -258,17 +258,8 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
              experiment_id (str): Experiment ID
              epoch (int): Epoch
         """
-
-        chekpoint_resources = [
-            CheckpointResource.model,
-            CheckpointResource.lr_scheduler,
-            CheckpointResource.optimizer,
-            CheckpointResource.stateful_components,
-        ]
-
-        for checkpoint in chekpoint_resources:
-            url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint}"
-            GridSearchRestfulAPIClient._del_binary_resource(url)
+        url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{epoch}"
+        GridSearchRestfulAPIClient._del_binary_resource(url)
 
     def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
         """

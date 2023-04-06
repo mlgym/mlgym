@@ -139,7 +139,11 @@ payload:
 }
 ```
 
-Delete Checkpoint Resources:
+Delete Checkpoint Resources: _model, optimiyer, stateful_component and lr_scheduler_ for a checkpoint ID in the experiment  :
+
+_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>_
+
+Delete specific Checkpoint Resource:
 
 _DELETE /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>_
 
