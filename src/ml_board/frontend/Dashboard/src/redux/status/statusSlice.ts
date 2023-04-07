@@ -59,9 +59,15 @@ export const statusSlice = createSlice({
     }
   }, extraReducers(builder) {
     builder.addCase(upsertCharts, (state, { payload }) => {
-      if (!state.color_map.hasOwnProperty(payload[0].exp_id)) {
-        // one can only hope that it doesn't produce a blue blue blue blue blue... pattern :')
-        state.color_map[payload[0].exp_id] = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+      // NOTE: very important to notice here that +4 increment
+      // because in the testing file every evaluation_result held 4 values for the same experiment
+      // this might not be true with other data
+      // TODO:
+      for (let i = 0; i < payload.length; i+=4) {
+        if (!state.color_map.hasOwnProperty(payload[i].exp_id)) {
+          // one can only hope that it doesn't produce a blue blue blue blue blue... pattern :')
+          state.color_map[payload[i].exp_id] = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+        }
       }
     })
   },

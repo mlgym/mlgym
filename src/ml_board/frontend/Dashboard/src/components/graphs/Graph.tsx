@@ -1,5 +1,5 @@
 import { Box, Card, Grid } from "@mui/material";
-import { ChartOptions } from "chart.js";
+import { ChartData, ChartOptions } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { useAppSelector } from "../../app/hooks";
 import { selectChartLabelsById, selectExperimentsPerChartById } from "../../redux/charts/chartsSlice";
@@ -12,26 +12,39 @@ import styles from "./Graphs.module.css";
 export default function Graph({ chart_id }: { chart_id: string }) {
 
     const chartLabels = useAppSelector(state => selectChartLabelsById(state, chart_id));
-    const experimentsDic = useAppSelector(state => selectExperimentsPerChartById(state, chart_id));
+    const experimentsDict = useAppSelector(state => selectExperimentsPerChartById(state, chart_id));
     const colors = useAppSelector(selectColorMap);
 
     // prepare data (Warning Looping!)
-    const data = {
+    const data: ChartData<"line"> = {
         labels: chartLabels, // the X-axis:Array<number>
-        datasets: !experimentsDic ? [] :
+        datasets: !experimentsDict ? [] :
             // loop over the experiments in the ChartF
-            Object.values(experimentsDic).map(exp => ({
+            Object.values(experimentsDict).map(exp => ({
                 label: "experiment_" + exp!.exp_id, // exp_name
                 data: exp!.data, // exp_values:Array<number>, Y-axis, same size as X-axis
-                fill: false,
                 backgroundColor: colors[exp!.exp_id],
                 borderColor: colors[exp!.exp_id],
-                tension: 0, // to give smoothness to the line curves
             })),
     };
 
-    // NOTE: casting as ChartOptions happens later, otherwise the radius parameters will give errors!!!
-    const options = {
+    // NOTE: https://www.chartjs.org/docs/latest/general/performance.html
+    const options: ChartOptions = {
+        datasets:{
+            line:{
+                fill: false,
+                spanGaps: true,
+                normalized: true,
+                // TODO: doesn't work! (I tried saving the x_axis values as string not number, no luck either!)
+                // parsing: false, 
+                pointRadius:0,
+                // showLine: false,
+                // // Automatic data decimation during draw happens if these 3 values are left as default!
+                // tension:0,
+                // stepped:false,
+                // borderDash:[],
+            }
+        },
         plugins: {
             title: {
                 text: chart_id,
@@ -43,20 +56,19 @@ export default function Graph({ chart_id }: { chart_id: string }) {
                 }
             },
             legend: {
-                display: true,
                 labels: {
                     usePointStyle: true,
                     pointStyle: 'circle'
                 }
             }
         },
-        animation: {
-            duration: 300,
-            easing: 'linear'
+        elements: {
+            point: {
+                radius: 1,  // radius of the label tag
+                hitRadius: 10, // radius of mouse to show the label values when mouse is near a datapoint
+            }
         },
-        radius: 3,  // radius of the label tag
-        hoverRadius: 12, // on hover:: change of data point radius size
-        hitRadius: 20, // radius of mouse to show the label values when mouse is near a datapoint
+        animation: false,
         responsive: true,
         maintainAspectRatio: false,
     };
@@ -66,8 +78,9 @@ export default function Graph({ chart_id }: { chart_id: string }) {
             <Card className={styles.grid_card}>
                 <Box className={styles.graphs_chart_container}>
                     <Line
+                        datasetIdKey={chart_id}
                         data={data}
-                        options={options as ChartOptions}
+                        options={options}
                     />
                 </Box>
             </Card>

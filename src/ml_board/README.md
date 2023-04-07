@@ -74,6 +74,7 @@ payload:
 
 _GET /grid_searches/<grid_search_id>/experiments_
 
+TODO need to check "experiments" in URL  
 ```json
 [
     {
@@ -138,9 +139,16 @@ payload:
 }
 ```
 
-Delete Checkpoint Resources:
+Delete Checkpoint Resources: _model, optimiyer, stateful_component and lr_scheduler_ for a checkpoint ID in the experiment  :
+
+_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>_
+
+Delete specific Checkpoint Resource:
+
+_DELETE /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>_
 
 _DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/model_
+
 
 _DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/optimizer_
 
@@ -265,9 +273,6 @@ metric scores of a model at a specific epoch.
     }
 }
 ```
-
-The files received by the websocket server are stored in
-`event_storage/mlgym_event_subscribers/<grid_search_id/event_storage_id><experiment_id>/checkpointing/<checkpoint_id>` as `model.pt`, `optimizer.pt` and `stateful_components.pt`. These files are available via the RESTful API to the clients and are not streamed.
 
 # Implementation idea:
 

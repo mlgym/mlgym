@@ -30,20 +30,12 @@ export interface Row {
 
     // NOTE: newKey encompasses all of the above and more if need be!!!
     // [newKey: string]: number | string;
-    // But unfortunately it create errors if used! (exposing only experiment_id is the current fix)
+    // But unfortunately it creates errors if used! (exposing only experiment_id is the current fix)
 }
 
 const rowsAdapter = createEntityAdapter<Row>({
     selectId: ({ experiment_id }: Row) => experiment_id,
-    sortComparer: ({ experiment_id: id1 }: Row, { experiment_id: id2 }: Row) => {
-        if(id1 > id2){
-            return 1;
-        }else if (id1 < id2){
-            return -1;
-        }else{
-            return 0;
-        }
-    }
+    sortComparer: ({ experiment_id: id1 }: Row, { experiment_id: id2 }: Row) => id1 - id2
 });
 
 const initialState: EntityState<Row> = rowsAdapter.getInitialState({});

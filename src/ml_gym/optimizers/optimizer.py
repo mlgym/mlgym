@@ -4,7 +4,7 @@ from copy import deepcopy
 from ml_gym.error_handling.exception import OptimizerNotInitializedError
 
 
-class OptimizerAdapter(object):
+class OptimizerAdapter(Optimizer, object):
 
     def __init__(self, optimizer_class: Type[Optimizer], optimizer_params: Dict = None):
         self._optimizer_class = optimizer_class

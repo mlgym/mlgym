@@ -1,4 +1,4 @@
-import os
+wimport os
 from typing import List, Any, Tuple
 from data_stack.dataset.factory import BaseDatasetFactory
 from data_stack.dataset.iterator import InformedDatasetIteratorIF, SequenceDatasetIterator, \
@@ -8,7 +8,7 @@ from data_stack.repository.repository import DatasetRepository
 from ml_gym.blueprints.constructables import ModelRegistryConstructable, ComponentConstructable
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.data_handling.postprocessors.factory import ModelGymInformedIteratorFactory
-from ml_gym.gym.jobs import AbstractGymJob, GymJobFactory
+from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob, GymJobFactory
 from ml_gym.batching.batch import DatasetBatch
 from dataclasses import dataclass, field
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector

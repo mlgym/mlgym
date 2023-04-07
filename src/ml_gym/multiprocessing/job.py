@@ -6,9 +6,6 @@ from typing import Callable, Dict, List
 
 
 class JobIF:
-    @property
-    def device(self) -> torch.device:
-        raise NotImplementedError
 
     @property
     def experiment_id(self) -> str:
@@ -18,32 +15,23 @@ class JobIF:
     def grid_search_id(self) -> str:
         raise NotImplementedError
 
-    @device.setter
-    def device(self, value: torch.device):
-        raise NotImplementedError
-
     def execute(self):
         raise NotImplementedError
 
 
 class Job(JobIF):
-    def __init__(self, job_id: str, fun: Callable, blueprint: BluePrint, param_dict: Dict, job_type: JobType = JobType.CALC):
+    def __init__(self, job_id: str, fun: Callable, blueprint: BluePrint, param_dict: Dict = None, job_type: JobType = JobType.CALC):
         self.job_id = job_id
         self.job_type = job_type
         self.fun = fun
         self.blueprint = blueprint
-        self.param_dict = param_dict
+        self.param_dict = param_dict if param_dict is not None else {}
         self.status = JobStatus.INIT
         self.starting_time = -1
         self.finishing_time = -1
         self.executing_process_id = -1
         self.error = None
         self.stacktrace = None
-        self._device: torch.device = torch.device("cpu")
-
-    @property
-    def device(self) -> torch.device:
-        return self._device
 
     @property
     def experiment_id(self) -> str:
@@ -59,13 +47,11 @@ class Job(JobIF):
         else:
             return None
 
-    @device.setter
-    def device(self, value: torch.device):
-        self._device = value
-
-    def execute(self):
-        self.param_dict["device"] = self._device
-        return self.fun(blueprint=self.blueprint, **self.param_dict)
+    def execute(self, device: torch.device = None):
+        if device is not None:
+            return self.fun(blueprint=self.blueprint, device=device, **self.param_dict)
+        else:
+            return self.fun(blueprint=self.blueprint, **self.param_dict)
 
 
 class JobStatusSubscriberIF:

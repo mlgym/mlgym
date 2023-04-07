@@ -2,9 +2,8 @@
 #!/bin/sh
 
 
-python run.py --process_count 1 \
-              --text_logging_path general_logging/ \
-              --num_epochs 10 \
+python run.py --process_count 21 \
+              --num_epochs 100 \
               --websocket_logging_servers http://127.0.0.1:5002 \
               --gs_rest_api_endpoint http://127.0.0.1:5001 \
               train \

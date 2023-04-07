@@ -46,6 +46,11 @@ class RestfulAPIServer:
             endpoint=self.add_checkpoint_resource,
         )
         self.app.add_api_route(
+            path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}",
+            methods=["DELETE"],
+            endpoint=self.delete_checkpoints,
+        )
+        self.app.add_api_route(
             path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource}",
             methods=["DELETE"],
             endpoint=self.delete_checkpoint_resource,
@@ -194,6 +199,32 @@ class RestfulAPIServer:
             self.data_access.delete_checkpoint_resource(
                 grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch, checkpoint_resource=checkpoint_resource
             )
+
+        except InvalidPathError as e:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Provided invalid parameters for checkpoint resource.") from e
+
+    def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: str):
+        """
+        ``HTTP DELETE`` Delete checkpoint resource pickle file
+          given the epoch, experiment ID & grid search ID.
+
+        :params:
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
+             epoch (str): Epoch number
+        """
+        try:
+            chekpoint_resources = [
+                CheckpointResource.model,
+                CheckpointResource.lr_scheduler,
+                CheckpointResource.optimizer,
+                CheckpointResource.stateful_components,
+            ]
+
+            for checkpoint in chekpoint_resources:
+                self.data_access.delete_checkpoint_resource(
+                    grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch, checkpoint_resource=checkpoint
+                )
 
         except InvalidPathError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Provided invalid parameters for checkpoint resource.") from e
