@@ -47,11 +47,13 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
         setConfigTextState({ ...configTextState, [key]: text });
     }
 
+    // regular expression in replace function replaces all the trailing backslashes and then stores the url in redux as during actual API call, we are appending the full api path with the main url
+
     function submitData() {
         let settingConfigs = {
             gridSearchId: configTextState.gridSearchId,
-            socketConnectionUrl: configTextState.socketConnectionUrl,
-            restApiUrl: configTextState.restApiUrl
+            socketConnectionUrl: configTextState.socketConnectionUrl.replace(/\/+$/, ''),
+            restApiUrl: configTextState.restApiUrl.replace(/\/+$/, '')
         }      
         setOpen(false);
         props.validateConfigs(true);
@@ -60,8 +62,8 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
 
     function validateData() {
         let gridSearchId = configTextState.gridSearchId;
-        let socketConnectionUrl = configTextState.socketConnectionUrl;
-        let restApiUrl = configTextState.restApiUrl;
+        let socketConnectionUrl = configTextState.socketConnectionUrl.replace(/\/+$/, '');
+        let restApiUrl = configTextState.restApiUrl.replace(/\/+$/, '');
         let isDataInValid = true;
 
         // basic validation check: if any values are typed by user, then enable submit button or else keep it disabled - so that empty values are not sent for socket connection request

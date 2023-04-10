@@ -13,6 +13,7 @@ export interface StatusState {
   grid_search_id: string;
   color_map: { [expID: string]: string }; // expID mapped to a color
   metric_loss: Array<string>;
+  rest_api_url: string;
 }
 
 const initialState: StatusState = {
@@ -24,7 +25,8 @@ const initialState: StatusState = {
   throughput: 0,
   grid_search_id: "",
   color_map: {},
-  metric_loss: [] //TODO: redundant??
+  metric_loss: [], //TODO: redundant??
+  rest_api_url: ""
 };
 
 export const statusSlice = createSlice({
@@ -52,6 +54,9 @@ export const statusSlice = createSlice({
     setGridSearchId: (state, action: PayloadAction<string>) => {
       state.grid_search_id = action.payload;
     },
+    setRestApiUrl: (state, action: PayloadAction<string>) => {
+      state.rest_api_url = action.payload;
+    },
     // ASK MAX: To be used if we want to save the Metric or Losses key here for the table
     // I stopped from doing so because then function is going to be called every evaluation_result message!!!
     upsertMetricOrLoss: (state, { payload }: PayloadAction<string[]>) => {
@@ -73,7 +78,7 @@ export const statusSlice = createSlice({
   },
 });
 
-export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput } = statusSlice.actions;
+export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl } = statusSlice.actions;
 export const selectFilter = (state: RootState) => state.status.currentFilter;
 export const selectTab = (state: RootState) => state.status.idTab;
 export const isConnected = (state: RootState) => state.status.wsConnected;
@@ -81,4 +86,7 @@ export const getLastPing = (state: RootState) => state.status.ping;
 export const getReceivevMsgCount = (state: RootState) => state.status.received_msg_count;
 export const getThroughput = (state: RootState) => state.status.throughput;
 export const selectColorMap = (state: RootState) => state.status.color_map;
+export const getGridSearchId = (state: RootState) => state.status.grid_search_id;
+export const getRestApiUrl = (state: RootState) => state.status.rest_api_url;
+
 export default statusSlice.reducer;

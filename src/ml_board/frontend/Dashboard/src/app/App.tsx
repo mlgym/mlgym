@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import { upsertCharts } from '../redux/charts/chartsSlice';
-import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
+import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
 import { upsertManyRows } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
 import { useAppDispatch } from './hooks';
@@ -123,6 +123,10 @@ export default function App() {
                 dispatch(setThroughput(data.status["throughput"]));
             } else if (data.status["isSocketConnected"] !== undefined) {
                 dispatch(setSocketConnection(data.status["isSocketConnected"]));
+                if (data.status["isSocketConnected"]) {
+                    dispatch(setGridSearchId(data.status["gridSearchId"]));
+                    dispatch(setRestApiUrl(data.status["restApiUrl"]));
+                }
                 setConnectionSnackBar({
                     isOpen: true,
                     connection: data.status["isSocketConnected"]

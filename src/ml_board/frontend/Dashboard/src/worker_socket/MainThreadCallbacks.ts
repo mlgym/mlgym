@@ -43,8 +43,8 @@ export const pingMainThreadCallback = (ping: number) => {
     postMessage({ status: { ping } } as DataToRedux);
 };
 
-export const connectionMainThreadCallback = (isSocketConnected: boolean) => {
-    postMessage({ status: { isSocketConnected } } as DataToRedux);
+export const connectionMainThreadCallback = (isSocketConnected: boolean, gridSearchId?: string, restApiUrl?: string) => {
+    postMessage({ status: { isSocketConnected, gridSearchId, restApiUrl } } as DataToRedux);
 };
 
 export const msgCounterIncMainThreadCallback = () => {

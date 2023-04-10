@@ -47,7 +47,7 @@ export default function Graph({ chart_id }: { chart_id: string }) {
         },
         plugins: {
             title: {
-                text: chart_id,
+                text: chart_id.toLowerCase().split("_").join(" "),
                 display: true,
                 color: 'black',
                 font: {

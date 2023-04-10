@@ -25,11 +25,38 @@ import Send from '@mui/icons-material/Send';
 import axios from 'axios';
 import api from '../../../app/ApiMaster';
 import { JsonViewer } from '@textea/json-viewer';
+import Graph from '../../graphs/Graph';
+import { getGridSearchId, getRestApiUrl } from '../../../redux/status/statusSlice';
 
-interface expObj {
+interface AnyKeyValuePairsInterface {
     [key: string]: any
 }
-var obj: expObj = {}
+var anyObj: AnyKeyValuePairsInterface = {}
+var configFileDataObj: AnyKeyValuePairsInterface = {}
+
+interface CheckpointDataInterface {
+    model?: Blob,
+    optimizer?: Blob,
+    stateful_components?: Blob,
+    lr_scheduler?: Blob
+}
+var checkpointDataObj: CheckpointDataInterface = {}
+
+interface lossOrMetricInterface {
+    [key: string]: Array<{
+        exp_id: number,
+        label: string,
+        data: Array<number>,
+        fill: Boolean,
+        backgroundColor: string,
+        borderColor: string,
+        tension: number,
+        pointRadius: Number,
+        pointHitRadius: Number,
+        pointHoverRadius: Number
+    }>
+}
+var lossOrMetricObj: lossOrMetricInterface = {}
 
 const Accordion = styled((props: AccordionProps) => (
     <MuiAccordion disableGutters elevation={0} square {...props} />))(() => ({
@@ -58,66 +85,32 @@ const AccordionSummary = styled((props: AccordionSummaryProps) => (
   
 const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
     paddingTop: theme.spacing(0),
-    // borderTop: '1px solid rgba(0, 0, 0, .125)',
 }));
-
-interface loss_or_metric_interface {
-    [key: string]: Array<{
-        exp_id: number,
-        label: string,
-        data: Array<number>,
-        fill: Boolean,
-        backgroundColor: string,
-        borderColor: string,
-        tension: number,
-        pointRadius: Number,
-        pointHitRadius: Number,
-        pointHoverRadius: Number
-    }>
-}
-
-const JSON_DUMMY_DATA = {
-    "id": 9,
-    "title": "Infinix INBOOK",
-    "description": "Infinix Inbook X1 Ci3 10th 8GB...",
-    "price": 1099,
-    "discountPercentage": 11.83,
-    "rating": 4.54,
-    "stock": 96,
-    "brand": "Infinix",
-    "category": "laptops",
-    "thumbnail": "https://i.dummyjson.com/data/products/9/thumbnail.jpg",
-    "images": [
-      "https://i.dummyjson.com/data/products/9/1.jpg",
-      "https://i.dummyjson.com/data/products/9/2.png",
-      "https://i.dummyjson.com/data/products/9/3.png",
-      "https://i.dummyjson.com/data/products/9/4.jpg",
-      "https://i.dummyjson.com/data/products/9/thumbnail.jpg"
-    ]
-}
 
 function ExperimentPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     let experiment_id = searchParams.get("experiment_id") as string;
-    const [selectedExperiment, setSelectedExperiment] = useState(obj)
+    const [selectedExperiment, setSelectedExperiment] = useState(anyObj)
     const filteredExp = useAppSelector(state => selectRowById(state, experiment_id));
     const [showMore, setShowMore] = useState(false);
-    const [loss_or_metric_data, setLossOrMetricData] = useState(obj);
+    const [loss_or_metric_data, setLossOrMetricData] = useState(lossOrMetricObj);
     const [isLoadingCheckpointData, setIsLoadingCheckpointData] = useState(false);
     const [errorInCheckpointData, setErrorInCheckpointData] = useState("");
     const [checkpointId, setCheckpointId] = useState("");
-    const [checkpointData, setCheckpointData] = useState(obj);
+    const [checkpointData, setCheckpointData] = useState(checkpointDataObj);
     const [configFileName, setConfigFileName] = useState("");
-    const [configFileData, setConfigFileData] = useState(obj);
+    const [configFileData, setConfigFileData] = useState(configFileDataObj);
     const [isLoadingExpConfigFile, setIsLoadingExpConfigFile] = useState(false);
+    const [showConfigFileData, setShowConfigFileData] = useState(false);
     const [errorInExpConfigFileData, setErrorInExpConfigFileData] = useState("");
+    const grid_search_id = useAppSelector(getGridSearchId);
+    const rest_api_url = useAppSelector(getRestApiUrl);
 
     useEffect(() => {
         console.log("filteredExp: ",filteredExp);
-        // setConfigFileData(JSON_DUMMY_DATA);
         if (filteredExp) {
             setSelectedExperiment(filteredExp);
-            let loss_or_metric:loss_or_metric_interface = {};
+            let loss_or_metric:lossOrMetricInterface = {};
             // TODO: replace any type with the interface of filteredExp (i.e <Row> as defined in redux)
             let selectedExp:any = filteredExp;
             if (selectedExp.splits) {
@@ -152,35 +145,59 @@ function ExperimentPage() {
     function changeText(key:string, text:string) {
         if (key === "checkpointId") {
             setCheckpointId(text);
+            setCheckpointData(checkpointDataObj);
             setErrorInCheckpointData("");
         }
         else if (key === "configFileName") {
             setConfigFileName(text);
             setErrorInExpConfigFileData("");
+            setConfigFileData(configFileDataObj);
+            setShowConfigFileData(false);
         }
     }
 
     function get_checkpoint_data() {
         if (checkpointId && checkpointId.length > 0) {
-        
-            let checkpoint_url = api.checkpoint_url.replace("<grid_search_id>", "");
-            let experiment_id = filteredExp?.experiment_id;
-            if (experiment_id) {
-                checkpoint_url = checkpoint_url.replace("<experiment_id>", experiment_id.toString());
-            }
+            
+            let checkpoint_url = api.checkpoint_url.replace("<grid_search_id>", grid_search_id);
+            checkpoint_url = checkpoint_url.replace("<experiment_id>", filteredExp!.experiment_id!.toString());
             checkpoint_url = checkpoint_url.replace("<checkpoint_id>", checkpointId);
             
-            setErrorInCheckpointData("");            
+            setErrorInCheckpointData("");
             setIsLoadingCheckpointData(true);
 
-            axios(checkpoint_url).then((data) => {
-                console.log("Got get_checkpoint_data: ", data);
+            axios.get(rest_api_url + checkpoint_url).then((response) => {
+                console.log("Got response from get_checkpoint API: ", response);
+                if (response.status === 200) {
+                    let resp_data = response.data;
+                    if (Object.keys(resp_data).length === 0) {
+                        setErrorInCheckpointData("No data available!");
+                    }
+                    else {
+                        if (resp_data.model) {
+                            checkpointData["model"] = resp_data.model;
+                        }
+                        if (resp_data.optimizer) {
+                            checkpointData["optimizer"] = resp_data.optimizer;
+                        }
+                        if (resp_data.stateful_components) {
+                            checkpointData["stateful_components"] = resp_data.stateful_components;
+                        }
+                        if (resp_data.lr_scheduler) {
+                            checkpointData["lr_scheduler"] = resp_data.lr_scheduler;
+                        }
+                        setCheckpointData(checkpointData);
+                    }
+                }
+                else {
+                    setErrorInCheckpointData("Oops! wrong ID / an error occurred");
+                }
                 setIsLoadingCheckpointData(false);
             })
             .catch((error) => {
                 console.log("Error in get_checkpoint_data: ", error);
                 setIsLoadingCheckpointData(false);
-                setErrorInCheckpointData("Oops! something went wrong in getting checkpoint data");
+                setErrorInCheckpointData("Oops! wrong ID / an error occurred");
             });
         }
         else {
@@ -190,28 +207,54 @@ function ExperimentPage() {
 
     function get_experiment_config_file() {
         if (configFileName && configFileName.length > 0) {
-            let experiment_config_file = api.experiment_config_file.replace("<grid_search_id>", "");
-            let experiment_id = filteredExp?.experiment_id;
-            if (experiment_id) {
-                experiment_config_file = experiment_config_file.replace("<experiment_id>", experiment_id.toString());
-            }
+            
+            let experiment_config_file = api.experiment_config_file.replace("<grid_search_id>", grid_search_id);
+            experiment_config_file = experiment_config_file.replace("<experiment_id>", filteredExp!.experiment_id!.toString());
             experiment_config_file = experiment_config_file.replace("<config_file_name>", configFileName);
             
             setErrorInExpConfigFileData("");
             setIsLoadingExpConfigFile(true);
+            setShowConfigFileData(false);
 
-            axios(experiment_config_file).then((data) => {
-                console.log("Got experiment_config_file: ", data);
+            axios.get(rest_api_url + experiment_config_file).then((response) => {
+                console.log("Got response from experiment_config API: ", response);
+                if (response.status === 200) {
+                    setConfigFileData(response.data);
+                    setShowConfigFileData(true);
+                }
+                else {
+                    setErrorInExpConfigFileData("Oops! wrong file name / an error occurred");
+                }
                 setIsLoadingExpConfigFile(false);
             })
             .catch((error) => {
                 console.log("Error in experiment_config_file: ", error);
                 setIsLoadingExpConfigFile(false);
-                setErrorInExpConfigFileData("Oops! something went wrong in getting Experiment Config File");
+                setErrorInExpConfigFileData("Oops! wrong file name / an error occurred");
             });   
         }
         else {
             console.log("Please enter config file name");
+        }
+    }
+
+    function downloadFile(file_name: string, fileData?: Blob | MediaSource) {
+        if (file_name == "experiment_config") {
+            const dataStr = JSON.stringify(configFileData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const linkElement = document.createElement("a");
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', configFileName+"_experiemnt_"+selectedExperiment.experiment_id.toString());
+            linkElement.click();
+        }
+        else {
+            const url = window.URL.createObjectURL(fileData!);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = file_name+"_experiemnt_"+selectedExperiment.experiment_id.toString();
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
     }
 
@@ -243,7 +286,12 @@ function ExperimentPage() {
                                             Job Type
                                         </div>
                                         <div className={styles.cardcontent_value}>
-                                            {selectedExperiment.job_type}
+                                            {
+                                                selectedExperiment.job_type ?
+                                                selectedExperiment.job_type
+                                                :
+                                                "--"
+                                            }
                                         </div>
                                     </div>
                                     <div className={styles.cardcontent}>
@@ -251,7 +299,12 @@ function ExperimentPage() {
                                             Device
                                         </div>
                                         <div className={styles.cardcontent_value}>
-                                            {selectedExperiment.device}
+                                            {
+                                                selectedExperiment.device ? 
+                                                selectedExperiment.device
+                                                :
+                                                "--"
+                                            }
                                         </div>
                                     </div>
                                 </CardContent>
@@ -269,7 +322,7 @@ function ExperimentPage() {
                                         </div>
                                         <div className={styles.cardcontent_value}>
                                             {
-                                                selectedExperiment.starting_time !== -1 ?
+                                                selectedExperiment.starting_time && selectedExperiment.starting_time !== -1 ?
                                                 moment(new Date(selectedExperiment.starting_time*1000)).format("YYYY-MM-DD hh:MM:SS")
                                                 :
                                                 "--"
@@ -282,7 +335,7 @@ function ExperimentPage() {
                                         </div>
                                         <div className={styles.cardcontent_value}>
                                             {
-                                                selectedExperiment.finishing_time !== -1 ?
+                                                selectedExperiment.finishing_time && selectedExperiment.finishing_time !== -1 ?
                                                 moment(new Date(selectedExperiment.finishing_time*1000)).format("YYYY-MM-DD hh:MM:SS")
                                                 :
                                                 "--"
@@ -313,7 +366,10 @@ function ExperimentPage() {
                                             selectedExperiment.job_status === "INIT" ?
                                             "INITIALIZING"
                                             :
+                                            selectedExperiment.job_status ?
                                             selectedExperiment.job_status
+                                            :
+                                            "--"
                                         }
                                         </div>
                                     </div>
@@ -410,14 +466,14 @@ function ExperimentPage() {
                                             <HalfDonoughtGraph 
                                                 graph_data={
                                                     [
-                                                        selectedExperiment.current_epoch,
-                                                        selectedExperiment.num_epochs-selectedExperiment.current_epoch
+                                                        selectedExperiment.epoch_progress,
+                                                        (1-selectedExperiment.epoch_progress)
                                                     ]
                                                 }
                                                 label_data={
                                                     [
-                                                        selectedExperiment.current_epoch+"%",
-                                                        (selectedExperiment.num_epochs-selectedExperiment.current_epoch)+"%"
+                                                        selectedExperiment.epoch_progress*100+"%",
+                                                        (1-selectedExperiment.epoch_progress)*100+"%"
                                                     ]
                                                 }
                                             />
@@ -486,33 +542,31 @@ function ExperimentPage() {
                 <AccordionDetails>
                     <Grid container rowSpacing={1} spacing={{ xs: 1, md: 2 }}>
                         <Grid item={true} xs={12} sm={12} md={3}>
-                            <Card className={styles.cardcontent_with_download_btn}>
+                            <Card className={styles.card}>
                                 <CardContent>
-                                    <div className={styles.cardcontent}>
-                                        <div className={styles.cardcontent_key}>
-                                            <TextField
-                                                error={errorInCheckpointData.length > 0}
-                                                helperText={errorInCheckpointData.length > 0? errorInCheckpointData : ""}
-                                                label="Enter Checkpoint Id" 
-                                                variant="standard" 
-                                                value={checkpointId}
-                                                disabled={isLoadingCheckpointData}
-                                                onChange={(e)=>changeText("checkpointId", e.target.value)}
-                                            />
-                                        </div>
-                                        <div className={styles.cardcontent_value}>
-                                            <IconButton 
-                                                disabled={isLoadingCheckpointData || checkpointId.length === 0}
-                                                size="large" 
-                                                onClick={()=>get_checkpoint_data()}
-                                            >
-                                                <Send /> 
-                                            </IconButton>
-                                        </div>
+                                    <div className={styles.textfiled_cardcontent}>
+                                        <TextField
+                                            error={errorInCheckpointData.length > 0}
+                                            helperText={errorInCheckpointData.length > 0? errorInCheckpointData : ""}
+                                            label="Enter Checkpoint Id" 
+                                            variant="standard" 
+                                            margin="dense"
+                                            fullWidth
+                                            value={checkpointId}
+                                            disabled={isLoadingCheckpointData}
+                                            onChange={(e)=>changeText("checkpointId", e.target.value)}
+                                        />
+                                        <IconButton 
+                                            disabled={isLoadingCheckpointData || checkpointId.length === 0}
+                                            size="large" 
+                                            onClick={()=>get_checkpoint_data()}
+                                        >
+                                            <Send /> 
+                                        </IconButton>
                                     </div>
                                     {
                                         isLoadingCheckpointData ?
-                                        <Box sx={{ width: '100%' }}>
+                                        <Box className={styles.loading_bar_wrap}>
                                             <LinearProgress />
                                         </Box>
                                         :
@@ -521,48 +575,78 @@ function ExperimentPage() {
                                         :
                                         !isLoadingCheckpointData && !checkpointData ?
                                         <div>
-                                            <div>
+                                            {
+                                                checkpointData["model"] ?
                                                 <div className={styles.cardcontent}>
                                                     <div className={styles.cardcontent_key}>
                                                         Model
                                                     </div>
                                                     <div className={styles.cardcontent_value}>
-                                                        <IconButton size="large">
+                                                        <IconButton 
+                                                            size="large" 
+                                                            onClick={() => downloadFile("Model", checkpointData["model"])}
+                                                        >
                                                             <Download /> 
                                                         </IconButton>
                                                     </div>
                                                 </div>
+                                                :
+                                                null
+                                            }
+                                            {
+                                                checkpointData["optimizer"] ?
                                                 <div className={styles.cardcontent}>
                                                     <div className={styles.cardcontent_key}>
                                                         Optimizer
                                                     </div>
                                                     <div className={styles.cardcontent_value}>
-                                                        <IconButton size="large">
+                                                        <IconButton 
+                                                            size="large"
+                                                            onClick={() => downloadFile("Optimizer", checkpointData["optimizer"])}
+                                                        >
                                                             <Download /> 
                                                         </IconButton>
                                                     </div>
                                                 </div>
+                                                :
+                                                null
+                                            }
+                                            {
+                                                checkpointData["stateful_components"] ?
                                                 <div className={styles.cardcontent}>
                                                     <div className={styles.cardcontent_key}>
                                                         Stateful Components
                                                     </div>
                                                     <div className={styles.cardcontent_value}>
-                                                        <IconButton size="large">
+                                                        <IconButton 
+                                                            size="large"
+                                                            onClick={() => downloadFile("Stateful Components", checkpointData["stateful_components"])}
+                                                        >
                                                             <Download /> 
                                                         </IconButton>
                                                     </div>
                                                 </div>
+                                                :
+                                                null
+                                            }
+                                            {
+                                                checkpointData["lr_scheduler"] ?
                                                 <div className={styles.cardcontent}>
                                                     <div className={styles.cardcontent_key}>
                                                         LR Scheduler
                                                     </div>
                                                     <div className={styles.cardcontent_value}>
-                                                        <IconButton size="large" onClick={()=>get_checkpoint_data()}>
+                                                        <IconButton 
+                                                            size="large" 
+                                                            onClick={() => downloadFile("LR Scheduler", checkpointData["lr_scheduler"])}
+                                                        >
                                                             <Download /> 
                                                         </IconButton>
                                                     </div>
                                                 </div>
-                                            </div>
+                                                :
+                                                null
+                                            }
                                         </div>
                                         :
                                         null
@@ -573,79 +657,61 @@ function ExperimentPage() {
                         <Grid item={true} xs={12} sm={12} md={9}>
                             <Card className={styles.card}>
                                 <CardContent>
-                                    <div className={styles.cardcontent}>
-                                        <div className={styles.cardcontent_key}>
-                                            <div className={styles.cardcontent}>
-                                                <div className={styles.cardcontent_key}>
-                                                    <TextField
-                                                        error={errorInExpConfigFileData.length > 0}
-                                                        helperText={errorInExpConfigFileData.length > 0? errorInExpConfigFileData : ""}
-                                                        label="Enter Config File Name" 
-                                                        variant="standard"
-                                                        value={configFileName}
-                                                        disabled={isLoadingExpConfigFile}
-                                                        onChange={(e)=>changeText("configFileName", e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className={styles.cardcontent_value}>
-                                                    <IconButton 
-                                                        size="large"
-                                                        disabled={isLoadingExpConfigFile ||configFileName.length === 0}
-                                                        onClick={()=>get_experiment_config_file()}
-                                                    >
-                                                        <Send /> 
-                                                    </IconButton>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <div className={styles.textfiled_cardcontent}>
+                                        <TextField
+                                            error={errorInExpConfigFileData.length > 0}
+                                            helperText={errorInExpConfigFileData.length > 0? errorInExpConfigFileData : ""}
+                                            label="Enter Config File Name" 
+                                            variant="standard"
+                                            margin="dense"
+                                            fullWidth
+                                            value={configFileName}
+                                            disabled={isLoadingExpConfigFile}
+                                            onChange={(e)=>changeText("configFileName", e.target.value)}
+                                        />
+                                        <IconButton 
+                                            size="large"
+                                            disabled={isLoadingExpConfigFile ||configFileName.length === 0}
+                                            onClick={()=>get_experiment_config_file()}
+                                        >
+                                            <Send /> 
+                                        </IconButton>
                                         {
-                                            Object.keys(configFileData).length > 0 ?
-                                            <div className={styles.cardcontent_key}>
-                                                <div className={styles.cardcontent}>
-                                                    <div className={styles.cardcontent_key}>
-                                                        <IconButton 
-                                                            size="large"
-                                                            style={{ marginRight: "20px" }} 
-                                                        >
-                                                            <Download /> 
-                                                        </IconButton>
-                                                    </div>
-                                                    <div className={styles.cardcontent_key}>
-                                                        <FormControlLabel
-                                                            sx={{
-                                                                display: 'block',
-                                                            }}
-                                                            disabled={isLoadingExpConfigFile ||configFileName.length === 0}
-                                                            control={
-                                                            <Switch
-                                                                checked={true}
-                                                                // onChange={() => setLoading(!loading)}
-                                                                name="loading"
-                                                                color="primary"
-                                                            />
-                                                            }
-                                                            label="View / Hide"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            !isLoadingExpConfigFile && errorInExpConfigFileData.length === 0 && Object.keys(configFileData).length > 0 ?
+                                            <IconButton 
+                                                size="large"
+                                                onClick={() => downloadFile("experiment_config")}
+                                            >
+                                                <Download /> 
+                                            </IconButton>
+                                            :
+                                            null
+                                        }
+                                        {
+                                            !isLoadingExpConfigFile && errorInExpConfigFileData.length === 0 && Object.keys(configFileData).length > 0 ?
+                                            <FormControlLabel
+                                                control={
+                                                    <Switch
+                                                        checked={showConfigFileData}
+                                                        onChange={() => setShowConfigFileData(!showConfigFileData)}
+                                                        name="loading"
+                                                        color="primary"
+                                                    />
+                                                }
+                                                label={"View/Hide"}
+                                            />
                                             :
                                             null
                                         }
                                     </div>
                                     {
                                         isLoadingExpConfigFile ?
-                                        <Box sx={{ width: '100%' }}>
+                                        <Box className={styles.loading_bar_wrap}>
                                             <LinearProgress />
                                         </Box>
                                         :
-                                        !isLoadingExpConfigFile && errorInExpConfigFileData.length > 0 ?
-                                        null
-                                        :
-                                        !isLoadingExpConfigFile && !configFileData ?
-                                        <div>
-                                            <JsonViewer value={configFileData} />
-                                        </div>
+                                        !isLoadingExpConfigFile && errorInExpConfigFileData.length === 0 && Object.keys(configFileData).length > 0 && showConfigFileData ?
+                                        <JsonViewer value={configFileData} />
                                         :
                                         null
                                     }
@@ -664,8 +730,15 @@ function ExperimentPage() {
                         Object.keys(loss_or_metric_data).length > 0 ?
                         <Grid container rowSpacing={1} spacing={{ xs: 2, md: 3 }} className={styles_graphs.grid_container}>
                             {
-                                Object.keys(loss_or_metric_data).map((loss_or_metric_key, index) => {
-                                    return(
+                                Object.keys(loss_or_metric_data).map((loss_or_metric_key, index) => 
+                                //     <Graph 
+                                //         chart_id={loss_or_metric_key} 
+                                //         key={loss_or_metric_key} 
+                                //         graph_data={loss_or_metric_data[loss_or_metric_key]}
+                                //     />
+                                // )
+                                // {
+                                    // return(
                                         <Grid item={true} xs={12} sm={12} md={6} key={index}>
                                             <Card className={styles_graphs.grid_card}>
                                                 <Box className={styles_graphs.graphs_chart_container}>
@@ -676,8 +749,9 @@ function ExperimentPage() {
                                                 </Box>
                                             </Card>
                                         </Grid>
-                                    )
-                                })
+                                    // )
+                                // }
+                                )
                             }
                         </Grid>
                         :

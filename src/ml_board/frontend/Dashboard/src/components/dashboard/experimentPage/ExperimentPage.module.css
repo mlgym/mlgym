@@ -12,15 +12,6 @@
     margin-bottom: 10px;
 }
 
-.cardcontent_with_download_btn {
-    /* display: flex;
-    flex-direction: row; */
-    width: 100%;
-    margin-top: 5px;
-    margin-bottom: 10px;
-    
-}
-
 .cardcontent_typography {
     display: flex;
     flex-direction: row;
@@ -97,6 +88,19 @@
     font-family: sans-serif;
 }
 
+.cardcontent_textfiled {
+    background-color: #36A2EB;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+.textfiled_cardcontent {
+    display: flex;
+    flex-direction: row;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
 .cardcontent_value {
     font-weight: bold;
     color: #36A2EB;
@@ -108,4 +112,20 @@
     margin-bottom: 20px;
     padding: 5px;
     display: flex;
+}
+
+.graphs_chart_container {
+    position: relative;
+    margin: auto;
+    height: 80vh;
+    width: 100%;
+}
+
+.loading_bar_wrap {
+    width: 100%;
+}
+
+.switch_container {
+    display: block;
+    margin-left: 20px;
 }
