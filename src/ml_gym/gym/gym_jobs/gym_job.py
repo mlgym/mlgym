@@ -106,7 +106,7 @@ class AbstractGymJob(StatefulComponent):
         evaluation_results = evaluation_step_routine(current_epoch=current_epoch)
         if current_epoch > 0:
             self.lr_scheduler.step()
-        if accelerator is not None and accelerator.is_main_process:
+        if accelerator is None or accelerator is not None and accelerator.is_main_process:
             checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=num_epochs,
                                                                                                      current_epoch=current_epoch,
                                                                                                      evaluation_result=evaluation_results)
