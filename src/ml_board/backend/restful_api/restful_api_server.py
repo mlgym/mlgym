@@ -1,4 +1,3 @@
-import pickle
 import base64
 from fastapi import FastAPI, File
 from fastapi import status, HTTPException
@@ -33,12 +32,17 @@ class RestfulAPIServer:
             path="/grid_searches/{grid_search_id}/{experiment_id}/{config_name}", methods=["PUT"], endpoint=self.add_config_to_experiment
         )
         self.app.add_api_route(
+            path="/checkpoint_list/{grid_search_id}/{experiment_id}",
+            methods=["GET"],
+            endpoint=self.get_checkpoint_list,
+        )
+        self.app.add_api_route(
+            path="/checkpoint_list/{grid_search_id}/{experiment_id}/{epoch}", methods=["GET"], endpoint=self.get_checkpoint_dict_epoch
+        )
+        self.app.add_api_route(
             path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource}",
             methods=["GET"],
             endpoint=self.get_checkpoint_resource,
-        )
-        self.app.add_api_route(
-            path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}", methods=["GET"], endpoint=self.get_checkpoint_dict_epoch
         )
         self.app.add_api_route(
             path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource}",
@@ -162,6 +166,48 @@ class RestfulAPIServer:
                 detail=f"Provided invalid grid_search_id {grid_search_id}, experiment_id {experiment_id} or config_name {config_name}",
             ) from e
 
+    def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str):
+        """
+        ``HTTP GET`` Fetch all checkpoint resource pickle files
+          given the epoch, experiment ID & grid search ID.
+
+        :params:
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
+             epoch (str): Epoch number
+
+        :returns: List of Checkpoints
+        """
+        try:
+            checkpoint_list = self.data_access.get_checkpoint_dict_epoch(
+                grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch
+            )
+            return checkpoint_list
+        except InvalidPathError as e:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Provided invalid grid_search_id {grid_search_id}, experiment_id {experiment_id} or epoch {epoch}",
+            ) from e
+
+    def get_checkpoint_list(self, grid_search_id: str, experiment_id: str):
+        """
+        ``HTTP GET`` Fetch all checkpoint resource pickle files
+          given the epoch, experiment ID & grid search ID.
+
+        :params:
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
+
+        :returns: List of checkpoints
+        """
+        try:
+            checkpoint_list = self.data_access.get_checkpoint_list(grid_search_id=grid_search_id, experiment_id=experiment_id)
+            return checkpoint_list
+        except InvalidPathError as e:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Provided invalid parameters for fetching checkpoint list."
+            ) from e
+
     def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
         """
         ``HTTP GET`` Fetch checkpoint resource pickle file
@@ -248,29 +294,6 @@ class RestfulAPIServer:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Provided invalid payload or grid_search_id {grid_search_id}, experiment_id {experiment_id} or epoch {epoch}.",
-            ) from e
-
-    def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str):
-        """
-        ``HTTP GET`` Fetch all checkpoint resource pickle files
-          given the epoch, experiment ID & grid search ID.
-
-        :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
-             epoch (str): Epoch number
-
-        :returns: List of Checkpoints
-        """
-        try:
-            checkpoint_list = self.data_access.get_checkpoint_dict_epoch(
-                grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch
-            )
-            return checkpoint_list
-        except InvalidPathError as e:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Provided invalid grid_search_id {grid_search_id}, experiment_id {experiment_id} or epoch {epoch}",
             ) from e
 
     def run_server(self, application_server_callable: Callable):
