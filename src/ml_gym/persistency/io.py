@@ -34,7 +34,7 @@ class GridSearchAPIClientIF(ABC):
     def add_checkpoint_resource(self, grid_search_id: str, experiment_id: str, payload: Dict):
         raise NotImplementedError
 
-    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: int):
+    def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: int):
         raise NotImplementedError
 
     def get_full_checkpoint(self, grid_search_id: str, experiment_id: str, checkpoint_id: int):
@@ -248,7 +248,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
             payload_pick = pickle.dumps(payload[f"{checkpoint}"])
             GridSearchRestfulAPIClient._post_binary_resource(url, payload_pick)
 
-    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: int):
+    def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: int):
         """
         ``HTTP DELETE Call Request`` Delete all checkpoint resource pickle files
           given the epoch, experiment ID & grid search ID over HTTP call.
