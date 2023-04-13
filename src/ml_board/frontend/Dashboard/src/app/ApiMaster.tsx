@@ -1,12 +1,15 @@
+export const defaultGridSearchConfigFileName = "grid_search_config";
+export const defaultExperimentConfigFileName = "experiment_config";
+
 const GRID_SEARCH_BASE_URL = "/grid_searches/<grid_search_id>";
 const CHECKPOINT_BASE_URL = "/checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>";
 
 let api = {
     // following API to PUT config file for the whole grid search
-    gridsearch_config_file: GRID_SEARCH_BASE_URL + "/<config_file_name>",
+    gridsearch_config_file: GRID_SEARCH_BASE_URL + "/" + defaultGridSearchConfigFileName,
 
     // following API to PUT config file for a selected experiment
-    experiment_config_file: GRID_SEARCH_BASE_URL + "/<experiment_id>/<config_file_name>",
+    experiment_config_file: GRID_SEARCH_BASE_URL + "/<experiment_id>/" + defaultExperimentConfigFileName,
 
     // following API to get all the experiments of a grid search
     experiments: GRID_SEARCH_BASE_URL + "/experiments",

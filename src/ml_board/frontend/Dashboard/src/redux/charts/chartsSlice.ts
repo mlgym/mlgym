@@ -69,7 +69,14 @@ export const { upsertCharts } = chartsSlice.actions;
 // TODO: memoize these selectors
 export const selectChartLabelsById = (state: RootState, chart_id: string) => state.charts.entities[chart_id]?.x_axis ?? [];
 export const selectExperimentsPerChartById = (state: RootState, chart_id: string) => state.charts.entities[chart_id]?.experiments.entities ?? {};
-
+// export const fun = (state: RootState, exp_id: string) =>{
+//     const allExp = {};
+//     for (const chart_id in state.charts.entities) {
+//         const experiments = state.charts.entities[chart_id]?.experiments.entities ?? {};
+//         allExp[chart_id] = experiments[exp_id];
+//     }
+//     return allExp;
+// }
 
 // create a set of memoized selectors
 export const {

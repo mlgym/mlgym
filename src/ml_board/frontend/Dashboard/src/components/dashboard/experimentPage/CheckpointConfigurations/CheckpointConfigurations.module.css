@@ -1,0 +1,17 @@
+.textfield_cardcontent_checkpoint_config {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.checkpoint_data_resources {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(227, 225, 222, 0.747);
+    border-radius: 15px;
+    padding-left: 20px;
+    padding-right: 10px;
+}
