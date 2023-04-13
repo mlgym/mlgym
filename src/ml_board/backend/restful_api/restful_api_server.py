@@ -260,17 +260,7 @@ class RestfulAPIServer:
              epoch (str): Epoch number
         """
         try:
-            chekpoint_resources = [
-                CheckpointResource.model,
-                CheckpointResource.lr_scheduler,
-                CheckpointResource.optimizer,
-                CheckpointResource.stateful_components,
-            ]
-
-            for checkpoint in chekpoint_resources:
-                self.data_access.delete_checkpoint_resource(
-                    grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch, checkpoint_resource=checkpoint
-                )
+            self.data_access.delete_checkpoints(grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch)
 
         except InvalidPathError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Provided invalid parameters for checkpoint resource.") from e

@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import os
 import glob
 import re
+import shutil
 from typing import Dict, List
 from ml_gym.error_handling.exception import InvalidPathError
 import json
@@ -51,6 +52,10 @@ class DataAccessIF(ABC):
 
     @abstractmethod
     def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: str):
         raise NotImplementedError
 
     @abstractmethod
@@ -330,6 +335,26 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
+    def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: str):
+        """
+        Delete checkpoint FOLDER From the event storage
+        given the epoch, experiment ID & grid search ID.
+
+        :params:
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
+             epoch (str): Epoch number
+        """
+
+        requested_full_path = os.path.realpath(
+            os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id), str(epoch))
+        )
+
+        if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
+            shutil.rmtree(requested_full_path)
+        else:
+            raise FileNotFoundError(f"Folder in path {requested_full_path} not found.")
+
     def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
         """
         Delete checkpoint resource pickle file from the event storage
@@ -342,11 +367,16 @@ class FileDataAccess(DataAccessIF):
              checkpoint_resource (CheckpointResource) : CheckpointResource type
         """
 
+        folder_path = os.path.realpath(
+            os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id), str(epoch))
+        )
         requested_full_path = os.path.realpath(
             os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id), str(epoch), f"{checkpoint_resource}.pickle")
         )
 
         if FileDataAccess.is_safe_path(base_dir=self.top_level_logging_path, requested_path=requested_full_path):
             os.remove(requested_full_path)
+            if len([name for name in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, name))]) == 0:
+                os.rmdir(folder_path)
         else:
             raise FileNotFoundError(f"File in path {requested_full_path} not found.")
