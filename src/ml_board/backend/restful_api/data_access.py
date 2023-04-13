@@ -262,7 +262,7 @@ class FileDataAccess(DataAccessIF):
             files = FileDataAccess.get_checkpoint_files(requested_full_path, base_path=self.top_level_logging_path)
             for file_num in range(len(files)):
                 split = os.path.normpath(files[file_num]).split(os.sep)
-                checkpoints.append(split[3])
+                checkpoints.append(os.path.basename(split[3]).split(".")[0])
                 if file_num == len(files) - 1:
                     response.append({"experiment_id": experiment_id, "epoch": epoch, "checkpoints": checkpoints})
             return response
@@ -294,9 +294,9 @@ class FileDataAccess(DataAccessIF):
                     response.append({"experiment_id": experiment_id, "epoch": last_epoch, "checkpoints": checkpoints})
                     last_epoch = epoch
                     checkpoints = []
-                    checkpoints.append(split[3])
+                    checkpoints.append(os.path.basename(split[3]).split(".")[0])
                 else:
-                    checkpoints.append(split[3])
+                    checkpoints.append(os.path.basename(split[3]).split(".")[0])
                     if file_num == len(files) - 1:
                         response.append({"experiment_id": experiment_id, "epoch": epoch, "checkpoints": checkpoints})
             return response
