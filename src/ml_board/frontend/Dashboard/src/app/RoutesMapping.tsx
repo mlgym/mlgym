@@ -4,7 +4,7 @@ import PageNotFound from '../components/error/PageNotFound';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import SettingsIcon from '@mui/icons-material/Settings';
-import ExperimentPage from '../components/dashboard/experimentPage/ExperimentPage';
+import ExperimentPage from '../components/experimentPage/ExperimentPage';
 
 interface RoutesMappingInterface {
     // Object's Key name will be the name shown in Menu List

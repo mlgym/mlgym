@@ -2,9 +2,9 @@ import { Grid, Card, CardContent, TextField, IconButton, Switch, FormControlLabe
 import { Send, Download } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import api from '../../../../app/ApiMaster';
-import { useAppSelector } from "../../../../app/hooks";
-import { getGridSearchId, getRestApiUrl } from '../../../../redux/status/statusSlice';
+import api from '../../../app/ApiMaster';
+import { useAppSelector } from "../../../app/hooks";
+import { getGridSearchId, getRestApiUrl } from '../../../redux/status/statusSlice';
 import styles from './CheckpointConfigurations.module.css';
 
 const defaultCheckpointIdHelperText = "eg: 1";
@@ -13,7 +13,7 @@ interface CheckpointDataInterface {
 }
 var checkpointDataObj: CheckpointDataInterface = {}
 
-export default function CheckpointConfigurations({experimentIdProp} : {experimentIdProp: number}) {
+export default function CheckpointConfigurations({experimentIdProp} : {experimentIdProp: string}) {
 
     const [experimentId, setExperimentId] = useState("");
     const [checkpointId, setCheckpointId] = useState("");
@@ -26,7 +26,7 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
 
     useEffect(() => {
         if(experimentIdProp) {
-            setExperimentId(experimentIdProp.toString());
+            setExperimentId(experimentIdProp);
         }
     },[experimentIdProp]);
 
@@ -40,7 +40,7 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
     function get_experiment_config_file() {
         
         let checkpoint_url = api.checkpoint_url.replace("<grid_search_id>", grid_search_id);
-        checkpoint_url = checkpoint_url.replace("<experiment_id>", experimentId.trim().toString());
+        checkpoint_url = checkpoint_url.replace("<experiment_id>", experimentId);
         checkpoint_url = checkpoint_url.replace("<checkpoint_id>", checkpointId.trim().toString());
         
         setError("");
@@ -79,7 +79,7 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
         const url = window.URL.createObjectURL(fileData!);
         const a = document.createElement('a');
         a.href = url;
-        a.download = "checkpoint"+checkpointId.trim().toString()+"_experiemnt_"+experimentId.trim().toString();
+        a.download = "checkpoint"+checkpointId.trim().toString()+"_experiemnt_"+experimentId;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

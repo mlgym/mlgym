@@ -3,12 +3,12 @@ import { Send, Download } from '@mui/icons-material';
 import { JsonViewer } from '@textea/json-viewer';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import api, { defaultExperimentConfigFileName } from '../../../../app/ApiMaster';
-import { useAppSelector } from "../../../../app/hooks";
-import { getGridSearchId, getRestApiUrl } from '../../../../redux/status/statusSlice';
+import api, { defaultExperimentConfigFileName } from '../../../app/ApiMaster';
+import { useAppSelector } from "../../../app/hooks";
+import { getGridSearchId, getRestApiUrl } from '../../../redux/status/statusSlice';
 import styles from './ExperimentConfigurations.module.css';
 
-export default function ExperimentConfigurations({experimentIdProp} : {experimentIdProp: number}) {
+export default function ExperimentConfigurations({experimentIdProp} : {experimentIdProp: string}) {
     
     const [experimentConfigFileObject, setExperimentConfigFileObject] = useState({});
     const [error, setError] = useState("");
@@ -19,9 +19,8 @@ export default function ExperimentConfigurations({experimentIdProp} : {experimen
 
     useEffect(() => {
         if(experimentIdProp) {
-            let experimentId = experimentIdProp.toString().trim();
             let experiment_config_file = api.experiment_config_file.replace("<grid_search_id>", grid_search_id);
-            experiment_config_file = experiment_config_file.replace("<experiment_id>", experimentId);
+            experiment_config_file = experiment_config_file.replace("<experiment_id>", experimentIdProp);
             
             setError("");
             setShowHideData(false);
@@ -48,12 +47,11 @@ export default function ExperimentConfigurations({experimentIdProp} : {experimen
 
     function downloadFile() {
         if(experimentIdProp) {
-            let experimentId = experimentIdProp.toString().trim();
             const dataStr = JSON.stringify(experimentConfigFileObject, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
             const linkElement = document.createElement("a");
             linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', defaultExperimentConfigFileName.trim()+"_experiment_"+experimentId+".json");
+            linkElement.setAttribute('download', defaultExperimentConfigFileName.trim()+"_experiment_"+experimentIdProp+".json");
             linkElement.click();
         }
     }
