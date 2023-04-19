@@ -33,14 +33,14 @@ export default function ExperimentConfigurations({experimentIdProp} : {experimen
                     setShowHideData(true);
                 }
                 else {
-                    setError("Oops! wrong experiment id / file name / an error occurred");
+                    setError("Oops! an error occurred");
                 }
                 setIsLoading(false);
             })
             .catch((error) => {
                 console.log("Error in experiment_config_file: ", error);
                 setIsLoading(false);
-                setError("Oops! wrong file name / an error occurred");
+                setError("Oops! an error occurred");
             });
         }
     },[experimentIdProp]);

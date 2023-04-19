@@ -47,14 +47,14 @@ export default function SelectExperimentDropdown() {
                 }
             }
             else {
-                setError("Oops! wrong file name / an error occurred");
+                setError("Oops! an error occurred");
             }
             setIsLoading(false);
         })
         .catch((error) => {
             console.log("Error in experiments API: ", error);
             setIsLoading(false);
-            setError("Oops! wrong file name / an error occurred");
+            setError("Oops! an error occurred");
         });
     },[]);
 

@@ -30,14 +30,14 @@ export default function GridSearchConfigurations() {
                 setShowHideData(true);
             }
             else {
-                setError("Oops! wrong file name / an error occurred");
+                setError("Oops! an error occurred");
             }
             setIsLoading(false);
         })
         .catch((error) => {
             console.log("Error in grid_search_config_file: ", error);
             setIsLoading(false);
-            setError("Oops! wrong file name / an error occurred");
+            setError("Oops! an error occurred");
         });
 
     },[]);
