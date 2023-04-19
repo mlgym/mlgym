@@ -100,8 +100,6 @@ class WebSocketServer:
                                                                                                                 event_storage_id=grid_search_id)
                 event_id = self._room_id_to_event_storage[grid_search_id].add_event(data)
                 emit('mlgym_event', {'event_id': event_id, 'data': data}, to=grid_search_id)
-            elif data["event_type"] == "checkpoint":
-                self.save_checkpoint_entity(checkpoint=data["payload"], path=self._top_level_logging_path)
             else:
                 print(f"Unsupported event_type {data['event_type']}")
 
@@ -135,45 +133,6 @@ class WebSocketServer:
 
     def run(self):
         self._socketio.run(self.app, host=self._host, port=self._port)
-
-    def save_checkpoint_entity(self, checkpoint: Dict[str, Any], path: str):
-
-        def delete_checkpoint_entity(full_file_path: str):
-            if os.path.exists(full_file_path):
-                os.remove(full_file_path)
-            parent_dir = Path(full_file_path).parent
-            if os.path.exists(parent_dir):
-                try:
-                    os.removedirs(parent_dir)  # removes all the parent directory that are empty
-                except:  # raised when the parent dir was not empty
-                    pass
-
-        def save_chunk_list(entity: CheckpointEntity):
-            byte_stream = b''.join(entity.get_chunk_list())
-
-            full_directory_path = os.path.join(path, str(entity.grid_search_id), str(entity.experiment_id), str(entity.checkpoint_id))
-            full_file_path = os.path.join(full_directory_path, f"{entity.entity_id}.pickle")
-            os.makedirs(full_directory_path, exist_ok=True)
-            with open(full_file_path, "wb") as fd:
-                fd.write(byte_stream)
-
-        if checkpoint["final_num_chunks"] == 0:  # delete message
-            try:
-                self._checkpoint_cache.delete_entity(**checkpoint)
-            except CheckpointEntityError:  # raised when the entity is not present
-                pass
-            full_directory_path = os.path.join(path, str(checkpoint["grid_search_id"]),
-                                               str(checkpoint["experiment_id"]), str(checkpoint["checkpoint_id"]))
-            full_file_path = os.path.join(full_directory_path, f"{checkpoint['entity_id']}.pickle")
-            delete_checkpoint_entity(full_file_path=full_file_path)
-        else:  # checkpoint message
-            entity = self._checkpoint_cache.add_chunk(**checkpoint)
-            print(f"Received chunk id {checkpoint['chunk_id']} for entity {checkpoint['entity_id']}")
-            transfer_status = entity.get_transfer_status()
-            if transfer_status == CheckpointEntityTransferStatus.TRANSFERRED:
-                save_chunk_list(entity=entity)
-                entity.delete_chunks()
-
 
 if __name__ == '__main__':
     host = "127.0.0.1"
