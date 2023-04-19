@@ -10,8 +10,8 @@ ChartJS.register(
 );
 
 interface HalfDonoughtGraphDataProps {
-    graph_data: Array<Number>;
-    label_data: Array<String>;
+    graph_data: Array<number>;
+    label_data: Array<string>;
 }
 
 const HalfDonoughtGraph: React.FC<HalfDonoughtGraphDataProps> = (props) => {
@@ -54,9 +54,9 @@ const HalfDonoughtGraph: React.FC<HalfDonoughtGraphDataProps> = (props) => {
             }}
             plugins={[{
                 id: "textCenter",
-                beforeDraw: function(chart) {
+                beforeDraw: (chart) => {
                     const {ctx, data} = chart;
-                    let text:any = "";
+                    let text:any = "--"; // have to use 'any' type here as charts -> data.labels have type 'unknown[]'. So taking data.lables[0] is also unknown.
                     if (data.labels) {
                         text = data.labels[0];
                     }
@@ -64,7 +64,7 @@ const HalfDonoughtGraph: React.FC<HalfDonoughtGraphDataProps> = (props) => {
                     ctx.fillStyle = '#36A2EB';
                     ctx.textAlign = 'center';
                     ctx.fillText(text, chart.getDatasetMeta(0).data[0].x, chart.getDatasetMeta(0).data[0].y);
-                    ctx.save();
+                    ctx.save();  
                 }
             }]}
         />        

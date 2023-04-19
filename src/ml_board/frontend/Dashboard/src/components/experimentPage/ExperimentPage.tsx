@@ -23,22 +23,6 @@ export interface AnyKeyValuePairsInterface {
 }
 var anyObj: AnyKeyValuePairsInterface = {}
 
-interface lossOrMetricInterface {
-    [key: string]: Array<{
-        exp_id: number,
-        label: string,
-        data: Array<number>,
-        fill: Boolean,
-        backgroundColor: string,
-        borderColor: string,
-        tension: number,
-        pointRadius: Number,
-        pointHitRadius: Number,
-        pointHoverRadius: Number
-    }>
-}
-var lossOrMetricObj: lossOrMetricInterface = {}
-
 const Accordion = styled((props: AccordionProps) => (
     <MuiAccordion disableGutters elevation={0} square {...props} />))(() => ({
     '&:not(:last-child)': {
@@ -78,7 +62,6 @@ function ExperimentPage() {
 
     useEffect(() => {
         console.log("filteredExp: ",filteredExp);
-        console.log("selectedExpGraphs: ",selectedExpGraphs)
         if (filteredExp) {
             setSelectedExperiment(filteredExp);
         }
