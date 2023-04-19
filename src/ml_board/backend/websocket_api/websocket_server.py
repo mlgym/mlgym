@@ -57,7 +57,8 @@ class WebSocketServer:
         print(f"=== WEBSOCKET SERVER LOG ===: Sending {event_storage.length()} old messages from room {room_id} to client {client_id}")
         for event_id, event in event_storage.iter_generator():  # TODO make grid search id selectable
             batch.append({"event_id": event_id, "data": event})
-        emit("mlgym_event", {"event_id": "batched_events", "data": batch}, room=client_id)
+        if len(batch) > 0:
+            emit("mlgym_event", {"event_id": "batched_events", "data": batch}, room=client_id)
 
     def _init_call_backs(self):
         @self._socketio.on("join")
