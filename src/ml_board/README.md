@@ -145,10 +145,9 @@ _DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>_
 
 Delete specific Checkpoint Resource:
 
-_DELETE /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>_
+_DELETE /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>/<checkpoint_resource>_
 
 _DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/model_
-
 
 _DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/optimizer_
 
