@@ -59,6 +59,11 @@ class RestfulAPIServer:
             methods=["DELETE"],
             endpoint=self.delete_checkpoint_resource,
         )
+        self.app.add_api_route(
+            path="/system-info",
+            methods=["GET"],
+            endpoint=self.get_system_info,
+        )
 
         # self.app.mount("/", StaticFiles(directory="/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_board/frontend/dashboard/build/", html=True), name="static")
 
@@ -295,6 +300,18 @@ class RestfulAPIServer:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Provided invalid payload or grid_search_id {grid_search_id}, experiment_id {experiment_id} or epoch {epoch}.",
             ) from e
+    
+    def get_system_info(self):
+        """
+        ``HTTP GET`` Fetch System Information for model card.
+
+        :returns: JSON object - System Information of host machine
+        """
+        try:
+            None
+            return {}
+        except InvalidPathError as e:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Error while fetching server system information") from e
 
     def run_server(self, application_server_callable: Callable):
         application_server_callable(app=self.app)
