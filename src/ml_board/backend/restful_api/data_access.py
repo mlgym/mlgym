@@ -7,6 +7,7 @@ from typing import Dict, List
 from ml_gym.error_handling.exception import InvalidPathError
 import json
 from ml_board.backend.restful_api.data_models import RawTextFile, CheckpointResource, ExperimentStatus
+from pyparsing import Generator
 
 
 class DataAccessIF(ABC):
@@ -17,49 +18,53 @@ class DataAccessIF(ABC):
     """
 
     @abstractmethod
-    def get_experiment_statuses(self, grid_search_id: str):
+    def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
         raise NotImplementedError
 
     @abstractmethod
-    def add_raw_config_to_grid_search(self, grid_search_id: str, config_name: str, config_file: RawTextFile):
+    def add_raw_config_to_grid_search(self, grid_search_id: str, config_name: str, config_file: RawTextFile) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def add_config_to_experiment(self, grid_search_id: str, experiment_id: str, config_name: str, config: RawTextFile):
+    def add_config_to_experiment(self, grid_search_id: str, experiment_id: str, config_name: str, config: RawTextFile) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def get_grid_config(self, grid_search_id: str, config_name: str):
+    def get_grid_config(self, grid_search_id: str, config_name: str) -> Generator:
         raise NotImplementedError
 
     @abstractmethod
-    def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str):
+    def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str) -> Generator:
         raise NotImplementedError
 
     @abstractmethod
-    def get_checkpoint_list(self, grid_search_id: str, experiment_id: str):
+    def get_checkpoint_list(self, grid_search_id: str, experiment_id: str) -> List[Dict]:
         raise NotImplementedError
 
     @abstractmethod
-    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+    def get_checkpoint_resource(
+        self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource
+    ) -> Generator:
         raise NotImplementedError
 
     @abstractmethod
     def add_checkpoint_resource(
         self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, payload_pickle: bytes
-    ):
+    ) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+    def delete_checkpoint_resource(
+        self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource
+    ) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: str):
+    def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: str) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str):
+    def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str) -> List[Dict]:
         raise NotImplementedError
 
 
@@ -155,7 +160,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def add_raw_config_to_grid_search(self, grid_search_id: str, config_name: str, config_file: RawTextFile):
+    def add_raw_config_to_grid_search(self, grid_search_id: str, config_name: str, config_file: RawTextFile) -> None:
         """
         Add Config for a Grid Search ID to event storage
 
@@ -174,7 +179,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def add_config_to_experiment(self, grid_search_id: str, experiment_id: str, config_name: str, config: RawTextFile):
+    def add_config_to_experiment(self, grid_search_id: str, experiment_id: str, config_name: str, config: RawTextFile) -> None:
         """
         Add experiment config given the experiment ID & grid search ID to event storage.
 
@@ -197,7 +202,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def get_grid_config(self, grid_search_id: str, config_name: str):
+    def get_grid_config(self, grid_search_id: str, config_name: str) -> Generator:
         """
         Fetch grid config for a Grid Search ID from the event storage.
 
@@ -217,7 +222,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str):
+    def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str) -> Generator:
         """
         `Fetch experiment config given the experiment ID & grid search ID from event storage.
 
@@ -240,7 +245,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str):
+    def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str) -> List[Dict]:
         """
         Fetch all checkpoint resource pickle file names from event storage
         given the epoch, experiment ID & grid search ID.
@@ -269,7 +274,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def get_checkpoint_list(self, grid_search_id: str, experiment_id):
+    def get_checkpoint_list(self, grid_search_id: str, experiment_id) -> List[Dict]:
         """
         `Fetch all checkpoint resource pickle file names given the experiment ID & grid search ID from event storage.
 
@@ -303,7 +308,9 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+    def get_checkpoint_resource(
+        self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource
+    ) -> Generator:
         """
         `Fetch checkpoint resource pickle file given the experiment ID & grid search ID from event storage.
 
@@ -329,7 +336,7 @@ class FileDataAccess(DataAccessIF):
 
     def add_checkpoint_resource(
         self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, payload_pickle: bytes
-    ):
+    ) -> None:
         """
         Add a checkpoint resource pickle file given the epoch, experiment ID & grid search ID to event storage.
 
@@ -354,7 +361,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: str):
+    def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: str) -> None:
         """
         Delete checkpoint FOLDER From the event storage
         given the epoch, experiment ID & grid search ID.
@@ -374,7 +381,9 @@ class FileDataAccess(DataAccessIF):
         else:
             raise FileNotFoundError(f"Folder in path {requested_full_path} not found.")
 
-    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+    def delete_checkpoint_resource(
+        self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource
+    ) -> None:
         """
         Delete checkpoint resource pickle file from the event storage
         given the epoch, experiment ID & grid search ID.
