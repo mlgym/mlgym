@@ -82,7 +82,7 @@ class AbstractGymJob(StatefulComponent):
             )
 
         for epoch in checkpoint_instruction.checkpoints_to_delete:
-            self.gs_api_client.delete_checkpoint_resource(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id, epoch=epoch)
+            self.gs_api_client.delete_checkpoints(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id, epoch=epoch)
 
     @staticmethod
     def batch_processed_callback(status: str, experiment_status_logger: ExperimentStatusLogger, num_batches: int,
