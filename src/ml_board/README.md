@@ -166,6 +166,13 @@ Every event message has the following structure:
 
 ```
 
+Historical events are sent as bacthed_events when a new client asks for events:
+
+```json
+{"event_type": "batched_events", "data": <array_of_events>}
+
+```
+
 **Job scheduled:**
 
 Dispatched when a job is scheduled within the gym
