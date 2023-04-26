@@ -89,7 +89,7 @@ class FileDataAccess(DataAccessIF):
     @staticmethod
     def get_checkpoint_files(path: str, base_path: str):
         full_paths = glob.glob(os.path.join(path, "**", "*.pickle"), recursive=True)
-        return [os.path.relpath(full_path, base_path) for full_path in full_paths]
+        return sorted([os.path.relpath(full_path, base_path) for full_path in full_paths], reverse=True)
 
     @staticmethod
     def iterfile(file_path: str):
@@ -242,7 +242,7 @@ class FileDataAccess(DataAccessIF):
 
     def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str):
         """
-        Fetch all checkpoint resource pickle files from event storage
+        Fetch all checkpoint resource pickle file names from event storage
         given the epoch, experiment ID & grid search ID.
 
         :params:
@@ -250,7 +250,7 @@ class FileDataAccess(DataAccessIF):
              experiment_id (str): Experiment ID
              epoch (str): Epoch number
 
-        :returns: List of Checkpoint files
+        :returns: List of Checkpoint file names in an epoch
         """
         requested_full_path = os.path.realpath(
             os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id), str(epoch))
@@ -262,9 +262,8 @@ class FileDataAccess(DataAccessIF):
             files = FileDataAccess.get_checkpoint_files(requested_full_path, base_path=self.top_level_logging_path)
             for file_num in range(len(files)):
                 split = os.path.normpath(files[file_num]).split(os.sep)
-                checkpoints.append(os.path.basename(split[3]).split(".")[0])
-                if file_num == len(files) - 1:
-                    response.append({"experiment_id": experiment_id, "epoch": epoch, "checkpoints": checkpoints})
+                checkpoints.append(os.path.basename(split[-1]).split(".")[0])
+            response.append({"experiment_id": experiment_id, "epoch": epoch, "checkpoints": checkpoints})
             return response
 
         else:
@@ -272,13 +271,13 @@ class FileDataAccess(DataAccessIF):
 
     def get_checkpoint_list(self, grid_search_id: str, experiment_id):
         """
-        `Fetch checkpoint resource pickle file given the experiment ID & grid search ID from event storage.
+        `Fetch all checkpoint resource pickle file names given the experiment ID & grid search ID from event storage.
 
         :params:
              grid_search_id (str): Grid Search ID
              experiment_id (str): Experiment ID
 
-        :returns: list of checkpoints
+        :returns: List of Checkpoint file names in an experiment
         """
         requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id)))
 
@@ -286,19 +285,19 @@ class FileDataAccess(DataAccessIF):
             response = []
             checkpoints = []
             files = FileDataAccess.get_checkpoint_files(requested_full_path, base_path=self.top_level_logging_path)
-            last_epoch = os.path.normpath(files[0]).split(os.sep)[2]
+            last_epoch = os.path.normpath(files[0]).split(os.sep)[-2]
             for file_num in range(len(files)):
                 split = os.path.normpath(files[file_num]).split(os.sep)
-                epoch = split[2]
+                epoch = split[-2]
                 if epoch != last_epoch:
                     response.append({"experiment_id": experiment_id, "epoch": last_epoch, "checkpoints": checkpoints})
                     last_epoch = epoch
                     checkpoints = []
-                    checkpoints.append(os.path.basename(split[3]).split(".")[0])
+                    checkpoints.append(os.path.basename(split[-1]).split(".")[0])
                 else:
-                    checkpoints.append(os.path.basename(split[3]).split(".")[0])
-                    if file_num == len(files) - 1:
-                        response.append({"experiment_id": experiment_id, "epoch": epoch, "checkpoints": checkpoints})
+                    checkpoints.append(os.path.basename(split[-1]).split(".")[0])
+
+            response.append({"experiment_id": experiment_id, "epoch": epoch, "checkpoints": checkpoints})
             return response
 
         else:
