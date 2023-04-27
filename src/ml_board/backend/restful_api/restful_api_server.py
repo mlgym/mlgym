@@ -3,7 +3,7 @@ from fastapi import FastAPI, File
 from fastapi import status, HTTPException
 from fastapi.responses import StreamingResponse
 from ml_board.backend.restful_api.data_access import DataAccessIF
-from ml_gym.error_handling.exception import InvalidPathError
+from ml_gym.error_handling.exception import InvalidPathError, SystemInfoFetchError
 from ml_board.backend.restful_api.data_models import RawTextFile, CheckpointResource
 from typing import Callable
 from fastapi.middleware.cors import CORSMiddleware
@@ -314,12 +314,12 @@ class RestfulAPIServer:
         """
         ``HTTP GET`` Fetch System Information for model card.
 
-        :returns: JSON object - System Information of host machine
+        :returns: JSON object - System Information of host machine (CPU & GPU)
         """
         try:
             sysinfo = self.data_access.get_system_info()
             return sysinfo
-        except InvalidPathError as e:
+        except SystemInfoFetchError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Error while fetching server system information") from e
 
     def run_server(self, application_server_callable: Callable):

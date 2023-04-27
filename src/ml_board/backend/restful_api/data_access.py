@@ -418,7 +418,7 @@ class FileDataAccess(DataAccessIF):
         """
         ``HTTP GET`` Fetch System Information for model card.
 
-        :returns: JSON object - System Information of host machine
+        :returns: JSON object - System Information of host machine (CPU & GPU)
         """
         try:
             info = {}
