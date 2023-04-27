@@ -3,9 +3,7 @@ import os
 import glob
 import re
 import shutil
-import socket
 from typing import Dict, List
-import uuid
 from ml_gym.error_handling.exception import InvalidPathError, SystemInfoFetchError
 import json
 from ml_board.backend.restful_api.data_models import RawTextFile, CheckpointResource, ExperimentStatus
@@ -425,13 +423,9 @@ class FileDataAccess(DataAccessIF):
             info={}
             info['platform']=platform.system()
             info['platform-release']=platform.release()
-            info['platform-version']=platform.version()
             info['architecture']=platform.machine()
-            info['hostname']=socket.gethostname()
-            info['ip-address']=socket.gethostbyname(socket.gethostname())
-            info['mac-address']=':'.join(re.findall('..', '%012x' % uuid.getnode()))
             info['processor']=platform.processor()
             info['ram']=str(round(psutil.virtual_memory().total / (1024.0 **3)))+" GB"
-            return json.dumps(info)
+            return info
         except:
             raise SystemInfoFetchError(f"Unable to fetch System Info")
