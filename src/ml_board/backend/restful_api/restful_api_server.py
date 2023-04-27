@@ -6,6 +6,7 @@ from ml_board.backend.restful_api.data_access import DataAccessIF
 from ml_gym.error_handling.exception import InvalidPathError
 from ml_board.backend.restful_api.data_models import RawTextFile, CheckpointResource
 from typing import Callable
+from fastapi.middleware.cors import CORSMiddleware
 
 # from fastapi.staticfiles import StaticFiles
 
@@ -19,6 +20,14 @@ class RestfulAPIServer:
 
     def __init__(self, data_access: DataAccessIF):
         self.app = FastAPI(port=8080)
+        origins = ["*"]
+        self.app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        )
         self.data_access = data_access
         self.app.add_api_route(path="/grid_searches/{grid_search_id}/experiments", methods=["GET"], endpoint=self.get_experiment_statuses)
         self.app.add_api_route(
@@ -308,8 +317,8 @@ class RestfulAPIServer:
         :returns: JSON object - System Information of host machine
         """
         try:
-            None
-            return {}
+            sysinfo = self.data_access.get_system_info()
+            return sysinfo
         except InvalidPathError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Error while fetching server system information") from e
 
