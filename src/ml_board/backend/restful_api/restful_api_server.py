@@ -83,8 +83,8 @@ class RestfulAPIServer:
           given the experiment ID & grid search ID.
 
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
              config_name (str): Name of Configuration file
 
         :returns: JSON stream response
@@ -103,7 +103,7 @@ class RestfulAPIServer:
         ``HTTP GET`` Fetch grid config for a Grid Search ID.
 
         :params:
-             grid_search_id (str): Grid Search ID
+             grid_search_id (str): Grid Search ID\n
              config_name (str): Name of Configuration file
 
         :returns: YML stream response
@@ -131,8 +131,8 @@ class RestfulAPIServer:
         ``HTTP PUT`` Add Config for a Grid Search ID
 
         :params:
-             grid_search_id (str): Grid Search ID
-             config_name (str): Name of Configuration file
+             grid_search_id (str): Grid Search ID\n
+             config_name (str): Name of Configuration file\n
              config_file (RawTextFile) : RawTextFile Object
 
         """
@@ -150,9 +150,9 @@ class RestfulAPIServer:
           given the experiment ID & grid search ID.
 
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
-             config_name (str): Name of Configuration file
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
+             config_name (str): Name of Configuration file\n
              config (RawTextFile) : RawTextFile Object
 
         """
@@ -172,8 +172,8 @@ class RestfulAPIServer:
           given the epoch, experiment ID & grid search ID.
 
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
              epoch (str): Epoch number
 
         :returns: List of Checkpoints
@@ -195,7 +195,7 @@ class RestfulAPIServer:
           given the epoch, experiment ID & grid search ID.
 
         :params:
-             grid_search_id (str): Grid Search ID
+             grid_search_id (str): Grid Search ID\n
              experiment_id (str): Experiment ID
 
         :returns: List of checkpoints
@@ -214,9 +214,9 @@ class RestfulAPIServer:
           given the experiment ID & grid search ID.
 
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
-             epoch (str): Epoch number
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
+             epoch (str): Epoch number\n
              checkpoint_resource (CheckpointResource) : CheckpointResource type
 
         :returns: Pickle file Stream response
@@ -236,9 +236,9 @@ class RestfulAPIServer:
           given the epoch, experiment ID & grid search ID.
 
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
-             epoch (str): Epoch number
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
+             epoch (str): Epoch number\n
              checkpoint_resource (CheckpointResource) : CheckpointResource type
         """
         try:
@@ -255,8 +255,8 @@ class RestfulAPIServer:
           given the epoch, experiment ID & grid search ID.
 
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
              epoch (str): Epoch number
         """
         try:
@@ -273,10 +273,10 @@ class RestfulAPIServer:
           given the epoch, experiment ID & grid search ID.
 
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
-             epoch (str): Epoch number
-             checkpoint_resource (CheckpointResource) : CheckpointResource type
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
+             epoch (str): Epoch number\n
+             checkpoint_resource (CheckpointResource) : CheckpointResource type\n
              file (bytes): Pickle file to be added
 
         :returns: Pickle file Stream response
