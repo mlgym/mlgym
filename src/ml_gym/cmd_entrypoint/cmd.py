@@ -186,7 +186,7 @@ def entry_train(
     log_configs(
         gs_config_string=gs_config_string,
         run_config_string=run_config_string,
-        alidation_strategy_config_raw_string=validation_strategy_config_string,
+        validation_strategy_config_raw_string=validation_strategy_config_string,
         gs_restful_api_client_constructable=gs_restful_api_client_constructable,
         accelerator=accelerator,
     )
