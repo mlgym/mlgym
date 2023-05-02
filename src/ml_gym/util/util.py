@@ -56,8 +56,8 @@ class SystemEnv:
                     )
                 info["cuda_device_list"] = dev_list
             return info
-        except:
-            raise SystemInfoFetchError(f"Unable to fetch System Info")
+        except Exception as e:
+            raise SystemInfoFetchError(f"Unable to fetch System Info") from e
 
 class ExportedModel:
     def __init__(self, model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str = None, device: torch.device = None):
