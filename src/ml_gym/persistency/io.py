@@ -7,9 +7,12 @@ from typing import Dict, List
 from ml_gym.persistency.logging import ExperimentStatusLogger
 import requests
 from http import HTTPStatus
-from ml_gym.error_handling.exception import NetworkError, DataIntegrityError
+from ml_gym.error_handling.exception import NetworkError, DataIntegrityError, SystemInfoFetchError
 from abc import ABC
 from ml_board.backend.restful_api.data_models import RawTextFile, FileFormat, ExperimentStatus, CheckpointResource
+import platform
+import torch
+import psutil
 
 
 class GridSearchAPIClientIF(ABC):
@@ -44,6 +47,9 @@ class GridSearchAPIClientIF(ABC):
         raise NotImplementedError
 
     def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
+        raise NotImplementedError
+
+    def create_system_info(self) -> Dict:
         raise NotImplementedError
 
 
@@ -277,6 +283,37 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         response = GridSearchRestfulAPIClient._get_json_resource(url)
         experiment_statuses = [ExperimentStatus(**r) for r in response]
         return experiment_statuses
+    
+    def create_system_info(self) -> Dict:
+        """
+        Fetch System Information for model card.
+
+        :returns: Dict- System Information of host machine (CPU & GPU)
+        """
+        try:
+            info = {}
+            info["platform"] = platform.system()
+            info["platform-release"] = platform.release()
+            info["architecture"] = platform.machine()
+            info["processor"] = platform.processor()
+            info["ram"] = str(round(psutil.virtual_memory().total / (1024.0**3))) + " GB"
+            if torch.cuda.is_available():
+                info["CUDNN_version"] = torch.backends.cudnn.version()
+                info["num_cuda_device"] = torch.cuda.device_count()
+                dev_list = []
+                infor = torch.cuda.get_device_properties(0)
+                for i in range(torch.cuda.device_count()):
+                    dev_list.append(
+                        {
+                            "name": torch.cuda.get_device_name(i),
+                            "multi_proc_count": torch.cuda.get_device_properties(i).multi_processor_count,
+                            "total_memory": f"{round(torch.cuda.get_device_properties(i).total_memory / 1e9, 2)} GB",
+                        }
+                    )
+                info["cuda_device_list"] = dev_list
+            return info
+        except:
+            raise SystemInfoFetchError(f"Unable to fetch System Info")
 
 
 class GridSearchAPIClientConstructableIF(ABC):

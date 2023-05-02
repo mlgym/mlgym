@@ -4,13 +4,10 @@ import glob
 import re
 import shutil
 from typing import Dict, List
-from ml_gym.error_handling.exception import InvalidPathError, SystemInfoFetchError
+from ml_gym.error_handling.exception import InvalidPathError
 import json
 from ml_board.backend.restful_api.data_models import RawTextFile, CheckpointResource, ExperimentStatus
-import psutil
 from pyparsing import Generator
-import platform
-import torch
 
 
 class DataAccessIF(ABC):
@@ -69,11 +66,6 @@ class DataAccessIF(ABC):
     @abstractmethod
     def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str) -> List[Dict]:
         raise NotImplementedError
-
-    @abstractmethod
-    def get_system_info(self) -> Dict:
-        raise NotImplementedError
-
 
 class FileDataAccess(DataAccessIF):
     """
@@ -413,34 +405,3 @@ class FileDataAccess(DataAccessIF):
                 os.rmdir(folder_path)
         else:
             raise FileNotFoundError(f"File in path {requested_full_path} not found.")
-
-    def get_system_info(self):
-        """
-        ``HTTP GET`` Fetch System Information for model card.
-
-        :returns: JSON object - System Information of host machine (CPU & GPU)
-        """
-        try:
-            info = {}
-            info["platform"] = platform.system()
-            info["platform-release"] = platform.release()
-            info["architecture"] = platform.machine()
-            info["processor"] = platform.processor()
-            info["ram"] = str(round(psutil.virtual_memory().total / (1024.0**3))) + " GB"
-            if torch.cuda.is_available():
-                info["CUDNN_version"] = torch.backends.cudnn.version()
-                info["num_cuda_device"] = torch.cuda.device_count()
-                dev_list = []
-                infor = torch.cuda.get_device_properties(0)
-                for i in range(torch.cuda.device_count()):
-                    dev_list.append(
-                        {
-                            "name": torch.cuda.get_device_name(i),
-                            "multi_proc_count": torch.cuda.get_device_properties(i).multi_processor_count,
-                            "total_memory": f"{round(torch.cuda.get_device_properties(i).total_memory / 1e9, 2)} GB",
-                        }
-                    )
-                info["cuda_device_list"] = dev_list
-            return info
-        except:
-            raise SystemInfoFetchError(f"Unable to fetch System Info")
