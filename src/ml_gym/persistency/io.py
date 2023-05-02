@@ -297,6 +297,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
             info["architecture"] = platform.machine()
             info["processor"] = platform.processor()
             info["ram"] = str(round(psutil.virtual_memory().total / (1024.0**3))) + " GB"
+            info["python-version"] = platform.python_version()
             if torch.cuda.is_available():
                 info["CUDNN_version"] = torch.backends.cudnn.version()
                 info["num_cuda_device"] = torch.cuda.device_count()
