@@ -8,6 +8,7 @@ from ml_gym.gym.gym import Gym, GymFactory
 from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable, LoggerConstructableIF, MLgymStatusLoggerConfig, \
     MLgymStatusLoggerTypes
 from ml_gym.modes import RunMode, ValidationMode
+from ml_gym.util.util import SystemEnv
 from ml_gym.validation.validator_factory import get_validator
 from ml_gym.io.config_parser import YAMLConfigLoader
 from typing import Callable, List, Tuple, Type, Dict, Union
@@ -105,11 +106,11 @@ def get_grid_search_restful_api_client_constructable(endpoint: str) -> GridSearc
     return client_constructable
 
 
-def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, gs_config_path: str,
+def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, gs_config_path: str, run_config_path: str,
                 validation_strategy_config_path: str, gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF,
                 accelerator: Accelerator = None):
 
-    def log_configs(gs_config_string: str, validation_strategy_config_raw_string: str,
+    def log_configs(gs_config_string: str, run_config_string: str, validation_strategy_config_raw_string: str,
                     gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF, accelerator: Accelerator = None):
         if accelerator is None or accelerator.is_main_process:
             gs_api_client = gs_restful_api_client_constructable.construct()
@@ -117,6 +118,10 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
                                             file_format=FileFormat.YAML,
                                             config_name="grid_search_config.yml",
                                             config=gs_config_string)
+            gs_api_client.add_config_string(grid_search_id=gridsearch_id, 
+                                            file_format=FileFormat.YAML, 
+                                            config_name="run_config.yml", 
+                                            config=run_config_string)
 
             if validation_strategy_config_raw_string is not None:
                 gs_api_client.add_config_string(grid_search_id=gridsearch_id,
@@ -127,9 +132,13 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
                 gs_api_client.add_config_string(grid_search_id=blueprint.grid_search_id, config_name="experiment_config.json",
                                                 config=json.dumps(blueprint.config), experiment_id=blueprint.experiment_id,
                                                 file_format=FileFormat.JSON)
+                gs_api_client.add_config_string(grid_search_id=blueprint.grid_search_id, config_name="system_info.json",
+                                                config=json.dumps(SystemEnv.create_system_info()), experiment_id=blueprint.experiment_id,
+                                                file_format=FileFormat.JSON)
 
     gs_config_string = Path(gs_config_path).read_text()
     gs_config = YAMLConfigLoader.load_string(gs_config_string)
+    run_config_string = Path(run_config_path).read_text()
 
     if validation_strategy_config_path is not None:
         validation_strategy_config_string = Path(validation_strategy_config_path).read_text()
@@ -148,8 +157,8 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
                                              blue_print_type=blueprint_class,
                                              gs_config=gs_config)
 
-    log_configs(gs_config_string=gs_config_string, validation_strategy_config_raw_string=validation_strategy_config_string,
-                gs_restful_api_client_constructable=gs_restful_api_client_constructable, accelerator=accelerator)
+    log_configs(gs_config_string=gs_config_string, run_config_string=run_config_string,      validation_strategy_config_raw_string=validation_strategy_config_string,
+    gs_restful_api_client_constructable=gs_restful_api_client_constructable, accelerator=accelerator)
 
     gym.run(blueprints)
 
@@ -229,7 +238,7 @@ def run(blueprint_class: BluePrint, run_configuration_file_path):
     if isinstance(run_config, TrainRunConfiguration):
         gridsearch_id = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
         entry_train(gridsearch_id=gridsearch_id, blueprint_class=blueprint_class, gym=gym, gs_config_path=run_config.gs_config_path,
-                    validation_strategy_config_path=run_config.validation_config_path,
+                    run_config_path=run_configuration_file_path, validation_strategy_config_path=run_config.validation_config_path,
                     gs_restful_api_client_constructable=gs_restful_api_client_constructable,
                     accelerator=accelerator)
     elif isinstance(run_config, WarmStartRunConfiguration):

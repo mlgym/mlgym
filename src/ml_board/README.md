@@ -70,6 +70,31 @@ payload:
 }
 ```
 
+**Model Card**
+
+Fetch System details like CPU & GPU for model card.
+
+_GET /system-info_
+
+```json
+{
+    "platform": <Operating system>,
+    "platform-release": <OS version>,
+    "architecture": <system architecture ex: AMD64>,
+    "processor": <processor name>,
+    "ram": <ram in GB>,
+    "CUDNN_version":<cudnn version>,
+    "num_cuda_device": <number of cuda devices>,
+    "cuda_device_list": [
+        {
+            "name": <name of GPU>,
+            "multi_proc_count": <Processor count of GPU>,
+            "total_memory": <Total GPU memory in GB>
+        }
+    ]
+}
+```
+
 **Experiments**
 
 _GET /grid_searches/<grid_search_id>/experiments_
