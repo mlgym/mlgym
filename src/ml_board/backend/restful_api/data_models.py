@@ -19,6 +19,7 @@ class ExperimentStatus(BaseModel):
     experiment_config: Dict
 
 
+# TODO Check if Enum is still needed
 class CheckpointResource(str, Enum):
     model = "model"
     optimizer = "optimizer"
