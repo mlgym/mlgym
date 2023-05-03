@@ -164,8 +164,8 @@ class FileDataAccess(DataAccessIF):
         Add Config for a Grid Search ID to event storage
 
         :params:
-             grid_search_id (str): Grid Search ID\n
-             config_name (str): Name of Configuration file\n
+             grid_search_id (str): Grid Search ID
+             config_name (str): Name of Configuration file
              config_file (RawTextFile) : RawTextFile Object
 
         """
@@ -183,9 +183,9 @@ class FileDataAccess(DataAccessIF):
         Add experiment config given the experiment ID & grid search ID to event storage.
 
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
-             config_name (str): Name of Configuration file\n
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
+             config_name (str): Name of Configuration file
              config (RawTextFile) : RawTextFile Object
 
         """
@@ -206,7 +206,7 @@ class FileDataAccess(DataAccessIF):
         Fetch grid config for a Grid Search ID from the event storage.
 
         :params:
-             grid_search_id (str): Grid Search ID\n
+             grid_search_id (str): Grid Search ID
              config_name (str): Name of Configuration file
 
         :returns: bytes response of YML file
@@ -226,8 +226,8 @@ class FileDataAccess(DataAccessIF):
         `Fetch experiment config given the experiment ID & grid search ID from event storage.
 
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
              config_name (str): Name of Configuration file
 
         :returns: bytes response of JSON file
@@ -250,8 +250,8 @@ class FileDataAccess(DataAccessIF):
         given the epoch, experiment ID & grid search ID.
 
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
              epoch (str): Epoch number
 
         :returns: List of Checkpoint file names in an epoch
@@ -278,7 +278,7 @@ class FileDataAccess(DataAccessIF):
         `Fetch all checkpoint resource pickle file names given the experiment ID & grid search ID from event storage.
 
         :params:
-             grid_search_id (str): Grid Search ID\n
+             grid_search_id (str): Grid Search ID
              experiment_id (str): Experiment ID
 
         :returns: List of Checkpoint file names in an experiment
@@ -314,9 +314,9 @@ class FileDataAccess(DataAccessIF):
         `Fetch checkpoint resource pickle file given the experiment ID & grid search ID from event storage.
 
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
-             epoch (str): Epoch number\n
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
+             epoch (str): Epoch number
              checkpoint_resource (CheckpointResource) : CheckpointResource type
 
         :returns: bytes response of pickle file
@@ -340,10 +340,10 @@ class FileDataAccess(DataAccessIF):
         Add a checkpoint resource pickle file given the epoch, experiment ID & grid search ID to event storage.
 
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
-             epoch (str): Epoch number\n
-             checkpoint_resource (CheckpointResource) : CheckpointResource type\n
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
+             epoch (str): Epoch number
+             checkpoint_resource (CheckpointResource) : CheckpointResource type
              payload_pickle (bytes): Pickle file to be added
 
         :returns: Pickle file Stream response
@@ -366,8 +366,8 @@ class FileDataAccess(DataAccessIF):
         given the epoch, experiment ID & grid search ID.
 
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
              epoch (str): Epoch number
         """
 
@@ -388,9 +388,9 @@ class FileDataAccess(DataAccessIF):
         given the epoch, experiment ID & grid search ID.
 
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
-             epoch (str): Epoch number\n
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
+             epoch (str): Epoch number
              checkpoint_resource (CheckpointResource) : CheckpointResource type
         """
 
