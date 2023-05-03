@@ -13,7 +13,6 @@ from pyparsing import Generator
 class DataAccessIF(ABC):
     """
     DataAccessIF class
-
     Declare Abstract methods to be used in FileDataAccess Class.
     """
 
@@ -70,9 +69,7 @@ class DataAccessIF(ABC):
 class FileDataAccess(DataAccessIF):
     """
     FileDataAccess Class
-
     :params: DataAccessIF object
-
     The rest server uses this class to use methods to access event storage files.
     Used to add new files, delete current files and fetch current files.
     """
@@ -103,10 +100,8 @@ class FileDataAccess(DataAccessIF):
     def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
         """
         Fetch experiment status for a Grid Search ID.
-
         :params:
              grid_search_id (str): Grid Search ID
-
         :returns: List - experiment_statuses
         """
 
@@ -162,12 +157,10 @@ class FileDataAccess(DataAccessIF):
     def add_raw_config_to_grid_search(self, grid_search_id: str, config_name: str, config_file: RawTextFile) -> None:
         """
         Add Config for a Grid Search ID to event storage
-
         :params:
-             grid_search_id (str): Grid Search ID
-             config_name (str): Name of Configuration file
+             grid_search_id (str): Grid Search ID\n
+             config_name (str): Name of Configuration file\n
              config_file (RawTextFile) : RawTextFile Object
-
         """
         requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), config_name))
 
@@ -181,13 +174,11 @@ class FileDataAccess(DataAccessIF):
     def add_config_to_experiment(self, grid_search_id: str, experiment_id: str, config_name: str, config: RawTextFile) -> None:
         """
         Add experiment config given the experiment ID & grid search ID to event storage.
-
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
-             config_name (str): Name of Configuration file
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
+             config_name (str): Name of Configuration file\n
              config (RawTextFile) : RawTextFile Object
-
         """
         requested_full_path = os.path.realpath(
             os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id), config_name)
@@ -204,11 +195,9 @@ class FileDataAccess(DataAccessIF):
     def get_grid_config(self, grid_search_id: str, config_name: str) -> Generator:
         """
         Fetch grid config for a Grid Search ID from the event storage.
-
         :params:
-             grid_search_id (str): Grid Search ID
+             grid_search_id (str): Grid Search ID\n
              config_name (str): Name of Configuration file
-
         :returns: bytes response of YML file
         """
         requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), f"{config_name}.yml"))
@@ -224,12 +213,10 @@ class FileDataAccess(DataAccessIF):
     def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str) -> Generator:
         """
         `Fetch experiment config given the experiment ID & grid search ID from event storage.
-
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
              config_name (str): Name of Configuration file
-
         :returns: bytes response of JSON file
         """
         requested_full_path = os.path.realpath(
@@ -248,12 +235,10 @@ class FileDataAccess(DataAccessIF):
         """
         Fetch all checkpoint resource pickle file names from event storage
         given the epoch, experiment ID & grid search ID.
-
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
              epoch (str): Epoch number
-
         :returns: List of Checkpoint file names in an epoch
         """
         requested_full_path = os.path.realpath(
@@ -276,11 +261,9 @@ class FileDataAccess(DataAccessIF):
     def get_checkpoint_list(self, grid_search_id: str, experiment_id) -> List[Dict]:
         """
         `Fetch all checkpoint resource pickle file names given the experiment ID & grid search ID from event storage.
-
         :params:
-             grid_search_id (str): Grid Search ID
+             grid_search_id (str): Grid Search ID\n
              experiment_id (str): Experiment ID
-
         :returns: List of Checkpoint file names in an experiment
         """
         requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id)))
@@ -312,13 +295,11 @@ class FileDataAccess(DataAccessIF):
     ) -> Generator:
         """
         `Fetch checkpoint resource pickle file given the experiment ID & grid search ID from event storage.
-
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
-             epoch (str): Epoch number
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
+             epoch (str): Epoch number\n
              checkpoint_resource (CheckpointResource) : CheckpointResource type
-
         :returns: bytes response of pickle file
         """
         requested_full_path = os.path.realpath(
@@ -338,14 +319,12 @@ class FileDataAccess(DataAccessIF):
     ) -> None:
         """
         Add a checkpoint resource pickle file given the epoch, experiment ID & grid search ID to event storage.
-
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
-             epoch (str): Epoch number
-             checkpoint_resource (CheckpointResource) : CheckpointResource type
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
+             epoch (str): Epoch number\n
+             checkpoint_resource (CheckpointResource) : CheckpointResource type\n
              payload_pickle (bytes): Pickle file to be added
-
         :returns: Pickle file Stream response
         """
 
@@ -364,10 +343,9 @@ class FileDataAccess(DataAccessIF):
         """
         Delete checkpoint FOLDER From the event storage
         given the epoch, experiment ID & grid search ID.
-
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
              epoch (str): Epoch number
         """
 
@@ -386,11 +364,10 @@ class FileDataAccess(DataAccessIF):
         """
         Delete checkpoint resource pickle file from the event storage
         given the epoch, experiment ID & grid search ID.
-
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
-             epoch (str): Epoch number
+             grid_search_id (str): Grid Search ID\n
+             experiment_id (str): Experiment ID\n
+             epoch (str): Epoch number\n
              checkpoint_resource (CheckpointResource) : CheckpointResource type
         """
 
