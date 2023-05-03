@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from enum import Enum
 import pickle
 from typing import Dict, List
-from ml_gym.persistency.logging import ExperimentStatusLogger
 import requests
 from http import HTTPStatus
 from ml_gym.error_handling.exception import NetworkError, DataIntegrityError
@@ -45,7 +44,6 @@ class GridSearchAPIClientIF(ABC):
 
     def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
         raise NotImplementedError
-
 
 class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
     """

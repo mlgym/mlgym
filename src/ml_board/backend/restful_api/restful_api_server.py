@@ -3,9 +3,10 @@ from fastapi import FastAPI, File
 from fastapi import status, HTTPException
 from fastapi.responses import StreamingResponse
 from ml_board.backend.restful_api.data_access import DataAccessIF
-from ml_gym.error_handling.exception import InvalidPathError
-from ml_board.backend.restful_api.data_models import RawTextFile, CheckpointResource
+from ml_gym.error_handling.exception import InvalidPathError, SystemInfoFetchError
+from ml_board.backend.restful_api.data_models import FileFormat, RawTextFile, CheckpointResource
 from typing import Callable
+from fastapi.middleware.cors import CORSMiddleware
 
 # from fastapi.staticfiles import StaticFiles
 
@@ -19,6 +20,14 @@ class RestfulAPIServer:
 
     def __init__(self, data_access: DataAccessIF):
         self.app = FastAPI(port=8080)
+        origins = ["*"]
+        self.app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        )
         self.data_access = data_access
         self.app.add_api_route(path="/grid_searches/{grid_search_id}/experiments", methods=["GET"], endpoint=self.get_experiment_statuses)
         self.app.add_api_route(
@@ -58,6 +67,11 @@ class RestfulAPIServer:
             path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource}",
             methods=["DELETE"],
             endpoint=self.delete_checkpoint_resource,
+        )
+        self.app.add_api_route(
+            path="/system-info/{grid_search_id}/{experiment_id}",
+            methods=["GET"],
+            endpoint=self.get_system_info,
         )
 
         # self.app.mount("/", StaticFiles(directory="/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_board/frontend/dashboard/build/", html=True), name="static")
@@ -295,6 +309,26 @@ class RestfulAPIServer:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Provided invalid payload or grid_search_id {grid_search_id}, experiment_id {experiment_id} or epoch {epoch}.",
             ) from e
+    
+    def get_system_info(self, grid_search_id: str, experiment_id: str):
+        """
+        ``HTTP GET`` Fetch System Information for model card.
+
+        :params:
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
+             config_name (str): Name of Configuration file
+
+        :returns: JSON object - System Information of host machine (CPU & GPU)
+        """
+        try:
+            file_generator = self.data_access.get_experiment_config(
+                grid_search_id=grid_search_id, experiment_id=experiment_id, config_name="system_info"
+            )
+            response = StreamingResponse(file_generator, media_type="application/json")
+            return response
+        except SystemInfoFetchError as e:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Error while fetching server system information") from e
 
     def run_server(self, application_server_callable: Callable):
         application_server_callable(app=self.app)

@@ -67,7 +67,6 @@ class DataAccessIF(ABC):
     def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str) -> List[Dict]:
         raise NotImplementedError
 
-
 class FileDataAccess(DataAccessIF):
     """
     FileDataAccess Class

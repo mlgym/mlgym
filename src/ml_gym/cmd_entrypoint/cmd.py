@@ -164,7 +164,6 @@ def get_grid_search_restful_api_client_constructable(endpoint: str) -> GridSearc
 def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, gs_config_path: str, run_config_path: str,
                 validation_strategy_config_path: str, gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF,
                 accelerator: Accelerator = None):
-    
     """
     Create Gym class object from the run configuration
 
@@ -178,7 +177,6 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
         API Client interface for performing REST calls.\n
         accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs
     """
-
 
     def log_configs(gs_config_string: str, run_config_string: str, validation_strategy_config_raw_string: str,
                     gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF, accelerator: Accelerator = None):
