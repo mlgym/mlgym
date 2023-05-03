@@ -24,3 +24,4 @@ class CheckpointResource(str, Enum):
     optimizer = "optimizer"
     lr_scheduler = "lr_scheduler"
     stateful_components = "stateful_components"
+    accelerate = "accelerate_zip"
