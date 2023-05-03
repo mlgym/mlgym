@@ -1,10 +1,7 @@
 from abc import abstractmethod
-import base64
 from dataclasses import dataclass
 from enum import Enum
-import pickle
 from typing import Dict, List
-from ml_gym.persistency.logging import ExperimentStatusLogger
 import requests
 from http import HTTPStatus
 from ml_gym.error_handling.exception import NetworkError, DataIntegrityError
@@ -31,7 +28,7 @@ class GridSearchAPIClientIF(ABC):
     def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, checkpoint_id: int, checkpoint_resource: CheckpointResource):
         raise NotImplementedError
 
-    def add_checkpoint_resource(self, grid_search_id: str, experiment_id: str, payload: Dict):
+    def add_checkpoint_resource(self, grid_search_id: str, experiment_id: str, payload: Dict, custom_file_name: str):
         raise NotImplementedError
 
     def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: int):
@@ -92,7 +89,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         else:
             return response.content
 
-    def _post_binary_resource(url: str, payload: bytes) -> Dict:
+    def _post_binary_resource(url: str, file_name: str, payload_stream: bytes) -> Dict:
         """
         ``HTTP POST Call`` Send bytes data.
 
@@ -100,10 +97,8 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
              url (str): HTTP request URL
              payload (bytes); pickle dump to be sent
         """
-        data = base64.b64encode(payload)
-        response = requests.post(
-            url=url, data={"data": data, "msg": "insert checkpoint", "type": "multipart/form-data"}, files={"file": data}
-        )
+        response = requests.post(url=url, files={"checkpoint_file": (file_name, payload_stream)})
+
         if response.status_code != HTTPStatus.OK:
             raise NetworkError(f"Server responded with error code {response.status_code}")
 
@@ -115,7 +110,9 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
              url (str): HTTP request URL
         """
         response = requests.delete(url=url)
-        if response.status_code != HTTPStatus.OK:
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            print(f"Resource {url} not found")
+        elif response.status_code != HTTPStatus.OK:
             raise NetworkError(f"Server responded with error code {response.status_code}")
 
     def _put_raw_text_file_resource(url: str, payload: Dict) -> Dict:
@@ -209,7 +206,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{checkpoint_id}"
         return GridSearchRestfulAPIClient._get_json_resource(url)
 
-    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, checkpoint_id: int, checkpoint_resource: CheckpointResource):
+    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, checkpoint_id: int, checkpoint_resource: str):
         """
         ``HTTP GET Call Request`` Fetch checkpoint resource
           given the grid search ID, experiment ID & checkpoint ID over HTTP call.
@@ -218,14 +215,15 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
              grid_search_id (str): Grid Search ID
              experiment_id (str): Experiment ID
              checkpoint_id (int): Checkpoint ID
-             checkpoint_resource (CheckpointResource) : CheckpointResource type
+             checkpoint_resource (str): Filename of the checkpoint resource
 
         :returns: bytes pickel data
         """
         url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{checkpoint_id}/{checkpoint_resource}"
         return GridSearchRestfulAPIClient._get_binary_resource(url)
 
-    def add_checkpoint_resource(self, grid_search_id: str, experiment_id: str, payload: Dict):
+    def add_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: int,
+                                payload_stream: bytes, custom_file_name: str):
         """
         ``HTTP POST Call Request`` Send all checkpoint resource pickle files
           given the epoch, experiment ID & grid search ID over HTTP call.
@@ -233,20 +231,12 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         :params:
              grid_search_id (str): Grid Search ID
              experiment_id (str): Experiment ID
-             payload (Dict): Dictionary containing CheckpointResource bytes array
+             payload (bytes): Bytes stream containing CheckpointResource 
+             custom_file_name (str): File name of the checkpoint resource
         """
 
-        chekpoint_resources = [
-            CheckpointResource.model,
-            CheckpointResource.lr_scheduler,
-            CheckpointResource.optimizer,
-            CheckpointResource.stateful_components,
-        ]
-
-        for checkpoint in chekpoint_resources:
-            url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{payload['epoch']}/{checkpoint}"
-            payload_pick = pickle.dumps(payload[f"{checkpoint}"])
-            GridSearchRestfulAPIClient._post_binary_resource(url, payload_pick)
+        url = f"{self.endpoint}/checkpoints/{grid_search_id}/{experiment_id}/{epoch}"
+        GridSearchRestfulAPIClient._post_binary_resource(url, file_name=custom_file_name, payload_stream=payload_stream)
 
     def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: int):
         """
@@ -268,8 +258,6 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
 
         :params:
              grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
-             epoch (int): Epoch
 
         :returns: experiment status List
         """
