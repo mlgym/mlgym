@@ -11,6 +11,17 @@ class BluePrint(ABC):
     def __init__(self, run_mode: RunMode, config: Dict[str, Any], grid_search_id: str,
                  experiment_id: str, external_injection: Dict[str, Any] = None,
                  warm_start_epoch: int = 0):
+        """
+        Initalize BluePrint class.
+
+        :params:
+            run_mode (RunMode): Create config to run from scratch or do a warm start.\n
+            config (Dict[str, Any]): This is a dictionary having the configuration keys.\n
+            grid_search_id (str): Grid Search ID created for the run.\n
+            experiment_id (str): Experminet Number of the model for which blueprint is created.\n
+            external_injection (Dict[str, Any]): TO DO\n
+            warm_start_epoch (int): epoch number to warm start from.
+        """ 
 
         self.run_mode = run_mode
         self.config = config
@@ -37,6 +48,20 @@ class BluePrint(ABC):
                          grid_search_id: str,
                          external_injection: Dict[str, Any] = None,
                          warm_start_epoch: int = 0) -> List["BluePrint"]:
+        """
+        Function to create a blue print Dictionary
+
+        :params:
+            blue_print_class (Type["BluePrint"]): Class call for BluePrint.\n
+            run_mode (RunMode): Create config to run from scratch or do a warm start.\n
+            experiment_config (Dict[str, Any]): This is a dictionary having the configuration keys.\n
+            grid_search_id (str): Grid Search ID created for the run.\n
+            experiment_id (str): Experminet Number of the model for which blueprint is created.\n
+            external_injection (Dict[str, Any]): TO DO\n
+            warm_start_epoch (int): epoch number to warm start from.
+        
+        :returns: blue_print(List["BluePrint"]) : List of blueprint objects.
+        """
 
         blue_print = blue_print_class(grid_search_id=grid_search_id,
                                       experiment_id=experiment_id,
