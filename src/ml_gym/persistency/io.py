@@ -43,7 +43,6 @@ class GridSearchAPIClientIF(ABC):
     def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
         raise NotImplementedError
 
-
 class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
     """
     GridSearchRestfulAPIClient class

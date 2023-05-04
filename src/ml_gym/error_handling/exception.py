@@ -134,3 +134,7 @@ class EarlyStoppingCriterionFulfilledError(Exception):
 class GymError(Exception):
     """Raised when an error occurs within the gym or during gym instantiation."""
     pass
+
+class SystemInfoFetchError(Exception):
+    """Raised when an error occurs during fetching system information."""
+    pass
