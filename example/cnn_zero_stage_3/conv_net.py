@@ -31,7 +31,6 @@ class ConvNet(NNModel):
                          out_features=layer_dict["out_features"])
 
     def forward_impl(self, inputs: torch.Tensor) -> Dict[str, torch.Tensor]:
-        # print(f"input shape: {inputs.shape}")
         output = inputs
         output = self.conv_layers[0](output)
         output = F.relu(output)
@@ -42,10 +41,13 @@ class ConvNet(NNModel):
         output = F.dropout(output, p=0.25, training=True)
 
         output = output.view(inputs.shape[0], -1)
-        output = self.fc_layers[0](output)
-        output = F.relu(output)
-        output = F.dropout(output, p=0.5, training=True)
-        output = self.fc_layers[1](output)
+
+        for layer in self.fc_layers[:-1]:
+            output = layer(output)
+            output = F.relu(output)
+            output = F.dropout(output, p=0.5, training=True)
+
+        output = self.fc_layers[-1](output)
 
         return {self.prediction_publication_key: output}
 
