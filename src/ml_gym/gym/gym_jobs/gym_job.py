@@ -20,6 +20,7 @@ from ml_gym.persistency.logging import ExperimentStatusLogger
 import torch
 from accelerate import Accelerator
 import shutil
+import tempfile
 
 
 class AbstractGymJob(StatefulComponent):
@@ -74,16 +75,18 @@ class AbstractGymJob(StatefulComponent):
         if checkpoint_instruction.save_current:
 
             if accelerator is not None:
-                root_dir = f"/root/checkpoints/{current_epoch}"
                 global_rank = accelerator.process_index
-                checkpoint_file_name = f"checkpoint_rank_{global_rank}"
-                checkpoint_path = os.path.join(root_dir, f"rank_{global_rank}/")
-                accelerator.save_state(output_dir=checkpoint_path)
-                shutil.make_archive(base_name=os.path.join(root_dir, checkpoint_file_name), format='zip', root_dir=checkpoint_path)
-                with open(os.path.join(root_dir, f"{checkpoint_file_name}.zip"), 'rb') as fd:
-                    self.gs_api_client.add_checkpoint_resource(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id,
-                                                               epoch=current_epoch, payload_stream=fd,
-                                                               custom_file_name=f"{checkpoint_file_name}.zip")
+                # TODO replace with an in-memory file system solution
+                with tempfile.TemporaryDirectory() as tmpdirname:
+                    root_dir = os.path.join(tmpdirname, f"epoch_{current_epoch}/rank_{global_rank}")
+                    checkpoint_file_name = f"checkpoint_rank_{global_rank}"
+                    checkpoint_path = os.path.join(root_dir, f"rank_{global_rank}/")
+                    accelerator.save_state(output_dir=checkpoint_path)
+                    shutil.make_archive(base_name=os.path.join(root_dir, checkpoint_file_name), format='zip', root_dir=checkpoint_path)
+                    with open(os.path.join(root_dir, f"{checkpoint_file_name}.zip"), 'rb') as fd:
+                        self.gs_api_client.add_checkpoint_resource(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id,
+                                                                   epoch=current_epoch, payload_stream=fd,
+                                                                   custom_file_name=f"{checkpoint_file_name}.zip")
 
             else:
                 payload_dict = {
@@ -96,9 +99,9 @@ class AbstractGymJob(StatefulComponent):
                 for checkpoint_resource_key, checkpoint_resource_stream in payload_dict.items():
                     self.gs_api_client.add_checkpoint_resource(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id,
                                                                epoch=current_epoch, payload_stream=checkpoint_resource_stream,
-                                                               custom_file_name=checkpoint_resource_key)
+                                                               custom_file_name=f"{checkpoint_resource_key}.pickle")
 
-        if accelerator is not None and accelerator.is_main_process:
+        if accelerator is None or accelerator is not None and accelerator.is_main_process:
             for epoch in checkpoint_instruction.checkpoints_to_delete:
                 self.gs_api_client.delete_checkpoints(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id, epoch=epoch)
 
