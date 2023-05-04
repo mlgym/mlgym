@@ -74,7 +74,7 @@ payload:
 
 Fetch System details like CPU & GPU for model card.
 
-_GET /system-info_
+_GET /system-info/<grid_search_id>/<experiment_id>_
 
 ```json
 {
@@ -83,6 +83,8 @@ _GET /system-info_
     "architecture": <system architecture ex: AMD64>,
     "processor": <processor name>,
     "ram": <ram in GB>,
+    "python-version": <version>,
+    "python-packages": <List of pip packages>,
     "CUDNN_version":<cudnn version>,
     "num_cuda_device": <number of cuda devices>,
     "cuda_device_list": [
