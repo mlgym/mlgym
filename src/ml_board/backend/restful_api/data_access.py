@@ -53,8 +53,7 @@ class DataAccessIF(ABC):
 
     @abstractmethod
     def delete_checkpoint_resource(
-        self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str
-    ) -> None:
+        self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -265,7 +264,7 @@ class FileDataAccess(DataAccessIF):
             files = FileDataAccess.get_checkpoint_files(requested_full_path, base_path=self.top_level_logging_path)
             for file_num in range(len(files)):
                 split = os.path.normpath(files[file_num]).split(os.sep)
-                checkpoints.append(os.path.basename(split[-1]).split(".")[0])
+                checkpoints.append(os.path.basename(split[-1]))
             response.append({"experiment_id": experiment_id, "epoch": epoch, "checkpoints": checkpoints})
             return response
 
@@ -296,9 +295,9 @@ class FileDataAccess(DataAccessIF):
                     response.append({"experiment_id": experiment_id, "epoch": last_epoch, "checkpoints": checkpoints})
                     last_epoch = epoch
                     checkpoints = []
-                    checkpoints.append(os.path.basename(split[-1]).split(".")[0])
+                    checkpoints.append(os.path.basename(split[-1]))
                 else:
-                    checkpoints.append(os.path.basename(split[-1]).split(".")[0])
+                    checkpoints.append(os.path.basename(split[-1]))
 
             response.append({"experiment_id": experiment_id, "epoch": epoch, "checkpoints": checkpoints})
             return response

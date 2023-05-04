@@ -25,7 +25,7 @@ class GridSearchAPIClientIF(ABC):
     def get_validation_config(self, grid_search_id: str):
         raise NotImplementedError
 
-    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, checkpoint_id: int, checkpoint_resource: CheckpointResource):
+    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, checkpoint_id: int, checkpoint_resource: str):
         raise NotImplementedError
 
     def add_checkpoint_resource(self, grid_search_id: str, experiment_id: str, payload: Dict, custom_file_name: str):
@@ -95,6 +95,7 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
 
         :params:
              url (str): HTTP request URL
+             file_name (str): Name of the file to be posted
              payload (bytes); pickle dump to be sent
         """
         response = requests.post(url=url, files={"checkpoint_file": (file_name, payload_stream)})
@@ -144,9 +145,8 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
     #     url = f"{self.endpoint}/grid_searches/{grid_search_id}/gs_config"
     #     return GridSearchRestfulAPIClient._put_raw_text_file_resource(url, grid_search_config)
 
-    def add_config_string(
-        self, grid_search_id: str, config_name: str, config: str, file_format: FileFormat, experiment_id: int = None
-    ) -> Dict:
+    def add_config_string(self, grid_search_id: str, config_name: str, config: str, file_format: FileFormat,
+                          experiment_id: int = None) -> Dict:
         """
         ``HTTP PUT Call Request`` Add configuration
           given the grid search ID over HTTP call.
@@ -231,7 +231,8 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         :params:
              grid_search_id (str): Grid Search ID
              experiment_id (str): Experiment ID
-             payload (bytes): Bytes stream containing CheckpointResource 
+             epoch (int): Current epoch
+             payload_stream (bytes): Bytes stream containing CheckpointResource 
              custom_file_name (str): File name of the checkpoint resource
         """
 

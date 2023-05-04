@@ -229,7 +229,7 @@ class RestfulAPIServer:
         except InvalidPathError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Provided invalid parameters for checkpoint resource.") from e
 
-    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
+    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str):
         """
         ``HTTP DELETE`` Delete checkpoint resource pickle file
           given the epoch, experiment ID & grid search ID.
@@ -238,7 +238,7 @@ class RestfulAPIServer:
              grid_search_id (str): Grid Search ID
              experiment_id (str): Experiment ID
              epoch (str): Epoch number
-             checkpoint_resource (CheckpointResource) : CheckpointResource type
+             checkpoint_resource (str) : Name oif the checkpoint resource
         """
         try:
             self.data_access.delete_checkpoint_resource(grid_search_id=grid_search_id, experiment_id=experiment_id,
@@ -278,10 +278,8 @@ class RestfulAPIServer:
              grid_search_id (str): Grid Search ID
              experiment_id (str): Experiment ID
              epoch (str): Epoch number
-             checkpoint_resource (CheckpointResource) : CheckpointResource type
-             file (bytes): Pickle file to be added
+             checkpoint_file (UploadFile): binary file to be added
 
-        :returns: Pickle file Stream response
         """
         try:
             self.data_access.add_checkpoint_resource(grid_search_id=grid_search_id,
