@@ -70,11 +70,39 @@ payload:
 }
 ```
 
+**Model Card**
+
+Fetch System details like CPU & GPU for model card.
+
+_GET /system-info/<grid_search_id>/<experiment_id>_
+
+```json
+{
+    "platform": <Operating system>,
+    "platform-release": <OS version>,
+    "architecture": <system architecture ex: AMD64>,
+    "processor": <processor name>,
+    "ram": <ram in GB>,
+    "python-version": <version>,
+    "python-packages": <List of pip packages>,
+    "CUDNN_version":<cudnn version>,
+    "num_cuda_device": <number of cuda devices>,
+    "cuda_device_list": [
+        {
+            "name": <name of GPU>,
+            "multi_proc_count": <Processor count of GPU>,
+            "total_memory": <Total GPU memory in GB>
+        }
+    ]
+}
+```
+
 **Experiments**
 
 _GET /grid_searches/<grid_search_id>/experiments_
 
-TODO need to check "experiments" in URL  
+TODO need to check "experiments" in URL
+
 ```json
 [
     {
@@ -90,28 +118,37 @@ TODO need to check "experiments" in URL
 
 **Checkpointing**
 
-Get all resources for single checkpoint:
+Available <checkpoint_resource> = [model, optimizer, stateful_component, lr_scheduler]
+
+Get all Checkpoint names for single experiment:
+
+_GET /checkpoints/<grid_search_id>/<experiment_id>_
+
+_Ex: GET /checkpoints/2023-04-12--23-42-17/0_
+
+Get all Checkpoint names for single epoch in an experiment:
 
 _GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>_
 
+_Ex: GET /checkpoints/2023-04-12--23-42-17/0/0_
+
+Return:
 ```json
-{
-        "model": <binary stream>,
-        "optimizer": <binary stream>,
-        "stateful_components": <binary stream>
-}
+[
+    {
+        "experiment_id": <experiment_id>,
+        "epoch": <checkpoint_id>,
+        "checkpoints": [<checkpoint_resource_name>,..]
+    }
+]
 
 ```
 
 Get Checkpoint Resource:
 
-_GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/model_
+_GET /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>/<checkpoint_resource>_
 
-_GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/optimizer_
-
-_GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/stateful_component_
-
-_GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/lr_scheduler_
+_Ex: GET /checkpoints/2023-04-12--23-42-17/0/0/model_
 
 Return:
 
@@ -121,13 +158,9 @@ Return:
 
 Insert Checkpoint Resources:
 
-_POST /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/model_
+_POST /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>/<checkpoint_resource>_
 
-_POST /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/optimizer_
-
-_POST /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/stateful_component_
-
-_POST /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/lr_scheduler_
+_Ex: POST /checkpoints/2023-04-12--23-42-17/0/0/model_
 
 payload:
 
@@ -139,21 +172,17 @@ payload:
 }
 ```
 
-Delete Checkpoint Resources: _model, optimiyer, stateful_component and lr_scheduler_ for a checkpoint ID in the experiment  :
+Delete Checkpoint Resources: _model, optimiyer, stateful_component and lr_scheduler_ for a checkpoint ID in the experiment :
 
 _DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>_
+
+_Ex: DELETE /checkpoints/2023-04-12--23-42-17/0/0_
 
 Delete specific Checkpoint Resource:
 
 _DELETE /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>/<checkpoint_resource>_
 
-_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/model_
-
-_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/optimizer_
-
-_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/stateful_component_
-
-_DELETE /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>/lr_scheduler_
+_Ex: DELETE /checkpoints/2023-04-12--23-42-17/0/0/model_
 
 ## Websocket API
 
@@ -161,6 +190,13 @@ Every event message has the following structure:
 
 ```json
 {"event_type": <event type>, "creation_ts": <unix timestamp (ms)>, "payload": <payload dict>}
+
+```
+
+Historical events are sent as bacthed_events when a new client asks for events:
+
+```json
+{"event_type": "batched_events", "data": <array_of_events>}
 
 ```
 
