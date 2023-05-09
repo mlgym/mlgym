@@ -18,6 +18,9 @@ from accelerate import Accelerator
 
 
 class AccelerateGymJob(AbstractGymJob):
+    """
+    Accelerate Gym Job class used for running job on multiple GPUs.
+    """
 
     def __init__(self, experiment_status_logger: ExperimentStatusLogger, gs_api_client: GridSearchAPIClientIF,
                  grid_search_id: str, experiment_id: int, run_mode: RunMode, num_epochs: int,
@@ -40,6 +43,14 @@ class AccelerateGymJob(AbstractGymJob):
         self._experiment_status_logger.disconnect()
 
     def _evaluation_step(self, current_epoch: int) -> List[EvaluationBatchResult]:
+        """ 
+        Evaluating the model.
+
+        :params:
+            current_epoch (int): Current epoch number for cerating checkpoints.
+        :returns:
+            evaluation_results (List[EvaluationBatchResult]): Object storing entire evaluation infotmation.
+        """
         partial_batch_processed_callback = partial(self.batch_processed_callback, num_epochs=self.num_epochs,
                                                    current_epoch=current_epoch,
                                                    experiment_status_logger=self._experiment_status_logger)
@@ -54,6 +65,9 @@ class AccelerateGymJob(AbstractGymJob):
         return evaluation_results
 
     def _execute_train(self):
+        """ 
+        Execute training of the model.
+        """
         self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
         self.lr_scheduler.register_optimizer(optimizer=self.optimizer)
 
@@ -84,6 +98,9 @@ class AccelerateGymJob(AbstractGymJob):
         self.accelerator.free_memory()
 
     def _execute_warm_start(self):
+        """ 
+        Execute warm start of the model from an epoch.
+        """
         if self.current_epoch > 0:
             model_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
                                                                                   experiment_id=self.experiment_id,

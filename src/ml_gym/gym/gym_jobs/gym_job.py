@@ -19,6 +19,9 @@ from accelerate import Accelerator
 
 
 class AbstractGymJob(StatefulComponent):
+    """
+    Class contating all running and config information for Gym Job.
+    """
 
     def __init__(self, experiment_status_logger: ExperimentStatusLogger, gs_api_client: GridSearchAPIClientIF,
                  grid_search_id: str, experiment_id: int, run_mode: RunMode, num_epochs: int,
@@ -65,7 +68,8 @@ class AbstractGymJob(StatefulComponent):
         Create and delete checkpoints for each epoch in experiments.
 
         :params:
-            checkpoint_instruction: CheckpointingInstruction object
+            checkpoint_instruction (CheckpointingInstruction): CheckpointingInstruction object.\n
+            current_epoch (int): Current epoch number for cerating checkpoints.
         """
 
         if checkpoint_instruction.save_current:
@@ -87,6 +91,19 @@ class AbstractGymJob(StatefulComponent):
     @staticmethod
     def batch_processed_callback(status: str, experiment_status_logger: ExperimentStatusLogger, num_batches: int,
                                  current_batch: int, splits: List[str], current_split: str, num_epochs: int, current_epoch: int):
+        """
+        Log experiment details for processed batch of data.
+
+        :params:
+            status (str): CheckpointingInstruction object.\n
+            experiment_status_logger (ExperimentStatusLogger): Epoch/Experiment number for cerating checkpoints.\n
+            num_batches (int): numner of batches to be trained.\n
+            current_batch (int): Batch number for which details to be logged.\n
+            splits (List[str]): Splits list for the data\n
+            current_split (str): Current split of the data.\n
+            num_epochs(int): number of epochs to be trained to.\n
+            current_epoch (int): Current epoch number.
+        """
         if (current_batch % max(1, int(num_batches/10))) == 0:  # TODO make update period configurable
             experiment_status_logger.log_experiment_status(status=status,
                                                            num_epochs=num_epochs,
@@ -99,10 +116,28 @@ class AbstractGymJob(StatefulComponent):
     @staticmethod
     def epoch_result_callback(experiment_status_logger: ExperimentStatusLogger, evaluation_result: EvaluationBatchResult,
                               current_epoch: int):
+        """
+        Log evaluation details for an epoch.
+
+        :params:
+            experiment_status_logger (ExperimentStatusLogger): Epoch/Experiment number for cerating checkpoints.\n
+            evaluation_result (EvaluationBatchResult): Object storing entire epoch infotmation.\n
+            current_epoch (int): Current epoch number.
+        """
         experiment_status_logger.log_evaluation_results(evaluation_result, current_epoch)
 
     def train_epoch_done_callback(self, num_epochs: int, current_epoch: int, model: NNModel, evaluation_step_routine: Callable,
                                   accelerator: Accelerator = None):
+        """
+        Log evaluation details for an epoch.
+
+        :params:
+            num_epochs (int): Number of epochs to be trained.\n
+            current_epoch (int): Current epoch number.\n
+            model (NNModel): Torch Neural Network module.\n
+            evaluation_step_routine (Callable): Epoch/Experiment number for cerating checkpoints.\n
+            accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
+        """
         evaluation_results = evaluation_step_routine(current_epoch=current_epoch)
         if current_epoch > 0:
             self.lr_scheduler.step()
