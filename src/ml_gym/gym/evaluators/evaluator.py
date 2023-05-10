@@ -198,7 +198,7 @@ class EvalComponent(EvalComponentIF):
 
         :params:
             inference_batch (InferenceResultBatch): Predicttion performed on the model.\n
-            split_metrics (List[Metric]): Metrics for each split of data.\n
+            split_metrics (List[Metric]): Metrics for each split of data.
         :returns:
             metric_scores (Dict[str, List[float]]): Metric scores for splits.
         """
