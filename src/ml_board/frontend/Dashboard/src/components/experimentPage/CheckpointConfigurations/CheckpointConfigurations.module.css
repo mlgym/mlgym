@@ -10,8 +10,17 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    background-color: rgba(227, 225, 222, 0.747);
+}
+
+.checkpoint_data_resources_main_card {
+    margin-bottom: 10px;
     border-radius: 15px;
-    padding-left: 20px;
-    padding-right: 10px;
+}
+
+.error_text {
+    font-family: sans-serif;
+    color: red;
+    font-weight: bold;
+    text-align: center;
+    font-size: 15px;
 }

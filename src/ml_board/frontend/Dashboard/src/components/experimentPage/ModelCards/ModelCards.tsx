@@ -1,4 +1,4 @@
-import { Grid, Card, CardContent, IconButton, Box, LinearProgress, FormControl, FormHelperText, InputLabel, MenuItem, Select } from '@mui/material';
+import { Grid, Card, CardContent } from '@mui/material';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import api from '../../../app/ApiMaster';
@@ -8,6 +8,11 @@ import styles from './ModelCards.module.css';
 import { AnyKeyValuePairsInterface } from '../ExperimentPage';
 import { CardDetails } from '../ExperimentDetails.tsx/CardDetails';
 import ModelCardCudaList from './ModelCardCudaList';
+import ModelCardPythonPackagesList from './ModelCardPythonPackagesList';
+
+export interface pythonPackagesListInterface {
+    [key: string|number]: string
+}
 
 export interface cudaDeviceListInterface {
     "name": string,
@@ -92,18 +97,28 @@ export default function ModelCards({experimentIdProp} : {experimentIdProp: strin
                 </Card>
                 :
                 <Grid container rowSpacing={1} spacing={{ xs: 1, md: 2 }}>
-                    <Grid item={true} xs={12} sm={12} md={6}>
+                    <Grid item={true} xs={12} sm={12} md={4}>
                         <CardDetails
                             cardTitle="System Info"
                             contentObj={sysInfoBasicData}
                         />
                     </Grid>
-                    <Grid item={true} xs={12} sm={12} md={6}>
+                    <Grid item={true} xs={12} sm={12} md={4}>
                         <Card>
                             <CardContent>
                                 <ModelCardCudaList 
                                     cardTitle="Cuda Devices List" 
                                     cudaDeviceList={sysInfoCudaDevicesData}
+                                />
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                    <Grid item={true} xs={12} sm={12} md={4}>
+                        <Card>
+                            <CardContent>
+                                <ModelCardPythonPackagesList 
+                                    cardTitle="Python Packages List" 
+                                    pythonPackagesList={sysInfoPythonPackages}
                                 />
                             </CardContent>
                         </Card>

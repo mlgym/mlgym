@@ -2,7 +2,8 @@ export const defaultGridSearchConfigFileName = "grid_search_config";
 export const defaultExperimentConfigFileName = "experiment_config";
 
 const GRID_SEARCH_BASE_URL = "/grid_searches/<grid_search_id>";
-const CHECKPOINT_BASE_URL = "/checkpoints/<grid_search_id>/<experiment_id>";
+const CHECKPOINT_BASE_URL = "/checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>";
+const CHECKPOINT_LIST_BASE_URL = "/checkpoint_list/<grid_search_id>/<experiment_id>";
 const MODEL_CARDS_BASE_URL = "/system-info/<grid_search_id>";
 
 let api = {
@@ -16,10 +17,10 @@ let api = {
     experiments: GRID_SEARCH_BASE_URL + "/experiments",
 
     // following API to GET data of all checkpoints of a selected experiment
-    all_checkpoints: CHECKPOINT_BASE_URL,
+    checkpoint_list: CHECKPOINT_LIST_BASE_URL,
 
     // following API to GET all data of a selected checkpoint
-    selected_checkpoint: CHECKPOINT_BASE_URL + "/<checkpoint_id>",
+    selected_checkpoint_list: CHECKPOINT_LIST_BASE_URL + "/<checkpoint_id>",
     
     // following APIs to GET, POST & DELETE data individually for checkpoints
     // <checkpoint_resource> can be: model, optimizer, stateful_component, lr_scheduler

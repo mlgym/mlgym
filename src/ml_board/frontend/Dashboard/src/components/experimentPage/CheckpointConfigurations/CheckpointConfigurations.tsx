@@ -15,8 +15,8 @@ interface CheckpointDataInterface {
 
 export default function CheckpointConfigurations({experimentIdProp} : {experimentIdProp: string}) {
 
-    const [checkpointId, setCheckpointId] = useState("");
-    const [checkpointResourceNames, setCheckpointResourceNames] = useState([]);
+    const [selectedCheckpointIndex, setSelectedCheckpointIndex] = useState(0);
+    const [checkpointResourceNames, setCheckpointResourceNames] = useState(Array<string>);
     const [checkpointData, setCheckpointData] = useState(Array<CheckpointDataInterface>);
     const [error, setError] = useState("");
     const [errorInGettingResource, setErrorInGettingResource] = useState("");
@@ -33,14 +33,16 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
     },[experimentIdProp]);
 
     function getAllCheckpoints() {
-        let all_checkpoints = api.all_checkpoints.replace("<grid_search_id>", grid_search_id);
+        let all_checkpoints = api.checkpoint_list.replace("<grid_search_id>", grid_search_id);
         all_checkpoints = all_checkpoints.replace("<experiment_id>", experimentIdProp);
 
         axios.get(rest_api_url + all_checkpoints).then((response) => {
-            console.log("Got response from all_checkpoints API: ", response);
+            console.log("Got response from checkpoint_list API: ", response);
             if (response.status === 200) {
                 let resp_data = response.data;
                 setCheckpointData(resp_data);
+                // selecting all the resource names to display for the first default index 
+                setCheckpointResourceNames(resp_data[0].checkpoints);
             }
             else {
                 setError("Error occured / No checkpoints available");
@@ -48,7 +50,7 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
             setIsLoading(false);
         })
         .catch((error) => {
-            console.log("Error in all_checkpoints: ", error);
+            console.log("Error in checkpoint_list: ", error);
             setIsLoading(false);
             setError("Error occured / No checkpoints available");
         });
@@ -57,7 +59,7 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
     function getCheckpointResource(resourceName: string) {
         let checkpoint_resource = api.checkpoint_resource.replace("<grid_search_id>", grid_search_id);
         checkpoint_resource = checkpoint_resource.replace("<experiment_id>", experimentIdProp);
-        checkpoint_resource = checkpoint_resource.replace("<checkpoint_id>", checkpointId.toString());
+        checkpoint_resource = checkpoint_resource.replace("<checkpoint_id>", checkpointData[selectedCheckpointIndex].epoch.toString());
         checkpoint_resource = checkpoint_resource.replace("<checkpoint_resource>", resourceName);
 
         setErrorInGettingResource("");
@@ -66,18 +68,17 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
         axios.get(rest_api_url + checkpoint_resource).then((response) => {
             console.log("Got response from checkpoint_resource API: ", response);
             if (response.status === 200) {
-                let resp_data = response.data;
-                downloadFile(resp_data);
+                downloadFile(new Blob([response.data]));
             }
             else {
-                setErrorInGettingResource("Oops! an error occurred in getting / downloading checkpoint resource data")
+                setErrorInGettingResource("Oops! an error occurred in getting & downloading checkpoint resource data")
             }
             setIsLoadingResource(false);
         })
         .catch((error) => {
             console.log("Error in checkpoint_resource API: ", error);
             setIsLoadingResource(false);
-            setErrorInGettingResource("Oops! an error occurred in getting / downloading checkpoint resource data")
+            setErrorInGettingResource("Oops! an error occurred in getting & downloading checkpoint resource data")
         });
     }
 
@@ -85,7 +86,7 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
         const url = window.URL.createObjectURL(fileData!);
         const a = document.createElement('a');
         a.href = url;
-        a.download = "checkpoint"+checkpointId.trim().toString()+"_experiemnt_"+experimentIdProp;
+        a.download = "checkpoint_"+checkpointData[selectedCheckpointIndex].epoch.trim().toString()+"_experiemnt_"+experimentIdProp+".pickle";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -100,19 +101,21 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
                         <Select
                             labelId="demo-simple-select-helper-label"
                             id="demo-simple-select-helper"
-                            value={checkpointData.length > 0 ? checkpointData : ""}
+                            value={selectedCheckpointIndex}
                             label="Select Checkpoint Id"
-                            // onChange={(e)=>{
-                            //     let v = e.target.value
-                            //     console.log(v);
-                            //     // setCheckpointId()
-                            // }}
+                            onChange={(e)=>{
+                                let index = Number(e.target.value);
+                                setSelectedCheckpointIndex(index);
+                                setCheckpointResourceNames(checkpointData[index].checkpoints);
+                            }}
                             MenuProps={{ style: { maxHeight: "250px" } }} // have to keep style here. keeping it in css file is not working for this
                         >
                             {
                                 checkpointData.length > 0 ?
-                                checkpointData.map((chkpt_obj)=> 
-                                    <MenuItem key={chkpt_obj.epoch} value={chkpt_obj.epoch}>{chkpt_obj.epoch}</MenuItem>
+                                checkpointData.map((chkpt_obj, index) => 
+                                    <MenuItem key={index} value={index.toString()}>
+                                        {chkpt_obj.epoch}
+                                    </MenuItem>
                                 )
                                 :
                                 null
@@ -142,33 +145,41 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
             {
                 !isLoading && error.length === 0 && checkpointResourceNames.length > 0 ?
                 <Grid item={true} xs={12} sm={12} md={12} lg={12}>
-                    <Card>
-                        <CardContent>
-                            {
-                                checkpointResourceNames.map((resourceName) => {
-                                    return(
-                                        <Box className={styles.checkpoint_data_resources}>
-                                            <div>
-                                                {resourceName}
-                                            </div>
-                                            <IconButton 
-                                                size="large"
-                                                onClick={()=>getCheckpointResource(resourceName)}
-                                                disabled={isLoadingResource || errorInGettingResource.length > 0}
-                                            >
-                                                <Download /> 
-                                            </IconButton>
-                                        </Box>
-                                    );
-                                })
-                            }
-                        </CardContent>
-                    </Card>
+                    {
+                        checkpointResourceNames.map((resourceName, index) => {
+                            return(
+                                <Card className={styles.checkpoint_data_resources_main_card} key={index}>
+                                    <CardContent className={styles.checkpoint_data_resources}>
+                                        <div>
+                                            {resourceName}
+                                        </div>
+                                        <IconButton 
+                                            size="small"
+                                            onClick={()=>getCheckpointResource(resourceName)}
+                                            disabled={isLoadingResource}
+                                        >
+                                            <Download /> 
+                                        </IconButton>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })
+                    }
+                    {
+                        isLoadingResource ?
+                        <Grid item={true} xs={12} sm={12} md={12} lg={12}>
+                            <Box>
+                                <LinearProgress />
+                            </Box>
+                        </Grid>
+                        :
+                        null
+                    }
                     {
                         errorInGettingResource.length > 0 ?
-                        <FormHelperText>
+                        <div className={styles.error_text}>
                             {errorInGettingResource}
-                        </FormHelperText>
+                        </div>
                         :
                         null
                     }
