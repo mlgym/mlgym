@@ -122,15 +122,15 @@ Available <checkpoint_resource> = [model, optimizer, stateful_component, lr_sche
 
 Get all Checkpoint names for single experiment:
 
-_GET /checkpoints/<grid_search_id>/<experiment_id>_
+_GET /checkpoint_list/<grid_search_id>/<experiment_id>_
 
-_Ex: GET /checkpoints/2023-04-12--23-42-17/0_
+_Ex: GET /checkpoint_list/2023-04-12--23-42-17/0_
 
 Get all Checkpoint names for single epoch in an experiment:
 
-_GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>_
+_GET /checkpoint_list/<grid_search_id>/<experiment_id>/<checkpoint_id>_
 
-_Ex: GET /checkpoints/2023-04-12--23-42-17/0/0_
+_Ex: GET /checkpoint_list/2023-04-12--23-42-17/0/0_
 
 Return:
 ```json
