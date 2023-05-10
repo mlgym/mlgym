@@ -10,9 +10,9 @@ import MuiAccordionDetails from '@mui/material/AccordionDetails';
 import styles from './ExperimentPage.module.css';
 import styles_graphs from "../graphs/Graphs.module.css";
 import Graph from "../graphs/Graph";
-import { getRandomColor } from '../../worker_socket/event_handlers/evaluationResultDataHandler';
 import CheckpointConfigurations from './CheckpointConfigurations/CheckpointConfigurations';
 import ExperimentConfigurations from './ExperimentConfigurations/ExperimentConfigurations';
+import ModelCards from './ModelCards/ModelCards';
 import { isConnected } from "../../redux/status/statusSlice";
 import { ExperimentDetails } from './ExperimentDetails.tsx/ExperimentDetails';
 import { ExperimentProgress } from './ExperimentProgress/ExperimentProgress';
@@ -87,6 +87,14 @@ function ExperimentPage() {
                         </AccordionSummary>
                         <AccordionDetails>
                             <ExperimentProgress selectedExperiment={selectedExperiment}/>
+                        </AccordionDetails>
+                    </Accordion>
+                    <Accordion defaultExpanded={true}>
+                        <AccordionSummary aria-controls="panel2d-content" id="panel2d-header">
+                            <div className={styles.accordian_heading}>Model Cards</div>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <ModelCards experimentIdProp={experiment_id.toString()}/>
                         </AccordionDetails>
                     </Accordion>
                     {

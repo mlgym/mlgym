@@ -1,4 +1,4 @@
-import { DataFromSocket, DataToRedux } from "./DataTypes";
+import { BufferedDataFromSocket, DataFromSocket, DataToRedux } from "./DataTypes";
 import { MLGYM_EVENT } from "./EventsTypes";
 import handleEvaluationResultData from "./event_handlers/EvaluationResultHandler";
 import handleExperimentStatusData from "./event_handlers/ExperimentStatusHandler";
@@ -17,6 +17,7 @@ const MapEventToProcess: { [event: string]: (output: DataToRedux, input: JSON) =
     },
     [MLGYM_EVENT.EXPERIMENT_CONFIG]: (dataToRedux: DataToRedux, data: JSON): void => console.log("Exp config found"),
     [MLGYM_EVENT.EXPERIMENT_STATUS]: (dataToRedux: DataToRedux, data: JSON): void => { dataToRedux.tableData.push(handleExperimentStatusData(data)) },
+    // [MLGYM_EVENT.BATCHED_EVENTS]: (dataToRedux: DataToRedux, data: JSON): void => { dataToRedux.tableData.push(handleJobStatusData(data)) },
 };
 
 
@@ -28,11 +29,25 @@ export const updateMainThreadCallback = (bufferedSocketData: Array<JSON>) => {
         chartsUpdates: []
     };
     // loop over all incoming data from socket
-    for (const data of bufferedSocketData) {
-        // parse data from socket then extract event_type and payload
-        const { data: { event_type, payload } } = data as DataFromSocket;
-        // process the payload and load it into the DataToRedux object
-        MapEventToProcess[event_type as keyof typeof MapEventToProcess](bufferedDataToRedux, payload);
+    for (const bfrdata of bufferedSocketData) {
+        let data_from_socket = bfrdata as DataFromSocket | BufferedDataFromSocket;
+        // handling batched events coming from socket itself
+        if(data_from_socket.event_id === "batched_events") {
+            const buffered_data =  data_from_socket as BufferedDataFromSocket;
+            // treating batched events as normal buffered events from web workers (like the else part of this function)
+            for(const iterated_buffer_data of buffered_data["data"]) {
+                // parse data from socket then extract event_type and payload
+                const { data: { event_type, payload } } = iterated_buffer_data as DataFromSocket;
+                // process the payload and load it into the DataToRedux object
+                MapEventToProcess[event_type as keyof typeof MapEventToProcess](bufferedDataToRedux, payload);
+            }
+        }
+        else {
+            // parse data from socket then extract event_type and payload
+            const { data: { event_type, payload } } = data_from_socket as DataFromSocket;
+            // process the payload and load it into the DataToRedux object
+            MapEventToProcess[event_type as keyof typeof MapEventToProcess](bufferedDataToRedux, payload);
+        }
     }
     // sending Data to the Main thread to store it in Redux
     postMessage(bufferedDataToRedux);
