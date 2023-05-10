@@ -5,8 +5,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { pythonPackagesListInterface } from './ModelCards';
-import { Box, TableFooter, TablePagination } from '@mui/material';
+import { Box, Card, CardContent, TableFooter, TablePagination } from '@mui/material';
 import styles from './ModelCards.module.css';
 import { useState } from 'react';
 
@@ -29,52 +28,51 @@ export default function ModelCardCudaList({cardTitle, pythonPackagesList} : {car
             </div>
             {
                 pythonPackagesList.length > 0 ?
-                <Box>
-                    <TableContainer component={Paper}>
-                        <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell component="th" scope="row">Package Name</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {
-                                    (rowsPerPage > 0 ? pythonPackagesList.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                    :
-                                    pythonPackagesList
-                                    ).map((row, index) => (
-                                        <TableRow
-                                            key={index}
-                                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                                        >
-                                            <TableCell>
-                                                {row}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                }
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                    <TableFooter>
-                        <TableRow>
-                            <TablePagination
-                                rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-                                count={pythonPackagesList.length}
-                                rowsPerPage={rowsPerPage}
-                                page={page}
-                                onPageChange={handleChangePage}
-                                onRowsPerPageChange={handleChangeRowsPerPage}
-                            />
-                        </TableRow>
-                    </TableFooter>
-                </Box>
+                <TableContainer component={Paper}>
+                    <Table size="small" aria-label="a dense table">
+                        <TableHead>
+                            <TableRow className={styles.table_header_bg}>
+                                <TableCell className={styles.table_header_text} component="th" scope="row">Package Name</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {
+                                (rowsPerPage > 0 ? pythonPackagesList.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                :
+                                pythonPackagesList
+                                ).map((row, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>
+                                            {row}
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            }
+                        </TableBody>
+                        <TableFooter>
+                            <TableRow>
+                                <TablePagination
+                                    rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+                                    count={pythonPackagesList.length}
+                                    rowsPerPage={rowsPerPage}
+                                    page={page}
+                                    onPageChange={handleChangePage}
+                                    onRowsPerPageChange={handleChangeRowsPerPage}
+                                />
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </TableContainer>
                 :
-                <div className={styles.cardcontent_model_cards}>
-                    <div className={styles.loading_text}>
-                        No Data Available
-                    </div>
-                </div>
+                <Card>
+                    <CardContent>
+                        <div className={styles.cardcontent_model_cards}>
+                            <div className={styles.loading_text}>
+                                No Data Available
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             }
         </Box>
     );

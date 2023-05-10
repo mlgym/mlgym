@@ -68,7 +68,7 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
         axios.get(rest_api_url + checkpoint_resource).then((response) => {
             console.log("Got response from checkpoint_resource API: ", response);
             if (response.status === 200) {
-                downloadFile(new Blob([response.data]));
+                downloadFile(resourceName, new Blob([response.data]));
             }
             else {
                 setErrorInGettingResource("Oops! an error occurred in getting & downloading checkpoint resource data")
@@ -82,11 +82,11 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
         });
     }
 
-    function downloadFile(fileData: Blob) {
+    function downloadFile(resourceName: string, fileData: Blob) {
         const url = window.URL.createObjectURL(fileData!);
         const a = document.createElement('a');
         a.href = url;
-        a.download = "checkpoint_"+checkpointData[selectedCheckpointIndex].epoch.trim().toString()+"_experiemnt_"+experimentIdProp+".pickle";
+        a.download = resourceName+"_checkpoint_"+checkpointData[selectedCheckpointIndex].epoch.trim().toString()+"_experiemnt_"+experimentIdProp+".pickle";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

@@ -10,10 +10,6 @@ import { CardDetails } from '../ExperimentDetails.tsx/CardDetails';
 import ModelCardCudaList from './ModelCardCudaList';
 import ModelCardPythonPackagesList from './ModelCardPythonPackagesList';
 
-export interface pythonPackagesListInterface {
-    [key: string|number]: string
-}
-
 export interface cudaDeviceListInterface {
     "name": string,
     "multi_proc_count": string,
@@ -104,24 +100,16 @@ export default function ModelCards({experimentIdProp} : {experimentIdProp: strin
                         />
                     </Grid>
                     <Grid item={true} xs={12} sm={12} md={4}>
-                        <Card>
-                            <CardContent>
-                                <ModelCardCudaList 
-                                    cardTitle="Cuda Devices List" 
-                                    cudaDeviceList={sysInfoCudaDevicesData}
-                                />
-                            </CardContent>
-                        </Card>
+                        <ModelCardCudaList 
+                            cardTitle="Cuda Devices List" 
+                            cudaDeviceList={sysInfoCudaDevicesData}
+                        />
                     </Grid>
                     <Grid item={true} xs={12} sm={12} md={4}>
-                        <Card>
-                            <CardContent>
-                                <ModelCardPythonPackagesList 
-                                    cardTitle="Python Packages List" 
-                                    pythonPackagesList={sysInfoPythonPackages}
-                                />
-                            </CardContent>
-                        </Card>
+                        <ModelCardPythonPackagesList 
+                            cardTitle="Python Packages List" 
+                            pythonPackagesList={sysInfoPythonPackages}
+                        />
                     </Grid>
                 </Grid>
             }
