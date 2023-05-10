@@ -1,5 +1,5 @@
 import { Toolbar } from '@mui/material';
-import { CellClickedEvent } from 'ag-grid-community';
+import { CellClickedEvent, RowClassParams, RowStyle } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
 import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
 import { AgGridReact } from "ag-grid-react";
@@ -23,9 +23,13 @@ export default function Table({ colNames, rows }: { colNames: string[], rows: an
 
   const onCellClicked = useCallback((event: CellClickedEvent) => { console.log(event) }, []);
 
+  // set background colour for every row based on the rowIndex, as it is the same as experiment_id. BUT this looks bad, should be using CSS classes?
+  const getRowStyle = ({ rowIndex }: RowClassParams): RowStyle => { return { background: `hsl(${rowIndex * 137.5},75%,50%)` }; };
+
   return (
     <div className="ag-theme-alpine" id={styles.ag_grid_container_table}>
       <Toolbar />
+      {/* NOTE: https://www.ag-grid.com/react-data-grid/row-styles/ */}
       <AgGridReact
         defaultColDef={defaultColDef}
         // {/* provide column definitions */}
@@ -53,6 +57,7 @@ export default function Table({ colNames, rows }: { colNames: string[], rows: an
         animateRows={true} // Optional - set to 'true' to have rows animate when sorted
         rowSelection="multiple"
         onCellClicked={onCellClicked}
+        // getRowStyle={getRowStyle}
       >
       </AgGridReact>
     </div>
