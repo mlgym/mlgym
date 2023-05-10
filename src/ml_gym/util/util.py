@@ -40,12 +40,11 @@ class SystemEnv:
             info["processor"] = platform.processor()
             info["ram"] = str(round(psutil.virtual_memory().total / (1024.0**3))) + " GB"
             info["python-version"] = platform.python_version()
-            info["python-packages"] = [p.project_name for p in pkg_resources.working_set]
+            info["python-packages"] = [{"name":p.project_name, "version": p.version} for p in pkg_resources.working_set]
             if torch.cuda.is_available():
                 info["CUDNN_version"] = torch.backends.cudnn.version()
                 info["num_cuda_device"] = torch.cuda.device_count()
                 dev_list = []
-                infor = torch.cuda.get_device_properties(0)
                 for i in range(torch.cuda.device_count()):
                     dev_list.append(
                         {
