@@ -25,7 +25,8 @@
 }
 
 .table_header_bg {
-    background-color: black;
+    background-color: rgb(147, 147, 147);
+    color: white;
 }
 
 .table_header_text {

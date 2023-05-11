@@ -1,6 +1,6 @@
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
+import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
@@ -8,8 +8,27 @@ import Paper from '@mui/material/Paper';
 import { Box, Card, CardContent, TableFooter, TablePagination } from '@mui/material';
 import styles from './ModelCards.module.css';
 import { useState } from 'react';
+import { styled } from '@mui/material/styles';
+import { pythonPackagesListInterface } from './ModelCards';
 
-export default function ModelCardCudaList({cardTitle, pythonPackagesList} : {cardTitle: string, pythonPackagesList: Array<string>}) {
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+      backgroundColor: theme.palette.common.black,
+      color: theme.palette.common.white,
+    }
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+    '&:nth-of-type(odd)': {
+      backgroundColor: theme.palette.action.hover,
+    },
+    // hide last border
+    '&:last-child td, &:last-child th': {
+      border: 0,
+    },
+}));
+
+export default function ModelCardCudaList({cardTitle, pythonPackagesList} : {cardTitle: string, pythonPackagesList: Array<pythonPackagesListInterface>}) {
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -31,8 +50,9 @@ export default function ModelCardCudaList({cardTitle, pythonPackagesList} : {car
                 <TableContainer component={Paper}>
                     <Table size="small" aria-label="a dense table">
                         <TableHead>
-                            <TableRow className={styles.table_header_bg}>
-                                <TableCell className={styles.table_header_text} component="th" scope="row">Package Name</TableCell>
+                            <TableRow>
+                                <StyledTableCell>Package Name</StyledTableCell>
+                                <StyledTableCell>Package Version</StyledTableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -41,11 +61,14 @@ export default function ModelCardCudaList({cardTitle, pythonPackagesList} : {car
                                 :
                                 pythonPackagesList
                                 ).map((row, index) => (
-                                    <TableRow key={index}>
+                                    <StyledTableRow key={index}>
                                         <TableCell>
-                                            {row}
+                                            {row.name}
                                         </TableCell>
-                                    </TableRow>
+                                        <TableCell>
+                                            {row.version}
+                                        </TableCell>
+                                    </StyledTableRow>
                                 ))
                             }
                         </TableBody>

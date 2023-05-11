@@ -10,6 +10,11 @@ import { CardDetails } from '../ExperimentDetails.tsx/CardDetails';
 import ModelCardCudaList from './ModelCardCudaList';
 import ModelCardPythonPackagesList from './ModelCardPythonPackagesList';
 
+export interface pythonPackagesListInterface {
+    "name": string,
+    "version": string
+}
+
 export interface cudaDeviceListInterface {
     "name": string,
     "multi_proc_count": string,
