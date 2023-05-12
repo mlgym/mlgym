@@ -16,8 +16,47 @@ from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingCom
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 import tqdm
 from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob
+from ml_gym.error_handling.exception import SystemInfoFetchError
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
+import platform
+import torch
+import psutil
+import pkg_resources
 
+
+class SystemEnv:
+    @staticmethod
+    def create_system_info() -> Dict:
+        """
+        Fetch System Information for model card.
+
+        :returns: Dict- System Information of host machine (CPU & GPU)
+        """
+        try:
+            info = {}
+            info["platform"] = platform.system()
+            info["platform-release"] = platform.release()
+            info["architecture"] = platform.machine()
+            info["processor"] = platform.processor()
+            info["ram"] = str(round(psutil.virtual_memory().total / (1024.0**3))) + " GB"
+            info["python-version"] = platform.python_version()
+            info["python-packages"] = [{"name":p.project_name, "version": p.version} for p in pkg_resources.working_set]
+            if torch.cuda.is_available():
+                info["CUDNN_version"] = torch.backends.cudnn.version()
+                info["num_cuda_device"] = torch.cuda.device_count()
+                dev_list = []
+                for i in range(torch.cuda.device_count()):
+                    dev_list.append(
+                        {
+                            "name": torch.cuda.get_device_name(i),
+                            "multi_proc_count": torch.cuda.get_device_properties(i).multi_processor_count,
+                            "total_memory": f"{round(torch.cuda.get_device_properties(i).total_memory / 1e9, 2)} GB",
+                        }
+                    )
+                info["cuda_device_list"] = dev_list
+            return info
+        except Exception as e:
+            raise SystemInfoFetchError(f"Unable to fetch System Info") from e
 
 class ExportedModel:
     def __init__(self, model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str = None, device: torch.device = None):

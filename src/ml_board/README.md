@@ -70,6 +70,33 @@ payload:
 }
 ```
 
+**Model Card**
+
+Fetch System details like CPU & GPU for model card.
+
+_GET /system-info/<grid_search_id>/<experiment_id>_
+
+```json
+{
+    "platform": <Operating system>,
+    "platform-release": <OS version>,
+    "architecture": <system architecture ex: AMD64>,
+    "processor": <processor name>,
+    "ram": <ram in GB>,
+    "python-version": <version>,
+    "python-packages": <List of pip packages>,
+    "CUDNN_version":<cudnn version>,
+    "num_cuda_device": <number of cuda devices>,
+    "cuda_device_list": [
+        {
+            "name": <name of GPU>,
+            "multi_proc_count": <Processor count of GPU>,
+            "total_memory": <Total GPU memory in GB>
+        }
+    ]
+}
+```
+
 **Experiments**
 
 _GET /grid_searches/<grid_search_id>/experiments_
@@ -96,15 +123,15 @@ Available <checkpoint_resource> = [model, optimizer, stateful_component, lr_sche
 
 Get all Checkpoint names for single experiment:
 
-_GET /checkpoints/<grid_search_id>/<experiment_id>_
+_GET /checkpoint_list/<grid_search_id>/<experiment_id>_
 
-_Ex: GET /checkpoints/2023-04-12--23-42-17/0_
+_Ex: GET /checkpoint_list/2023-04-12--23-42-17/0_
 
 Get all Checkpoint names for single epoch in an experiment:
 
-_GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>_
+_GET /checkpoint_list/<grid_search_id>/<experiment_id>/<checkpoint_id>_
 
-_Ex: GET /checkpoints/2023-04-12--23-42-17/0/0_
+_Ex: GET /checkpoint_list/2023-04-12--23-42-17/0/0_
 
 Return:
 ```json
