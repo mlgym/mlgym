@@ -16,71 +16,53 @@ export function ExperimentDetails({selectedExperiment} : {selectedExperiment: An
                     <CardDetails
                         cardTitle='Overview'
                         contentObj={
-                            {   
+                            {
                                 "Experiment ID": selectedExperiment.experiment_id,
-                                "Job Type": 
-                                selectedExperiment.job_type ?
-                                selectedExperiment.job_type
-                                :
-                                "--",
-                                "Device":
-                                selectedExperiment.device ? 
-                                selectedExperiment.device
-                                :
-                                "--"
+                                "Job Type": selectedExperiment.job_type ?? "--",
+                                "Device": selectedExperiment.device ?? "--"
                             }
                         }
                     />
                 </Grid>
                 <Grid item={true} xs={12} sm={12} md={4}>
-                    <CardDetails 
+                    <CardDetails
                         cardTitle='Times'
                         contentObj={
-                            {   
+                            {
                                 "Start": selectedExperiment.starting_time && selectedExperiment.starting_time !== -1 ?
-                                moment(new Date(selectedExperiment.starting_time*1000)).format("YYYY-MM-DD hh:MM:SS")
-                                :
-                                "--",
+                                    moment(new Date(selectedExperiment.starting_time * 1000)).format("YYYY-MM-DD hh:MM:SS")
+                                    :
+                                    "--",
                                 "End": selectedExperiment.finishing_time && selectedExperiment.finishing_time !== -1 ?
-                                moment(new Date(selectedExperiment.finishing_time*1000)).format("YYYY-MM-DD hh:MM:SS")
-                                :
-                                "--"
+                                    moment(new Date(selectedExperiment.finishing_time * 1000)).format("YYYY-MM-DD hh:MM:SS")
+                                    :
+                                    "--"
                             }
                         }
                     />
                 </Grid>
                 <Grid item={true} xs={12} sm={12} md={4}>
-                    <CardDetails 
+                    <CardDetails
                         cardTitle='State'
                         contentObj={
-                            {   
-                                "Job Status": 
-                                selectedExperiment.hasOwnProperty("error") && selectedExperiment.error !== null ?
-                                "FAILED"
-                                :
-                                selectedExperiment.job_status === "DONE" ?
-                                "COMPLETED"
-                                :
-                                selectedExperiment.job_status === "INIT" ?
-                                "INITIALIZING"
-                                :
-                                selectedExperiment.job_status ?
-                                selectedExperiment.job_status
-                                :
-                                "--",
-                                "Model Status": 
-                                selectedExperiment.model_status ?
-                                selectedExperiment.model_status 
-                                :
-                                "--"
+                            {
+                                "Job Status":
+                                    selectedExperiment.hasOwnProperty("error") && selectedExperiment.error !== null ?
+                                        "FAILED"
+                                        :
+                                        selectedExperiment.job_status === "DONE" ?
+                                            "COMPLETED"
+                                            :
+                                            selectedExperiment.job_status === "INIT" ?
+                                                "INITIALIZING" : selectedExperiment.job_status ?? "--",
+                                "Model Status": selectedExperiment.model_status ?? "--"
                             }
                         }
                     />
                 </Grid>
             </Grid>
             {
-                selectedExperiment.hasOwnProperty("error") && selectedExperiment.error !== null ?
-                <div className={styles.error_card}>
+                selectedExperiment.error && <div className={styles.error_card}>
                     <Card className={styles.card}>
                         <CardContent>
                             <div className={styles.card_content_typography_error} >
@@ -90,21 +72,20 @@ export function ExperimentDetails({selectedExperiment} : {selectedExperiment: An
                                 {selectedExperiment.error}
                             </div>
                             {
-                                selectedExperiment.hasOwnProperty("stacktrace") && selectedExperiment.stacktrace !== (null||undefined) ?
-                                <div>
-                                    <br/>
+                                selectedExperiment.stacktrace && <div>
+                                    <br />
                                     <div className={styles.card_content_typography} >
                                         Stacktrace
                                     </div>
                                     <div className={styles.cardcontent_key}>
                                         {
-                                            showMore ? 
-                                            selectedExperiment.stacktrace 
-                                            : 
-                                            selectedExperiment.stacktrace.substring(0,100)+"..."
+                                            showMore ?
+                                                selectedExperiment.stacktrace
+                                                :
+                                                selectedExperiment.stacktrace.substring(0, 100) + "..."
                                         }
-                                        <span 
-                                            onClick={()=>setShowMore(!showMore)} 
+                                        <span
+                                            onClick={() => setShowMore(!showMore)}
                                             className={styles.show_more_text}
                                         >
                                             {
@@ -113,14 +94,10 @@ export function ExperimentDetails({selectedExperiment} : {selectedExperiment: An
                                         </span>
                                     </div>
                                 </div>
-                                :
-                                null
                             }
                         </CardContent>
                     </Card>
                 </div>
-                :
-                null
             }
         </>
     );
