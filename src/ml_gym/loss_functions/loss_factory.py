@@ -15,13 +15,14 @@ class LossFactory:
         Get Lp Loss object from params. 
 
         :params:
-            target_subscription_key (str): Loss function.\n
-            prediction_subscription_key (str): Predicttion performed on the model.\n
-            root (int): Root Value in Loss equation.\n
-            exponent (int): Exponent value in Loss equation.\n
-            class_selection_fun_params (Dict): TO DO\n
-            average_batch_loss (bool): Average Loss value for the batch of data.\n
-            tag (str): Label to be tagged with the loss object. 
+           - target_subscription_key (str): Loss function.
+           - prediction_subscription_key (str): Predicttion performed on the model.
+           - root (int): Root Value in Loss equation.
+           - exponent (int): Exponent value in Loss equation.
+           - class_selection_fun_params (Dict): TO DO
+           - average_batch_loss (bool): Average Loss value for the batch of data.
+           - tag (str): Label to be tagged with the loss object. 
+
         :returns:
             LPLoss: Object of LPLoss.
         """
@@ -41,9 +42,10 @@ class LossFactory:
         Get Cross Entropy Loss Object from params.
 
         :params:
-            target_subscription_key (str): Loss function.\n
-            prediction_subscription_key (str): Predicttion performed on the model.\n
-            tag (str): Label to be tagged with the loss object. 
+           - target_subscription_key (str): Loss function.
+           - prediction_subscription_key (str): Predicttion performed on the model.
+           - tag (str): Label to be tagged with the loss object. 
+
         :returns:
             CrossEntropyLoss: Object of CrossEntropyLoss.
         """
@@ -57,9 +59,10 @@ class LossFactory:
         Get Negative log Likelihood Loss Object from params.
 
         :params:
-            target_subscription_key (str): Loss function.\n
-            prediction_subscription_key (str): Predicttion performed on the model.\n
-            tag (str): Label to be tagged with the loss object. 
+           - target_subscription_key (str): Loss function.
+           - prediction_subscription_key (str): Predicttion performed on the model.
+           - tag (str): Label to be tagged with the loss object. 
+
         :returns:
             NLLLoss: Object of NLLLoss.
         """
@@ -74,11 +77,12 @@ class LossFactory:
         Get BCEWithLogitsLoss Object (cross entropy loss that comes inside a sigmoid function) from params.
 
         :params:
-            target_subscription_key (str): Loss function.\n
-            prediction_subscription_key (str): Predicttion performed on the model.\n
-            tag (str): Label to be tagged with the loss object.\n
-            average_batch_loss (bool): Average Loss value for the batch of data.\n
-            flatten_predictions (bool): Flatten the layer to get predictions.
+           - target_subscription_key (str): Loss function.
+           - prediction_subscription_key (str): Predicttion performed on the model.
+           - tag (str): Label to be tagged with the loss object.
+           - average_batch_loss (bool): Average Loss value for the batch of data.
+           - flatten_predictions (bool): Flatten the layer to get predictions.
+           
         :returns:
             BCEWithLogitsLoss: Object of BCEWithLogitsLoss.
         """

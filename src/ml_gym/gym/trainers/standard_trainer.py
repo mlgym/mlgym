@@ -27,10 +27,11 @@ class TrainComponent(StatefulComponent):
         Train torch NN Model with a batch.
 
         :params:
-            batch (DatasetBatch): Train Dataset.\n
-            model (NNModel): Torch Neural Network module.\n
-            optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.\n
-            device (torch.device): Torch device either CPUs or a specified GPU.
+           - batch (DatasetBatch): Train Dataset
+           - model (NNModel): Torch Neural Network module.
+           - optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
+           - device (torch.device): Torch device either CPUs or a specified GPU.
+
         :returns:
             model (NNModel): Torch Neural Network module.
         """
@@ -49,12 +50,13 @@ class TrainComponent(StatefulComponent):
         Train torch NN Model.
 
         :params:
-            model (NNModel): Torch Neural Network module.\n
-            optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.\n
-            dataloader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.\n
-            device (torch.device): Torch device either CPUs or a specified GPU.\n
-            batch_done_callback_fun (Callable): Batch number for which details to be logged.\n
-            epoch_done_callback_fun (Callable): numner of batches to be trained.
+           - model (NNModel): Torch Neural Network module.
+           - optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
+           - dataloader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.
+           - device (torch.device): Torch device either CPUs or a specified GPU.
+           - batch_done_callback_fun (Callable): Batch number for which details to be logged.
+           - epoch_done_callback_fun (Callable): numner of batches to be trained.
+
         :returns:
             model (NNModel): Torch Neural Network module.
         """
@@ -89,8 +91,9 @@ class TrainComponent(StatefulComponent):
         Valvulate loss given the loss function.
 
         :params:
-            model (NNModel): Torch Neural Network module.\n
-            batch (DatasetBatch); Batch of data for which loss is to be calcualted.
+           - model (NNModel): Torch Neural Network module
+           - batch (DatasetBatch); Batch of data for which loss is to be calcualted.
+
         :returns:
             loss (List[torch.Tensor]): Loss list for batch.
         """
@@ -111,13 +114,14 @@ class Trainer:
         Train torch NN Model.
 
         :params:
-            num_epochs (int): Number of epochs to be trained.\n
-            model (NNModel): Torch Neural Network module.\n
-            optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.\n
-            device (torch.device): Torch device either CPUs or a specified GPU.\n
-            batch_done_callback_fun (Callable): Batch number for which details to be logged.\n
-            epoch_done_callback (Callable): numner of batches to be trained.\n
-            num_batches_per_epoch (int): number of batches to be trained per epoch.
+           - num_epochs (int): Number of epochs to be trained.
+           - model (NNModel): Torch Neural Network module.
+           - optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
+           - device (torch.device): Torch device either CPUs or a specified GPU.
+           - batch_done_callback_fun (Callable): Batch number for which details to be logged.
+           - epoch_done_callback (Callable): numner of batches to be trained.
+           - num_batches_per_epoch (int): number of batches to be trained per epoch.
+           
         :returns:
             model (NNModel): Torch Neural Network module.
         """

@@ -25,10 +25,11 @@ class AccelerateEvaluator(AbstractEvaluator):
         Evaulate torch NN Model.
 
         :params:
-            model (NNModel): Torch Neural Network module.\n
-            accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.\n
-            epoch_result_callback_fun (Callable): numner of batches to be trained.\n
-            batch_processed_callback_fun (Callable): Batch number for which details to be logged.
+           - model (NNModel): Torch Neural Network module
+           - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
+           - epoch_result_callback_fun (Callable): numner of batches to be trained.
+           - batch_processed_callback_fun (Callable): Batch number for which details to be logged.
+
         :returns:
             evaluation_batch_results (List[EvaluationBatchResult]): Evaluation results of batches trained on.
         """
@@ -70,10 +71,11 @@ class AccelerateEvalComponent:
         Evaulate torch NN Model.
 
         :params:
-            model (NNModel): Torch Neural Network module.\n
-            accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.\n
-            epoch_result_callback_fun (Callable): numner of batches to be trained.\n
-            batch_processed_callback_fun (Callable): Batch number for which details to be logged.
+           - model (NNModel): Torch Neural Network module.
+           - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
+           - epoch_result_callback_fun (Callable): numner of batches to be trained.
+           - batch_processed_callback_fun (Callable): Batch number for which details to be logged.
+
         :returns:
             evaluation_batch_results (List[EvaluationBatchResult]): Evaluation results of batches trained on.
         """
@@ -86,12 +88,13 @@ class AccelerateEvalComponent:
         Evaulate torch NN Model on specific split of Data.
 
         :params:
-            model (NNModel): Torch Neural Network module.\n
-            split_name (str): Name of split of Dataset being evaluated.\n
-            dataset_loader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.\n
-            accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.\n
-            epoch_result_callback_fun (Callable): numner of batches to be trained.\n
-            batch_processed_callback_fun (Callable): Batch number for which details to be logged.
+           - model (NNModel): Torch Neural Network module.
+           - split_name (str): Name of split of Dataset being evaluated.
+           - dataset_loader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.
+           - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
+           - epoch_result_callback_fun (Callable): numner of batches to be trained.
+           - batch_processed_callback_fun (Callable): Batch number for which details to be logged.
+
         :returns:
             evaluation_result (EvaluationBatchResult): Evaluation results of batches trained on.
         """
@@ -170,11 +173,12 @@ class AccelerateEvalComponent:
         Creating Metric object to be used for calcualting Metrics for the model.
 
         :params:
-            identifier (str): Torch Neural Network module.\n
-            target_subscription (Enum): Target Subscription key.\n
-            prediction_subscription (Enum): Prediction Subscription key.\n
-            metric_fun (Callable): Function to calculate Metric.\n
-            params (Dict[str, Any]): Parameters for metric calcualtion.
+           - identifier (str): Torch Neural Network module.
+           - target_subscription (Enum): Target Subscription key.
+           - prediction_subscription (Enum): Prediction Subscription key.
+           - metric_fun (Callable): Function to calculate Metric.
+           - params (Dict[str, Any]): Parameters for metric calcualtion.
+
         :returns:
             Metric object (Metric)
         """
@@ -186,9 +190,10 @@ class AccelerateEvalComponent:
         NN Model predict on dataset batch.
 
         :params:
-            dataset_batch (DatasetBatch): Train Dataset.\n
-            model (NNModel): Torch Neural Network module.\n
-            postprocessors (List[PredictPostProcessingIF]): TODO
+           - dataset_batch (DatasetBatch): Train Dataset.
+           - model (NNModel): Torch Neural Network module.
+           - postprocessors (List[PredictPostProcessingIF]): TODO
+
         :returns:
             inference_result_batch (InferenceResultBatch): Predicttion performed on the model.
         """
@@ -200,8 +205,8 @@ class AccelerateEvalComponent:
         Calcualtion of metric scores on the splits of data set.
 
         :params:
-            inference_batch (InferenceResultBatch): Predicttion performed on the model.\n
-            split_metrics (List[Metric]): Metrics for each split of data.\n
+           - inference_batch (InferenceResultBatch): Predicttion performed on the model.
+           - split_metrics (List[Metric]): Metrics for each split of data.
         :returns:
             metric_scores (Dict[str, List[float]]): Metric scores for splits.
         """
@@ -218,8 +223,8 @@ class AccelerateEvalComponent:
         Calcualtion of loss scores on the splits of data set.
 
         :params:
-            forward_batch (InferenceResultBatch): Predicttion performed on the model.\n
-            split_loss_funs (Dict[str, Loss]): Loss functions for splits.
+           - forward_batch (InferenceResultBatch): Predicttion performed on the model.
+           - split_loss_funs (Dict[str, Loss]): Loss functions for splits.
         :returns:
             loss_scores (Dict[str, Loss]): Loss scores for splits.
         """
@@ -237,8 +242,8 @@ class AccelerateEvalComponent:
         Evaulate torch NN Model on specific split of Data.
 
         :params:
-            loss_fun (Loss): Loss function.\n
-            forward_batch (InferenceResultBatch): Predicttion performed on the model.
+           - loss_fun (Loss): Loss function.
+           - forward_batch (InferenceResultBatch): Predicttion performed on the model.
         :returns:
             loss (List[torch.Tensor]): Loss list for batch.
         """

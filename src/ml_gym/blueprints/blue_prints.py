@@ -14,12 +14,12 @@ class BluePrint(ABC):
         """
         Initalize BluePrint class.
         :params:
-            run_mode (RunMode): Create config to run from scratch or do a warm start.\n
-            config (Dict[str, Any]): This is a dictionary having the configuration keys.\n
-            grid_search_id (str): Grid Search ID created for the run.\n
-            experiment_id (str): Experminet Number of the model for which blueprint is created.\n
-            external_injection (Dict[str, Any]): TO DO\n
-            warm_start_epoch (int): epoch number to warm start from.
+           - run_mode (RunMode): Create config to run from scratch or do a warm start.
+           - config (Dict[str, Any]): This is a dictionary having the configuration keys.
+           - grid_search_id (str): Grid Search ID created for the run.
+           - experiment_id (str): Experminet Number of the model for which blueprint is created.
+           - external_injection (Dict[str, Any]): TO DO
+           - warm_start_epoch (int): epoch number to warm start from.
         """ 
 
         self.run_mode = run_mode
@@ -50,13 +50,13 @@ class BluePrint(ABC):
         """
         Function to create a blue print Dictionary
         :params:
-            blue_print_class (Type["BluePrint"]): Class call for BluePrint.\n
-            run_mode (RunMode): Create config to run from scratch or do a warm start.\n
-            experiment_config (Dict[str, Any]): This is a dictionary having the configuration keys.\n
-            grid_search_id (str): Grid Search ID created for the run.\n
-            experiment_id (str): Experminet Number of the model for which blueprint is created.\n
-            external_injection (Dict[str, Any]): TO DO\n
-            warm_start_epoch (int): epoch number to warm start from.
+           - blue_print_class (Type["BluePrint"]): Class call for BluePrint.
+           - run_mode (RunMode): Create config to run from scratch or do a warm start.
+           - experiment_config (Dict[str, Any]): This is a dictionary having the configuration keys.
+           - grid_search_id (str): Grid Search ID created for the run.
+           - experiment_id (str): Experminet Number of the model for which blueprint is created.
+           - external_injection (Dict[str, Any]): TO DO
+           - warm_start_epoch (int): epoch number to warm start from.
         
         :returns: blue_print(List["BluePrint"]) : List of blueprint objects.
         """

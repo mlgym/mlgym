@@ -93,9 +93,10 @@ class RestfulAPIServer:
         ``HTTP GET`` Fetch specific experiment config
           given the experiment ID & grid search ID.
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
-             config_name (str): Name of Configuration file
+            - grid_search_id (str): Grid Search ID
+            - experiment_id (str): Experiment ID
+            - config_name (str): Name of Configuration file
+
         :returns: JSON stream response
         """
         try:
@@ -111,8 +112,9 @@ class RestfulAPIServer:
         """
         ``HTTP GET`` Fetch grid config for a Grid Search ID.
         :params:
-             grid_search_id (str): Grid Search ID\n
-             config_name (str): Name of Configuration file
+            - grid_search_id (str): Grid Search ID
+            - config_name (str): Name of Configuration file
+
         :returns: YML stream response
         """
         try:
@@ -137,9 +139,9 @@ class RestfulAPIServer:
         """
         ``HTTP PUT`` Add Config for a Grid Search ID
         :params:
-             grid_search_id (str): Grid Search ID\n
-             config_name (str): Name of Configuration file\n
-             config_file (RawTextFile) : RawTextFile Object
+            - grid_search_id (str): Grid Search ID
+            - config_name (str): Name of Configuration file
+            - config_file (RawTextFile) : RawTextFile Object
         """
         try:
             self.data_access.add_raw_config_to_grid_search(grid_search_id=grid_search_id, config_name=config_name, config_file=config_file)
@@ -154,10 +156,10 @@ class RestfulAPIServer:
         ``HTTP PUT`` Add specific experiment config
           given the experiment ID & grid search ID.
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
-             config_name (str): Name of Configuration file\n
-             config (RawTextFile) : RawTextFile Object
+            - grid_search_id (str): Grid Search ID
+            - experiment_id (str): Experiment ID
+            - config_name (str): Name of Configuration file
+            - config (RawTextFile) : RawTextFile Object
         """
         try:
             self.data_access.add_config_to_experiment(
@@ -174,9 +176,10 @@ class RestfulAPIServer:
         ``HTTP GET`` Fetch all checkpoint resource pickle files
           given the epoch, experiment ID & grid search ID.
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
-             epoch (str): Epoch number
+            - grid_search_id (str): Grid Search ID
+            - experiment_id (str): Experiment ID
+            - epoch (str): Epoch number
+
         :returns: List of Checkpoints
         """
         try:
@@ -195,8 +198,9 @@ class RestfulAPIServer:
         ``HTTP GET`` Fetch all checkpoint resource pickle files
           given the epoch, experiment ID & grid search ID.
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID
+            - grid_search_id (str): Grid Search ID
+            - experiment_id (str): Experiment ID
+
         :returns: List of checkpoints
         """
         try:
@@ -212,10 +216,11 @@ class RestfulAPIServer:
         ``HTTP GET`` Fetch checkpoint resource pickle file
           given the experiment ID & grid search ID.
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
-             epoch (str): Epoch number\n
-             checkpoint_resource (CheckpointResource) : CheckpointResource type
+            - grid_search_id (str): Grid Search ID
+            - experiment_id (str): Experiment ID
+            - epoch (str): Epoch number
+            - checkpoint_resource (CheckpointResource) : CheckpointResource type
+
         :returns: Pickle file Stream response
         """
         try:
@@ -232,10 +237,10 @@ class RestfulAPIServer:
         ``HTTP DELETE`` Delete checkpoint resource pickle file
           given the epoch, experiment ID & grid search ID.
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
-             epoch (str): Epoch number\n
-             checkpoint_resource (CheckpointResource) : CheckpointResource type
+            - grid_search_id (str): Grid Search ID
+            - experiment_id (str): Experiment ID
+            - epoch (str): Epoch number
+            - checkpoint_resource (CheckpointResource) : CheckpointResource type
         """
         try:
             self.data_access.delete_checkpoint_resource(
@@ -250,9 +255,9 @@ class RestfulAPIServer:
         ``HTTP DELETE`` Delete checkpoint resource pickle file
           given the epoch, experiment ID & grid search ID.
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
-             epoch (str): Epoch number
+            - grid_search_id (str): Grid Search ID
+            - experiment_id (str): Experiment ID
+            - epoch (str): Epoch number
         """
         try:
             self.data_access.delete_checkpoints(grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch)
@@ -267,11 +272,12 @@ class RestfulAPIServer:
         ``HTTP POST`` Add a checkpoint resource pickle file
           given the epoch, experiment ID & grid search ID.
         :params:
-             grid_search_id (str): Grid Search ID\n
-             experiment_id (str): Experiment ID\n
-             epoch (str): Epoch number\n
-             checkpoint_resource (CheckpointResource) : CheckpointResource type\n
-             file (bytes): Pickle file to be added
+            - grid_search_id (str): Grid Search ID
+            - experiment_id (str): Experiment ID
+            - epoch (str): Epoch number
+            - checkpoint_resource (CheckpointResource) : CheckpointResource type
+            - file (bytes): Pickle file to be added
+
         :returns: Pickle file Stream response
         """
         try:
@@ -293,9 +299,10 @@ class RestfulAPIServer:
         """
         ``HTTP GET`` Fetch System Information for model card.
         :params:
-             grid_search_id (str): Grid Search ID
-             experiment_id (str): Experiment ID
-             config_name (str): Name of Configuration file
+            - grid_search_id (str): Grid Search ID
+            - experiment_id (str): Experiment ID
+            - config_name (str): Name of Configuration file
+
         :returns: JSON object - System Information of host machine (CPU & GPU)
         """
         try:
