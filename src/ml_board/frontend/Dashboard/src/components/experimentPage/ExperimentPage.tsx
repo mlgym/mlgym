@@ -14,7 +14,7 @@ import CheckpointConfigurations from './CheckpointConfigurations/CheckpointConfi
 import ExperimentConfigurations from './ExperimentConfigurations/ExperimentConfigurations';
 import ModelCards from './ModelCards/ModelCards';
 import { isConnected } from "../../redux/status/statusSlice";
-import { ExperimentDetails } from './ExperimentDetails.tsx/ExperimentDetails';
+import { ExperimentDetails } from './ExperimentDetails/ExperimentDetails';
 import { ExperimentProgress } from './ExperimentProgress/ExperimentProgress';
 import { selectChartsByExperimentId } from '../../redux/charts/chartsSlice';
 

@@ -6,7 +6,7 @@ import { useAppSelector } from "../../../app/hooks";
 import { getGridSearchId, getRestApiUrl } from '../../../redux/status/statusSlice';
 import styles from './ModelCards.module.css';
 import { AnyKeyValuePairsInterface } from '../ExperimentPage';
-import { CardDetails } from '../ExperimentDetails.tsx/CardDetails';
+import { CardDetails } from '../ExperimentDetails/CardDetails';
 import ModelCardCudaList from './ModelCardCudaList';
 import ModelCardPythonPackagesList from './ModelCardPythonPackagesList';
 
