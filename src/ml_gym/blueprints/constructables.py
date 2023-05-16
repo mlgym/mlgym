@@ -254,7 +254,7 @@ class FeatureEncodedIteratorConstructable(ComponentConstructable):
 class OneHotEncodedTargetsIteratorConstructable(ComponentConstructable):
     """
     OneHotEncodedTargetsIteratorConstructable class is used to get an iterator which can iterate 
-    through one hot encoded targets of a dataset.
+    through one hot encoded target vector.
     """
     applicable_splits: List[str] = field(default_factory=list)
     target_vector_size: int = 0
