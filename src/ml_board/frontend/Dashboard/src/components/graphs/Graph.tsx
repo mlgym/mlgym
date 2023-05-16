@@ -3,9 +3,10 @@ import { ChartData, ChartOptions } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { useAppSelector } from "../../app/hooks";
 import { selectChartLabelsById, selectExperimentsPerChartById } from "../../redux/charts/chartsSlice";
-import { selectColorMap } from "../../redux/status/statusSlice";
 // styles
 import styles from "./Graphs.module.css";
+
+const selectColor = (index: number): string => `hsl(${index * 137.5},75%,50%)`;
 
 // https://www.chartjs.org/docs/latest/general/data-structures.html
 
@@ -13,7 +14,6 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
 
     const chartLabels = useAppSelector(state => selectChartLabelsById(state, chart_id));
     const experimentsDict = useAppSelector(state => selectExperimentsPerChartById(state, chart_id));
-    const colors = useAppSelector(selectColorMap);
 
     // prepare data (Warning Looping!)
     const data: ChartData<"line"> = {
@@ -28,8 +28,8 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
             [{
                 label: "experiment_" + exp_id, // exp_name
                 data: exp_data, // exp_values:Array<number>, Y-axis, same size as X-axis
-                backgroundColor: colors[exp_id],
-                borderColor: colors[exp_id],
+                backgroundColor: selectColor(Number(exp_id)),
+                borderColor: selectColor(Number(exp_id)),
             }]
             :
             !experimentsDict ? 
@@ -38,8 +38,8 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
             Object.values(experimentsDict).map(exp => ({
                 label: "experiment_" + exp!.exp_id, // exp_name
                 data: exp!.data, // exp_values:Array<number>, Y-axis, same size as X-axis
-                backgroundColor: colors[exp!.exp_id],
-                borderColor: colors[exp!.exp_id],
+                backgroundColor: selectColor(exp!.exp_id),
+                borderColor: selectColor(exp!.exp_id),
             })),
     };
 
@@ -55,7 +55,7 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
                 pointRadius:0,
                 // showLine: false,
                 // // Automatic data decimation during draw happens if these 3 values are left as default!
-                // tension:0,
+                // tension:0, // 0 for straight lines otherwise curvy lines
                 // stepped:false,
                 // borderDash:[],
             }

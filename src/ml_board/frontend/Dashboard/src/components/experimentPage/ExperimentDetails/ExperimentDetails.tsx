@@ -1,40 +1,26 @@
-import styles from '../ExperimentPage.module.css';
 import { Card, CardContent, Grid } from '@mui/material';
 import moment from 'moment';
 import { useState } from 'react';
 import { AnyKeyValuePairsInterface } from '../ExperimentPage';
+import styles from '../ExperimentPage.module.css';
 import { CardDetails } from './CardDetails';
 
 interface return_obj_interface {
-    [key:string]: string
+    [key: string]: string
 }
-export function ExperimentDetails({selectedExperiment} : {selectedExperiment: AnyKeyValuePairsInterface}) {
-    
+
+export function ExperimentDetails({ selectedExperiment }: { selectedExperiment: AnyKeyValuePairsInterface }) {
+
     const [showMore, setShowMore] = useState(false);
 
-    function conditional_render_exp_overview() {
-        let return_obj:return_obj_interface = {};
-        return_obj["Experiment ID"] = selectedExperiment.experiment_id;
-
-        if(selectedExperiment.job_type) {
-            return_obj["Job Type"] = selectedExperiment.job_type;
-        }
-        else {
-            return_obj["Job Type"] = "--";
-        }
-
-        if(selectedExperiment.device) {
-            return_obj["Device"] = selectedExperiment.device;
-        }
-        else {
-            return_obj["Device"] = "--";
-        }
-
-        return return_obj;
-    }
+    const conditional_render_exp_overview = () => ({
+        "Experiment ID": selectedExperiment.experiment_id,
+        "Job Type": selectedExperiment.job_type ?? "--",
+        "Device": selectedExperiment.device ?? "--"
+    });
 
     function conditional_render_exp_state() {
-        let return_obj:return_obj_interface = {};
+        const return_obj: return_obj_interface = {};
 
         if(selectedExperiment.hasOwnProperty("error") && selectedExperiment.error !== null) {
             return_obj["Job Status"] = "FAILED";
@@ -52,18 +38,13 @@ export function ExperimentDetails({selectedExperiment} : {selectedExperiment: An
             return_obj["Job Status"] = "--";
         }
 
-        if(selectedExperiment.model_status) {
-            return_obj["Model Status"] = selectedExperiment.model_status;
-        }
-        else {
-            return_obj["Model Status"] = "--";
-        }
+        return_obj["Model Status"] = selectedExperiment.model_status ?? "--";
 
         return return_obj;
     }
 
     function conditional_render_exp_date_time() {
-        let return_obj:return_obj_interface = {};
+        const return_obj: return_obj_interface = {};
 
         if(selectedExperiment.starting_time && selectedExperiment.starting_time !== -1) {
             return_obj["Start"] = moment(new Date(selectedExperiment.starting_time * 1000)).format("YYYY-MM-DD hh:MM:SS");
@@ -81,8 +62,8 @@ export function ExperimentDetails({selectedExperiment} : {selectedExperiment: An
 
         return return_obj;
     }
-    
-    return(
+
+    return (
         <>
             <Grid container rowSpacing={1} spacing={{ xs: 1, md: 2 }}>
                 <Grid item={true} xs={12} sm={12} md={4}>
