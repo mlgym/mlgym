@@ -20,6 +20,20 @@ class DatasetLoaderFactory:
     @staticmethod
     def get_splitted_data_loaders_deprecated(dataset_splits: Dict[str, InformedDatasetIteratorIF], batch_size: int, collate_fn: Callable = None, weigthed_sampling_split_name: str = None, label_pos: int = 2, seeds: Dict[str, int] = None,drop_last: bool = False
     ) -> Dict[str, "DatasetLoader"]:
+        """
+        Get the spliited data based on the wighted sampling. (DEPRECATED)
+        :params:
+            - dataset_splits (Dict[str, InformedDatasetIteratorIF]): List of splits of the dataset to be made.
+            - batch_size (int): Batch size for the data set.
+            - collate_fn (Callable): TO DO
+            - weigthed_sampling_split_name (str): Weighted sampling to be used for the splits.
+            - label_pos (int): param for random generator.
+            - seeds (Dict[str, int]): Seeds for random sampler.
+            - drop_last (bool): TO DO
+
+        :return:
+            data_loaders (Dict[str, "DatasetLoader"]): Data loaded based on the splits and sampling stratergy.
+        """
         seeds = {} if seeds is None else seeds
         # NOTE: Weighting is only applied to the split specified by `weigthed_sampling_split_name`.
         data_loaders = {}
@@ -41,7 +55,7 @@ class DatasetLoaderFactory:
     def get_splitted_data_loaders(dataset_splits: Dict[str, InformedDatasetIteratorIF], batch_size: int, collate_fn: Callable = None,
                                   drop_last: bool = False, sampling_strategies: Dict[str, Any] = None) -> Dict[str, "DatasetLoader"]:
         """
-        Get the spliited data based on the sampling stratergey.
+        Get the spliited data based on the sampling stratergy.
         :params:
             - dataset_splits (Dict[str, InformedDatasetIteratorIF]): List of splits of the dataset to be made.
             - batch_size (int): Batch size for the data set.

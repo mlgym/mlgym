@@ -120,6 +120,9 @@ class AccelerateTrainComponent(StatefulComponent):
 
 
 class AccelerateTrainer:
+    """
+    Trainer class contains functions used to train the torch Neural Net model on GPU
+    """
     def __init__(self, train_component: AccelerateTrainComponent, train_loader: DatasetLoader):
         self.train_component = train_component
         self.train_loader = train_loader

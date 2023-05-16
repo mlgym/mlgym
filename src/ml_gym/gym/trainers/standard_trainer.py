@@ -14,7 +14,7 @@ import numpy as np
 
 class TrainComponent(StatefulComponent):
     """
-    TrainComponent  class used when there is only one CPU or GPU to train model.
+    TrainComponent class used when there is only one CPU or GPU to train model.
     """
     def __init__(self, inference_component: InferenceComponent, post_processors: List[PredictPostProcessingIF],
                  loss_fun: Loss):
@@ -103,6 +103,9 @@ class TrainComponent(StatefulComponent):
 
 
 class Trainer:
+    """
+    Trainer class contains functions used to train the torch Neural Net model on CPU.
+    """
     def __init__(self, train_component: TrainComponent, train_loader: DatasetLoader):
         self.train_component = train_component
         self.train_loader = train_loader
