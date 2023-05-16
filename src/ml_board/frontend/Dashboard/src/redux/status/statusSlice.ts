@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { upsertCharts } from '../charts/chartsSlice';
 import { RootState } from '../store';
 
 // TODO: ASK MAX, renaming to GlobalConfigSlice
@@ -11,7 +10,6 @@ export interface StatusState {
   received_msg_count: number;
   throughput: number;
   grid_search_id: string;
-  color_map: { [expID: string]: string }; // expID mapped to a color
   metric_loss: Array<string>;
 }
 
@@ -23,7 +21,6 @@ const initialState: StatusState = {
   received_msg_count: 0,
   throughput: 0,
   grid_search_id: "",
-  color_map: {},
   metric_loss: [] //TODO: redundant??
 };
 
@@ -57,20 +54,20 @@ export const statusSlice = createSlice({
     upsertMetricOrLoss: (state, { payload }: PayloadAction<string[]>) => {
       state.metric_loss.push(...payload);
     }
-  }, extraReducers(builder) {
-    builder.addCase(upsertCharts, (state, { payload }) => {
-      // NOTE: very important to notice here that +4 increment
-      // because in the testing file every evaluation_result held 4 values for the same experiment
-      // this might not be true with other data
-      // TODO:
-      for (let i = 0; i < payload.length; i+=4) {
-        if (!state.color_map.hasOwnProperty(payload[i].exp_id)) {
-          // one can only hope that it doesn't produce a blue blue blue blue blue... pattern :')
-          state.color_map[payload[i].exp_id] = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-        }
-      }
-    })
-  },
+  }, 
+  // extraReducers(builder) {
+  //   builder.addCase(upsertCharts, (state, { payload }) => {
+  //     // NOTE: very important to notice here that +4 increment
+  //     // because in the testing file every evaluation_result held 4 values for the same experiment
+  //     // this might not be true with other data
+  //     for (let i = 0; i < payload.length; i+=4) {
+  //       if (!state.color_map.hasOwnProperty(payload[i].exp_id)) {
+  //         // one can only hope that it doesn't produce a blue blue blue blue blue... pattern :')
+  //         state.color_map[payload[i].exp_id] = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+  //       }
+  //     }
+  //   })
+  // },
 });
 
 export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput } = statusSlice.actions;
@@ -80,5 +77,4 @@ export const isConnected = (state: RootState) => state.status.wsConnected;
 export const getLastPing = (state: RootState) => state.status.ping;
 export const getReceivevMsgCount = (state: RootState) => state.status.received_msg_count;
 export const getThroughput = (state: RootState) => state.status.throughput;
-export const selectColorMap = (state: RootState) => state.status.color_map;
 export default statusSlice.reducer;
