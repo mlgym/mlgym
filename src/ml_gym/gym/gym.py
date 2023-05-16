@@ -20,7 +20,6 @@ class Gym(ABC):
     def __init__(self, logger_collection_constructable: MLgymStatusLoggerCollectionConstructable):
         self.job_status_logger = JobStatusLogger(logger_collection_constructable.construct())
 
-
     @abstractmethod
     def run(self, blueprints: List[BluePrint]):
         """Executes the jobs. Note that this function blocks until all jobs have been executed!
@@ -127,7 +126,6 @@ class GymFactory:
                                                            logger_collection_constructable=logger_collection_constructable,
                                                            gs_restful_api_client_constructable=gs_restful_api_client_constructable,
                                                            num_batches_per_epoch=num_batches_per_epoch)
-
         return gym_job.execute(device=device)
 
     @staticmethod

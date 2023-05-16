@@ -21,7 +21,7 @@ class AccelerateEvaluator(AbstractEvaluator):
 
     def evaluate(self, model: NNModel, accelerator: Accelerator, epoch_result_callback_fun: Callable = None,
                  batch_processed_callback_fun: Callable = None) -> List[EvaluationBatchResult]:
-        model.eval()
+        model = model.eval()
 
         # returns a EvaluationBatchResult for each split
         evaluation_batch_results = self.eval_component.evaluate(model=model, accelerator=accelerator,
