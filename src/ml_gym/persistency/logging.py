@@ -154,64 +154,7 @@ class ExperimentStatusLogger:
         payload["loss_scores"] = loss_scores
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
-
-    def log_checkpoint(self, epoch: int, model_state_dict=None, optimizer_state_dict=None, lr_scheduler_state_dict=None,
-                       stateful_components_state_dict=None):
-        def get_chunks(binary_stream, binary_stream_chunk_size: int):
-            stream_length = len(binary_stream)
-            num_chunks = math.ceil(stream_length/binary_stream_chunk_size)
-            chunks = [binary_stream[i*binary_stream_chunk_size: (i+1)*binary_stream_chunk_size] for i in range(num_chunks)]
-            return chunks
-
-        data_dicts = {'model': model_state_dict,
-                      'optimizer': optimizer_state_dict,
-                      'lr_scheduler': lr_scheduler_state_dict,
-                      'stateful_components': stateful_components_state_dict}
-        data_streams = {}
-        # Iterate over state dicts
-        for key, state_dict in data_dicts.items():
-            # If dict is not None call torch.save()
-            if state_dict is not None:
-                with io.BytesIO() as buffer:
-                    torch.save(state_dict, buffer)
-                    data_streams[key] = buffer.getvalue()
-            else:
-                data_streams[key] = None                
-
-        for entity_id, binary_stream in data_streams.items():
-            if binary_stream is not None:  # new checkpoint message
-                print(f"Sending checkpoint entity {entity_id}")
-                chunks = get_chunks(binary_stream, binary_stream_chunk_size=self._binary_stream_chunk_size)
-                final_num_chunks = len(chunks)
-                for chunk_id, chunk in enumerate(chunks):
-                    payload = {
-                        "grid_search_id": self._grid_search_id,
-                        "experiment_id": self._experiment_id,
-                        "checkpoint_id": epoch,
-                        "entity_id": entity_id,
-                        "chunk_data": chunk,
-                        "chunk_id": chunk_id,
-                        "final_num_chunks": final_num_chunks
-                    }
-                    message = {"event_type": "checkpoint", "creation_ts": get_timestamp()}
-                    message["payload"] = payload
-                    self._logger.log_raw_message(raw_log_message=message)
-
-            else:  # delete message
-                payload = {
-                    "grid_search_id": self._grid_search_id,
-                    "experiment_id": self._experiment_id,
-                    "checkpoint_id": epoch,
-                    "entity_id": entity_id,
-                    "chunk_data": None,
-                    "chunk_id": -1,
-                    "final_num_chunks": 0
-                }
-
-                message = {"event_type": "checkpoint", "creation_ts": get_timestamp()}
-                message["payload"] = payload
-                self._logger.log_raw_message(raw_log_message=message)
-
+        
     def disconnect(self):
         self._logger.disconnect()
 

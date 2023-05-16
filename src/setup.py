@@ -34,7 +34,9 @@ setup(
         "gunicorn",
         "flask-socketio",
         "datasets",
-        "transformers"
+        "transformers",
+        "accelerate",
+        "fs"
     ],
     python_requires=">=3.7",
     include_package_data=True,
