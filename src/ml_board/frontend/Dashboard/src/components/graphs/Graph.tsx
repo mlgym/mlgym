@@ -10,16 +10,31 @@ const selectColor = (index: number): string => `hsl(${index * 137.5},75%,50%)`;
 
 // https://www.chartjs.org/docs/latest/general/data-structures.html
 
-export default function Graph({ chart_id }: { chart_id: string }) {
+export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string, exp_id?:string, exp_data?: Array<number> }) {
 
     const chartLabels = useAppSelector(state => selectChartLabelsById(state, chart_id));
     const experimentsDict = useAppSelector(state => selectExperimentsPerChartById(state, chart_id));
 
     // prepare data (Warning Looping!)
     const data: ChartData<"line"> = {
-        labels: chartLabels, // the X-axis:Array<number>
-        datasets: !experimentsDict ? [] :
-            // loop over the experiments in the ChartF
+        // labels = the X-axis:Array<number>
+        labels: 
+            exp_id && exp_data ?
+            Array.from({ length: exp_data.length }, (_, i) => i)
+            :
+            chartLabels, 
+        datasets: 
+            exp_id && exp_data ?
+            [{
+                label: "experiment_" + exp_id, // exp_name
+                data: exp_data, // exp_values:Array<number>, Y-axis, same size as X-axis
+                backgroundColor: selectColor(Number(exp_id)),
+                borderColor: selectColor(Number(exp_id)),
+            }]
+            :
+            !experimentsDict ? 
+            [] 
+            :
             Object.values(experimentsDict).map(exp => ({
                 label: "experiment_" + exp!.exp_id, // exp_name
                 data: exp!.data, // exp_values:Array<number>, Y-axis, same size as X-axis
@@ -47,7 +62,7 @@ export default function Graph({ chart_id }: { chart_id: string }) {
         },
         plugins: {
             title: {
-                text: chart_id,
+                text: chart_id.toLowerCase().split("_").join(" "),
                 display: true,
                 color: 'black',
                 font: {

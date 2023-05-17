@@ -2,10 +2,14 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 5%;
+    padding-top: 2%;
 }
 
-.settings_text_box {
+.settings_text_box_full_width {
+    width: 100%;
+}
+
+.settings_text_box_less_width {
     width: 60%;
 }
 
@@ -14,6 +18,31 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    width: 60%;
-    gap: 40px
+    width: 100%;
+    gap: 40px;
+    margin-top: 20px;
+    margin-bottom: 40px;
+}
+
+.grid_container_basic_fields {
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+.grid_item_basic_fields {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.grid_search_config_contianer {
+    padding-left: 30px;
+    padding-right: 30px;
+    display: flex;
+    flex-direction: column;
+}
+
+.heading_style {
+    font-family: sans-serif;
 }
