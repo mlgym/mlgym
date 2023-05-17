@@ -2,7 +2,6 @@ import socketIO, { Socket } from 'socket.io-client';
 import { settingConfigsInterface } from '../app/App';
 import { connectionMainThreadCallback, msgCounterIncMainThreadCallback, pingMainThreadCallback, throughputMainThreadCallback, updateMainThreadCallback } from './MainThreadCallbacks';
 
-
 // ========================= variables ============================//
 let socket: Socket; // 'let' to initialize on funciton call
 // Ping to measure Round Trip Time (RTT)
@@ -20,9 +19,9 @@ let buffering_interval: NodeJS.Timer;
 
 // =~=~=~=~=~=~=~=~=~=~=~=~=~= ~WebSocket~ =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=//
 const initSocket = (settingConfigs: settingConfigsInterface) => {
+    console.log("WebSocket initializing...");
     socket = socketIO(settingConfigs.socketConnectionUrl, { autoConnect: true });
-    console.log("WebSocket initialized");
-    socket.on('connect', () => onConnect(socket, settingConfigs.gridSearchId));
+    socket.on('connect', () => onConnect(socket, settingConfigs.gridSearchId, settingConfigs.restApiUrl));
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onError);
     socket.on('mlgym_event', process_mlgym_event);
@@ -31,14 +30,14 @@ const initSocket = (settingConfigs: settingConfigsInterface) => {
 
 
 // ========================= connection events ============================//
-const onConnect = (socket: Socket, runId: string) => {
+const onConnect = (socket: Socket, gridSearchId: string, restApiUrl: string) => {
     //NOTE: for testing with the dummy_server.py set runId = "mlgym_event_subscribers";
     // Max added bug report here: https://github.com/mlgym/mlgym/issues/134
-    socket.emit('join', { rooms: [runId] });
+    socket.emit('join', { rooms: [gridSearchId] });
     // start periodic server pining
     pinging_interval = setInterval(send_ping_to_websocket_server, period * 1000, socket);
     // flag main thread that connection is on
-    connectionMainThreadCallback(true);
+    connectionMainThreadCallback(true, gridSearchId, restApiUrl);
     // start periodic buffer flushing
     buffering_interval = setInterval(() => { bufferQueue.length > 0 && flushBufferingWindow() }, BUFFER_WINDOW_LIMIT_IN_SECONDS * 1000);
 };
@@ -46,7 +45,6 @@ const onConnect = (socket: Socket, runId: string) => {
 const onDisconnect = (reason: Socket.DisconnectReason) => stop(reason);
 
 const onError = (err: Error) => stop(err);
-
 
 // ========================= data driven events ============================//
 const process_mlgym_event = (msg: JSON) => {

@@ -6,7 +6,7 @@ from ml_gym.multiprocessing.states import JobStatus, JobType
 from ml_gym.io.websocket_client import ClientFactory, BufferedClient
 import time
 import torch
-import pickle
+import io
 import math
 
 
@@ -154,7 +154,7 @@ class ExperimentStatusLogger:
         payload["loss_scores"] = loss_scores
         message["payload"] = payload
         self._logger.log_raw_message(raw_log_message=message)
-
+        
     def disconnect(self):
         self._logger.disconnect()
 
