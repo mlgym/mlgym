@@ -5,6 +5,7 @@ import { useAppSelector } from "../../app/hooks";
 import { selectChartLabelsById, selectExperimentsPerChartById } from "../../redux/charts/chartsSlice";
 // styles
 import styles from "./Graphs.module.css";
+import SelectExperimentDropdown from "../settings/SelectExperimentDropdown/SelectExperimentDropdown";
 
 const selectColor = (index: number): string => `hsl(${index * 137.5},75%,50%)`;
 
@@ -15,7 +16,6 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
     const chartLabels = useAppSelector(state => selectChartLabelsById(state, chart_id));
     const experimentsDict = useAppSelector(state => selectExperimentsPerChartById(state, chart_id));
 
-    // prepare data (Warning Looping!)
     const data: ChartData<"line"> = {
         // labels = the X-axis:Array<number>
         labels: 
@@ -42,6 +42,56 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
                 borderColor: selectColor(exp!.exp_id),
             })),
     };
+
+    const legendOnClickHandler = function (event:any, legendItem:any, legend:any) {
+        let index = legendItem.datasetIndex;
+        let ci = legend.chart;
+        let meta = ci.getDatasetMeta(index);
+
+        // Get the indexes of datasets with hidden === false
+        let visibleIndexes = ci.data.datasets.reduce(function(acc:any, dataset:any, i:any) {
+            let otherMeta = ci.getDatasetMeta(i);
+            if (otherMeta.hidden === false) {
+                acc.push(i);
+            }
+            return acc;
+        }, []);
+
+        // Toggle visibility of clicked dataset
+        if(meta.hidden === false) {
+            if(visibleIndexes.length === 1) {
+                ci.data.datasets.forEach(function(dataset:any, i:any) {
+                    let otherMeta = ci.getDatasetMeta(i);
+                    otherMeta.hidden = null;
+                });
+            }
+            else {
+                if(meta.hidden === false) {
+                    meta.hidden = true;
+                }
+            }
+        }
+        else {
+            meta.hidden = false;
+            ci.data.datasets.forEach(function(dataset:any, i:any) {
+                let otherMeta = ci.getDatasetMeta(i);
+                if (otherMeta.hidden === null && i !== index) {
+                    otherMeta.hidden = true;
+                }
+            });
+        }
+
+        // Update chart
+        ci.update();
+    };
+
+    const legendOnHoverHandler = function (event:any, legendItem:any, legend:any) {
+        event.chart.canvas.style.cursor = "pointer";
+    }
+
+    const legendOnLeaveHandler = function (event:any, legendItem:any, legend:any) {
+        event.chart.canvas.style.cursor = "default";
+    }
 
     // NOTE: https://www.chartjs.org/docs/latest/general/performance.html
     const options: ChartOptions = {
@@ -71,9 +121,19 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
                 }
             },
             legend: {
+                onClick: legendOnClickHandler,
+                onHover: legendOnHoverHandler,
+                onLeave: legendOnLeaveHandler,
                 labels: {
                     usePointStyle: true,
                     pointStyle: 'circle'
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    title: (tooltipItems:any) => {
+                        return 'Epoch: ' + tooltipItems[0].label;
+                    }
                 }
             }
         },
@@ -86,8 +146,8 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
         animation: false,
         responsive: true,
         maintainAspectRatio: false,
-    };
-
+    }
+    
     return (
         <Grid item={true} xs={12} sm={12} md={6} key={chart_id}>
             <Card className={styles.grid_card}>
