@@ -3,7 +3,7 @@ import api from '../../../app/ApiMaster';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useAppSelector } from "../../../app/hooks";
-import { Grid, Box, LinearProgress, Button } from '@mui/material';
+import { Grid, Box, LinearProgress, IconButton } from '@mui/material';
 import FormHelperText from '@mui/material/FormHelperText';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
@@ -102,15 +102,13 @@ export default function SelectExperimentDropdown() {
                                 null
                             }
                         </FormControl>
-                        <Button 
-                            variant="contained" 
+                        <IconButton 
                             size="large" 
-                            endIcon={<SendIcon />}
                             onClick={()=>goToSelectedExperiment()}
                             disabled={isLoading || error.length > 0}
                         >
-                            
-                        </Button>
+                            <SendIcon fontSize="inherit" />
+                        </IconButton>
                     </Box>
                 </Grid>
                 {

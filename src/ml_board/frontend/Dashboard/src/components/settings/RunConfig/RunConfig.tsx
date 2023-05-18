@@ -2,12 +2,12 @@ import { Grid, Card, CardContent, IconButton, Switch, FormControlLabel, Box, Lin
 import { Download } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import api, { defaultGridSearchConfigFileName } from '../../../app/ApiMaster';
+import api, { defaultRunConfigFileName } from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
 import { getGridSearchId, getRestApiUrl, getSocketConnectionUrl, isConnected } from '../../../redux/status/statusSlice';
-import styles from './GridSearchConfigurations.module.css';
+import styles from '../GridSearchConfigurations/GridSearchConfigurations.module.css';
 
-export default function GridSearchConfigurations() {
+export default function RunConfig() {
     
     const isSocketConnected = useAppSelector(isConnected);
     const grid_search_id = useAppSelector(getGridSearchId);
@@ -18,16 +18,16 @@ export default function GridSearchConfigurations() {
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [showHideData, setShowHideData] = useState(false);
-
+    
     useEffect(() => {
-        let grid_search_config_url = api.gridsearch_config_file.replace("<grid_search_id>", grid_search_id);
+        let run_config_file = api.run_config_file.replace("<grid_search_id>", grid_search_id);
 
         setError("");
         setShowHideData(false);
         setIsLoading(true);
         
-        axios.get(rest_api_url+grid_search_config_url).then((response) => {
-            console.log("Got response from grid_search_config_file API: ", response);
+        axios.get(rest_api_url+run_config_file).then((response) => {
+            console.log("Got response from run_config_file API: ", response);
             if(response.status === 200) {
                 setYamlString(response.data.trim());
                 setShowHideData(true);
@@ -38,7 +38,7 @@ export default function GridSearchConfigurations() {
             setIsLoading(false);
         })
         .catch((error) => {
-            console.log("Error in grid_search_config_file: ", error);
+            console.log("Error in run_config_file: ", error);
             setIsLoading(false);
             setError("Oops! an error occurred");
         });
@@ -50,7 +50,7 @@ export default function GridSearchConfigurations() {
         const url = window.URL.createObjectURL(blob!);
         const a = document.createElement('a');
         a.href = url;
-        a.download = defaultGridSearchConfigFileName+".yml";
+        a.download = defaultRunConfigFileName+".yml";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -61,7 +61,7 @@ export default function GridSearchConfigurations() {
             <Grid item={true} xs={12} sm={12} md={12} lg={12}>
                 <Box className={styles.textfield_cardcontent_grid_search_config}>
                     <h2 className={styles.heading_style}>
-                        Grid Search Configuration
+                        Run Config
                     </h2>
                     <div>
                     {
@@ -116,7 +116,7 @@ export default function GridSearchConfigurations() {
                 !isLoading && error.length !== 0 ?
                 <Grid item={true} xs={12} sm={12} md={12} lg={12}>
                     <Box className={styles.error_text}>
-                        Error Occured In Getting Grid Search Configuration File!
+                        Error Occured In Getting Run Config File!
                     </Box>
                 </Grid>
                 :

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import { upsertCharts } from '../redux/charts/chartsSlice';
-import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
+import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setSocketConnectionUrl, setThroughput } from '../redux/status/statusSlice';
 import { upsertManyRows } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
 import { useAppDispatch } from './hooks';
@@ -107,7 +107,7 @@ export default function App() {
                 workerSocket.terminate();
             }
         }
-    }, [isConfigValidated])
+    }, [isConfigValidated && settingConfigs])
     // recommended way: keeping the second condition blank, fires useEffect just once as there are no conditions to check to fire up useEffect again (just like componentDidMount of React Life cycle).
 
 
@@ -126,6 +126,8 @@ export default function App() {
                 if (data.status["isSocketConnected"]) {
                     dispatch(setGridSearchId(data.status["gridSearchId"]));
                     dispatch(setRestApiUrl(data.status["restApiUrl"]));
+                    dispatch(setSocketConnectionUrl(settingConfigs.socketConnectionUrl));
+                    // dispatch(setSocketConnectionUrl(data.status["restApiUrl"]));
                 }
                 setConnectionSnackBar({
                     isOpen: true,
