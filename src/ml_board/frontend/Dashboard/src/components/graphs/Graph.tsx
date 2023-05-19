@@ -3,9 +3,11 @@ import { ChartData, ChartOptions } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { useAppSelector } from "../../app/hooks";
 import { selectChartLabelsById, selectExperimentsPerChartById } from "../../redux/charts/chartsSlice";
+import SelectExperimentDropdown from "./SelectExperimentDropdown/SelectExperimentDropdown";
 // styles
 import styles from "./Graphs.module.css";
-import SelectExperimentDropdown from "../settings/SelectExperimentDropdown/SelectExperimentDropdown";
+import { RoutesMapping } from "../../app/RoutesMapping";
+import { useLocation } from "react-router-dom";
 
 const selectColor = (index: number): string => `hsl(${index * 137.5},75%,50%)`;
 
@@ -15,7 +17,8 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
 
     const chartLabels = useAppSelector(state => selectChartLabelsById(state, chart_id));
     const experimentsDict = useAppSelector(state => selectExperimentsPerChartById(state, chart_id));
-
+    const location = useLocation();
+    
     const data: ChartData<"line"> = {
         // labels = the X-axis:Array<number>
         labels: 
@@ -94,7 +97,7 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
     }
 
     // NOTE: https://www.chartjs.org/docs/latest/general/performance.html
-    const options: ChartOptions = {
+    const options: ChartOptions<'line'> = {
         datasets:{
             line:{
                 fill: false,
@@ -143,11 +146,19 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
                 hitRadius: 10, // radius of mouse to show the label values when mouse is near a datapoint
             }
         },
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Epochs',
+                },
+            }
+        },
         animation: false,
         responsive: true,
         maintainAspectRatio: false,
     }
-    
+
     return (
         <Grid item={true} xs={12} sm={12} md={6} key={chart_id}>
             <Card className={styles.grid_card}>
@@ -158,6 +169,12 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
                         options={options}
                     />
                 </Box>
+                {
+                    location.pathname.split("/")[1] !== RoutesMapping["ExperimentPage"].url ?
+                    <SelectExperimentDropdown chart_id={chart_id} />
+                    :
+                    null
+                }
             </Card>
         </Grid>
     );
