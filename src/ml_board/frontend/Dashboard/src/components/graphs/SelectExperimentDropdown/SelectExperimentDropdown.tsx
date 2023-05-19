@@ -32,7 +32,7 @@ export default function SelectExperimentDropdown({chart_id} : {chart_id:string})
     return(
         <Box className={styles.selection_to_exp_page}>
             <div className={styles.selection_to_exp_page_text}>
-                Take me to Experiment: 
+                Take me to experiment page: 
             </div>
             <FormControl variant="standard" fullWidth={true} className={styles.selection_to_exp_page_form_control}>
                 <InputLabel id="demo-simple-select-standard-label">Experiment Id</InputLabel>
