@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import api, { defaultGridSearchConfigFileName } from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
-import { getGridSearchId, getRestApiUrl } from '../../../redux/status/statusSlice';
+import { getGridSearchId, getRestApiUrl } from '../../../redux/globalConfig/globalConfigSlice';
 import styles from './GridSearchConfigurations.module.css';
 
 export default function GridSearchConfigurations() {

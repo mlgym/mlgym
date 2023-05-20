@@ -1,8 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 
-// TODO: ASK MAX, renaming to GlobalConfigSlice
-export interface StatusState {
+export interface GlobalConfig {
   currentFilter: string;
   idTab: string;
   wsConnected: boolean;
@@ -14,7 +13,7 @@ export interface StatusState {
   rest_api_url: string;
 }
 
-const initialState: StatusState = {
+const initialState: GlobalConfig = {
   currentFilter: '.*',
   idTab: "Dashboard", //TODO: redundant??
   wsConnected: false,
@@ -26,8 +25,8 @@ const initialState: StatusState = {
   rest_api_url: ""
 };
 
-export const statusSlice = createSlice({
-  name: 'status',
+export const globalConfigSlice = createSlice({
+  name: 'GlobalConfig',
   initialState,
   reducers: {
     changeFilter: (state, action: PayloadAction<string>) => {
@@ -75,15 +74,15 @@ export const statusSlice = createSlice({
   // },
 });
 
-export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl } = statusSlice.actions;
+export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl } = globalConfigSlice.actions;
 
-export const selectFilter = (state: RootState) => state.status.currentFilter;
-export const selectTab = (state: RootState) => state.status.idTab;
-export const isConnected = (state: RootState) => state.status.wsConnected;
-export const getLastPing = (state: RootState) => state.status.ping;
-export const getReceivevMsgCount = (state: RootState) => state.status.received_msg_count;
-export const getThroughput = (state: RootState) => state.status.throughput;
-export const getGridSearchId = (state: RootState) => state.status.grid_search_id;
-export const getRestApiUrl = (state: RootState) => state.status.rest_api_url;
+export const selectFilter = (state: RootState) => state.globalConfig.currentFilter;
+export const selectTab = (state: RootState) => state.globalConfig.idTab;
+export const isConnected = (state: RootState) => state.globalConfig.wsConnected;
+export const getLastPing = (state: RootState) => state.globalConfig.ping;
+export const getReceivevMsgCount = (state: RootState) => state.globalConfig.received_msg_count;
+export const getThroughput = (state: RootState) => state.globalConfig.throughput;
+export const getGridSearchId = (state: RootState) => state.globalConfig.grid_search_id;
+export const getRestApiUrl = (state: RootState) => state.globalConfig.rest_api_url;
 
-export default statusSlice.reducer;
+export default globalConfigSlice.reducer;

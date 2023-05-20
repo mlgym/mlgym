@@ -2,13 +2,13 @@ import { configureStore } from '@reduxjs/toolkit';
 // import { ThunkAction    } from '@reduxjs/toolkit';
 // import { Action         } from '@reduxjs/toolkit';
 import charts from './charts/chartsSlice';
-import status from './status/statusSlice';
+import globalConfig from './globalConfig/globalConfigSlice';
 import table from './table/tableSlice';
 
 
 export const store = configureStore({
   reducer: {
-    status,
+    globalConfig,
     charts,
     table
   }
