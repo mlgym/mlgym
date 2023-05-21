@@ -1,218 +1,316 @@
 # Redux Data Structures
 
-In this document, we specify the redux data structures used within the MLboard frontend. Since messages come in frequently, also the react components need to be redrawn at the same rate. 
+In this document, we specify the redux data structures used within the MLboard frontend. Since messages come in frequently, and the react components need to be redrawn at a close rate. 
 Therefore, we need data structures that allow for efficient updates of incoming messages and need little to no operations to reshape the data for the visual components. 
 
-## Job Status
-
-The incoming `job_status` message has the following format:
-
+The store is divided mainly into 3 slices, as shown, and each are explained further in this document.
 ```python
 {
-    "event_type": "job_status",
-    "creation_ts": "1",
-    "event_id": <int>
-    "payload": { 
-        "job_id":<str>,          # format <grid_search_id>-<job index>
-        "job_type": <str>        # <CALC, TERMINATE>
-        "status": <str>          # <INIT, RUNNING, DONE>
-        "grid_search_id": <str>  # <timestamp>, 
-        "experiment_id": <int>,
-        "starting_time": <unix_timestamp>,
-        "finishing_time": <unix_timestamp>,
-        "error": <str>,
-        "stacktrace": <str>,
-        "device": <str>
-    }
+    globalConfig: {},
+    charts: {},
+    table:  {}
 }
 ```
 
-### Redux data structure 
+## Global Config Slice
 
-Here is how the **jobs slice** is implemented:
+This slice holds the global configurations of the whole app. Here is how it's implemented and its default initial state:
 
-```tsx
-export interface Job {
-  job_id          : string; // format <grid_search_id>-<job index>
-  job_type?       : string; // <CALC, TERMINATE>
-  status?         : string; // <INIT, RUNNING, DONE>
-  grid_search_id? : string; // <timestamp>
-  experiment_id?  : string;
-  starting_time?  : number;
-  finishing_time? : number;
-  error?          : string;
-  stacktrace?     : string;
-  device?         : string;
+```ts
+export interface GlobalConfig {
+    currentFilter: string; // the current value of the filter
+    idTab: string; // the current open tab
+    wsConnected: boolean; // websocket connection flag
+    ping: number; // in milliseconds to measure the Round Trip Time
+    received_msg_count: number; // total number of messages received from the websocket server 
+    throughput: number; // measuring how many messages are received per specific time interval
+    grid_search_id: string; // holding the grid_search_id that this client instance is tracking
+    table_headers: Array<string>; // all the columns' headers of the table
+    rest_api_url: string; // the link used to talk with the REST server
 }
 
-export interface JobsState {
-  [jID: string]: Job;
-}
+const initialState: GlobalConfig = {
+    currentFilter: '.*',
+    idTab: "analysisboard", 
+    wsConnected: false,
+    ping: -1,
+    received_msg_count: 0,
+    throughput: 0,
+    grid_search_id: "",
+    table_headers: [], 
+    rest_api_url: ""
+};
+```
+**Data complexity insertion & retrieval:**  
+for every field in this data structure there is a direct getter and setter, so for all of them the Read/Write process is $O(1)$.
+
+### Note!
+The following 2 slices were implemented using [createEntityAdapter](https://redux-toolkit.js.org/api/createEntityAdapter) to be in a [Normalized State Shape](https://redux.js.org/usage/structuring-reducers/normalizing-state-shape), that means the slice or the entity state (as RTK name it) structure that looks like:
+
+```ts
+{
+  // The unique IDs of each item. Must be strings or numbers
+  ids: []
+  // A lookup table mapping entity IDs to the corresponding entity objects
+  entities: {
+  }
+} 
 ```
 
-Here is how the slice looks in the redux state:
-
-```python
-jobs: {
-    <job_id>: {
-        "job_id":<str>,          # format <grid_search_id>-<job index>
-        "job_type": <str>        # <CALC, TERMINATE>
-        "status": <str>          # <INIT, RUNNING, DONE>
-        "grid_search_id": <str>  # <timestamp>, 
-        "experiment_id": <str>,
-        "starting_time": <number>,
-        "finishing_time": <number>,
-        "error": <str>,
-        "stacktrace": <str>,
-        "device": <str>
-    }
-    ...
-    <job_id>: {
-        ...
-    }
-}
-```
-
-### Complexity
-
-**Insert message complexity:**
-
-**Data retrieval complexity of single line chart:**
-
-**Data retrieval complexity for data table:**
-
-**Data retrieval complexity of single table row:**
-
-
-
-
-
-
-
-## Evaluation Result & Experiment Status
-
-The `evaluation_result` messages coming in via the websocket have the following format:
-
+## Table Slice
+The final form of the table slice looks like the snippet directly below, then follows a detailed explaination of how this is achived.
 ```python
 {
-    "event_type": "evaluation_result",
-    "creation_ts": <unix timestamp>,
-    "event_id": <int>
-    "payload": {
-        "epoch": <int>,
-        "grid_search_id": <timestamp>, 
-        "experiment_id": <int>,
-        "metric_scores": [
-            {
-                "metric": <str>, 
-                "split": <str>,
-                "score": <float>
-            }, 
-            ...
-        ],
-        "loss_scores": [
-            {
-                "loss": <str>,, 
-                "split": <str>,,
-                "score": <float>
+    table: {
+        ids: [ <row_id>, ... ],
+        entities: {
+            <row_id>: {
+                experiment_id: <row_id>,
+                job_status: <str>, # <INIT, RUNNING, DONE>
+                job_id: <str>, # format <grid_search_id>-<job index>
+                job_type: <int>, # <CALC, TERMINATE>
+                starting_time: <float>,
+                finishing_time: <float>,
+                device: <str>, # e.g.: 'cuda: 2',
+                error: <str>, 
+                stacktrace: <str>, 
+                model_status: <str>, # <TRAINING, EVALUATING>
+                splits: <str>, # e.g.: "train,val,test",
+                epoch_progress: <float>,
+                batch_progress: <float>,
+                num_epochs: <int>,
+                current_epoch: <int>,
+                current_split: <str>, # e.g.: "train",
+                num_batches: <int>,
+                current_batch: <int>,
+                ...,
+                ...,
+                <other_scores>
             },
             ...
-        ]
+        }
     }
 }
 ```
+As you can see the table slice is holding the IDs of all the Rows inside of an array conveniently named `ids`.
+All these IDs are primary keys for the actual Row entities themselves inside the dictionary named `entities`.
+The implementation of the Row entity is actually quite simple, it is just an object that must have an `experiment_id` to function as the primary key for that row in the table.
+But it also accept the other fields that are mainly the payloads from the `job_status` and the `experiment_status` mlgym events
 
-The incoming `experiment_status` message has the following format:
+```ts
+// NOTE: Row = JobStatusPayload + ExperimentStatusPayload + scores
+export interface Row {
+    // // // Job Payload
+    // job_id?: string; // format <grid_search_id>-<job index>
+    // job_type?: string; // <CALC, TERMINATE>
+    // job_status?: string; // <INIT, RUNNING, DONE>
+    // starting_time?: number;
+    // finishing_time?: number;
+    // error?: string;
+    // stacktrace?: string;
+    // device?: string;
+    
+    // // // Experiment Payload
+    experiment_id: number;
+    // model_status?: string;   // <TRAINING, EVALUATING>,
+    // current_split?: string;
+    // splits?: string; //e.g.: ["train", "val", "test"],
+    // num_epochs?: number;
+    // current_epoch?: number;
+    // num_batches?: number;
+    // current_batch?: number;
+    // // progresses calculations
+    // epoch_progress?: number;
+    // batch_progress?: number;
+
+    // // // and any other field (for different kinds of scores)
+
+
+    // // NOTE: All of the above could have been written in typescript like this:
+    // // [newKey: string]: number | string;
+    // // where newKey encompasses all of the above and more if need be!!!
+    // // But unfortunately it creates errors if used! (exposing only experiment_id is the current fix)
+}
+```
+
+For clarification purposes, here is also how the payloads of `job_status` and `experiment_status` mlgym events are parsed:
+<table>
+<tr>
+<th> job_status (with example values)</th>
+<th> experiment_status (with example values)</th>
+</tr>
+<tr>
+<td>
+
+```ts
+interface JobStatusPayload extends JSON {
+    "job_id": string; // "2022-11-23--20-08-38-17",
+    "job_type": string; // 1,
+    "status": string; // "RUNNING",
+    "grid_search_id": string; // "2022-11-23--20-08-38",
+    "experiment_id": number; //  17,
+    "starting_time": number; // 1669234123.8701758,
+    "finishing_time": number; // -1,
+    "device": string; // "cuda:4",
+    "error": string; // null,
+    "stacktrace": string; // null
+}
+```
+
+</td>
+<td>
+
+```ts
+interface ExperimentStatusPayload extends JSON {
+    "grid_search_id": string;// "2022-11-23--20-08-38",
+    "experiment_id": number; // 6,
+    "status": string; // "evaluation",
+    "num_epochs": number;// 100,
+    "current_epoch": number;// 0,
+    "splits": Array<string>; // ["train", "val", "test"],
+    "current_split": string;// "train",
+    "num_batches": number; // 8400,
+    "current_batch": number;// 840
+}
+```
+
+</td>
+</tr>
+</table>
+
+## Charts Slice
+
+For the last slice it's a bit helpful if you saw or at least understand the main plot behind the film [Inception 2010](https://www.imdb.com/title/tt1375666/), instead of a dream within a dream, here we have mulitple EntityAdapters inside a big EntityAdapter! Take a look at the snippet first then scroll down for futher explaination.
 
 ```python
 {
-    "event_type": "experiment_status",
-    "creation_ts": "1",
-    "event_id": <int>
-    "payload": { 
-        "grid_search_id": <timestamp>, 
-        "experiment_id": <int>,
-        "status": <str> # <TRAINING, EVALUATING>,
-        "num_epochs": <int>,
-        "current_epoch": <int>,
-        "splits":  [<str>, ...], # e.g., ["train", "val", "test"],
-        "current_split": <str>, # e.g., "val"
-        "num_batches": <int>,
-        "current_batch": <int>
-    }
-}
-```
-It's highly inefficient to store every message as is, and traverse through all of them to render the charts. Hence, the messages are parsed the moment they are received, and saved into experiments slice in the redux state.
-
-### Redux data structure
-
-Here is how the **experiments slice** is implemented:
-
-```tsx
-export interface Epoch {
-  id            : number;
-  [eID: string] : number;
-}
-
-export interface Experiment {
-  grid_search_id : string; 
-  experiment_id  : string;
-  chart_ids?     : string[]; //format ${split}@@${metric}
-  status?        : string;   // <TRAINING, EVALUATING>,
-  current_split? : string;
-  splits?        : string[]; //e.g.: ["train", "val", "test"],
-  num_epochs?    : number;
-  current_epoch? : number;
-  num_batches?   : number;
-  current_batch? : number;
-  color?         : string;
-  // used to keep split data -- VV    To avoid compilation error      VV
-  [split_metric: string] : Epoch[] | number | string | string[] | undefined;
-  // -------------------------- ^^^^^^ To avoid compilation error ^^^^^^
-}
-
-export interface ExperimentsState {
-  [eID: string]: Experiment;
+    charts: {
+        ids: [ <chart_id>, ...],
+        entities: {
+            <chart_id>: {
+                chart_id: <chart_id>,
+                x_axis: [ 0, 1, 2, ... ],
+                experiments: {
+                    ids: [ <experiment_id>, ...],
+                    entities: {
+                        <experiment_id>: {
+                            exp_id: <experiment_id>,
+                            data: [ ... ]
+                        },
+                        ...
+                    }
+                }
+            },
+        }
+    },
 }
 ```
 
-Here is how the slice looks in the redux state:
+The idea is we have different Charts, and so there is a dedicated slice to hold all of them. This slice is in a Normalized State Shape, so all the chart entities are saved in a dictionary for fast access and all the keys are also stored in an array called ids.
+Now every Chart has its own chart_id, x_axis values (Epochs) and of course contains a specific set of Experiments, hence the other EntityAdaptors inside of it.
+By now you surely got the idea of Normalized State Shape, so it's enough to say that the each Experiment contain it's experiment_id and the values at each epoch (values on the y_axis).
 
-```python
-experiments: {
-    <experiment_id>: {
-        "grid_search_id": <str>, # is a timestamp
-        "experiment_id": <str>,  # e.g.: 0,1,2,...
-        "status": <str>          # <TRAINING, EVALUATING>,
-        "num_epochs": <int>,
-        "current_epoch": <int>,
-        "splits": [<str>, ...], # e.g.: ["train", "val", "test"],
-        "current_split": <str>, # e.g.: "val"
-        "num_batches": <int>,
-        "current_batch": <int>,
-        "color": <str>,
-        "chart_ids": [<str>, ...], # format ${split}@@${metric}
-        [<split_metric>]:  [
-          {
-            <experiment_id>: <float>,
-            id: <int>
-          },
-          ...
-        ],
-    }
-    ...
-    <experiment_id>: {
-        ...
-    }
+The incoming payload of the `evaluation_result` mlgym event:
+```ts
+interface EvaluationResultPayload extends JSON {
+    epoch: number, // string, // in Graph.tsx parsing: false, 
+    grid_search_id: string,
+    experiment_id: number,
+    metric_scores: Array<Score>,
+    loss_scores: Array<Score>
+}
+
+interface Score {
+    metric?: string,
+    loss?: string,
+    split: string,
+    score: number
+}
+```
+
+is then parsed into `Array<ChartUpdate>`:
+
+```ts
+export interface ChartUpdate {
+    chart_id: string,
+    exp_id: number,
+    epoch: number, //string, // in Graph.tsx parsing: false, 
+    score: number
 }
 ```
 
 ### Complexity
+As you might imagine because of the nomalization the data is flat, and we are using sorted array for ids and a dictionary or a hashmap for the entities themselves, so we have a very performant CRUD system.
 
-**Insert message complexity:**
+- table slice has complexity of $O(1)$ for insertion and lookup.
+- charts slice has complexity of $O(1)$ for inserting and looking up the chart itself.
+- experiment slices inside a chart also has complexity of $O(1)$ for insertion and lookup, as long as we look for a specific exepriment with its experiment_id or retriving all the experiments all together (and this is the current state of the code, exposing only these specific methods).
 
-**Data retrieval complexity of single line chart:**
++note: to update the Charts with the `Array<ChartUpdate>` we definitely use a loop, but this is so far un-avoidable to go over the array, yet a single `ChartUpdate` in itself is done in $O(1)$.
 
-**Data retrieval complexity for data table:**
+**So the final view of the whole redux store looks like:**
+```python
+{
+    status: {
+      currentFilter: <str>, # default: '.*',
+      idTab: <str>, # default: "Dashboard"
+      wsConnected: <bool>, # default: false,
+      ping: <int>, # default: -1
+      received_msg_count: <int>, # default: 0
+      throughput: <int>, # default: 0
+      grid_search_id: <str>, # default: ""
+      table_headers: [], # default: []
+      rest_api_url: <str> # default: 'http://127.0.0.1:5001'
+    },
 
-**Data retrieval complexity of single table row:**
+    charts: {
+        ids: [ <chart_id>, ...],
+        entities: {
+            <chart_id>: {
+                chart_id: <chart_id>,
+                x_axis: [ 0, 1, 2, ... ],
+                experiments: {
+                    ids: [ <experiment_id>, ...],
+                    entities: {
+                        <experiment_id>: {
+                            exp_id: <experiment_id>,
+                            data: [ ... ]
+                        },
+                        ...
+                    }
+                }
+            },
+        }
+    },
+
+    table: {
+        ids: [ <row_id>, ... ],
+        entities: {
+            <row_id>: {
+                experiment_id: <row_id>,
+                job_status: <str>, # <INIT, RUNNING, DONE>
+                job_id: <str>, # format <grid_search_id>-<job index>
+                job_type: <int>, # <CALC, TERMINATE>
+                starting_time: <float>,
+                finishing_time: <float>,
+                device: <str>, # e.g.: 'cuda: 2',
+                error: <str>, 
+                stacktrace: <str>, 
+                model_status: <str>, # <TRAINING, EVALUATING>
+                splits: <str>, # e.g.: "train,val,test",
+                epoch_progress: <float>,
+                batch_progress: <float>,
+                num_epochs: <int>,
+                current_epoch: <int>,
+                current_split: <str>, # e.g.: "train",
+                num_batches: <int>,
+                current_batch: <int>,
+                ...,
+                ...,
+                <other_scores>
+            },
+            ...
+        }
+    }
+}
+```
