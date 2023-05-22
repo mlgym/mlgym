@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import { upsertCharts } from '../redux/charts/chartsSlice';
-import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
+import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setThroughput, upsertTableHeaders } from '../redux/status/statusSlice';
 import { upsertManyRows } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
-import { useAppDispatch } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
+import { useAppDispatch } from './hooks';
 
 // components & styles
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
@@ -134,13 +134,16 @@ export default function App() {
             }
         } else if (data.chartsUpdates.length > 0) {
             // update the Charts Slice
-            // dispatch(upsertSingleExperimentCharts(data.chartsUpdates!));
             dispatch(upsertCharts(data.chartsUpdates!));
             dispatch(upsertManyRows(data.tableData!));
+            dispatchTableHeadersUpdate(data.tableHeaders);
         } else if (data.tableData.length > 0) {
             dispatch(upsertManyRows(data.tableData!));
+            dispatchTableHeadersUpdate(data.tableHeaders);
         }
     }
+
+    function dispatchTableHeadersUpdate(tableHeaders: Array<string> | undefined) { tableHeaders && dispatch(upsertTableHeaders(tableHeaders)); }
 
     return (
         <div className={styles.main_container}>

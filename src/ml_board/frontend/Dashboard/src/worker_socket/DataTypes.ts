@@ -20,6 +20,7 @@ export interface BufferedDataFromSocket extends JSON {
 }
 
 export interface DataToRedux {
+    tableHeaders?: string[],
     tableData: Row[],
     chartsUpdates: ChartUpdate[],
     status?: any,

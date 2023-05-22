@@ -10,19 +10,19 @@ export interface StatusState {
   received_msg_count: number;
   throughput: number;
   grid_search_id: string;
-  metric_loss: Array<string>;
+  table_headers: Array<string>;
   rest_api_url: string;
 }
 
 const initialState: StatusState = {
   currentFilter: '.*',
-  idTab: "Dashboard", //TODO: redundant??
+  idTab: "analysisboard", //ASK Vijul: do we need to store the current tab? is it useful?
   wsConnected: false,
   ping: -1,
   received_msg_count: 0,
   throughput: 0,
   grid_search_id: "",
-  metric_loss: [], //TODO: redundant??
+  table_headers: [], //TODO: will be used to store the ALL column headers
   rest_api_url: ""
 };
 
@@ -54,28 +54,18 @@ export const statusSlice = createSlice({
     setRestApiUrl: (state, action: PayloadAction<string>) => {
       state.rest_api_url = action.payload;
     },
-    // ASK MAX: To be used if we want to save the Metric or Losses key here for the table
-    // I stopped from doing so because then function is going to be called every evaluation_result message!!!
-    upsertMetricOrLoss: (state, { payload }: PayloadAction<string[]>) => {
-      state.metric_loss.push(...payload);
+    upsertTableHeaders: (state, { payload }: PayloadAction<string[]>) => {
+      state.table_headers = [...new Set([...state.table_headers, ...payload])];
     }
-  }, 
+  },
   // extraReducers(builder) {
-  //   builder.addCase(upsertCharts, (state, { payload }) => {
-  //     // NOTE: very important to notice here that +4 increment
-  //     // because in the testing file every evaluation_result held 4 values for the same experiment
-  //     // this might not be true with other data
-  //     for (let i = 0; i < payload.length; i+=4) {
-  //       if (!state.color_map.hasOwnProperty(payload[i].exp_id)) {
-  //         // one can only hope that it doesn't produce a blue blue blue blue blue... pattern :')
-  //         state.color_map[payload[i].exp_id] = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-  //       }
-  //     }
+  //   builder.addCase(upsertManyRows, (state, { payload }) => {
+  //     // TODO:: Loop over all and check the type, if already there add new headers, else skip
   //   })
   // },
 });
 
-export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl } = statusSlice.actions;
+export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl, upsertTableHeaders } = statusSlice.actions;
 
 export const selectFilter = (state: RootState) => state.status.currentFilter;
 export const selectTab = (state: RootState) => state.status.idTab;
@@ -85,5 +75,6 @@ export const getReceivevMsgCount = (state: RootState) => state.status.received_m
 export const getThroughput = (state: RootState) => state.status.throughput;
 export const getGridSearchId = (state: RootState) => state.status.grid_search_id;
 export const getRestApiUrl = (state: RootState) => state.status.rest_api_url;
+export const selectTableHeaders = (state: RootState) => state.status.table_headers;
 
 export default statusSlice.reducer;

@@ -6,20 +6,37 @@ import handleJobStatusData from "./event_handlers/JobStatusHandler";
 
 // ========================= variables ============================//
 
+const MapEventsFirstOccurrence: { [event: string]: boolean } = {};
+
 // Hashing is faster instead of switching over the the eventType
 const MapEventToProcess: { [event: string]: (output: DataToRedux, input: JSON) => void } = {
-    [MLGYM_EVENT.JOB_STATUS]: (dataToRedux: DataToRedux, data: JSON): void => { dataToRedux.tableData.push(handleJobStatusData(data)) },
+    [MLGYM_EVENT.JOB_STATUS]: (dataToRedux: DataToRedux, data: JSON): void => {
+        const tableData = handleJobStatusData(data);
+        dataToRedux.tableData.push(tableData);
+        checkForTableHeaders(MLGYM_EVENT.JOB_STATUS, dataToRedux, Object.keys(tableData));
+    },
     [MLGYM_EVENT.JOB_SCHEDULED]: (dataToRedux: DataToRedux, data: JSON): void => console.log("Job scheduled found"),
     [MLGYM_EVENT.EVALUATION_RESULT]: (dataToRedux: DataToRedux, data: JSON): void => {
         const { experiment_id, charts_updates, table_scores } = handleEvaluationResultData(data);
         dataToRedux.chartsUpdates.push(...charts_updates);
         dataToRedux.tableData.push({ experiment_id, ...table_scores });
+        checkForTableHeaders(MLGYM_EVENT.EVALUATION_RESULT, dataToRedux, Object.keys(table_scores));
     },
     [MLGYM_EVENT.EXPERIMENT_CONFIG]: (dataToRedux: DataToRedux, data: JSON): void => console.log("Exp config found"),
-    [MLGYM_EVENT.EXPERIMENT_STATUS]: (dataToRedux: DataToRedux, data: JSON): void => { dataToRedux.tableData.push(handleExperimentStatusData(data)) },
-    // [MLGYM_EVENT.BATCHED_EVENTS]: (dataToRedux: DataToRedux, data: JSON): void => { dataToRedux.tableData.push(handleJobStatusData(data)) },
+    [MLGYM_EVENT.EXPERIMENT_STATUS]: (dataToRedux: DataToRedux, data: JSON): void => {
+        const tableData = handleExperimentStatusData(data);
+        dataToRedux.tableData.push(tableData);
+        checkForTableHeaders(MLGYM_EVENT.EXPERIMENT_STATUS, dataToRedux, Object.keys(tableData));
+    },
 };
 
+// ========================= helper methods ============================//
+function checkForTableHeaders(key: string, dataToRedux: DataToRedux, tableHeaders: Array<string>) {
+    if (MapEventsFirstOccurrence[key]) return;
+    MapEventsFirstOccurrence[key] = true;
+    dataToRedux.tableHeaders ??= [];
+    dataToRedux.tableHeaders.push(...tableHeaders);
+}
 
 // ========================= Callbacks to update the MainThread ============================//
 export const updateMainThreadCallback = (bufferedSocketData: Array<JSON>) => {
@@ -32,10 +49,10 @@ export const updateMainThreadCallback = (bufferedSocketData: Array<JSON>) => {
     for (const bfrdata of bufferedSocketData) {
         let data_from_socket = bfrdata as DataFromSocket | BufferedDataFromSocket;
         // handling batched events coming from socket itself
-        if(data_from_socket.event_id === "batched_events") {
-            const buffered_data =  data_from_socket as BufferedDataFromSocket;
+        if (data_from_socket.event_id === "batched_events") {
+            const buffered_data = data_from_socket as BufferedDataFromSocket;
             // treating batched events as normal buffered events from web workers (like the else part of this function)
-            for(const iterated_buffer_data of buffered_data["data"]) {
+            for (const iterated_buffer_data of buffered_data["data"]) {
                 // parse data from socket then extract event_type and payload
                 const { data: { event_type, payload } } = iterated_buffer_data as DataFromSocket;
                 // process the payload and load it into the DataToRedux object

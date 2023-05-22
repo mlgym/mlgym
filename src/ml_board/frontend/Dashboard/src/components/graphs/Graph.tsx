@@ -7,6 +7,7 @@ import { selectChartLabelsById, selectExperimentsPerChartById } from "../../redu
 import styles from "./Graphs.module.css";
 
 const selectColor = (index: number): string => `hsl(${index * 137.5},75%,50%)`;
+// `#${Math.floor(Math.random() * 16777215).toString(16)}`; // totally random and so one can only hope that it doesn't produce a blue blue blue blue blue... pattern :')
 
 // https://www.chartjs.org/docs/latest/general/data-structures.html
 
