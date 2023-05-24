@@ -60,7 +60,6 @@ class TrainComponent(StatefulComponent):
         :returns:
             model (NNModel): Torch Neural Network module.
         """
-        model.train()
 
         if num_batches_per_epoch is None:
             num_batches_per_epoch = len(dataloader)
@@ -84,7 +83,6 @@ class TrainComponent(StatefulComponent):
 
             if (batch_id + 1) % num_batches_per_epoch == 0:  # when epoch done
                 epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=current_epoch, model=model)
-                model.train()
 
         return model
 
@@ -131,6 +129,7 @@ class Trainer:
             model (NNModel): Torch Neural Network module.
         """
 
+        model = model.train()
 
         model = self.train_component.train(model=model, optimizer=optimizer, dataloader=self.train_loader, device=device,
                                            batch_done_callback_fun=batch_done_callback_fun, epoch_done_callback_fun=epoch_done_callback,

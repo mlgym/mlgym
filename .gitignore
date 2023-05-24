@@ -128,4 +128,4 @@ event_storage
 *.whl
 *.arrow
 transformer/
-core.*
+

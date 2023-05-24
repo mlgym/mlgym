@@ -33,7 +33,7 @@ class AccelerateEvaluator(AbstractEvaluator):
         :returns:
             evaluation_batch_results (List[EvaluationBatchResult]): Evaluation results of batches trained on.
         """
-        model.eval()
+        model = model.eval()
 
         # returns a EvaluationBatchResult for each split
         evaluation_batch_results = self.eval_component.evaluate(model=model, accelerator=accelerator,

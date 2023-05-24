@@ -1,4 +1,5 @@
-from fastapi import FastAPI, UploadFile
+import base64
+from fastapi import FastAPI, File
 from fastapi import status, HTTPException
 from fastapi.responses import StreamingResponse
 from ml_board.backend.restful_api.data_access import DataAccessIF
@@ -52,7 +53,7 @@ class RestfulAPIServer:
             endpoint=self.get_checkpoint_resource,
         )
         self.app.add_api_route(
-            path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}",
+            path="/checkpoints/{grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource}",
             methods=["POST"],
             endpoint=self.add_checkpoint_resource,
         )
@@ -210,7 +211,7 @@ class RestfulAPIServer:
                 status_code=status.HTTP_403_FORBIDDEN, detail="Provided invalid parameters for fetching checkpoint list."
             ) from e
 
-    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str):
+    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
         """
         ``HTTP GET`` Fetch checkpoint resource pickle file
           given the experiment ID & grid search ID.
@@ -231,7 +232,7 @@ class RestfulAPIServer:
         except InvalidPathError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Provided invalid parameters for checkpoint resource.") from e
 
-    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str):
+    def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource):
         """
         ``HTTP DELETE`` Delete checkpoint resource pickle file
           given the epoch, experiment ID & grid search ID.
@@ -242,14 +243,12 @@ class RestfulAPIServer:
             - checkpoint_resource (CheckpointResource) : CheckpointResource type
         """
         try:
-            self.data_access.delete_checkpoint_resource(grid_search_id=grid_search_id, experiment_id=experiment_id,
-                                                        epoch=epoch, checkpoint_resource=checkpoint_resource)
-        except FileNotFoundError as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail=f"Checkpoint resource {grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource} not found.") from e
+            self.data_access.delete_checkpoint_resource(
+                grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch, checkpoint_resource=checkpoint_resource
+            )
+
         except InvalidPathError as e:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                                detail=f"Provided invalid parameters for checkpoint resource {grid_search_id}/{experiment_id}/{epoch}/{checkpoint_resource}.") from e
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Provided invalid parameters for checkpoint resource.") from e
 
     def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: str):
         """
@@ -262,14 +261,13 @@ class RestfulAPIServer:
         """
         try:
             self.data_access.delete_checkpoints(grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch)
-        except FileNotFoundError as e:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail=f"Checkpoint resource {grid_search_id}/{experiment_id}/{epoch} not found.") from e
-        except InvalidPathError as e:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                                detail=f"Provided invalid parameters for checkpoint resource {grid_search_id}/{experiment_id}/{epoch}.") from e
 
-    def add_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_file: UploadFile):
+        except InvalidPathError as e:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Provided invalid parameters for checkpoint resource.") from e
+
+    def add_checkpoint_resource(
+        self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: CheckpointResource, file: bytes = File(...)
+    ):
         """
         ``HTTP POST`` Add a checkpoint resource pickle file
           given the epoch, experiment ID & grid search ID.
@@ -279,16 +277,23 @@ class RestfulAPIServer:
             - epoch (str): Epoch number
             - checkpoint_resource (CheckpointResource) : CheckpointResource type
             - file (bytes): Pickle file to be added
+
+        :returns: Pickle file Stream response
         """
         try:
-            self.data_access.add_checkpoint_resource(grid_search_id=grid_search_id,
-                                                     experiment_id=experiment_id,
-                                                     epoch=epoch,
-                                                     checkpoint_file=checkpoint_file)
+            payload_pickle = base64.b64decode(file)
+            self.data_access.add_checkpoint_resource(
+                grid_search_id=grid_search_id,
+                experiment_id=experiment_id,
+                epoch=epoch,
+                checkpoint_resource=checkpoint_resource,
+                payload_pickle=payload_pickle,
+            )
         except InvalidPathError as e:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                                detail=f"Provided invalid payload or grid_search_id {grid_search_id}, experiment_id {experiment_id} or epoch {epoch}.",
-                                ) from e
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Provided invalid payload or grid_search_id {grid_search_id}, experiment_id {experiment_id} or epoch {epoch}.",
+            ) from e
     
     def get_system_info(self, grid_search_id: str, experiment_id: str):
         """
