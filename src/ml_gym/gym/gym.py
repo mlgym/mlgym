@@ -28,7 +28,6 @@ class Gym(ABC):
         """
         self.job_status_logger = JobStatusLogger(logger_collection_constructable.construct())
 
-
     @abstractmethod
     def run(self, blueprints: List[BluePrint]):
         """
@@ -200,7 +199,6 @@ class GymFactory:
                                                            logger_collection_constructable=logger_collection_constructable,
                                                            gs_restful_api_client_constructable=gs_restful_api_client_constructable,
                                                            num_batches_per_epoch=num_batches_per_epoch)
-
         return gym_job.execute(device=device)
 
     @staticmethod

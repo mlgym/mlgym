@@ -35,8 +35,7 @@ setup(
         "flask-socketio",
         "datasets",
         "transformers",
-        "accelerate",
-        "fs"
+        "accelerate"
     ],
     python_requires=">=3.7",
     include_package_data=True,
