@@ -6,7 +6,9 @@ import torch
 
 @dataclass
 class Collator(Callable):
-
+    """
+    To DO
+    """
     device: torch.device = field(default_factory=lambda: torch.device("cpu"))
 
     @abstractmethod

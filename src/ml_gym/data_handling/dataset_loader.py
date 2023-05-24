@@ -13,11 +13,27 @@ from accelerate.data_loader import DataLoaderShard
 
 
 class DatasetLoaderFactory:
+    """
+    Class containing methedolgies to load dataset in the MlGym job to be worked on.
+    """
 
     @staticmethod
-    def get_splitted_data_loaders_deprecated(dataset_splits: Dict[str, InformedDatasetIteratorIF], batch_size: int, collate_fn: Callable = None,
-                                             weigthed_sampling_split_name: str = None, label_pos: int = 2, seeds: Dict[str, int] = None,
-                                             drop_last: bool = False) -> Dict[str, "DatasetLoader"]:
+    def get_splitted_data_loaders_deprecated(dataset_splits: Dict[str, InformedDatasetIteratorIF], batch_size: int, collate_fn: Callable = None, weigthed_sampling_split_name: str = None, label_pos: int = 2, seeds: Dict[str, int] = None,drop_last: bool = False
+    ) -> Dict[str, "DatasetLoader"]:
+        """
+        Get the spliited data based on the wighted sampling. (DEPRECATED)
+        :params:
+            - dataset_splits (Dict[str, InformedDatasetIteratorIF]): List of splits of the dataset to be made.
+            - batch_size (int): Batch size for the data set.
+            - collate_fn (Callable): TO DO
+            - weigthed_sampling_split_name (str): Weighted sampling to be used for the splits.
+            - label_pos (int): param for random generator.
+            - seeds (Dict[str, int]): Seeds for random sampler.
+            - drop_last (bool): TO DO
+
+        :return:
+            data_loaders (Dict[str, "DatasetLoader"]): Data loaded based on the splits and sampling stratergy.
+        """
         seeds = {} if seeds is None else seeds
         # NOTE: Weighting is only applied to the split specified by `weigthed_sampling_split_name`.
         data_loaders = {}
@@ -38,6 +54,18 @@ class DatasetLoaderFactory:
     @staticmethod
     def get_splitted_data_loaders(dataset_splits: Dict[str, InformedDatasetIteratorIF], batch_size: int, collate_fn: Callable = None,
                                   drop_last: bool = False, sampling_strategies: Dict[str, Any] = None) -> Dict[str, "DatasetLoader"]:
+        """
+        Get the spliited data based on the sampling stratergy.
+        :params:
+            - dataset_splits (Dict[str, InformedDatasetIteratorIF]): List of splits of the dataset to be made.
+            - batch_size (int): Batch size for the data set.
+            - collate_fn (Callable): TO DO
+            - drop_last (bool): TO DO
+            - sampling_strategies (Dict[str, Any]): What type of sampling stratergy to be used for the splits.
+
+        :return:
+            data_loaders (Dict[str, "DatasetLoader"]): Data loaded based on the splits and sampling stratergy.
+        """
         data_loaders = {}
         for split_name, dataset_split in dataset_splits.items():
             if split_name in sampling_strategies:
@@ -97,11 +125,27 @@ class SamplerFactory:
 
     @staticmethod
     def get_random_sampler(dataset: InformedDatasetIteratorIF, seed: int = 0) -> Sampler:
+        """
+        Create sequential sample on the dataset.
+        :params:
+            - dataset (InformedDatasetIteratorIF): Dataset
+            - seed (int): Seed for the generator
+            
+        :return:
+            RandomSampler object created on the dataset to provide randomly generated samples.
+        """
         rnd_generator = torch.Generator().manual_seed(seed) if seed is not None else None
         return RandomSampler(data_source=dataset, generator=rnd_generator)
 
     @staticmethod
     def get_sequential_sampler(dataset: InformedDatasetIteratorIF) -> Sampler:
+        """
+        Create sequential sample on the dataset.
+        :params:
+            dataset (InformedDatasetIteratorIF): Dataset
+        :return:
+            SequentialSampler object created on the dataset to provide sequential samples.
+        """
         return SequentialSampler(data_source=dataset)
 
 
@@ -119,6 +163,9 @@ class DatsetLoaderMetaInfoIF(ABC):
 
 
 class DatasetLoader(DatsetLoaderMetaInfoIF, DataLoader):
+    """
+    Data Set loader class. Uses the toech class DataLaoder to load data for mlgym model which is iterable.
+    """
     def __init__(self, dataset_iterator: InformedDatasetIteratorIF, batch_size: int, sampler: Sampler,
                  collate_fn: Collator = None, drop_last: bool = False):
         super().__init__(dataset=dataset_iterator, sampler=sampler, batch_size=batch_size, collate_fn=collate_fn, drop_last=drop_last)

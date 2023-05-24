@@ -40,6 +40,9 @@ class Loss(ABC):
 
 
 class LPLoss(Loss):
+    """
+    TO DO
+    """
     def __init__(self, target_subscription_key: str, prediction_subscription_key: str, root: int = 1, exponent: int = 2,
                  sample_selection_fun: Callable[[InferenceResultBatch], List[bool]] = None,
                  tag: str = "", average_batch_loss: bool = True, avg_per_feature_loss: bool = False):
@@ -96,6 +99,9 @@ class LPLoss(Loss):
 
 
 class CrossEntropyLoss(Loss):
+    """
+    Class to perform Cross Entropy Loss on parameters.
+    """
 
     def __init__(self, target_subscription_key: str, prediction_subscription_key: str, tag: str = "", average_batch_loss: bool = True):
         super().__init__(tag)
@@ -134,6 +140,9 @@ class NLLLoss(Loss):
 
 
 class BCEWithLogitsLoss(Loss):
+    """
+    Class to perform BCE With Logits Loss (cross entropy loss that comes inside a sigmoid function) from parameters.
+    """
     def __init__(self, target_subscription_key: str, prediction_subscription_key: str, tag: str = "", average_batch_loss: bool = True,
                  flatten_predictions: bool = False):
         super().__init__(tag)

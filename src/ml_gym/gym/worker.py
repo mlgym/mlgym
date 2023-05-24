@@ -3,6 +3,9 @@ from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob
 
 
 class WorkerIF(ABC):
+    """
+    Worker Interface
+    """
 
     @abstractmethod
     def work(job: AbstractGymJob):
@@ -10,6 +13,9 @@ class WorkerIF(ABC):
 
 
 class Worker(WorkerIF):
+    """
+    Worker class providing function to run gym job.
+    """
 
     def __init__(self):
         pass
