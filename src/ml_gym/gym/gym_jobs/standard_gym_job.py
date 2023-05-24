@@ -18,9 +18,6 @@ from ml_gym.error_handling.exception import EarlyStoppingCriterionFulfilledError
 
 
 class StandardGymJob(AbstractGymJob):
-    """
-    Standard Gym Job class used for running job on single CPU or GPU.
-    """
 
     def __init__(self, experiment_status_logger: ExperimentStatusLogger, gs_api_client: GridSearchAPIClientIF,
                  grid_search_id: str, experiment_id: int, run_mode: RunMode, num_epochs: int,
@@ -36,21 +33,13 @@ class StandardGymJob(AbstractGymJob):
     def execute(self, device: torch.device):
         """ Executes the job
 
-        :params:
-            device (torch.device): torch device either CPUs or a specified GPU
+        Args:
+            device: torch device either CPUs or a specified GPU
         """
         self._execution_method(device)
         self._experiment_status_logger.disconnect()
 
     def _train_step(self, device: torch.device) -> NNModel:
-        """ 
-        Training the model.
-
-        :params:
-            device (torch.device): torch device either CPUs or a specified GPU
-        :returns:
-            model (NNModel): Neural Net torch model. 
-        """
         partial_batch_processed_callback = partial(AbstractGymJob.batch_processed_callback, num_epochs=self.num_epochs,
                                                    experiment_status_logger=self._experiment_status_logger)
         model = self.trainer.train_epoch(self.model, self.optimizer, device,
@@ -58,16 +47,6 @@ class StandardGymJob(AbstractGymJob):
         return model
 
     def _evaluation_step(self, current_epoch: int, device: torch.device) -> List[EvaluationBatchResult]:
-        """ 
-        Evaluating the model.
-
-        :params:
-           - current_epoch (int): Current epoch number for cerating checkpoints.
-           - device (torch.device): torch device either CPUs or a specified GPU
-
-        :returns:
-            evaluation_results (EvaluationBatchResult): Object storing entire evaluation infotmation.
-        """
         partial_batch_processed_callback = partial(AbstractGymJob.batch_processed_callback, num_epochs=self.num_epochs,
                                                    current_epoch=current_epoch,
                                                    experiment_status_logger=self._experiment_status_logger)
@@ -82,12 +61,6 @@ class StandardGymJob(AbstractGymJob):
         return evaluation_results
 
     def _execute_train(self, device: torch.device):
-        """ 
-        Execute training of the model.
-
-        :params:
-            device (torch.device): torch device either CPUs or a specified GPU
-        """
         self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
         self.lr_scheduler.register_optimizer(optimizer=self.optimizer)
 
@@ -104,13 +77,6 @@ class StandardGymJob(AbstractGymJob):
             print(f"Early stopping criterion matched. Stopping training.")
 
     def _execute_warm_start(self, device: torch.device, warm_start_epoch: int):
-        """ 
-        Execute warm start of the model from an epoch.
-
-        :params:
-           - device (torch.device): torch device either CPUs or a specified GPU.
-           - warm_start_epoch (int): Epoch to start Training from.
-        """
         model_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
                                                                               experiment_id=self.experiment_id,
                                                                               checkpoint_id=warm_start_epoch,

@@ -3,9 +3,6 @@ from typing import Dict
 
 
 class YAMLConfigLoader:
-    """
-    Load Yaml files and unpack configuration.
-    """
 
     @staticmethod
     def load(path: str):
