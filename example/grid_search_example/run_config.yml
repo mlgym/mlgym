@@ -1,17 +1,17 @@
 run_configuration:
   type: train # train, warmstart
   config:
-    num_epochs: 50 # Number of epochs
-    num_batches_per_epoch: 100
-    gs_config_path: ./gs_config.yml
+    num_epochs: 10 # Number of epochs
+    gs_config_path: /scratch/max/mlgym/example/grid_search_example/gs_config.yml
 
 environment:
   type: multiprocessing # multiprocessing,  main_process, accelerate
   config:
-    process_count: 3 # Max. number of processes running at a time.
-    computation_device_ids: [0, 1, 5] # Indices of GPUs to distribute the GS over
+    process_count: 1 # Max. number of processes running at a time.
+    computation_device_ids: [4] # Indices of GPUs to distribute the GS over
 
 logging:
   websocket_logging_servers: # List of websocket logging servers, e.g., http://127.0.0.1:9090 http://127.0.0.1:8080
     - http://127.0.0.1:5002
   gs_rest_api_endpoint: http://127.0.0.1:5001 # Endpoint for the grid search API, e.g., http://127.0.0.1:8080
+

@@ -38,6 +38,13 @@ const rowsAdapter = createEntityAdapter<Row>({
     sortComparer: ({ experiment_id: id1 }: Row, { experiment_id: id2 }: Row) => id1 - id2
 });
 
+// interface RowsState {
+//     // The unique IDs of each Row.
+//     ids: [];
+//     // A lookup table mapping Rows' IDs to the corresponding Row objects
+//     entities: {};
+// }
+
 const initialState: EntityState<Row> = rowsAdapter.getInitialState({});
 
 export const tableSlice = createSlice({

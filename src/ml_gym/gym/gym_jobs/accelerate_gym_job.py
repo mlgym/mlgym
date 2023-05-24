@@ -18,9 +18,6 @@ from accelerate import Accelerator
 
 
 class AccelerateGymJob(AbstractGymJob):
-    """
-    Accelerate Gym Job class used for running job on multiple GPUs.
-    """
 
     def __init__(self, experiment_status_logger: ExperimentStatusLogger, gs_api_client: GridSearchAPIClientIF,
                  grid_search_id: str, experiment_id: int, run_mode: RunMode, num_epochs: int,
@@ -43,14 +40,6 @@ class AccelerateGymJob(AbstractGymJob):
         self._experiment_status_logger.disconnect()
 
     def _evaluation_step(self, current_epoch: int) -> List[EvaluationBatchResult]:
-        """ 
-        Evaluating the model.
-
-        :params:
-            current_epoch (int): Current epoch number for cerating checkpoints.
-        :returns:
-            evaluation_results (List[EvaluationBatchResult]): Object storing entire evaluation infotmation.
-        """
         partial_batch_processed_callback = partial(self.batch_processed_callback, num_epochs=self.num_epochs,
                                                    current_epoch=current_epoch,
                                                    experiment_status_logger=self._experiment_status_logger)
@@ -65,34 +54,27 @@ class AccelerateGymJob(AbstractGymJob):
         return evaluation_results
 
     def _execute_train(self):
-        """ 
-        Execute training of the model.
-        """
         self.optimizer.register_model_params(model_params=dict(self.model.named_parameters()))
         self.lr_scheduler.register_optimizer(optimizer=self.optimizer)
 
-        eval_loader_keys, eval_loaders_list = zip(*self.evaluator.eval_component.dataset_loaders.items())
-
-        self.model, self.optimizer, self.lr_scheduler, train_loader, *eval_acc_loaders_list = self.accelerator.prepare(self.model,
-                                                                                                                       self.optimizer,
-                                                                                                                       self.lr_scheduler,
-                                                                                                                       self.trainer.train_loader,
-                                                                                                                       *eval_loaders_list)
-
-        eval_loaders = {k: v for k, v in zip(eval_loader_keys, eval_acc_loaders_list)}
-
+        self.model, self.optimizer, self.trainer, self.evaluator, self.lr_scheduler, train_loader = self.accelerator.prepare(self.model,
+                                                                                                                             self.optimizer,
+                                                                                                                             self.trainer,
+                                                                                                                             self.evaluator,
+                                                                                                                             self.lr_scheduler,
+                                                                                                                             self.trainer.train_loader)
         self.trainer.train_loader = DatasetLoaderFactory.get_data_loader_shard_wrapper(data_loader_shard=train_loader,
                                                                                        dataset_name=self.trainer.train_loader.dataset_name,
                                                                                        dataset_tag=self.trainer.train_loader.dataset_tag)
 
         self.evaluator.eval_component.dataset_loaders = {key: DatasetLoaderFactory.get_data_loader_shard_wrapper(
-            data_loader_shard=eval_loaders[key],
+            data_loader_shard=self.accelerator.prepare(data_loader),
             dataset_name=data_loader.dataset_name,
             dataset_tag=data_loader.dataset_tag) for key, data_loader in self.evaluator.eval_component.dataset_loaders.items()}
 
         partial_batch_done_callback = partial(self.batch_processed_callback, experiment_status_logger=self._experiment_status_logger)
         def evaluation_step_routine(current_epoch: int): return self._evaluation_step(current_epoch=current_epoch)
-        partial_train_epoch_done_callback = partial(self.train_epoch_done_callback, evaluation_step_routine=evaluation_step_routine,
+        partial_train_epoch_done_callback = partial(self.train_epoch_done_callback, evaluation_step_routine=evaluation_step_routine, 
                                                     accelerator=self.accelerator)
 
         model = self.trainer.train(num_epochs=self.num_epochs, model=self.model, optimizer=self.optimizer,
@@ -102,9 +84,6 @@ class AccelerateGymJob(AbstractGymJob):
         self.accelerator.free_memory()
 
     def _execute_warm_start(self):
-        """ 
-        Execute warm start of the model from an epoch.
-        """
         if self.current_epoch > 0:
             model_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
                                                                                   experiment_id=self.experiment_id,
