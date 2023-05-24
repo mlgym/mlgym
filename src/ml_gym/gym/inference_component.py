@@ -13,6 +13,17 @@ class InferenceComponent:
         self.no_grad = no_grad
 
     def predict(self, model: NNModel, batch: DatasetBatch, post_processors: List[PredictPostProcessingIF] = None) -> InferenceResultBatch:
+        """
+        Perform prediction on the torch NN Model.
+
+        :params:
+           - model (NNModel): Torch Neural Network module.
+           - batch (DatasetBatch): Train Dataset.
+           - post_processors (List[PredictPostProcessingIF]): Batch number for which details to be logged.
+           
+        :returns:
+            result_batch (InferenceResultBatch): Predicttion performed on the model.
+        """
         post_processors = post_processors if post_processors is not None else []
         if self.no_grad:
             with torch.no_grad():
