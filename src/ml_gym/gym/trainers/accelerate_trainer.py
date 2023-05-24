@@ -80,6 +80,8 @@ class AccelerateTrainComponent(StatefulComponent):
             model (NNModel): Torch Neural Network module.
         """
 
+        model.train()
+
         if num_batches_per_epoch is None:
             num_batches_per_epoch = len(dataloader)
 
@@ -100,7 +102,7 @@ class AccelerateTrainComponent(StatefulComponent):
                                         current_epoch=current_epoch)
             if (batch_id + 1) % num_batches_per_epoch == 0:  # when epoch done
                 epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=current_epoch, model=model, accelerator=accelerator)
-
+                model.train()
         return model
 
     def calc_loss(self, model: NNModel, batch: DatasetBatch) -> torch.Tensor:
@@ -145,8 +147,6 @@ class AccelerateTrainer:
         :returns:
             model (NNModel): Torch Neural Network module.
         """
-
-        model = model.train()
 
         # accelerate_train_loader = accelerator.prepare(self.train_loader)
 
