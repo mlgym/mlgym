@@ -1,0 +1,10 @@
+.heading_style {
+    font-family: sans-serif;
+}
+
+.textfield_cardcontent_select_experiment {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}

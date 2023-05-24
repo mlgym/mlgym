@@ -1,0 +1,14 @@
+.textfield_cardcontent_grid_search_config {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.yaml_content_overflow {
+    overflow: auto
+}
+
+.heading_style {
+    font-family: sans-serif;
+}

@@ -70,12 +70,40 @@ payload:
 }
 ```
 
+**Model Card**
+
+Fetch System details like CPU & GPU for model card.
+
+_GET /system-info/<grid_search_id>/<experiment_id>_
+
+```json
+{
+    "platform": <Operating system>,
+    "platform-release": <OS version>,
+    "architecture": <system architecture ex: AMD64>,
+    "processor": <processor name>,
+    "ram": <ram in GB>,
+    "python-version": <version>,
+    "python-packages": <List of pip packages>,
+    "CUDNN_version":<cudnn version>,
+    "num_cuda_device": <number of cuda devices>,
+    "cuda_device_list": [
+        {
+            "name": <name of GPU>,
+            "multi_proc_count": <Processor count of GPU>,
+            "total_memory": <Total GPU memory in GB>
+        }
+    ]
+}
+```
+
 **Experiments**
 
 _GET /grid_searches/<grid_search_id>/experiments_
 
 TODO need to check "experiments" in URL
 
+TODO need to check "experiments" in URL  
 ```json
 [
     {
@@ -95,15 +123,15 @@ Available <checkpoint_resource> = [model, optimizer, stateful_component, lr_sche
 
 Get all Checkpoint names for single experiment:
 
-_GET /checkpoints/<grid_search_id>/<experiment_id>_
+_GET /checkpoint_list/<grid_search_id>/<experiment_id>_
 
-_Ex: GET /checkpoints/2023-04-12--23-42-17/0_
+_Ex: GET /checkpoint_list/2023-04-12--23-42-17/0_
 
 Get all Checkpoint names for single epoch in an experiment:
 
-_GET /checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>_
+_GET /checkpoint_list/<grid_search_id>/<experiment_id>/<checkpoint_id>_
 
-_Ex: GET /checkpoints/2023-04-12--23-42-17/0/0_
+_Ex: GET /checkpoint_list/2023-04-12--23-42-17/0/0_
 
 Return:
 ```json
@@ -156,6 +184,17 @@ Delete specific Checkpoint Resource:
 _DELETE /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>/<checkpoint_resource>_
 
 _Ex: DELETE /checkpoints/2023-04-12--23-42-17/0/0/model_
+
+*PUT /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>/<model, optimizer, lr_scheduler, stateful_component>*
+```json
+{
+        "<model, optimizer, lr_scheduler, stateful_component>": <binary stream>,
+        "chunk_id": <chunk_id>,
+        "num_chunks": <num_chunks>
+```
+
+*DELETE /checkpoints/<grid_search_id><experiment_id>/<checkpoint_id>*
+
 
 ## Websocket API
 
@@ -283,6 +322,12 @@ metric scores of a model at a specific epoch.
 ```
 
 # Implementation idea:
+
+**Checkpointing (legacy)**:
+
+After each epoch and if condition is fulfilled (based on strategy), the model is binarized and sent to the server as a checkpoint.
+
+Create checkpoint:
 
 Add subscribers to trainer, evaluator and gymjob. We need to inject them via
 For trainer and evaluator we add the subscribers within the blueprints. E.g., trainer.add_subscriber(subscriber)

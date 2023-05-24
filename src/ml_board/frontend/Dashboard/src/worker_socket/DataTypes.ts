@@ -14,6 +14,11 @@ export interface DataFromSocket extends JSON {
     }
 }
 
+export interface BufferedDataFromSocket extends JSON {
+    event_id: string,
+    data: Array<DataFromSocket>
+}
+
 export interface DataToRedux {
     tableData: Row[],
     chartsUpdates: ChartUpdate[],

@@ -27,6 +27,7 @@
 }
 .app_bar_right_corner_logo { 
     color: black !important;
+    margin-right: -20px !important;
 }
 .logo_inside_menu { 
     padding-top: 10px;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import { upsertCharts } from '../redux/charts/chartsSlice';
-import { incrementReceivedMsgCount, setLastPing, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
+import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
 import { upsertManyRows } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
 import { useAppDispatch } from './hooks';
@@ -123,6 +123,10 @@ export default function App() {
                 dispatch(setThroughput(data.status["throughput"]));
             } else if (data.status["isSocketConnected"] !== undefined) {
                 dispatch(setSocketConnection(data.status["isSocketConnected"]));
+                if (data.status["isSocketConnected"]) {
+                    dispatch(setGridSearchId(data.status["gridSearchId"]));
+                    dispatch(setRestApiUrl(data.status["restApiUrl"]));
+                }
                 setConnectionSnackBar({
                     isOpen: true,
                     connection: data.status["isSocketConnected"]
@@ -179,7 +183,7 @@ export default function App() {
             {
                 // Floating Action Button (FAB) added for filter popup
                 // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar). Also hide it when user is on Settings Page (As - not needed to do filter when viewing/inserting/updating configurations)
-                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url ?
+                (urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url) && (location.pathname.split("/")[1] !== RoutesMapping["ExperimentPage"].url) ?
                     <div className={styles.fab}>
                         <Fab
                             variant="extended"
