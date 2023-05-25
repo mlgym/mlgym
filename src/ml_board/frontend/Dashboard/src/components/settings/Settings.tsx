@@ -15,7 +15,7 @@ export const defaultSocketConnectionUrlHelperText = "eg: http://127.0.0.1:5002";
 export const defaultRestApiUrlHelperText = "eg: http://127.0.0.1:5001";
 
 export interface FuncProps {
-    validateConfigs(value:boolean): void;
+    setSocketConnectionRequest(): void;
     setConfigData(configData:settingConfigsInterface): void;
     isConfigValidated?: boolean
 }
