@@ -38,6 +38,14 @@ class AccelerateEnvironmentConfig:
 
 @dataclass
 class TrainRunConfiguration:
+    """
+    Class to store configuration to initiate training of a model.
+    :params:
+       - num_epochs(int): number of epochs to be trained to.
+       - gs_config_path (str): Path ro the gs_config file.
+       - validation_config_path : Path ro the validation_strategy_config file.
+       - num_batches_per_epoch (int): numner of batches to be trained per epoch.
+    """
     num_epochs: int
     gs_config_path: str
     validation_config_path = None
@@ -46,6 +54,13 @@ class TrainRunConfiguration:
 
 @dataclass
 class WarmStartRunConfiguration:
+    """
+    Class to store configuration to warm start a model in mlGym.
+    :params:
+       - grid_search_id (str): Grid Search ID created for the run.
+       - num_epochs(int): number of epochs to be trained to.
+       - num_batches_per_epoch (int): numner of batches to be trained per epoch.
+    """
     gridsaerch_id: str
     num_epochs: int
     num_batches_per_epoch: int = None
@@ -53,6 +68,12 @@ class WarmStartRunConfiguration:
 
 @dataclass
 class LoggingConfiguration:
+    """
+    Class to store endpint configuration used for logging.
+    :params:
+       - websocket_logging_servers(List[str]): Endpoint for Websocket Server.
+       - gs_rest_api_endpoint (str): Endpoint for RESTApi .
+    """
     websocket_logging_servers: List[str]
     gs_rest_api_endpoint: str
 
@@ -64,6 +85,19 @@ def get_gym_from_environment_config(env_config: Union[MultiProcessingEnvironment
                                     num_epochs: int,
                                     num_batches_per_epoch: int = None,
                                     accelerator: Accelerator = None) -> Gym:
+    """
+    Create Gym class object from the run configuration
+    :params:
+       - env_config (Union[..]): Contains the environment config objects for number of processors and
+        devices which are to be used to train the model.
+       - logger_collection_constructable (LoggerConstructableIF): Logging interface
+       - gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
+       - num_epochs(int): number of epochs to be trained to.
+       - num_batches_per_epoch (int): numner of batches to be trained per epoch.
+       - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs
+
+    :returns: gym(Gym): Gym class object
+    """
 
     if isinstance(env_config, MainProcessEnvironmentConfig):
         gym = GymFactory.get_sequential_gym(logger_collection_constructable=logger_collection_constructable,
@@ -90,6 +124,12 @@ def get_gym_from_environment_config(env_config: Union[MultiProcessingEnvironment
 
 
 def get_logger_constructable(websocket_logging_servers: List) -> LoggerConstructableIF:
+    """
+    Initiate MLgymStatusLoggerIF to be used to store logs for events during the running of experiments.
+    :params:
+        websocket_logging_servers (List): Webscoket server to be used to store logs.
+    :returns:  logger_collection_constructable (LoggerConstructableIF): Initiated Logging interface
+    """
     websocket_logging_servers = [(f"{protocol}:{ip}", int(port)) for protocol, ip, port in [
         connection.split(":") for connection in websocket_logging_servers]]
 
@@ -100,6 +140,12 @@ def get_logger_constructable(websocket_logging_servers: List) -> LoggerConstruct
 
 
 def get_grid_search_restful_api_client_constructable(endpoint: str) -> GridSearchAPIClientConstructableIF:
+    """
+    Initiate MLgymStatusLoggerIF to be used to store logs for events during the running of experiments.
+    :params:
+        endpoint (str): Endpoint URL for RESTful API Server.
+    :returns:  client_constructable (GridSearchAPIClientConstructableIF): Initiated Grid Search API Client interface for performing REST calls.
+    """
     client_config = GridSearchAPIClientConfig(api_client_type=GridSearchAPIClientType.GRID_SEARCH_RESTFUL_API_CLIENT,
                                               api_client_config={"endpoint": endpoint})
     client_constructable = GridSearchAPIClientConstructable(client_config)
@@ -109,9 +155,30 @@ def get_grid_search_restful_api_client_constructable(endpoint: str) -> GridSearc
 def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, gs_config_path: str, run_config_path: str,
                 validation_strategy_config_path: str, gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF,
                 accelerator: Accelerator = None):
+    """
+    Create Gym class object from the run configuration
+    :params:
+       - grid_search_id (int): Grid Search ID created for the run.
+       - blueprint_class (Type[BluePrint]): Blueprint class object having all the components for the GymJob.
+       - gym (Gym): Gym class object.
+       - gs_config_path (str): Path ro the gs_config file.
+       - validation_strategy_config_path (str): Path ro the validation_strategy_config file.
+       - gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Initiated Grid Search
+       - API Client interface for performing REST calls.
+       - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs
+    """
 
     def log_configs(gs_config_string: str, run_config_string: str, validation_strategy_config_raw_string: str,
                     gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF, accelerator: Accelerator = None):
+        """
+        Log the configuration files in event_storage which are being used to run Gym Model.
+        :params:
+           - gs_config_path (str): Path ro the gs_config file.
+           - validation_strategy_config_path (str): Path ro the validation_strategy_config file.
+           - gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Initiated Grid Search
+           - API Client interface for performing REST calls.
+           - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs
+    """
         if accelerator is None or accelerator.is_main_process:
             gs_api_client = gs_restful_api_client_constructable.construct()
             gs_api_client.add_config_string(grid_search_id=gridsearch_id,
@@ -165,6 +232,16 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
 
 def entry_warm_start(blueprint_class: Type[BluePrint], gym: Gym, grid_search_id: int,
                      gs_restful_api_client_constructable: GridSearchAPIClientConstructableIF, num_epochs: int):
+    """
+    Create Gym class object from the run configuration
+    :params:
+       - blueprint_class (Type[BluePrint]): Blueprint class object having all the components for the GymJob.
+       - gym (Gym): Gym class object
+       - grid_search_id (int): Grid Search ID created for the run.
+       - gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Initiated Grid Search
+       - API Client interface for performing REST calls.
+       - num_epochs(int): number of epochs to be trained to.
+    """
 
     gs_api_client = gs_restful_api_client_constructable.construct()
     experiment_statuses = gs_api_client.get_experiment_statuses(grid_search_id)
@@ -181,6 +258,10 @@ def entry_warm_start(blueprint_class: Type[BluePrint], gym: Gym, grid_search_id:
 
 
 def get_args() -> Tuple[Callable, Dict]:
+    """
+    Fetch run_config given as an argument while running run.py
+    :returns:  args (Tuple[Callable, Dict]): run_config passes with --config_path.
+    """
     parser = argparse.ArgumentParser(description='Run a grid search on CPUs or distributed over multiple GPUs')
 
     parser.add_argument('--config_path', type=str, required=True, help='Path to the run configuration file')
@@ -192,6 +273,17 @@ def get_args() -> Tuple[Callable, Dict]:
 def parse_run_configuration(run_configuration_file_path: str) -> Tuple[Union[TrainRunConfiguration, WarmStartRunConfiguration],
                                                                        Union[MultiProcessingEnvironmentConfig, AccelerateEnvironmentConfig,
                                                                        MainProcessEnvironmentConfig], LoggingConfiguration]:
+    """
+    Parsing run_config.yml file to create configs needed for mlGym to run experiments.
+    :params:
+        run_configuration_file_path (str): Path ro the run_config file.
+    :returns:  
+       - run_config (Union[..]): Tran Config object from run_config yml file.
+       - environment_config (Union[..]): Contains the environment config objects for number of processors and
+        devices which are to be used to train the model.
+       - logging_config (LoggingConfiguration): Websocket and Restful API Server endpoints.
+    """
+
     with open(run_configuration_file_path, "r") as fp:
         run_configuration_dict = yaml.safe_load(fp)
 
@@ -217,6 +309,15 @@ def parse_run_configuration(run_configuration_file_path: str) -> Tuple[Union[Tra
 
 
 def get_logging_constructables(logging_config: LoggingConfiguration) -> Tuple[LoggerConstructableIF, GridSearchAPIClientConstructableIF]:
+    """
+    Parsing run_config.yml file to create configs needed for mlGym to run experiments.
+    :params:
+        logging_config (LoggingConfiguration): Websocket and Restful API Server endpoints.
+    
+    :returns:  
+        Tuple[(GridSearchAPIClientConstructableIF): Initiated Grid Search API Client interface for performing REST calls.
+         (LoggerConstructableIF): Initiated Logging interface]
+    """
     # get logger constructables
     logger_collection_constructable = get_logger_constructable(logging_config.websocket_logging_servers)
     gs_restful_api_client_constructable = get_grid_search_restful_api_client_constructable(endpoint=logging_config.gs_rest_api_endpoint)
@@ -224,7 +325,13 @@ def get_logging_constructables(logging_config: LoggingConfiguration) -> Tuple[Lo
 
 
 def run(blueprint_class: BluePrint, run_configuration_file_path):
-
+    """
+    Parsing run_config.yml file to create configs needed for mlGym to run experiments.
+    :params:
+       - blueprint_class (BluePrint): Object of blueprint Class used for creating all the components for the GymJob.
+       - run_configuration_file_path (str): Path ro the run_config file.
+    
+    """
     run_config, env_config, logging_config = parse_run_configuration(run_configuration_file_path=run_configuration_file_path)
 
     logger_collection_constructable, gs_restful_api_client_constructable = get_logging_constructables(logging_config)
