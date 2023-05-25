@@ -15,8 +15,9 @@ export const defaultSocketConnectionUrlHelperText = "eg: http://127.0.0.1:5002";
 export const defaultRestApiUrlHelperText = "eg: http://127.0.0.1:5001";
 
 export interface FuncProps {
-    validateConfigs(value:boolean): void;
+    setSocketConnectionRequest(): void;
     setConfigData(configData:settingConfigsInterface): void;
+    isConfigValidated?: boolean
 }
 
 // Settings file and Config popup file (except render part) might look exactly the same for now. But Settigns will have more functionality later. So we will add more things in Settings which will make it different from popup file.
@@ -59,7 +60,6 @@ const Settings: React.FC<FuncProps> = (props) => {
         }
         setConfigTextState(reset_config_texts);
         localStorage.removeItem("SettingConfigs");
-        // props.validateConfigs(false);
         props.setConfigData(reset_config_texts);
     }
 
@@ -69,7 +69,8 @@ const Settings: React.FC<FuncProps> = (props) => {
             socketConnectionUrl: configTextState.socketConnectionUrl,
             restApiUrl: configTextState.restApiUrl
         }      
-        props.validateConfigs(true);
+        // props.validateConfigs(true);
+        props.setSocketConnectionRequest();
         props.setConfigData(configData);
     }
 
