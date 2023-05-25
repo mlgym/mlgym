@@ -8,7 +8,7 @@ from pathlib import Path
 from ml_board.backend.websocket_api.checkpoint_cache import CheckpointCache, CheckpointEntity, CheckpointEntityTransferStatus
 from ml_gym.error_handling.exception import CheckpointEntityError
 
-Payload.max_decode_packets = 1000000000
+Payload.max_decode_packets = 1e9
 
 
 class EventSubscriberIF:
@@ -35,7 +35,7 @@ class WebSocketServer:
         self._port = port
         self._host = host
         self.app = app
-        self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=cors_allowed_origins, max_http_buffer_size=100000000000)
+        self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=cors_allowed_origins, max_http_buffer_size=1e11)
         self._client_sids = []
         self._top_level_logging_path = top_level_logging_path
         self._room_id_to_event_storage: Dict[str, EventStorageIF] = {
@@ -45,6 +45,7 @@ class WebSocketServer:
         self._checkpoint_cache = CheckpointCache()
 
     def emit_server_log_message(self, data):
+        print(data)
         emit("server_log_message", data)
 
     @property
@@ -59,16 +60,14 @@ class WebSocketServer:
             batch.append({"event_id": event_id, "data": event})
         if len(batch) > 0:
             emit("mlgym_event", {"event_id": "batched_events", "data": batch}, room=client_id)
+        # emit('mlgym_event', {'event_id': event_id, 'data': event}, room=client_id)
 
     def _init_call_backs(self):
         @self._socketio.on("join")
         def on_join(data):
             client_sid = request.sid
             self._client_sids.append(client_sid)
-            if "client_id" in data:
-                client_id = data["client_id"]
-            else:
-                client_id = "<unknown>"
+            client_id = data["client_id"] if "client_id" in data else "<unknown>"
             rooms_to_join = data["rooms"]
             for room in rooms_to_join:
                 if room not in self._room_id_to_event_storage:
@@ -76,8 +75,8 @@ class WebSocketServer:
                         parent_dir=self._top_level_logging_path, event_storage_id=room
                     )
                 join_room(room)
-            print(f"Client {client_id} joined rooms: {rooms()}")
-            print(rooms_to_join)
+            # print(f"Client {client_id} joined rooms: {rooms()}")
+            # print(rooms_to_join)
             self.emit_server_log_message(f"Client {client_id} joined rooms: {rooms()}")
             for room in rooms_to_join:
                 self._send_event_history_to_client(client_sid, room)
@@ -124,7 +123,6 @@ class WebSocketServer:
 
         @self._socketio.on("client_connected")
         def on_client_connected():
-            print(f"Client with SID {request.sid} connnected.")
             self.emit_server_log_message(f"Client with SID {request.sid} connnected.")
 
         @self._socketio.on("client_disconnected")
