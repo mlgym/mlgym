@@ -8,14 +8,13 @@ import Table from "./table/Table";
 export default function Dashboard() {
   // filter them based on the regEx in the status slice
   const re = new RegExp(useAppSelector(selectFilter));
-  // const colorMap = useAppSelector(selectColorMap);
+  // fetch table data
   const rows = useAppSelector(selectAllRows);
+  // fetch table headers
   const colNames: string[] = useAppSelector(selectTableHeaders);
 
   // Table should consist of these columns for minimized view. To get detailed view, user can click on the row and see the job + experiment details:
-  // const colNames = ["experiment_id", "job_status", "starting_time", "finishing_time",
-  // "model_status", "epoch_progress", "batch_progress"];
-
+  // const colNames = ["experiment_id", "job_status", "starting_time", "finishing_time", "model_status", "epoch_progress", "batch_progress"];
 
   return (
     <div>

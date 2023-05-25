@@ -1,13 +1,12 @@
-import { RowDoubleClickedEvent } from 'ag-grid-community';
-import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
-import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
+import { ColDef, GetRowIdFunc, GetRowIdParams, GridReadyEvent, RowDoubleClickedEvent } from 'ag-grid-community';
 import { AgGridReact } from "ag-grid-react";
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Row } from '../../../redux/table/tableSlice';
 // styles
+import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
+import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
 import styles from './Table.module.css';
-
-interface columnDefinition { field: string; }
 
 // TODO: Maybe merge Table and Dashboard?
 export default function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
@@ -15,11 +14,11 @@ export default function Table({ colNames, rows }: { colNames: string[], rows: an
   const navigate = useNavigate();
 
   // change the array of strings to array of colum definitions
-  const colDefs: columnDefinition[] = colNames.map(
+  const colDefs: ColDef<Row>[] = useMemo(() => colNames.map(
     (colName: string) => ({
       field: colName,
     })
-  );
+  ), colNames);
 
   const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), []);
 
@@ -33,6 +32,8 @@ export default function Table({ colNames, rows }: { colNames: string[], rows: an
 
   // set background colour for every row based on the rowIndex, as it is the same as experiment_id. BUT this looks bad, should be using CSS classes?
   // const getRowStyle = ({ rowIndex }: RowClassParams): RowStyle => { return { background: `hsl(${rowIndex * 137.5},75%,50%)` }; };
+  const onGridReady: (params: GridReadyEvent<Row>) => void = useCallback(params => params.api.sizeColumnsToFit(), []);
+  const getRowId: GetRowIdFunc<Row> = useCallback((params: GetRowIdParams<Row>) => params.data.experiment_id.toString(), []);
 
   return (
     <div className="ag-theme-alpine" id={styles.ag_grid_container_table}>
@@ -41,12 +42,13 @@ export default function Table({ colNames, rows }: { colNames: string[], rows: an
         defaultColDef={defaultColDef}
         columnDefs={colDefs}
         rowData={rows}
-        onGridReady={params => params.api.sizeColumnsToFit()}
-        getRowId={(params: any) => params.data.job_id}
+        onGridReady={onGridReady}
+        getRowId={getRowId}
         rowSelection={"multiple"}
         onRowDoubleClicked={onRowDoubleClicked}
         rowStyle={{ cursor: "pointer" }}
         animateRows={true} // Optional - set to 'true' to have rows animate when sorted
+        enableCellChangeFlash={true}
       >
       </AgGridReact>
     </div>
