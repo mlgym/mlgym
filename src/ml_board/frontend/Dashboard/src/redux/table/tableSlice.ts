@@ -46,11 +46,14 @@ export const tableSlice = createSlice({
     reducers: {
         upsertOneRow: rowsAdapter.upsertOne,
         upsertManyRows: rowsAdapter.upsertMany,
+        resetTableState: () => {
+            return initialState
+        }
     }
 });
 
 
-export const { upsertOneRow, upsertManyRows } = tableSlice.actions;
+export const { upsertOneRow, upsertManyRows, resetTableState } = tableSlice.actions;
 
 // create a set of memoized selectors
 export const {

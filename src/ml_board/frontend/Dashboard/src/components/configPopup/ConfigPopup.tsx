@@ -16,10 +16,7 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
 
     const navigate = useNavigate();
 
-    const [open, setOpen] = useState(true);
-
     const handleGoToSettings = () => {
-        setOpen(false);
         navigate(RoutesMapping.Settings.url)
     };
 
@@ -54,9 +51,8 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
             gridSearchId: configTextState.gridSearchId,
             socketConnectionUrl: configTextState.socketConnectionUrl.replace(/\/+$/, ''),
             restApiUrl: configTextState.restApiUrl.replace(/\/+$/, '')
-        }      
-        setOpen(false);
-        props.validateConfigs(true);
+        }
+        props.setSocketConnectionRequest();
         props.setConfigData(settingConfigs);
     }
 
@@ -75,7 +71,7 @@ const ConfigPopup: React.FC<FuncProps> = (props) => {
     }
 
     return(
-        <Dialog open={open}>
+        <Dialog open={!props.isConfigValidated}>
             <DialogTitle>Enter Configurations</DialogTitle>
             <DialogContent>
             <DialogContentText>

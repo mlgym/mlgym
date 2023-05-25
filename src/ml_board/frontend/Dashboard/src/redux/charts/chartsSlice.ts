@@ -13,7 +13,7 @@ export interface Chart {
     experiments: EntityState<Experiment>,
 }
 
-const chartsAdapter = createEntityAdapter<Chart>({
+export const chartsAdapter = createEntityAdapter<Chart>({
     selectId: ({ chart_id }: Chart) => chart_id,
     sortComparer: ({ chart_id: id1 }: Chart, { chart_id: id2 }: Chart) => id1.localeCompare(id2)
 });
@@ -23,7 +23,7 @@ const experimentsAdapter = createEntityAdapter<Experiment>({
     sortComparer: ({ exp_id: id1 }: Experiment, { exp_id: id2 }: Experiment) => id1 - id2
 });
 
-const initialState: EntityState<Chart> = chartsAdapter.getInitialState({});
+export const initialState: EntityState<Chart> = chartsAdapter.getInitialState({});
 
 export const chartsSlice = createSlice({
     name: 'charts',
@@ -61,10 +61,13 @@ export const chartsSlice = createSlice({
                 }
             }
         },
+        resetChartState: () => {
+            return initialState
+        },
     }
 });
 
-export const { upsertCharts } = chartsSlice.actions;
+export const { upsertCharts, resetChartState } = chartsSlice.actions;
 
 // TODO: memoize these selectors
 export const selectChartLabelsById = (state: RootState, chart_id: string) => state.charts.entities[chart_id]?.x_axis ?? [];
