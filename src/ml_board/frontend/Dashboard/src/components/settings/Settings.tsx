@@ -6,7 +6,6 @@ import { settingConfigsInterface } from "../../app/App";
 import { isConnected } from "../../redux/status/statusSlice";
 import { useAppSelector } from "../../app/hooks";
 import GridSearchConfigurations from "./GridSearchConfigurations/GridSearchConfigurations";
-import SelectExperimentDropdown from "./SelectExperimentDropdown/SelectExperimentDropdown";
 // styles
 import styles from "./Settings.module.css";
 
@@ -124,14 +123,6 @@ const Settings: React.FC<FuncProps> = (props) => {
                     </Grid>
                 </Grid>
             </Box>
-            {
-                isSocketConnected ?
-                <Box className={styles.grid_search_config_contianer}>
-                    <SelectExperimentDropdown />
-                </Box>
-                :
-                null
-            }
             {
                 isSocketConnected ?
                 <Box className={styles.grid_search_config_contianer}>

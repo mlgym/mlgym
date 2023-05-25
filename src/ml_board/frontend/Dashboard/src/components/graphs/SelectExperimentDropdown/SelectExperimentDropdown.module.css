@@ -1,0 +1,16 @@
+.selection_to_exp_page {
+    display: flex;
+    flex-direction: row;
+    padding-left: 15px;
+    margin-top: -1%;
+    padding-bottom: 10px;
+}
+
+.selection_to_exp_page_text {
+    width: 50%;
+    align-self: center;
+}
+
+.selection_to_exp_page_form_control {
+    width: 50%;
+}

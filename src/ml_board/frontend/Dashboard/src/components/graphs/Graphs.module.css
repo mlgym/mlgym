@@ -12,6 +12,7 @@
     margin-bottom: 20px;
     padding: 5px;
     display: flex;
+    flex-direction: column;
 }
 .graphs_chart_container {
     position: relative;
