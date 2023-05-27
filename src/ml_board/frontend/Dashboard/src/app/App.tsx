@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import { upsertCharts } from '../redux/charts/chartsSlice';
 import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setThroughput, upsertTableHeaders } from '../redux/status/statusSlice';
@@ -8,12 +8,8 @@ import { RoutesMapping } from './RoutesMapping';
 import { useAppDispatch } from './hooks';
 
 // components & styles
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import Alert from '@mui/material/Alert';
-import Drawer from '@mui/material/Drawer';
-import Fab from '@mui/material/Fab';
 import Snackbar from '@mui/material/Snackbar';
-import TextField from '@mui/material/TextField';
 import ConfigPopup from '../components/configPopup/ConfigPopup';
 import Settings from '../components/settings/Settings';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
@@ -54,9 +50,7 @@ async function getUrlParamsOrLocalStorageData(searchParams: URLSearchParams, set
 
 export default function App() {
 
-    const [filterText, setFilterText] = useState("")
-    const [filterDrawer, setFilterDrawer] = useState(false)
-    const [isConfigValidated, setConfigValidation] = useState(false)
+    const [isConfigValidated, setConfigValidation] = useState(false);
     const [connectionSnackBar, setConnectionSnackBar] = useState({
         isOpen: false,
         connection: false
@@ -183,49 +177,6 @@ export default function App() {
                     })
                 }
             </Routes>
-            {
-                // Floating Action Button (FAB) added for filter popup
-                // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar). Also hide it when user is on Settings Page (As - not needed to do filter when viewing/inserting/updating configurations)
-                (urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url) && (location.pathname.split("/")[1] !== RoutesMapping["ExperimentPage"].url) ?
-                    <div className={styles.fab}>
-                        <Fab
-                            variant="extended"
-                            color="primary"
-                            aria-label="add"
-                            onClick={() => setFilterDrawer(true)}
-                        >
-                            <FilterAltIcon /> Filter
-                        </Fab>
-                    </div>
-                    :
-                    null
-            }
-            {/* Filter Popup */}
-            <React.Fragment>
-                <Drawer
-                    anchor={"bottom"} // MUI-Drawer property: tells from which side of the screen, the drawer should appear
-                    open={filterDrawer}
-                    onClose={() => setFilterDrawer(false)}
-                    // Drawer wraps your content inside a <Paper /> component. A Materiaul-UI paper component has shadows and a non-transparent background.
-                    classes={{ paper: styles.filter_drawer_container }}
-                >
-                    <div className={styles.filter_container}>
-                        <h3>
-                            Filter Your Results
-                        </h3>
-                        <TextField
-                            id="outlined-multiline-flexible"
-                            label="Filter"
-                            placeholder="Filter your experiments here!..."
-                            multiline
-                            maxRows={4}
-                            value={filterText}
-                            onChange={(e) => setFilterText(e.target.value)}
-                            className={styles.filter_textfield}
-                        />
-                    </div>
-                </Drawer>
-            </React.Fragment>
             {
                 // here also, it is same as done above for Setting Component. We need to pass functions as props to the popup - so that when user submits the configured values, we can connect to websocket with the changed parameters.
                 urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url && isConfigValidated === false ?
