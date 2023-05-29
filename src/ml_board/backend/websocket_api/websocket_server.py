@@ -100,6 +100,7 @@ class WebSocketServer:
                         parent_dir=self._top_level_logging_path, event_storage_id=grid_search_id
                     )
                 event_id = self._room_id_to_event_storage[grid_search_id].add_event(data)
+                emit('mlgym_event', {'event_id': event_id, 'data': data}, to=grid_search_id)
             else:
                 print(f"Unsupported event_type {data['event_type']}")
 
