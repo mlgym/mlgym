@@ -24,6 +24,9 @@ class ExperimentRatingStrategyIf(ABC):
 
 
 class ExperimentRepresentation:
+    """
+    Represent Experiment results for the folds in Nested Cross Validation.
+    """
     def __init__(self, config_path: str, metric_path: str):
         self.config_path = config_path
         self.metric_path = metric_path
@@ -40,6 +43,9 @@ class ExperimentRepresentation:
 
 
 class NestedCVRepresentation:
+    """
+    Representing Experiments for Nested CV
+    """
     def __init__(self) -> None:
         # outer fold id -> hpc_id -> Experiment
         self.outer_experiments: Dict[int, Dict[int, ExperimentRepresentation]] = {}
@@ -47,6 +53,11 @@ class NestedCVRepresentation:
         self.inner_experiments: Dict[int, Dict[int, Dict[int, ExperimentRepresentation]]] = {}
 
     def add_experiment(self, e: ExperimentRepresentation):
+        """
+        Add experiments for outer and inner folds.
+        :params:
+            e (ExperimentRepresentation): ExperimentRepresentation Object.
+        """
         # outer folds
         if e.inner_test_fold_id == -1:
             if e.outer_test_fold_id not in self.outer_experiments:
@@ -77,6 +88,9 @@ class NestedCVRepresentation:
 
 
 class NestedCVReport:
+    """
+    Make a report with metrics calculation for Nested CV.
+    """
     def __init__(self, nested_cv_path: str, experiments: List[ExperimentRepresentation], epoch: int):
         self.nested_cv_path = nested_cv_path
         self.experiments = experiments
@@ -85,6 +99,13 @@ class NestedCVReport:
 
     @staticmethod
     def calc_report(experiments: List[ExperimentRepresentation]) -> Dict[str, Any]:
+        """
+        Calculate report.
+        :params:
+            experiments (List[ExperimentRepresentation]): List of experiments in the Nested CV.
+        :returns:
+            aggregated_metrics (Dict[str, Any]): Metrics for Nested CV.
+        """
         results_list: List[Dict[str, Any]] = [e.results for e in experiments]
         aggregated_metrics = {"avg_scores": {}, "std": {}}
         for metric_key in results_list[0].keys():
@@ -109,12 +130,22 @@ class NestedCVReport:
 
 
 class NestedCVAnalyzer(EvaluationAnalyzerIF):
+    """
+    Nested CV Analyzer.
+    """
     def __init__(self, result_directory: str, scoring_fun: Callable[[ExperimentRepresentation], float]):
         self.result_directory = result_directory
         self.scoring_fun = scoring_fun
 
     @staticmethod
     def _load_experiments(result_directory: str) -> NestedCVRepresentation:
+        """
+        Calculate report.
+        :params:
+            result_directory (str): Path to result directory.
+        :returns:
+            nested_cv_representation (NestedCVRepresentation): Experiment Representation for Nested CV.
+        """
         nested_cv_representation = NestedCVRepresentation()
         metric_paths = list(sorted(glob.glob(os.path.join(result_directory, "**/*metrics.json"), recursive=True)))
         config_paths = list(sorted(glob.glob(os.path.join(result_directory, "**/*config.json"), recursive=True)))
@@ -127,6 +158,16 @@ class NestedCVAnalyzer(EvaluationAnalyzerIF):
     @staticmethod
     def _select_best_model_of_inner_fold(outer_fold_id: int, nested_cv_representation: NestedCVRepresentation,
                                          scoring_fun: Callable[[ExperimentRepresentation], float]) -> int:
+        """
+        Select Best model for the inner fold of Nested Cross Validation.
+        :params:
+            - outer_fold_id (int): Outer fold id.
+            - nested_cv_representation (NestedCVRepresentation): Nested CV Representation.
+            - scoring_fun (Callable[[ExperimentRepresentation], float]): Scoring function.
+        
+        :returns:
+            best_hpc_id (list): Best model IDs in inner fold.
+        """
         # inner fold id -> hpc_id -> Experiment
         experiments = nested_cv_representation.inner_experiments[outer_fold_id]
         # hpc_id -> [score_1, score_2]
@@ -143,6 +184,13 @@ class NestedCVAnalyzer(EvaluationAnalyzerIF):
         return best_hpc_id
 
     def analyze(self, epoch: int) -> NestedCVReport:
+        """
+        Analyze Nested Cross Validation to create NestedCVReport.
+        :params:
+            epoch (int): Epoch number.
+        :returns:
+            report (NestedCVReport): NestedCVReport object.
+        """
         nested_cv_representation = self._load_experiments(self.result_directory)
         if not nested_cv_representation.verify():
             raise Exception("Corrputed Nested CV representation!")

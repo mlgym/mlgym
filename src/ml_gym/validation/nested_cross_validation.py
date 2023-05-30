@@ -9,6 +9,9 @@ from ml_gym.util.grid_search import GridSearch
 
 
 class NestedCV(ValidatorIF):
+    """
+    Class containing functions to perform Nested Cross Validation.
+    """
     def __init__(self, dataset_iterator: DatasetIteratorIF, num_outer_loop_folds: int,
                  num_inner_loop_folds: int, inner_stratification: bool, outer_stratification: bool,
                  target_pos: int, shuffle: bool, seed: int, run_mode: RunMode):
@@ -35,6 +38,13 @@ class NestedCV(ValidatorIF):
 
     @staticmethod
     def _create_outer_folds_splits(outer_folds_indices: Tuple[List[int]]) -> List[Dict[str, Any]]:
+        """
+        Create Outer Fold Splits of nested CV.
+        :params:
+            outer_folds_indices (Tuple[List[int]]): List of Outer folds indicies.
+        :returns:
+            splits (List[Dict[str, Any]]): Outer fold Splits.
+        """
         # outer folds
         # [outer_fold_1_indices, outer_fold2_indices ...]
         splits = []
@@ -58,6 +68,13 @@ class NestedCV(ValidatorIF):
 
     @staticmethod
     def _create_inner_folds_splits(inner_folds_indices: Tuple[List[int]]) -> List[Dict[str, Any]]:
+        """
+        Create Inner Fold Splits of nested CV.
+        :params:
+            inner_folds_indices (Tuple[List[int]]): List of Inner folds indicies.
+        :returns:
+            splits (List[Dict[str, Any]]): Inner fold Splits.
+        """
         splits = []
         # inner folds
         # [[outer_fold_1_inner_fold_1_indices, outer_fold_1_inner_fold_2_indices, ...], ...]
@@ -80,7 +97,16 @@ class NestedCV(ValidatorIF):
         return splits
 
     def _get_blue_prints(self, grid_search_id: str, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any]) -> List[Type[BluePrint]]:
-
+        """
+        Function to get a list of blueprints.
+        :params:
+           - grid_search_id (str): Grid Search ID.
+           - blue_print_type (Type[BluePrint]): BluePrint Type.
+           - gs_config (Dict[str, Any]): Grid Search Configuration.
+        
+        :returns: 
+            blueprints(List[Type[BluePrint]]) : List of blueprint objects.
+        """
         run_id_to_config_dict = {run_id: config for run_id, config in enumerate(GridSearch.create_gs_from_config_dict(gs_config))}
 
         outer_fold_indices, inner_folds_indices = self._get_fold_indices()
@@ -108,6 +134,16 @@ class NestedCV(ValidatorIF):
         return blueprints
 
     def create_blueprints(self, grid_search_id: str, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any]) -> List[BluePrint]:
+        """
+        Function to create a list of blueprints.
+        :params:
+           - grid_search_id (str): Grid Search ID.
+           - blue_print_type (Type[BluePrint]): BluePrint Type.
+           - gs_config (Dict[str, Any]): Grid Search Configuration.
+        
+        :returns: 
+            blueprints(List[BluePrint]) : List of blueprint objects.
+        """
         blueprints = self._get_blue_prints(grid_search_id=grid_search_id,
                                            blue_print_type=blue_print_type,
                                            gs_config=gs_config)

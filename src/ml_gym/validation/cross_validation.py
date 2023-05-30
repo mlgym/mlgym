@@ -9,6 +9,9 @@ from ml_gym.util.grid_search import GridSearch
 
 
 class CrossValidation(ValidatorIF):
+    """
+    Class containing functions to perform Cross Validation.
+    """
     def __init__(self, dataset_iterator: DatasetIteratorIF, num_folds: int, stratification: bool,
                  target_pos: int, shuffle: bool, seed: int, run_mode: RunMode):
         self.num_folds = num_folds
@@ -51,7 +54,16 @@ class CrossValidation(ValidatorIF):
         return splits
 
     def create_blue_prints(self, grid_search_id: str, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any]) -> List[Type[BluePrint]]:
-
+        """
+        Function to create a list of blueprints.
+        :params:
+           - grid_search_id (str): Grid Search ID.
+           - blue_print_type (Type[BluePrint]): BluePrint Type.
+           - gs_config (Dict[str, Any]): Grid Search Configuration.
+        
+        :returns: 
+            blueprints(List[Type[BluePrint]]) : List of blueprint objects.
+        """
         run_id_to_config_dict = {run_id: config for run_id, config in enumerate(GridSearch.create_gs_from_config_dict(gs_config))}
 
         fold_indices = self._get_fold_indices()
@@ -77,6 +89,15 @@ class CrossValidation(ValidatorIF):
         return blueprints
 
     def create_blueprints(self, blue_print_type: Type[BluePrint], gs_config: Dict[str, Any]) -> List[BluePrint]:
+        """
+        Function to create a list of blueprints.
+        :params:
+           - blue_print_type (Type[BluePrint]): BluePrint Type.
+           - gs_config (Dict[str, Any]): Grid Search Configuration.
+        
+        :returns: 
+            blueprints(List[BluePrint]) : List of blueprint objects.
+        """
         blueprints = self.create_blue_prints(blue_print_type=blue_print_type,
                                              gs_config=gs_config)
         return blueprints
