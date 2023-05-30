@@ -34,10 +34,11 @@ class SystemEnv:
         """
         try:
             info = {}
-            info["platform"] = platform.system()
-            info["platform-release"] = platform.release()
-            info["architecture"] = platform.machine()
+            info["system_info"] = platform.platform()
+            info["architecture"] = platform.architecture()
+            info["machine_type"] = platform.machine()
             info["processor"] = platform.processor()
+            info["num_processor_cores"] = psutil.cpu_count()
             info["ram"] = str(round(psutil.virtual_memory().total / (1024.0**3))) + " GB"
             info["python-version"] = platform.python_version()
             info["python-packages"] = [{"name":p.project_name, "version": p.version} for p in pkg_resources.working_set]
@@ -49,8 +50,10 @@ class SystemEnv:
                     dev_list.append(
                         {
                             "name": torch.cuda.get_device_name(i),
-                            "multi_proc_count": torch.cuda.get_device_properties(i).multi_processor_count,
-                            "total_memory": f"{round(torch.cuda.get_device_properties(i).total_memory / 1e9, 2)} GB",
+                            "total_memory": f"{round(torch.cuda.get_device_properties(i).total_memory /(1024.0**3), 2)} GB",
+                            "memory_allocated": f"{round(torch.cuda.memory_allocated(i) /(1024.0**3), 2)} GB",
+                            "memory_reserved": f"{round(torch.cuda.memory_reserved(i) /(1024.0**3), 2)} GB",
+                            "max_memory_reserved": f"{round(torch.cuda.max_memory_reserved(i) /(1024.0**3), 2)} GB",
                         }
                     )
                 info["cuda_device_list"] = dev_list
