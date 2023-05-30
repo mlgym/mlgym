@@ -5,6 +5,9 @@ from transformers import get_scheduler
 
 
 class LRSchedulerFactory:
+    """
+    Learning Rate Scheduler Factory contains different types of available LR Schedulers.
+    """
     lr_scheduler_map: Dict[str, _LRScheduler] = {
         "LinearLR": LinearLR,
         "ConstantLR": ConstantLR,
@@ -16,6 +19,15 @@ class LRSchedulerFactory:
 
     @classmethod
     def get_lr_scheduler(cls, lr_scheduler_key: str, params: Dict = None) -> LRSchedulerAdapter:
+        """
+        Get the LRSchedulerAdapter initialzied with the specific Schduler from the lr_scheduler_map.
+        :params:
+            - lr_scheduler_key (str): Scheduler key name from lr_scheduler_map.
+            - params (dict): Parameters for the LRScheduler.
+
+        :returns:
+            Initilzed LRSchedulerAdapter object.
+        """
         params = params if params is not None else {}
         lr_scheduler_class = cls.lr_scheduler_map[lr_scheduler_key]
         return LRSchedulerAdapter(lr_scheduler_class=lr_scheduler_class, lr_scheduler_params=params)

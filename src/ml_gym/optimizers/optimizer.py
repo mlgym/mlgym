@@ -5,6 +5,9 @@ from ml_gym.error_handling.exception import OptimizerNotInitializedError
 
 
 class OptimizerAdapter(Optimizer, object):
+    """
+    OptimizerAdapter class uses Optimizer selected from OptimizerFactory as an Optimizer in mlGym Job.
+    """
 
     def __init__(self, optimizer_class: Type[Optimizer], optimizer_params: Dict = None):
         self._optimizer_class = optimizer_class
@@ -14,6 +17,12 @@ class OptimizerAdapter(Optimizer, object):
         self._state_dict = None
 
     def register_model_params(self, model_params: Dict, restore_state: bool = True):
+        """
+        Register Model parameters with the Optimzier.
+        :params:
+            - model_params (Dict): Model Parameters Dictionary.
+            - restore_state (bool): Restore Optimizer State.
+        """
         model_params_list = model_params.values()
         if not restore_state:
             self._optimizer = self._optimizer_class(**self._optimizer_params, params=model_params_list)
@@ -91,12 +100,21 @@ class OptimizerAdapter(Optimizer, object):
 
 
 class OptimizerBundle(OptimizerAdapter):
+    """
+    OptimizerBundle class wraps up multiple OptimizerAdapters to be used during mlGym Job.
+    """
 
     def __init__(self, optimizers: Dict[str, OptimizerAdapter], optimizer_key_to_param_key_filters: Dict[str, List[str]]):
         self.optimizers = optimizers
         self.optimizer_key_to_param_key_filters = optimizer_key_to_param_key_filters
 
     def register_model_params(self, model_params: Dict, restore_state: bool = True):
+        """
+        Register Model parameters with the Optimzier.
+        :params:
+            - model_params (Dict): Model Parameters Dictionary.
+            - restore_state (bool): Restore Optimizer State.
+        """
         for optimizer_key in self.optimizers.keys():
             parameter_key_filters = self.optimizer_key_to_param_key_filters[optimizer_key]
             model_params_filtered = {model_param_key: model_params[model_param_key]

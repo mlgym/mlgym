@@ -9,6 +9,9 @@ from ml_gym.persistency.logging import JobStatusLogger, MLgymStatusLoggerCollect
 
 
 class JobStatusLoggingSubscriber(JobStatusSubscriberIF):
+    """
+    Class responsible for representing the Job Status to be logged.
+    """
 
     def __init__(self, logger: JobStatusLogger):
         self._logger = logger
@@ -22,6 +25,9 @@ class JobStatusLoggingSubscriber(JobStatusSubscriberIF):
 
 
 class Pool:
+    """
+    Class contains functions to run, add jobs and create and replace processes for workers tp execute the jobs.
+    """
     def __init__(self, num_processes: int, devices: List[torch.device],
                  logger_collection_constructable: MLgymStatusLoggerCollectionConstructable, max_jobs_per_process: int = 1):
         self.num_processes = num_processes
@@ -46,6 +52,9 @@ class Pool:
             self.job_collection.add_or_update_job(job)
 
     def run(self):
+        """
+        Run Job
+        """
         # we have to add the termination jobs at the end of the queue such that the processes stop working and don't get stuck in jobs_q.get()
         termination_jobs = [Job(job_id=i+len(self.job_collection), fun=None, blueprint=None, param_dict=None,
                                 job_type=JobType.TERMINATE) for i in range(self.num_processes)]
@@ -69,6 +78,12 @@ class Pool:
         self.job_status_logger.disconnect()
 
     def create_or_replace_process(self, process_id: int, num_jobs_to_perform: int):
+        """
+        Create or replace Worker Process to work on Jobs.
+        :params:
+            - process_id (int): Process ID.
+            - num_jobs_to_perform (int): Number of Jobs to perform.
+        """
         process = WorkerProcessWrapper(process_id=process_id,
                                        num_jobs_to_perform=num_jobs_to_perform,
                                        device=self.devices[process_id % len(self.devices)],

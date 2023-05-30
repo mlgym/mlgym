@@ -8,11 +8,31 @@ from torch import nn
 
 
 def binary_auroc_score(y_true: torch.Tensor, y_pred: torch.Tensor, **params: Dict[str, Any]) -> float:
+    """
+    Uses sk learn roc_auc_score() function to calculate 
+    Area Under the Receiver Operating Characteristic Curve (ROC AUC) from prediction scores.
+    :params:
+        - y_true (Tensor): True target scores.
+        - y_pred (Tensor): Prediction target scores.
+        - kwargs: Additional keyword arguments to pass to sk_learn roc_auc_score() function.
+    :returns:
+        score (float): Metric score from ROC AUC Curve.
+    """
     score = roc_auc_score(y_true=y_true, y_score=y_pred, **params)
     return score
 
 
 def binary_aupr_score(y_true: torch.Tensor, y_pred: torch.Tensor, **params: Dict[str, Any]) -> float:
+    """
+    Uses sk learn average_precision_score() function to 
+    compute average precision (AP) from prediction scores.
+    :params:
+        - y_true (Tensor): True target scores.
+        - y_pred (Tensor): Prediction target scores.
+        - kwargs: Additional keyword arguments to pass to sk_learn roc_auc_score() function.
+    :returns:
+        score (float): average precision score.
+    """
     score = average_precision_score(y_true=y_true, y_score=y_pred, **params)
     return score
 
@@ -36,6 +56,9 @@ class Metric(MetricIF):
 
 
 class PredictionMetric(Metric):
+    """
+    Class to get all parameters for calculating Metrics.
+    """
 
     def __init__(self, tag: str, identifier: str, target_subscription_key: str,
                  prediction_subscription_key: str, metric_fun: Callable, params: Dict[str, Any] = None):
@@ -52,6 +75,9 @@ class PredictionMetric(Metric):
 
 
 class ClassSpecificExpectedCalibrationErrorMetric(Metric):
+    """
+    Class to calculate a Metric having Specific Expected Callibration Error 
+    """
 
     def __init__(self, tag: str, identifier: str, target_subscription_key: str,
                  prediction_subscription_key: str, num_bins: int = 10, class_label: int = 1, sum_up_bins: bool = True):
@@ -103,6 +129,9 @@ class ClassSpecificExpectedCalibrationErrorMetric(Metric):
 
 
 class BinaryClasswiseExpectedCalibrationErrorMetric(Metric):
+    """
+    Class to calculate a Metric having Specific Expected Callibration Error in Binary Classes 
+    """
 
     def __init__(self, tag: str, identifier: str, target_subscription_key: str,
                  prediction_subscription_key_0: str, prediction_subscription_key_1: str, class_labels: List[int], num_bins: int = 10):
@@ -128,6 +157,9 @@ class BinaryClasswiseExpectedCalibrationErrorMetric(Metric):
 
 
 class BrierScoreMetric(Metric):
+    """
+    Class to calculate Brier Score (Brier Score is a way to judge and score the accuracy of probabilistic forecasts).
+    """
     def __init__(self, tag: str, identifier: str,
                  prediction_subscription_key: str,
                  target_subscription_key: str,
@@ -149,6 +181,9 @@ class BrierScoreMetric(Metric):
 
 
 class RecallAtKMetric(Metric):
+    """
+    Class to calculate Recall at K score (Recall at k is the proportion of relevant items found in the top-k recommendations).
+    """
     def __init__(self, tag: str, identifier: str,
                  prediction_subscription_key: str,
                  target_subscription_key: str,
@@ -179,6 +214,9 @@ class RecallAtKMetric(Metric):
 
 
 class AreaUnderRecallAtKMetric(Metric):
+    """
+    Class to calculate Area Under Recall at K Metric
+    """
     def __init__(self, tag: str, identifier: str,
                  prediction_subscription_key: str,
                  target_subscription_key: str,

@@ -18,6 +18,16 @@ class MetricFactory:
     def get_brier_score_metric_fun(tag: str,
                                    prediction_subscription_key: str,
                                    target_subscription_key: str):
+        """
+        Get BRIER Score Metric
+        :params:
+            - tag (str): Label to be tagged with the metric object.
+            - prediction_subscription_key (str): Subscription key to the prediction table.
+            - target_subscription_key (str): Subscription key to the target table.
+
+        :returns:
+            brier_score_fun (BrierScoreMetric): BrierScoreMetric object.
+        """
         brier_score_fun = BrierScoreMetric(tag=tag,
                                            identifier="BRIER_SCORE",
                                            prediction_subscription_key=prediction_subscription_key,
@@ -31,6 +41,19 @@ class MetricFactory:
                                    class_label: int,
                                    k_vals: List[int],
                                    sort_descending: bool):
+        """
+        Get Recall at K Metric
+        :params:
+            - tag (str): Label to be tagged with the metric object.
+            - prediction_subscription_key (str): Subscription key to the prediction table.
+            - target_subscription_key (str): Subscription key to the target table.
+            - class_label (int): Class label.
+            - k_vals (List[int]): List of k values.
+            - sort_descending (bool): Sort descending.
+
+        :returns:
+            recall_at_k_metric_fun (RecallAtKMetric): RecallAtKMetric object.
+        """
         recall_at_k_metric_fun = RecallAtKMetric(tag=tag,
                                                  identifier="RecallAtK",
                                                  prediction_subscription_key=prediction_subscription_key,
@@ -48,6 +71,20 @@ class MetricFactory:
                                               k_vals: List[int],
                                               sort_descending: bool,
                                               normalize: bool):
+        """
+        Get Area Under Recall at K Metric
+        :params:
+            - tag (str): Label to be tagged with the metric object.
+            - prediction_subscription_key (str): Subscription key to the prediction table.
+            - target_subscription_key (str): Subscription key to the target table.
+            - class_label (int): Class label.
+            - k_vals (List[int]): List of k values.
+            - sort_descending (bool): Sort descending.
+            - normalize (bool): Normalize.
+
+        :returns:
+            area_under_recall_at_k_metric_fun (AreaUnderRecallAtKMetric): AreaUnderRecallAtKMetric object.
+        """
         area_under_recall_at_k_metric_fun = AreaUnderRecallAtKMetric(tag=tag,
                                                                      identifier="RecallAtK",
                                                                      prediction_subscription_key=prediction_subscription_key,
@@ -65,6 +102,19 @@ class MetricFactory:
                                                   num_bins: int,
                                                   class_label: int,
                                                   sum_up_bins: bool):
+        """
+        Get Expected Calibration Error Metric
+        :params:
+            - tag (str): Label to be tagged with the metric object.
+            - prediction_subscription_key (str): Subscription key to the prediction table.
+            - target_subscription_key (str): Subscription key to the target table.
+            - num_bins (int): Number of bins.
+            - class_label (int): Class label.
+            - sum_up_bins (bool): Sum up bins.
+
+        :returns:
+            ece_score_fun (ClassSpecificExpectedCalibrationErrorMetric): ClassSpecificExpectedCalibrationErrorMetric object.
+        """
         ece_score_fun = ClassSpecificExpectedCalibrationErrorMetric(tag=tag,
                                                                     identifier="EXPECTED_CALIBRATION_ERROR",
                                                                     prediction_subscription_key=prediction_subscription_key,
@@ -81,6 +131,19 @@ class MetricFactory:
                                                                    prediction_subscription_key_1: str,
                                                                    num_bins: int,
                                                                    class_labels: List[int]):
+        """
+        Get Binary Classwise Expected Calibration Error Metric
+        :params:
+            - tag (str): Label to be tagged with the metric object.
+            - target_subscription_key (str): Subscription key to the target table.
+            - prediction_subscription_key_0 (str): Subscription key to the prediction table for class 0.
+            - prediction_subscription_key_1 (str): Subscription key to the prediction table for class 1.
+            - num_bins (int): Number of bins.
+            - class_label (int): Class label.
+
+        :returns:
+            ece_score_fun (BinaryClasswiseExpectedCalibrationErrorMetric): BinaryClasswiseExpectedCalibrationErrorMetric object.
+        """
         ece_score_fun = BinaryClasswiseExpectedCalibrationErrorMetric(tag=tag,
                                                                       identifier="BINARY_CLASSWISE_EXPECTED_CALIBRATION_ERROR",
                                                                       prediction_subscription_key_0=prediction_subscription_key_0,
