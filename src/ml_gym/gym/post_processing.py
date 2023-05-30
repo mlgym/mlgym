@@ -41,9 +41,9 @@ class SoftmaxPostProcessorImpl(PredictPostProcessingIF):
         Perform prediction on the torch NN Model for the entire btach using SoftMax.
 
         :params:
-            result_batch (InferenceResultBatch): Predicttion performed on the model.
+            result_batch (InferenceResultBatch): Prediction performed on the model.
         :returns:
-            result_batch (InferenceResultBatch): Predicttion performed on the model.
+            result_batch (InferenceResultBatch): Prediction performed on the model.
         """
         predictions = nn.Softmax(dim=1)(result_batch.get_predictions(self.prediction_subscription_key))
         result_batch.add_predictions(key=self.prediction_publication_key, predictions=predictions)
@@ -63,9 +63,9 @@ class ArgmaxPostProcessorImpl(PredictPostProcessingIF):
         Perform prediction on the torch NN Model for the entire btach using ArgMax.
 
         :params:
-            result_batch (InferenceResultBatch): Predicttion performed on the model.
+            result_batch (InferenceResultBatch): Prediction performed on the model.
         :returns:
-            result_batch (InferenceResultBatch): Predicttion performed on the model.
+            result_batch (InferenceResultBatch): Prediction performed on the model.
         """
         predictions = torch.argmax(result_batch.get_predictions(self.prediction_subscription_key), dim=1)
         result_batch.add_predictions(key=self.prediction_publication_key, predictions=predictions)
@@ -91,9 +91,9 @@ class MaxOrMinPostProcessorImpl(PredictPostProcessingIF):
         Perform prediction on the torch NN Model for the entire btach using Max and Min.
 
         :params:
-            result_batch (InferenceResultBatch): Predicttion performed on the model.
+            result_batch (InferenceResultBatch): Prediction performed on the model.
         :returns:
-            result_batch (InferenceResultBatch): Predicttion performed on the model.
+            result_batch (InferenceResultBatch): Prediction performed on the model.
         """
         predictions = self.agg_fun(result_batch.get_predictions(self.prediction_subscription_key), dim=1)[0]
         result_batch.add_predictions(key=self.prediction_publication_key, predictions=predictions)
@@ -114,9 +114,9 @@ class BinarizationPostProcessorImpl(PredictPostProcessingIF):
         Perform prediction on the torch NN Model for the entire btach using Zero Like Binarizaton.
 
         :params:
-            result_batch (InferenceResultBatch): Predicttion performed on the model.
+            result_batch (InferenceResultBatch): Prediction performed on the model.
         :returns:
-            result_batch (InferenceResultBatch): Predicttion performed on the model.
+            result_batch (InferenceResultBatch): Prediction performed on the model.
         """
         predictions = result_batch.get_predictions(self.prediction_subscription_key)
         binarized_outputs = torch.zeros_like(predictions).int()
@@ -138,9 +138,9 @@ class SigmoidalPostProcessorImpl(PredictPostProcessingIF):
         Perform prediction on the torch NN Model for the entire btach using Sigmoid.
 
         :params:
-            result_batch (InferenceResultBatch): Predicttion performed on the model.
+            result_batch (InferenceResultBatch): Prediction performed on the model.
         :returns:
-            result_batch (InferenceResultBatch): Predicttion performed on the model.
+            result_batch (InferenceResultBatch): Prediction performed on the model.
         """
         predictions = result_batch.get_predictions(self.prediction_subscription_key)
         sigmoidal_predictions = torch.sigmoid(predictions)

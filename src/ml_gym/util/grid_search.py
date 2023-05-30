@@ -12,10 +12,13 @@ class GridSearch:
     @staticmethod
     def _get_dict_obj(keys: List[str], values: Tuple[Any]) -> Dict[str, Any]:
         """
-        Merges two lists into a dictionary, where one acts as the keys and the other one as the values
-        :param keys:
-        :param values:
-        :return:
+        Merges two lists into a dictionary, where one acts as the keys and the other one as the values.
+        :param:
+            - keys (List[str]): List of Keys.
+            - values (Tuple[Any]): List of Values.
+
+        :returns:
+            d (Dict[str, Any]): Dictionary of given key and values.
         """
         d = {}
         for key, value in zip(keys, values):
@@ -32,8 +35,10 @@ class GridSearch:
         From each tuple we then create a dictionary resulting in the list of dictionaries
         [{"p1": "A", "p2": "a", "p3": 1}, ..., {"p1": "C", "p2": "b", "p3": 1}].
 
-        :param splits_by_keys:
-        :return:
+        :params:
+            splits_by_keys (Dict[str, List[Any]]): Splits by Keys Dictionary.
+        :returns:
+            dict_objs (Dict[str, List[Any]]): Dictionary of given key and values.
         """
         values = list(splits_by_keys.values())
         keys = list(splits_by_keys.keys())
@@ -103,12 +108,26 @@ class GridSearch:
 
     @staticmethod
     def create_gs_configs_from_path(config_path: str) -> List[Dict]:
+        """
+        Creation of Grid Search config from YAML file path.
+        :params:
+            config_path (str): Path to the YAML configuration file.
+        :returns:
+            configs (List[Dict]): Corresponding List of configs.
+        """
         gs_config = YAMLConfigLoader.load(config_path)
         configs = GridSearch.create_gs_from_config_dict(gs_config)
         return configs
 
     @staticmethod
     def create_gs_from_config_dict(gs_config: Dict):
+        """
+        Creation of Grid Search config from Unpacked Configuration Dictionary.
+        :params:
+            gs_config (Dict): Unpacked Configuration from YAML file.
+        :returns:
+            configs (List[Dict]): Corresponding List of configs.
+        """
         configs = GridSearch._split_config(gs_config)
         return configs
 
@@ -190,6 +209,13 @@ class GridSearch:
 
     @staticmethod
     def update_config_from_grid_search(old_config: Dict, gs: List[Dict], negligible_paths: Dict):
+        """
+        Update Config from Grid Search.
+        :params:
+            - old_config (Dict): Old unpacked Grid Search configuration.
+            - gs (List[Dict]): List of Grid Search Configurations.
+            - negligible_paths (Dict): TODO
+        """
         for new_config in gs:
             if GridSearch._is_config_equal(old_config, new_config, negligible_paths):
                 return new_config
@@ -197,12 +223,28 @@ class GridSearch:
 
     @staticmethod
     def get_rerun_configs(old_configs: List[Dict], gs: Dict, negligible_paths: Dict) -> List[Dict[str, Any]]:
+        """
+        Update Condig from Grid Search.
+        :params:
+            - old_configs (List[Dict]): List of old unpacked Grid Search configurations.
+            - gs (Dict): Grid Search Configurations.
+            - negligible_paths (Dict): TODO
+        """
         gs_configs = GridSearch.create_gs_from_config_dict(gs)
         return [GridSearch.update_config_from_grid_search(old_config, gs_configs, negligible_paths) for old_config in
                 old_configs]
 
     @staticmethod
     def are_sweeps_identical(gs_config_path: str, experiment_folder: str) -> bool:
+        """
+        Checking if sweeps are identical.
+        :params:
+            - gs_config_path (str): Path to Grid Search Configuration File.
+            - experiment_folder (str): Path to Experiment Folder.
+
+        :returns:
+            bool value: True or False based on the sweeps.
+        """
         with open(gs_config_path, "r") as f:
             gs_config = json.load(f)
         gs_configs_list = GridSearch.create_gs_configs_from_path(gs_config_path)

@@ -189,7 +189,7 @@ class EvalComponent(EvalComponentIF):
            - postprocessors (List[PredictPostProcessingIF]): TODO
 
         :returns:
-            inference_result_batch (InferenceResultBatch): Predicttion performed on the model.
+            inference_result_batch (InferenceResultBatch): Prediction performed on the model.
         """
         model = model.to(device)
         dataset_batch.to(device)
@@ -201,7 +201,7 @@ class EvalComponent(EvalComponentIF):
         Calcualtion of metric scores on the splits of data set.
 
         :params:
-           - inference_batch (InferenceResultBatch): Predicttion performed on the model.
+           - inference_batch (InferenceResultBatch): Prediction performed on the model.
            - split_metrics (List[Metric]): Metrics for each split of data.
 
         :returns:
@@ -220,7 +220,7 @@ class EvalComponent(EvalComponentIF):
         Calcualtion of loss scores on the splits of data set.
 
         :params:
-           - forward_batch (InferenceResultBatch): Predicttion performed on the model.
+           - forward_batch (InferenceResultBatch): Prediction performed on the model.
            - split_loss_funs (Dict[str, Loss]): Loss functions for splits.
 
         :returns:
@@ -241,7 +241,7 @@ class EvalComponent(EvalComponentIF):
 
         :params:
            - loss_fun (Loss): Loss function.
-           - forward_batch (InferenceResultBatch): Predicttion performed on the model.
+           - forward_batch (InferenceResultBatch): Prediction performed on the model.
            
         :returns:
             loss (List[torch.Tensor]): Loss list for batch.

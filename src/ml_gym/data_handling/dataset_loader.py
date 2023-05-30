@@ -164,7 +164,7 @@ class DatsetLoaderMetaInfoIF(ABC):
 
 class DatasetLoader(DatsetLoaderMetaInfoIF, DataLoader):
     """
-    Data Set loader class. Uses the toech class DataLaoder to load data for mlgym model which is iterable.
+    Data Set loader class. Uses the torch class DataLaoder to load data for mlgym model which is iterable.
     """
     def __init__(self, dataset_iterator: InformedDatasetIteratorIF, batch_size: int, sampler: Sampler,
                  collate_fn: Collator = None, drop_last: bool = False):

@@ -16,7 +16,7 @@ class LossFactory:
 
         :params:
            - target_subscription_key (str): Loss function.
-           - prediction_subscription_key (str): Predicttion performed on the model.
+           - prediction_subscription_key (str): Prediction performed on the model.
            - root (int): Root Value in Loss equation.
            - exponent (int): Exponent value in Loss equation.
            - class_selection_fun_params (Dict): TO DO
@@ -43,7 +43,7 @@ class LossFactory:
 
         :params:
            - target_subscription_key (str): Loss function.
-           - prediction_subscription_key (str): Predicttion performed on the model.
+           - prediction_subscription_key (str): Prediction performed on the model.
            - tag (str): Label to be tagged with the loss object. 
 
         :returns:
@@ -60,7 +60,7 @@ class LossFactory:
 
         :params:
            - target_subscription_key (str): Loss function.
-           - prediction_subscription_key (str): Predicttion performed on the model.
+           - prediction_subscription_key (str): Prediction performed on the model.
            - tag (str): Label to be tagged with the loss object. 
 
         :returns:
@@ -78,7 +78,7 @@ class LossFactory:
 
         :params:
            - target_subscription_key (str): Loss function.
-           - prediction_subscription_key (str): Predicttion performed on the model.
+           - prediction_subscription_key (str): Prediction performed on the model.
            - tag (str): Label to be tagged with the loss object.
            - average_batch_loss (bool): Average Loss value for the batch of data.
            - flatten_predictions (bool): Flatten the layer to get predictions.
