@@ -13,7 +13,7 @@ import Graph from "../graphs/Graph";
 import CheckpointConfigurations from './CheckpointConfigurations/CheckpointConfigurations';
 import ExperimentConfigurations from './ExperimentConfigurations/ExperimentConfigurations';
 import ModelCards from './ModelCards/ModelCards';
-import { isConnected } from "../../redux/status/statusSlice";
+import { isConnected } from "../../redux/globalConfig/globalConfigSlice";
 import { ExperimentDetails } from './ExperimentDetails/ExperimentDetails';
 import { ExperimentProgress } from './ExperimentProgress/ExperimentProgress';
 import { selectChartsByExperimentId } from '../../redux/charts/chartsSlice';

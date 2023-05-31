@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import api, { defaultRunConfigFileName } from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
-import { getGridSearchId, getRestApiUrl, getSocketConnectionUrl, isConnected } from '../../../redux/status/statusSlice';
+import { getGridSearchId, getRestApiUrl, getSocketConnectionUrl, isConnected } from '../../../redux/globalConfig/globalConfigSlice';
 import styles from '../GridSearchConfigurations/GridSearchConfigurations.module.css';
 
 export default function RunConfig() {

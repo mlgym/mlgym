@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import api from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
-import { getGridSearchId, getRestApiUrl } from '../../../redux/status/statusSlice';
+import { getGridSearchId, getRestApiUrl } from '../../../redux/globalConfig/globalConfigSlice';
 import styles from './ModelCards.module.css';
 import { AnyKeyValuePairsInterface } from '../ExperimentPage';
 import { CardDetails } from '../ExperimentDetails/CardDetails';

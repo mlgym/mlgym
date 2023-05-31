@@ -1,5 +1,5 @@
 import { useAppDispatch } from "../../app/hooks";
-import { changeFilter } from "../../redux/status/statusSlice";
+import { changeFilter } from "../../redux/globalConfig/globalConfigSlice";
 
 function Filter() {
   const dispatch = useAppDispatch();

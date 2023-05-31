@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 import { settingConfigsInterface } from "../../app/App";
-import { getGridSearchId, getRestApiUrl, getSocketConnectionUrl, isConnected } from "../../redux/status/statusSlice";
+import { getGridSearchId, getRestApiUrl, getSocketConnectionUrl, isConnected } from "../../redux/globalConfig/globalConfigSlice";
 import { useAppSelector } from "../../app/hooks";
 import GridSearchConfigurations from "./GridSearchConfigurations/GridSearchConfigurations";
 import RunConfig from "./RunConfig/RunConfig";
