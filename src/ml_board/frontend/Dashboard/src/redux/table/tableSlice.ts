@@ -2,6 +2,10 @@ import { createEntityAdapter, createSlice, EntityState, PayloadAction } from "@r
 import { RootState } from "../store";
 
 
+interface TableHeaders {
+    table_headers: Array<string>
+}
+
 // NOTE: Row = JobStatusPayload + ExperimentStatusPayload + scores
 export interface Row {
     // // Job
@@ -38,34 +42,25 @@ const rowsAdapter = createEntityAdapter<Row>({
     sortComparer: ({ experiment_id: id1 }: Row, { experiment_id: id2 }: Row) => id1 - id2
 });
 
-const initialState: EntityState<Row> = rowsAdapter.getInitialState({});
+const initialState: EntityState<Row> & TableHeaders = rowsAdapter.getInitialState({
+    table_headers: [],
+});
 
-export const tableSlice = createSlice({
+const { actions, reducer } = createSlice({
     name: 'table',
     initialState,
     reducers: {
-        // NOTE: when multiple updates targets the same ID, they will be merged into a single update,
-        // with later updates overwriting the earlier ones. So can't use the line below:
-        // upsertManyRows: rowsAdapter.upsertMany,
-        // https://redux-toolkit.js.org/api/createEntityAdapter#applying-multiple-updates
-        upsertManyRows: (state, { payload }: PayloadAction<Row[]>) => {
-            // TODO: instead of looping here over a potentially large array
-            // in the background thread we can only send the last updates base on every event type, and overwrite the state here!
-            for (let i = 0; i < payload.length; i++) {
-                state = rowsAdapter.upsertOne(state, payload[i]);
-                // if (payload[i].experiment_id in state.entities) {
-                //     state = rowsAdapter.updateOne(state, { id: payload[i].experiment_id, changes: payload[i] } as Update<Row>);
-                // } else {
-                //     // add it directly
-                //     state = rowsAdapter.addOne(state, payload[i]);
-                // }
-            }
+        // NOTE: when multiple updates targets the same ID, they will be merged into a single update, with later updates
+        // overwriting the earlier ones. (https://redux-toolkit.js.org/api/createEntityAdapter#applying-multiple-updates)
+        upsertManyRows: rowsAdapter.upsertMany,
+        upsertTableHeaders: (state, { payload }: PayloadAction<string[]>) => {
+            state.table_headers = [...new Set([...state.table_headers, ...payload])];
         }
     }
 });
 
 
-export const { upsertManyRows } = tableSlice.actions;
+export const { upsertManyRows, upsertTableHeaders } = actions;
 
 // create a set of memoized selectors
 export const {
@@ -73,4 +68,6 @@ export const {
     selectById: selectRowById
 } = rowsAdapter.getSelectors((state: RootState) => state.table)
 
-export default tableSlice.reducer;
+export const selectTableHeaders = (state: RootState) => state.table.table_headers;
+
+export default reducer;

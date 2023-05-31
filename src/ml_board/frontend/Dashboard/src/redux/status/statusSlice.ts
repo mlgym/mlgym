@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 
-// TODO: ASK MAX, renaming to GlobalConfigSlice
 export interface StatusState {
   currentFilter: string;
   idTab: string;
@@ -10,7 +9,6 @@ export interface StatusState {
   received_msg_count: number;
   throughput: number;
   grid_search_id: string;
-  table_headers: Array<string>;
   rest_api_url: string;
 }
 
@@ -22,7 +20,6 @@ const initialState: StatusState = {
   received_msg_count: 0,
   throughput: 0,
   grid_search_id: "",
-  table_headers: [], //TODO: will be used to store the ALL column headers
   rest_api_url: ""
 };
 
@@ -54,9 +51,6 @@ export const statusSlice = createSlice({
     setRestApiUrl: (state, action: PayloadAction<string>) => {
       state.rest_api_url = action.payload;
     },
-    upsertTableHeaders: (state, { payload }: PayloadAction<string[]>) => {
-      state.table_headers = [...new Set([...state.table_headers, ...payload])];
-    }
   },
   // extraReducers(builder) {
   //   builder.addCase(upsertManyRows, (state, { payload }) => {
@@ -65,7 +59,7 @@ export const statusSlice = createSlice({
   // },
 });
 
-export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl, upsertTableHeaders } = statusSlice.actions;
+export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl } = statusSlice.actions;
 
 export const selectFilter = (state: RootState) => state.status.currentFilter;
 export const selectTab = (state: RootState) => state.status.idTab;
@@ -75,6 +69,5 @@ export const getReceivevMsgCount = (state: RootState) => state.status.received_m
 export const getThroughput = (state: RootState) => state.status.throughput;
 export const getGridSearchId = (state: RootState) => state.status.grid_search_id;
 export const getRestApiUrl = (state: RootState) => state.status.rest_api_url;
-export const selectTableHeaders = (state: RootState) => state.status.table_headers;
 
 export default statusSlice.reducer;

@@ -1,20 +1,20 @@
-import { Toolbar } from '@mui/material';
-import { useAppSelector } from "../../app/hooks";
-import { selectFilter, selectTableHeaders } from "../../redux/status/statusSlice";
-import { useLocation } from 'react-router-dom';
-import { selectAllRows } from "../../redux/table/tableSlice";
-import Table from "./table/Table";
-import { useState } from 'react';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import Fab from '@mui/material/Fab';
-import styles from './Dashboard.module.css';
-import { RoutesMapping } from '../../app/RoutesMapping';
-import FilterTableHeaders from './filterTableHeaders/FilterTableHeaders';
-import Zoom from '@mui/material/Zoom';
 import ClearIcon from '@mui/icons-material/Clear';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import SearchIcon from '@mui/icons-material/Search';
+import { Toolbar } from '@mui/material';
+import Fab from '@mui/material/Fab';
+import Zoom from '@mui/material/Zoom';
+import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { RoutesMapping } from '../../app/RoutesMapping';
+import { useAppSelector } from "../../app/hooks";
+import { selectFilter } from "../../redux/status/statusSlice";
+import { selectAllRows, selectTableHeaders } from "../../redux/table/tableSlice";
+import styles from './Dashboard.module.css';
+import FilterTableHeaders from './filterTableHeaders/FilterTableHeaders';
 import FilterTextSearch from './filterTextSearch/FilterTextSearch';
+import Table from "./table/Table";
 
 export default function Dashboard() {
   

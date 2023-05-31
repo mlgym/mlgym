@@ -25,3 +25,9 @@ export interface DataToRedux {
     chartsUpdates: ChartUpdate[],
     status?: any,
 }
+
+export interface UpdatesObject {
+    headers: Set<string>; // set of column headers
+    chartsUpdates: ChartUpdate[];
+    [experiment_id: number]: Row; // only the updates
+}
