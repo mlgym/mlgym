@@ -88,6 +88,8 @@ export default function App() {
 
     useEffect(() => {
         if (socketConnectionRequest) {
+            dispatch(resetChartState());
+            dispatch(resetTableState());
             // save to local storage only after user clicks on submit button - either in popup or in settings page.
             // after the used submits the values & after it is saved, then only we will connect to the socket with the values given by user.
             // TODO:: after Vijul and Osama's code is merged, handle error message from the socket and show to user - so if the socket connection was not successful, user can update the values and try again.
