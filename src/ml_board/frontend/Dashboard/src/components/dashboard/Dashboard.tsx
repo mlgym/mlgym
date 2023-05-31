@@ -1,5 +1,5 @@
 import { useAppSelector } from "../../app/hooks";
-import { selectFilter } from "../../redux/status/statusSlice";
+import { selectFilter } from "../../redux/globalConfig/globalConfigSlice";
 import { selectAllRows } from "../../redux/table/tableSlice";
 import Table from "./table/Table";
 import { Toolbar } from '@mui/material';
