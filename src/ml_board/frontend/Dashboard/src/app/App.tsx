@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
 import { upsertCharts } from '../redux/charts/chartsSlice';
-import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setThroughput } from '../redux/status/statusSlice';
+import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setThroughput } from '../redux/globalConfig/globalConfigSlice';
 import { upsertManyRows } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
 import { useAppDispatch } from './hooks';

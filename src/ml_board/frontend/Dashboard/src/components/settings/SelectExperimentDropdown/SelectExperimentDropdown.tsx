@@ -1,4 +1,4 @@
-import { getGridSearchId, getRestApiUrl } from '../../../redux/status/statusSlice';
+import { getGridSearchId, getRestApiUrl } from '../../../redux/globalConfig/globalConfigSlice';
 import api from '../../../app/ApiMaster';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
