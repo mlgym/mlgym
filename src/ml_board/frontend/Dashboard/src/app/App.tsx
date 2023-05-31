@@ -8,6 +8,7 @@ import { RoutesMapping } from './RoutesMapping';
 import { useAppDispatch } from './hooks';
 
 // components & styles
+import { Toolbar } from '@mui/material';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import ConfigPopup from '../components/configPopup/ConfigPopup';
@@ -145,6 +146,7 @@ export default function App() {
                 // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
                 urls.includes(location.pathname.split("/")[1]) && <TopBarWithDrawer />
             }
+            <Toolbar/> {/* This acts as a padding buffer for the area under the TopBarWithDrawer and nothing more!  */}
             <Routes>
                 {
                     // Dynamic Routes added as a functionality. 

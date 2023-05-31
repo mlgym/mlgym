@@ -1,22 +1,24 @@
-import { Toolbar, styled, AccordionProps, AccordionSummaryProps, Card, CardContent, Box, Grid } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAppSelector } from "../../app/hooks";
+import { selectChartsByExperimentId } from '../../redux/charts/chartsSlice';
+import { isConnected } from "../../redux/status/statusSlice";
 import { selectRowById } from '../../redux/table/tableSlice';
-import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
-import MuiAccordion from '@mui/material/Accordion';
-import MuiAccordionSummary from '@mui/material/AccordionSummary';
-import MuiAccordionDetails from '@mui/material/AccordionDetails';
-import styles from './ExperimentPage.module.css';
-import styles_graphs from "../graphs/Graphs.module.css";
 import Graph from "../graphs/Graph";
 import CheckpointConfigurations from './CheckpointConfigurations/CheckpointConfigurations';
 import ExperimentConfigurations from './ExperimentConfigurations/ExperimentConfigurations';
-import ModelCards from './ModelCards/ModelCards';
-import { isConnected } from "../../redux/status/statusSlice";
 import { ExperimentDetails } from './ExperimentDetails/ExperimentDetails';
 import { ExperimentProgress } from './ExperimentProgress/ExperimentProgress';
-import { selectChartsByExperimentId } from '../../redux/charts/chartsSlice';
+import ModelCards from './ModelCards/ModelCards';
+
+// mui components & styles
+import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
+import { AccordionProps, AccordionSummaryProps, Box, Grid, styled } from '@mui/material';
+import MuiAccordion from '@mui/material/Accordion';
+import MuiAccordionDetails from '@mui/material/AccordionDetails';
+import MuiAccordionSummary from '@mui/material/AccordionSummary';
+import styles_graphs from "../graphs/Graphs.module.css";
+import styles from './ExperimentPage.module.css';
 
 export interface AnyKeyValuePairsInterface {
     [key: string]: any
@@ -69,7 +71,6 @@ function ExperimentPage() {
 
     return(
         <div className={styles.main}>
-            <Toolbar />
             {
                 filteredExp && isSocketConnected ?
                 <>
