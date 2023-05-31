@@ -25,7 +25,6 @@ export interface GlobalConfig {
     received_msg_count: number; // total number of messages received from the websocket server 
     throughput: number; // measuring how many messages are received per specific time interval
     grid_search_id: string; // holding the grid_search_id that this client instance is tracking
-    table_headers: Array<string>; // all the columns' headers of the table
     rest_api_url: string; // the link used to talk with the REST server
 }
 
@@ -37,7 +36,6 @@ const initialState: GlobalConfig = {
     received_msg_count: 0,
     throughput: 0,
     grid_search_id: "",
-    table_headers: [], 
     rest_api_url: ""
 };
 ```
@@ -62,6 +60,7 @@ The final form of the table slice looks like the snippet directly below, then fo
 ```python
 {
     table: {
+        table_headers: Array<string>; # all the columns' headers of the table
         ids: [ <row_id>, ... ],
         entities: {
             <row_id>: {
@@ -98,6 +97,9 @@ The implementation of the Row entity is actually quite simple, it is just an obj
 But it also accept the other fields that are mainly the payloads from the `job_status` and the `experiment_status` mlgym events
 
 ```ts
+interface TableHeaders {
+    table_headers: Array<string>
+}
 // NOTE: Row = JobStatusPayload + ExperimentStatusPayload + scores
 export interface Row {
     // // // Job Payload
@@ -259,7 +261,6 @@ As you might imagine because of the nomalization the data is flat, and we are us
       received_msg_count: <int>, # default: 0
       throughput: <int>, # default: 0
       grid_search_id: <str>, # default: ""
-      table_headers: [], # default: []
       rest_api_url: <str> # default: 'http://127.0.0.1:5001'
     },
 
@@ -284,6 +285,7 @@ As you might imagine because of the nomalization the data is flat, and we are us
     },
 
     table: {
+        table_headers: [], # default: []
         ids: [ <row_id>, ... ],
         entities: {
             <row_id>: {
