@@ -107,8 +107,7 @@ class WebSocketServer:
         emit("pong")
 
     def _on_client_connected(self):
-        self._emit_server_log_message(
-            f"Client with SID {request.sid} connnected.")
+        self._emit_server_log_message(f"Client with SID {request.sid} connnected.")
 
     def _on_client_disconnected(self):
         print("Client disconnected", request.sid)

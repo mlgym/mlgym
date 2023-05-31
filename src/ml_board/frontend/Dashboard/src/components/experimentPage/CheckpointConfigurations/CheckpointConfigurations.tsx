@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import api from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
-import { getGridSearchId, getRestApiUrl } from '../../../redux/status/statusSlice';
+import { getGridSearchId, getRestApiUrl } from '../../../redux/globalConfig/globalConfigSlice';
 import styles from './CheckpointConfigurations.module.css';
 
 interface CheckpointDataInterface {

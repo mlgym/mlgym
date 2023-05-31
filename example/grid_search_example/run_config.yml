@@ -3,7 +3,7 @@ run_configuration:
   config:
     num_epochs: 50 # Number of epochs
     num_batches_per_epoch: 100
-    gs_config_path: /scratch/max/mlgym/example/grid_search_example/gs_config.yml
+    gs_config_path: ./gs_config.yml
 
 environment:
   type: multiprocessing # multiprocessing,  main_process, accelerate
@@ -15,4 +15,3 @@ logging:
   websocket_logging_servers: # List of websocket logging servers, e.g., http://127.0.0.1:9090 http://127.0.0.1:8080
     - http://127.0.0.1:5002
   gs_rest_api_endpoint: http://127.0.0.1:5001 # Endpoint for the grid search API, e.g., http://127.0.0.1:8080
-

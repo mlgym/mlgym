@@ -56,6 +56,10 @@ class Requirement:
 
 @dataclass
 class ComponentConstructable(ABC):
+    """
+    ComponentConstructable is an Abstract class which is used to create all the other constructable calsses.
+    The abstract class allows the other Constructables to maintain a common single structure to be used to access the classes.
+    """
     component_identifier: str = ""
     constructed: Any = None
     requirements: Dict[str, Requirement] = field(default_factory=dict)
@@ -82,6 +86,10 @@ class ComponentConstructable(ABC):
 
 @dataclass
 class DatasetRepositoryConstructable(ComponentConstructable):
+    """
+    DatasetRepositoryConstructable class initializes DatasetRepository & StorageConnectorFactory object from datastack library
+    to be used for accessing data for models used in MlGym.
+    """
     storage_connector_path: str = ""
 
     def _construct_impl(self) -> DatasetRepository:
@@ -93,6 +101,10 @@ class DatasetRepositoryConstructable(ComponentConstructable):
 
 @dataclass
 class DatasetIteratorConstructable(ComponentConstructable):
+    """
+    DatasetIteratorConstructable class is used to make the dataset iterable
+    to be used for accessing specific split for models used in MlGym.
+    """
     dataset_identifier: str = ""
     split_configs: Dict[str, Any] = field(default_factory=dict)
 
@@ -112,6 +124,10 @@ class DatasetIteratorConstructable(ComponentConstructable):
 
 @dataclass
 class DatasetIteratorSplitsConstructable(ComponentConstructable):
+    """
+    DatasetIteratorSplitsConstructable class is used to make the dataset iterable.
+    to be used for accessing all data splits for models used in MlGym.
+    """
     split_configs: Dict = None
     seed: int = 1
     stratified: bool = False
@@ -125,6 +141,10 @@ class DatasetIteratorSplitsConstructable(ComponentConstructable):
 
 @dataclass
 class CombinedDatasetIteratorConstructable(ComponentConstructable):
+    """
+    CombinedDatasetIteratorConstructable class is used to get combined itterators for the dataset by 
+    combining iterators from old splits and getting new iterators for new splits.
+    """
     combine_configs: Dict = None
 
     def _construct_impl(self) -> Dict[str, InformedDatasetIteratorIF]:
@@ -137,7 +157,9 @@ class CombinedDatasetIteratorConstructable(ComponentConstructable):
 
 @dataclass
 class InMemoryDatasetIteratorConstructable(ComponentConstructable):
-
+    """
+    InMemoryDatasetIteratorConstructable class is used to load a given iterator into memory to speed up the iteration.
+    """
     def _construct_impl(self) -> Dict[str, InformedDatasetIteratorIF]:
         dataset_iterators_dict = self.get_requirement("iterators")
         return {name: ModelGymInformedIteratorFactory.get_in_memory_iterator(self.component_identifier, iterator)
@@ -146,6 +168,9 @@ class InMemoryDatasetIteratorConstructable(ComponentConstructable):
 
 @dataclass
 class ShuffledDatasetIteratorConstructable(ComponentConstructable):
+    """
+    ShuffledDatasetIteratorConstructable class is used to get randomly shuffled iterators usefull for large datasets.
+    """
     seeds: Dict[str, Any] = field(default_factory=dict)
     applicable_splits: List[str] = field(default_factory=list)
 
@@ -158,6 +183,9 @@ class ShuffledDatasetIteratorConstructable(ComponentConstructable):
 
 @dataclass
 class FilteredLabelsIteratorConstructable(ComponentConstructable):
+    """
+    FilteredLabelsIteratorConstructable class is used to get an iterator which can iterate through filtered labels in the dataset.
+    """
     filtered_labels: List[Any] = field(default_factory=list)
     applicable_splits: List[str] = field(default_factory=list)
 
@@ -170,6 +198,9 @@ class FilteredLabelsIteratorConstructable(ComponentConstructable):
 
 @dataclass
 class IteratorViewConstructable(ComponentConstructable):
+    """
+    IteratorViewConstructable class is used to create a view on an iterator for accessing elements of a given split only.
+    """
     split_indices: Dict[str, List[int]] = field(default_factory=dict)
     view_tags: Dict[str, Any] = field(default_factory=dict)
     applicable_split: str = ""
@@ -191,6 +222,9 @@ class IteratorViewConstructable(ComponentConstructable):
 
 @dataclass
 class MappedLabelsIteratorConstructable(ComponentConstructable):
+    """
+    MappedLabelsIteratorConstructable class is used to get an iterator which can iterate through mapped labels in the dataset.
+    """
     mappings: Dict[str, Union[List[int], int]] = field(default_factory=dict)
     applicable_splits: List[str] = field(default_factory=list)
 
@@ -203,6 +237,9 @@ class MappedLabelsIteratorConstructable(ComponentConstructable):
 
 @dataclass
 class FeatureEncodedIteratorConstructable(ComponentConstructable):
+    """
+    FeatureEncodedIteratorConstructable class is used to get an iterator which can iterate through encoded fetures of a dataset.
+    """
     applicable_splits: List[str] = field(default_factory=list)
     feature_encoding_configs: Dict = field(default_factory=Dict)
 
@@ -215,6 +252,10 @@ class FeatureEncodedIteratorConstructable(ComponentConstructable):
 
 @dataclass
 class OneHotEncodedTargetsIteratorConstructable(ComponentConstructable):
+    """
+    OneHotEncodedTargetsIteratorConstructable class is used to get an iterator which can iterate 
+    through one hot encoded target vector.
+    """
     applicable_splits: List[str] = field(default_factory=list)
     target_vector_size: int = 0
 
@@ -227,6 +268,10 @@ class OneHotEncodedTargetsIteratorConstructable(ComponentConstructable):
 
 @dataclass
 class DataCollatorConstructable(ComponentConstructable):
+    """
+    DataCollatorConstructable class is used to collate data for TrainBatch
+    TO DO.
+    """
     collator_params: Dict = field(default_factory=Dict)
     collator_type: Type[Collator] = None
 
@@ -236,6 +281,9 @@ class DataCollatorConstructable(ComponentConstructable):
 
 @dataclass
 class DeprecatedDataLoadersConstructable(ComponentConstructable):
+    """
+    DeprecatedDataLoadersConstructable class is used to get the spliited data based on the wighted sampling. (DEPRECATED)
+    """
     batch_size: int = 1
     weigthed_sampling_split_name: str = None
     label_pos: int = 2
@@ -257,6 +305,9 @@ class DeprecatedDataLoadersConstructable(ComponentConstructable):
 
 @dataclass
 class DataLoadersConstructable(ComponentConstructable):
+    """
+    DataLoadersConstructable class is used to get the spliited data based on the sampling stratergy.
+    """
     batch_size: int = 1
     sampling_strategies: Dict[str, Any] = field(default_factory=dict)
     drop_last: bool = False
@@ -273,6 +324,10 @@ class DataLoadersConstructable(ComponentConstructable):
 
 @dataclass
 class OptimizerConstructable(ComponentConstructable):
+    """
+    OptimizerConstructable class is used to create an object of Optimizer Adapter based on what optimizer is
+    to be used as per the config of MlGym Job.
+    """
     optimizer_key: str = ""
     params: Dict[str, Any] = field(default_factory=dict)
 
@@ -282,6 +337,10 @@ class OptimizerConstructable(ComponentConstructable):
 
 @dataclass
 class LRSchedulerConstructable(ComponentConstructable):
+    """
+    LRSchedulerConstructable class is used to create an object of LRScheduler Adapter based on what shedule of learning rate is
+    to be used as per the config of MlGym Job.
+    """
     lr_scheduler_key: str = ""
     params: Dict[str, Any] = field(default_factory=dict)
 
@@ -291,6 +350,10 @@ class LRSchedulerConstructable(ComponentConstructable):
 
 @dataclass
 class OptimizerBundleConstructable(ComponentConstructable):
+    """
+    OptimizerBundleConstructable class is used to create an object of Optimizer Bundle containing
+    all optimizers with registered optimizer params.
+    """
 
     optimizers_config: Dict[str, Any] = field(default_factory=list)
     # {
@@ -312,6 +375,9 @@ class OptimizerBundleConstructable(ComponentConstructable):
 
 @dataclass
 class ModelRegistryConstructable(ComponentConstructable):
+    """
+    ModelRegistryConstructable class is used to create a ClassRegistry object for model.
+    """
     model_registry: ClassRegistry = None
 
     def _construct_impl(self):
@@ -321,6 +387,9 @@ class ModelRegistryConstructable(ComponentConstructable):
 
 @dataclass
 class LossFunctionRegistryConstructable(ComponentConstructable):
+    """
+    LossFunctionRegistryConstructable class is used to create a ClassRegistry object for all available Loss Functions.
+    """
     class LossKeys:
         LPLoss = "LPLoss"
         LPPredictionLoss = "LPPredictionLoss"
@@ -349,6 +418,9 @@ class LossFunctionRegistryConstructable(ComponentConstructable):
 
 @dataclass
 class MetricFunctionRegistryConstructable(ComponentConstructable):
+    """
+    MetricFunctionRegistryConstructable class is used to create a ClassRegistry object for all available Evaluation Metrics.
+    """
     class MetricKeys:
         F1_SCORE = "F1_SCORE"
         ACCURACY = "ACCURACY"
@@ -406,6 +478,10 @@ class MetricFunctionRegistryConstructable(ComponentConstructable):
 
 @dataclass
 class PredictionPostProcessingRegistryConstructable(ComponentConstructable):
+    """
+    PredictionPostProcessingRegistryConstructable class is used to create a ClassRegistry object for 
+    all available Prediction Functions used in post processing.
+    """
     class FunctionKeys:
         SOFT_MAX = "SOFT_MAX"
         ARG_MAX = "ARG_MAX"
@@ -431,6 +507,10 @@ class PredictionPostProcessingRegistryConstructable(ComponentConstructable):
 
 @dataclass
 class ModelConstructable(ComponentConstructable):
+    """
+    ModelConstructable class is used to construct a Neural Net model based on the
+    params in the model registry.
+    """
     model_type: str = ""
     model_definition: Dict[str, Any] = field(default_factory=dict)
     seed: int = None
@@ -444,6 +524,10 @@ class ModelConstructable(ComponentConstructable):
 
 @dataclass
 class TrainComponentConstructable(ComponentConstructable):
+    """
+    TrainComponentConstructable class is used to construct a TrainComponent
+    used when there is only one CPU or GPU to train model.
+    """
     loss_fun_config: Dict = field(default_factory=dict)
     post_processors_config: List[Dict] = field(default_factory=list)
     show_progress: bool = False
@@ -462,6 +546,10 @@ class TrainComponentConstructable(ComponentConstructable):
 
 @dataclass
 class AccelerateTrainComponentConstructable(ComponentConstructable):
+    """
+    AccelerateTrainComponentConstructable class is used to construct a AccelerateTrainComponent
+    used when there are multiple GPUs to train model.
+    """
     loss_fun_config: Dict = field(default_factory=dict)
     post_processors_config: List[Dict] = field(default_factory=list)
 
@@ -479,7 +567,9 @@ class AccelerateTrainComponentConstructable(ComponentConstructable):
 
 @dataclass
 class TrainerConstructable(ComponentConstructable):
-
+    """
+    TrainerConstructable creates a Trainer object containing functions used to train the torch Neural Net model on CPU.
+    """
     def _construct_impl(self) -> Trainer:
         train_loader: DatasetLoader = self.get_requirement("data_loaders")
         train_component: TrainComponent = self.get_requirement("train_component")
@@ -489,7 +579,10 @@ class TrainerConstructable(ComponentConstructable):
 
 @dataclass
 class AccelerateTrainerConstructable(ComponentConstructable):
-
+    """
+    AccelerateTrainerConstructable creates a AccelerateTrainer object containing functions 
+    used to train the torch Neural Net model on GPU.
+    """
     def _construct_impl(self) -> AccelerateTrainer:
         train_loader: DatasetLoader = self.get_requirement("data_loaders")
         train_component: TrainComponent = self.get_requirement("train_component")
@@ -499,6 +592,10 @@ class AccelerateTrainerConstructable(ComponentConstructable):
 
 @dataclass
 class EvalComponentConstructable(ComponentConstructable):
+    """
+    EvalComponentConstructable creates a EvalComponent object containing functions 
+    used to evaluate the torch Neural Net model on CPU.
+    """
     metrics_config: List = field(default_factory=list)
     loss_funs_config: List = field(default_factory=list)
     post_processors_config: List[Dict] = field(default_factory=list)
@@ -539,7 +636,10 @@ class EvalComponentConstructable(ComponentConstructable):
 
 @dataclass
 class EvaluatorConstructable(ComponentConstructable):
-
+    """
+    EvaluatorConstructable creates a Evaluator object containing functions 
+    used to evaluate the torch Neural Net model on CPU.
+    """
     def _construct_impl(self) -> Evaluator:
         eval_component: EvalComponent = self.get_requirement("eval_component")
         evaluator = Evaluator(eval_component)
@@ -548,6 +648,10 @@ class EvaluatorConstructable(ComponentConstructable):
 
 @dataclass
 class AccelerateEvalComponentConstructable(ComponentConstructable):
+    """
+    AccelerateEvalComponentConstructable creates a AccelerateEvalComponent object containing functions 
+    used to evaluate the torch Neural Net model on GPU.
+    """
     metrics_config: List = field(default_factory=list)
     loss_funs_config: List = field(default_factory=list)
     post_processors_config: List[Dict] = field(default_factory=list)
@@ -587,6 +691,10 @@ class AccelerateEvalComponentConstructable(ComponentConstructable):
 
 @dataclass
 class AccelerateEvaluatorConstructable(ComponentConstructable):
+    """
+    AccelerateEvaluatorConstructable creates a AccelerateEvaluator object containing functions 
+    used to evaluate the torch Neural Net model on GPU.
+    """
 
     def _construct_impl(self) -> AccelerateEvaluator:
         eval_component: AccelerateEvalComponent = self.get_requirement("eval_component")
@@ -596,6 +704,9 @@ class AccelerateEvaluatorConstructable(ComponentConstructable):
 
 @dataclass
 class EarlyStoppingRegistryConstructable(ComponentConstructable):
+    """
+    EarlyStoppingRegistryConstructable creates a ClassRegistry object for all available Early Stopping Stratergies.
+    """
     class StrategyKeys:
         LAST_K_EPOCHS_IMPROVEMENT_STRATEGY = "LAST_K_EPOCHS_IMPROVEMENT_STRATEGY"
 
@@ -613,6 +724,9 @@ class EarlyStoppingRegistryConstructable(ComponentConstructable):
 
 @dataclass
 class EarlyStoppingStrategyConstructable(ComponentConstructable):
+    """
+    EarlyStoppingStrategyConstructable initializes the EarlyStoppingIF  for all available Early Stopping Stratergies.
+    """
     early_stopping_config: Dict = field(default_factory=dict)
     early_stopping_key: str = ""
 
@@ -624,6 +738,9 @@ class EarlyStoppingStrategyConstructable(ComponentConstructable):
 
 @dataclass
 class CheckpointingRegistryConstructable(ComponentConstructable):
+    """
+    CheckpointingRegistryConstructable creates a ClassRegistry object for all available Checkpointing Stratergies.
+    """
     class StrategyKeys:
         SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY = "SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY"
         SAVE_ALL_CHECKPOINTING_STRATEGY = "SAVE_ALL_CHECKPOINTING_STRATEGY"
@@ -644,6 +761,9 @@ class CheckpointingRegistryConstructable(ComponentConstructable):
 
 @dataclass
 class CheckpointingStrategyConstructable(ComponentConstructable):
+    """
+    CheckpointingStrategyConstructable initializes the CheckpointingIF for all available Checkpointing Stratergies.
+    """
     checkpointing_config: Dict = field(default_factory=dict)
     checkpointing_key: str = ""
 
