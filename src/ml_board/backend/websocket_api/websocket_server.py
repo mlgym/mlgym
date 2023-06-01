@@ -2,11 +2,8 @@ import os
 from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room, rooms, disconnect
 from ml_board.backend.messaging.event_storage import EventStorageIF, EventStorageFactory
-from typing import Any, List, Dict
 from engineio.payload import Payload
-from pathlib import Path
-from ml_board.backend.websocket_api.checkpoint_cache import CheckpointCache, CheckpointEntity, CheckpointEntityTransferStatus
-from ml_gym.error_handling.exception import CheckpointEntityError
+
 
 Payload.max_decode_packets = 1e9
 
@@ -27,13 +24,13 @@ class WebSocketServer:
             async_mode (str):  Sync mode
             app (Flask Obj): Flask server object
             top_level_logging_path (str): path of folder where logs will be stored
-            cors_allowed_origins (List[str]): the IPs who will be allowed to communicate with the websocket.
+            cors_allowed_origins (list[str]): the IPs who will be allowed to communicate with the websocket.
 
     """
 
-    def __init__(self, host: str, port: int, async_mode: str, app: Flask, top_level_logging_path: str, cors_allowed_origins: List[str]):
+    def __init__(self, host: str, port: int, async_mode: str, app: Flask, top_level_logging_path: str, cors_allowed_origins: list[str]):
         # parameters for the run function
-        self._run = { "port": port, "host": host, "app": app }
+        self._run_params = { "port": port, "host": host, "app": app }
         # create the websocket
         self._socketio = SocketIO(app, async_mode=async_mode, cors_allowed_origins=cors_allowed_origins, max_http_buffer_size=1e11)
         # array of connected client session ids
@@ -41,21 +38,18 @@ class WebSocketServer:
         # the path to the event_storage directory
         self._top_level_logging_path = top_level_logging_path
         # dictionary between rooms and event storages
-        self._room_id_to_event_storage: Dict[str, EventStorageIF] = {
+        self._room_id_to_event_storage: dict[str, EventStorageIF] = {
             # "mlgym_event_subscribers": EventStorageFactory.get_disc_event_storage(parent_dir=self.mlgym_event_logging_path)
         }
         # initialize callbacks
         self._init_call_backs()
-        # creating a checkpoint cache
-        self._checkpoint_cache = CheckpointCache()
 
     # NOTE: the call to this function is blocking!
     def run(self):
-        self._socketio.run(
-            self._run["app"], host=self._run["host"], port=self._run["port"])
+        self._socketio.run(self._run_params["app"], host=self._run_params["host"], port=self._run_params["port"])
 
     @property
-    def client_sids(self) -> List[str]:
+    def client_sids(self) -> list[str]:
         return self._client_sids
 
 ####################################################################################################
@@ -150,7 +144,7 @@ class WebSocketServer:
 def create_flask_server() -> Flask:
     # create Flask server
     _app: Flask = Flask(__name__, template_folder="template")
-    _app.secret_key = 'secret!'
+    _app.secret_key = os.urandom(24)
     return _app
 
 ####################################################################################################
