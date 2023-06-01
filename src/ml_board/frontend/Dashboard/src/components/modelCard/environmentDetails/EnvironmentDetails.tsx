@@ -22,7 +22,7 @@ export interface cudaDeviceListInterface {
 }
 let sysInfoAnyKeyObj:AnyKeyValuePairsInterface = {};
 
-export default function EnvironmentDetails({experimentId} : {experimentId: string}) {
+export default function EnvironmentDetails({experiment_id, tableRows} : {experiment_id: string, tableRows?: number}) {
 
     const grid_search_id = useAppSelector(getGridSearchId);
     const rest_api_url = useAppSelector(getRestApiUrl);
@@ -34,14 +34,14 @@ export default function EnvironmentDetails({experimentId} : {experimentId: strin
 
 
     useEffect(() => {
-        if(experimentId) {
+        if(experiment_id) {
             getSysInfo();
         }
-    },[experimentId]);
+    },[experiment_id]);
 
     function getSysInfo() {
         let model_card_sys_info = api.model_card_sys_info.replace("<grid_search_id>", grid_search_id);
-        model_card_sys_info = model_card_sys_info.replace("<experiment_id>", experimentId);
+        model_card_sys_info = model_card_sys_info.replace("<experiment_id>", experiment_id);
 
         setError("");
         setIsLoading(true);
@@ -108,12 +108,24 @@ export default function EnvironmentDetails({experimentId} : {experimentId: strin
                         <CudaList 
                             cardTitle="Cuda Devices List" 
                             cudaDeviceList={sysInfoCudaDevicesData}
+                            tableRows={
+                                tableRows && tableRows !== 0?
+                                tableRows
+                                :
+                                undefined
+                            }
                         />
                     </Grid>
                     <Grid item={true} xs={12} sm={12} md={4}>
                         <PythonPackagesList 
                             cardTitle="Python Packages List" 
                             pythonPackagesList={sysInfoPythonPackages}
+                            tableRows={
+                                tableRows && tableRows !== 0?
+                                tableRows
+                                :
+                                undefined
+                            }
                         />
                     </Grid>
                 </Grid>

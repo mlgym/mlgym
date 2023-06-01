@@ -1,4 +1,4 @@
-export default function TrainingDetails({experimentId} : {experimentId: string}) {
+export default function TrainingDetails({experiment_id} : {experiment_id: string}) {
 
     return(
         <div>

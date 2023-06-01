@@ -8,7 +8,7 @@ import Paper from '@mui/material/Paper';
 import { cudaDeviceListInterface } from './EnvironmentDetails';
 import { Box, Card, CardContent, TableFooter, TablePagination } from '@mui/material';
 import styles from './EnvironmentDetails.module.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -28,7 +28,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     },
 }));
 
-export default function CudaList({cardTitle, cudaDeviceList} : {cardTitle: string, cudaDeviceList: Array<cudaDeviceListInterface>}) {
+export default function CudaList({cardTitle, cudaDeviceList, tableRows} : {cardTitle: string, cudaDeviceList: Array<cudaDeviceListInterface>, tableRows?: number}) {
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -39,6 +39,14 @@ export default function CudaList({cardTitle, cudaDeviceList} : {cardTitle: strin
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
+    useEffect(()=>{
+        if(tableRows !== undefined) {
+            setRowsPerPage(tableRows)
+        }
+        else {
+            setRowsPerPage(5);
+        }
+    },[tableRows]);
 
     return(
         <Box>

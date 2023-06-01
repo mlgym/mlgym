@@ -7,7 +7,7 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Box, Card, CardContent, TableFooter, TablePagination } from '@mui/material';
 import styles from './EnvironmentDetails.module.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 import { pythonPackagesListInterface } from './EnvironmentDetails';
 
@@ -28,7 +28,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     },
 }));
 
-export default function PythonPackagesList({cardTitle, pythonPackagesList} : {cardTitle: string, pythonPackagesList: Array<pythonPackagesListInterface>}) {
+export default function PythonPackagesList({cardTitle, pythonPackagesList, tableRows} : {cardTitle: string, pythonPackagesList: Array<pythonPackagesListInterface>, tableRows?: number}) {
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -39,6 +39,14 @@ export default function PythonPackagesList({cardTitle, pythonPackagesList} : {ca
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
+    useEffect(()=>{
+        if(tableRows !== undefined) {
+            setRowsPerPage(tableRows)
+        }
+        else {
+            setRowsPerPage(5);
+        }
+    },[tableRows]);
 
     return(
         <Box>
