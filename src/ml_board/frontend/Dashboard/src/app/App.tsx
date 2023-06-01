@@ -112,7 +112,7 @@ export default function App() {
                 workerSocket.terminate();
             }
         }
-    }, [socketConnectionRequest && settingConfigs]);
+    }, [socketConnectionRequest, settingConfigs]);
     // recommended way: keeping the second condition blank, fires useEffect just once as there are no conditions to check to fire up useEffect again (just like componentDidMount of React Life cycle).
 
     // NOTE: data is alway created with 2 empty buffers and then populated before being passed to this method, so no need to check for null or undefined!

@@ -43,7 +43,7 @@ export default function GridSearchConfigurations() {
             setError("Oops! an error occurred");
         });
 
-    },[isSocketConnected && (grid_search_id || rest_api_url || socket_connection_url)]);
+    },[isSocketConnected, grid_search_id, rest_api_url, socket_connection_url]);
 
     function downloadFile() {
         const blob = new Blob([yamlString], { type: 'text/yaml' });
