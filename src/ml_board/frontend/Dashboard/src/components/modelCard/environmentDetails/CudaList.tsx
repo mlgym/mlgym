@@ -5,9 +5,9 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { cudaDeviceListInterface } from './ModelCards';
+import { cudaDeviceListInterface } from './EnvironmentDetails';
 import { Box, Card, CardContent, TableFooter, TablePagination } from '@mui/material';
-import styles from './ModelCards.module.css';
+import styles from './EnvironmentDetails.module.css';
 import { useState } from 'react';
 import { styled } from '@mui/material/styles';
 
@@ -28,7 +28,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     },
 }));
 
-export default function ModelCardCudaList({cardTitle, cudaDeviceList} : {cardTitle: string, cudaDeviceList: Array<cudaDeviceListInterface>}) {
+export default function CudaList({cardTitle, cudaDeviceList} : {cardTitle: string, cudaDeviceList: Array<cudaDeviceListInterface>}) {
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);

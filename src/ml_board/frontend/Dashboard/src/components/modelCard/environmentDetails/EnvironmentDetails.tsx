@@ -4,11 +4,11 @@ import axios from 'axios';
 import api from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
 import { getGridSearchId, getRestApiUrl } from '../../../redux/globalConfig/globalConfigSlice';
-import styles from './ModelCards.module.css';
-import { AnyKeyValuePairsInterface } from '../ExperimentPage';
-import { CardDetails } from '../ExperimentDetails/CardDetails';
-import ModelCardCudaList from './ModelCardCudaList';
-import ModelCardPythonPackagesList from './ModelCardPythonPackagesList';
+import styles from './EnvironmentDetails.module.css';
+import { AnyKeyValuePairsInterface } from '../../experimentPage/ExperimentPage';
+import { CardDetails } from '../../experimentPage/ExperimentDetails/CardDetails';
+import CudaList from './CudaList';
+import PythonPackagesList from './PythonPackagesList';
 
 export interface pythonPackagesListInterface {
     "name": string,
@@ -22,7 +22,7 @@ export interface cudaDeviceListInterface {
 }
 let sysInfoAnyKeyObj:AnyKeyValuePairsInterface = {};
 
-export default function ModelCards({experimentIdProp} : {experimentIdProp: string}) {
+export default function EnvironmentDetails({experimentId} : {experimentId: string}) {
 
     const grid_search_id = useAppSelector(getGridSearchId);
     const rest_api_url = useAppSelector(getRestApiUrl);
@@ -34,14 +34,14 @@ export default function ModelCards({experimentIdProp} : {experimentIdProp: strin
 
 
     useEffect(() => {
-        if(experimentIdProp) {
+        if(experimentId) {
             getSysInfo();
         }
-    },[experimentIdProp]);
+    },[experimentId]);
 
     function getSysInfo() {
         let model_card_sys_info = api.model_card_sys_info.replace("<grid_search_id>", grid_search_id);
-        model_card_sys_info = model_card_sys_info.replace("<experiment_id>", experimentIdProp);
+        model_card_sys_info = model_card_sys_info.replace("<experiment_id>", experimentId);
 
         setError("");
         setIsLoading(true);
@@ -105,13 +105,13 @@ export default function ModelCards({experimentIdProp} : {experimentIdProp: strin
                         />
                     </Grid>
                     <Grid item={true} xs={12} sm={12} md={4}>
-                        <ModelCardCudaList 
+                        <CudaList 
                             cardTitle="Cuda Devices List" 
                             cudaDeviceList={sysInfoCudaDevicesData}
                         />
                     </Grid>
                     <Grid item={true} xs={12} sm={12} md={4}>
-                        <ModelCardPythonPackagesList 
+                        <PythonPackagesList 
                             cardTitle="Python Packages List" 
                             pythonPackagesList={sysInfoPythonPackages}
                         />

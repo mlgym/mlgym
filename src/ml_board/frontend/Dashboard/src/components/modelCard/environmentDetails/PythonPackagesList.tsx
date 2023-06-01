@@ -6,10 +6,10 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Box, Card, CardContent, TableFooter, TablePagination } from '@mui/material';
-import styles from './ModelCards.module.css';
+import styles from './EnvironmentDetails.module.css';
 import { useState } from 'react';
 import { styled } from '@mui/material/styles';
-import { pythonPackagesListInterface } from './ModelCards';
+import { pythonPackagesListInterface } from './EnvironmentDetails';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -28,7 +28,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     },
 }));
 
-export default function ModelCardCudaList({cardTitle, pythonPackagesList} : {cardTitle: string, pythonPackagesList: Array<pythonPackagesListInterface>}) {
+export default function PythonPackagesList({cardTitle, pythonPackagesList} : {cardTitle: string, pythonPackagesList: Array<pythonPackagesListInterface>}) {
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);

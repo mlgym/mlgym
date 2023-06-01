@@ -1,6 +1,6 @@
-import { Toolbar, styled, AccordionProps, AccordionSummaryProps, Card, CardContent, Box, Grid } from '@mui/material';
+import { Toolbar, styled, AccordionProps, AccordionSummaryProps, Card, CardContent, Box, Grid, Button } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppSelector } from "../../app/hooks";
 import { selectRowById } from '../../redux/table/tableSlice';
 import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
@@ -12,11 +12,13 @@ import styles_graphs from "../graphs/Graphs.module.css";
 import Graph from "../graphs/Graph";
 import CheckpointConfigurations from './CheckpointConfigurations/CheckpointConfigurations';
 import ExperimentConfigurations from './ExperimentConfigurations/ExperimentConfigurations';
-import ModelCards from './ModelCards/ModelCards';
+import EnvironmentDetails from '../modelCard/environmentDetails/EnvironmentDetails';
 import { isConnected } from "../../redux/globalConfig/globalConfigSlice";
 import { ExperimentDetails } from './ExperimentDetails/ExperimentDetails';
 import { ExperimentProgress } from './ExperimentProgress/ExperimentProgress';
 import { selectChartsByExperimentId } from '../../redux/charts/chartsSlice';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
+import { RoutesMapping } from '../../app/RoutesMapping';
 
 export interface AnyKeyValuePairsInterface {
     [key: string]: any
@@ -53,6 +55,8 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 }));
 
 function ExperimentPage() {
+    
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     let experiment_id = searchParams.get("experiment_id") as string;
     const [selectedExperiment, setSelectedExperiment] = useState(anyObj)
@@ -91,10 +95,25 @@ function ExperimentPage() {
                     </Accordion>
                     <Accordion defaultExpanded={true}>
                         <AccordionSummary aria-controls="panel2d-content" id="panel2d-header">
-                            <div className={styles.accordian_heading}>Model Cards</div>
+                            <div className={styles.accordian_heading}>
+                                Model Cards
+                                <Button 
+                                    variant="contained" 
+                                    endIcon={<AnalyticsIcon />} 
+                                    className={styles.accordian_heading_moedl_card_btn}
+                                    onClick={()=>{
+                                        navigate({
+                                            pathname: '/'+RoutesMapping["ModelCard"].url,
+                                            search: '?experiment_id=' + experiment_id,
+                                        })
+                                    }}
+                                >
+                                    Full Model Card
+                                </Button>
+                            </div>
                         </AccordionSummary>
                         <AccordionDetails>
-                            <ModelCards experimentIdProp={experiment_id.toString()}/>
+                            <EnvironmentDetails experimentId={experiment_id.toString()}/>
                         </AccordionDetails>
                     </Accordion>
                     {
