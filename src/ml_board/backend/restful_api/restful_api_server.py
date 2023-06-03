@@ -277,8 +277,7 @@ class RestfulAPIServer:
             - grid_search_id (str): Grid Search ID
             - experiment_id (str): Experiment ID
             - epoch (str): Epoch number
-            - checkpoint_resource (CheckpointResource) : CheckpointResource type
-            - file (bytes): Pickle file to be added
+            - checkpoint_file (UploadFile): Pickle file to be added
         """
         try:
             self.data_access.add_checkpoint_resource(grid_search_id=grid_search_id,
