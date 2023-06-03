@@ -1,3 +1,4 @@
+from io import BytesIO
 from ml_gym.early_stopping.early_stopping_strategies import EarlyStoppingIF
 from ml_gym.gym.gym_jobs.gym_job import AbstractGymJob
 from ml_gym.models.nn.net import NNModel
@@ -81,7 +82,7 @@ class StandardGymJob(AbstractGymJob):
 
         return evaluation_results
 
-    def _execute_train(self, device: torch.device):
+    def _execute_train(self, device: torch.device, initial_epoch: int = 0):
         """ 
         Execute training of the model.
 
@@ -99,7 +100,8 @@ class StandardGymJob(AbstractGymJob):
             model = self.trainer.train(num_epochs=self.num_epochs, model=self.model, optimizer=self.optimizer, device=device,
                                        batch_done_callback_fun=partial_batch_done_callback,
                                        epoch_done_callback=partial_train_epoch_done_callback,
-                                       num_batches_per_epoch=self.num_batches_per_epoch)
+                                       num_batches_per_epoch=self.num_batches_per_epoch,
+                                       initial_epoch=initial_epoch)
         except EarlyStoppingCriterionFulfilledError:
             print("Early stopping criterion matched. Stopping training.")
 
@@ -113,28 +115,37 @@ class StandardGymJob(AbstractGymJob):
         """
 
         if self.warm_start_epoch > -1:
-            model_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                  experiment_id=self.experiment_id,
-                                                                                  checkpoint_id=self.warm_start_epoch,
-                                                                                  checkpoint_resource=CheckpointResource.model))
+            model_state_buffer = BytesIO(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
+                                                                                    experiment_id=self.experiment_id,
+                                                                                    checkpoint_id=self.warm_start_epoch,
+                                                                                    checkpoint_resource=CheckpointResource.model))
+            model_state = torch.load(model_state_buffer, map_location=device)
             self.model.load_state_dict(model_state)
+            model_state_buffer.close()
 
-            optimizer_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                      experiment_id=self.experiment_id,
-                                                                                      checkpoint_id=self.warm_start_epoch,
-                                                                                      checkpoint_resource=CheckpointResource.optimizer))
+            self.model = self.model.to(device)
+
+            optimizer_state_buffer = BytesIO(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
+                                                                                        experiment_id=self.experiment_id,
+                                                                                        checkpoint_id=self.warm_start_epoch,
+                                                                                        checkpoint_resource=CheckpointResource.optimizer))
+            optimizer_state = torch.load(optimizer_state_buffer, map_location=device)
             self.optimizer.load_state_dict(optimizer_state)
+            optimizer_state_buffer.close()
 
-            lr_scheduler_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                         experiment_id=self.experiment_id,
-                                                                                         checkpoint_id=self.warm_start_epoch,
-                                                                                         checkpoint_resource=CheckpointResource.lr_scheduler))
+            lr_scheduler_state_buffer = BytesIO(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
+                                                                                           experiment_id=self.experiment_id,
+                                                                                           checkpoint_id=self.warm_start_epoch,
+                                                                                           checkpoint_resource=CheckpointResource.lr_scheduler))
+            lr_scheduler_state = torch.load(lr_scheduler_state_buffer, map_location=device)
             self.lr_scheduler.load_state_dict(lr_scheduler_state)
+            lr_scheduler_state_buffer.close()
 
             stateful_component_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
                                                                                                experiment_id=self.experiment_id,
                                                                                                checkpoint_id=self.warm_start_epoch,
                                                                                                checkpoint_resource=CheckpointResource.stateful_components))
+            print(stateful_component_state)
             self.set_state(stateful_component_state)
 
-        self._execute_train(device)
+        self._execute_train(device, initial_epoch=self.warm_start_epoch)
