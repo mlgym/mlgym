@@ -6,12 +6,18 @@ import numpy as np
 
 
 class EarlyStoppingIF(StatefulComponent):
+    """
+    Early Stopping Interface containing function to cehck for stopping criteria.
+    """
 
     def is_stopping_criterion_fulfilled(self, evaluation_results: List[EvaluationBatchResult], current_epoch: int) -> bool:
         raise NotImplementedError
 
 
 class EarlyStopping(EarlyStoppingIF):
+    """
+    Early Stopping Stratergy Class containing functions for performing early stopping.
+    """
     def __init__(self, strategy: EarlyStoppingIF):
         self.strategy = strategy
 
@@ -27,6 +33,9 @@ class EarlyStopping(EarlyStoppingIF):
 
 
 class LastKEpochsImprovementStrategy(EarlyStoppingIF):
+    """
+    Class containing functions to perform last K epochs Improvement Early Stopping Stratergy.
+    """
 
     def __init__(self, min_relative_improvement: float, epochs_window: int, split_name: str, monitoring_key: str,
                  is_increase_task: bool):
@@ -44,6 +53,14 @@ class LastKEpochsImprovementStrategy(EarlyStoppingIF):
         self.is_increase_task = is_increase_task
 
     def _get_monitoring_value(self, evaluation_results: List[EvaluationBatchResult]) -> float:
+        """
+        Get values from the key which are being monitored
+
+        :params:
+            evaluation_results (List[EvaluationBatchResult]): Object storing entire evaluation infotmation.
+        :returns:
+            value (float): value of the monitored key.
+        """
         evaluation_result = None
         for e in evaluation_results:
             if e.split_name == self.split_name:
@@ -58,6 +75,14 @@ class LastKEpochsImprovementStrategy(EarlyStoppingIF):
         return value
 
     def _evaluate_history(self, current_epoch: int) -> bool:
+        """
+        Evaluate history for last K epochs Improvement.
+
+        :params:
+            current_epoch (int): Current epoch number.
+        :returns:
+            (bool): True or False boolean response if condition is met or not met.
+        """
         def monitoring_diff_fun(i, current_epoch):
             next_val = self.monitoring_values[(i + 2 + current_epoch) % self.epochs_window]
             base_val = self.monitoring_values[(i + 1 + current_epoch) % self.epochs_window]
@@ -71,6 +96,16 @@ class LastKEpochsImprovementStrategy(EarlyStoppingIF):
             return min(relative_diffs) > self.min_relative_improvement * -1
 
     def is_stopping_criterion_fulfilled(self, evaluation_results: List[EvaluationBatchResult], current_epoch: int) -> bool:
+        """
+        Check if the stopping criteria has been fulfilled.
+
+        :params:
+            - evaluation_results (List[EvaluationBatchResult]): Object storing entire evaluation infotmation.
+            - current_epoch (int): Current epoch number.
+
+        :returns:
+            perform_stop (bool): True or False boolean response if condition is met or not met for early stopping.
+        """
         monitoring_value = self._get_monitoring_value(evaluation_results)
         self.monitoring_values[current_epoch % self.epochs_window] = monitoring_value
 
@@ -86,9 +121,25 @@ class LastKEpochsImprovementStrategy(EarlyStoppingIF):
 
 
 class EarlyStoppingStrategyFactory:
+    """
+    Factory containing all possible early stopping stratergies.
+    """
 
     def get_last_k_epochs_improvement_strategy(min_relative_improvement: float, epochs_window: int, split_name: str,
                                                monitoring_key: str, is_increase_task: bool) -> EarlyStoppingIF:
+        """
+        Perform last K epochs Improvement Early Stopping Stratergy.
+
+        :params:
+            - min_relative_improvement (float): value for minimum relative improvement between epochs to be checked.
+            - epoch_window (int): Epochs to be monitored.
+            - split_name (str): Name of the split.
+            - monitoring_key (str): Key of the metric to be monitored.
+            - is_increase_task (bool): Is the task to be monitored an increase or decrease task.
+            
+        :returns:
+            EarlyStoppingIF object: Initialzied with LastKEpochsImprovementStrategy.
+        """
         strategy = LastKEpochsImprovementStrategy(min_relative_improvement=min_relative_improvement,
                                                   epochs_window=epochs_window,
                                                   split_name=split_name,

@@ -22,8 +22,15 @@ class FittablePostProcessorIf(PostProcessorIf):
 
 
 class LabelMapperPostProcessor(PostProcessorIf):
+    """
+    This class contains functions which perform Label Matching as a 
+    post processing stratergy in the MlGym Job.
+    """
 
     class Mapping:
+        """
+        Class providing the previous and new labels in the mappings.
+        """
         def __init__(self, previous_labels: List[Any], new_label: Any):
             self.previous_labels: List[Any] = previous_labels
             self.new_label: Any = new_label
@@ -37,6 +44,14 @@ class LabelMapperPostProcessor(PostProcessorIf):
         self.mappings: List[LabelMapperPostProcessor.Mapping] = [LabelMapperPostProcessor.Mapping(**mapping) for mapping in mappings]
 
     def postprocess(self, sample: Tuple[Any]) -> Tuple[Any]:
+        """
+        Perform the Label Matching postprocess.
+
+        :params:
+            sample (Tuple[Any]): Data sample.
+        :returns:
+            tuple(sample) (Tuple[Any]): Label matched sample.
+        """
         for mapping in self.mappings:
             if sample[self.target_position] in mapping:
                 # have to convert to list as tuples are immutable
@@ -50,6 +65,10 @@ class LabelMapperPostProcessor(PostProcessorIf):
 
 
 class FeatureEncoderPostProcessor(FittablePostProcessorIf):
+    """
+    Class having functions to perform Feature Encoding.
+    (It transforms the categorical values of the relevant features into numerical ones.)
+    """
 
     def __init__(self, sample_position: int, feature_encoding_configs: Dict[str, List[Any]], custom_encoders: Dict[str, Encoder] = None, sequential=False):
         self.sample_position = sample_position
@@ -63,6 +82,14 @@ class FeatureEncoderPostProcessor(FittablePostProcessorIf):
     def fit(self, iterators: Dict[str, DatasetIteratorIF]):
 
         def fit_sequential(iterators: Dict[str, DatasetIteratorIF]):
+            """
+            Sequential encoding.
+
+            :params:
+                iterators (Dict[str, DatasetIteratorIF]): Dictionary mapping from iterator_name.
+            :returns:
+                encoders (dict): Encoded features.
+            """
             encoders = {}
             for config in tqdm.tqdm(self.feature_encoding_configs, desc="Encoding Progress"):
                 encoder_class = self.feature_encoder_mapping[config["feature_type"]]
@@ -76,6 +103,14 @@ class FeatureEncoderPostProcessor(FittablePostProcessorIf):
             return encoders
 
         def fit_parallel(iterators: Dict[str, DatasetIteratorIF]):
+            """
+            Parallel encoding.
+
+            :params:
+                iterators (Dict[str, DatasetIteratorIF]): Dictionary mapping from iterator_name.
+            :returns:
+                encoders (dict): Encoded features.
+            """
             encoders = {}
             for config in tqdm.tqdm(self.feature_encoding_configs, desc="Encoding Progress"):
                 encoder_class = self.feature_encoder_mapping[config["feature_type"]]
@@ -97,6 +132,14 @@ class FeatureEncoderPostProcessor(FittablePostProcessorIf):
         self.encoders = {name: encoder for name, encoder in sorted(encoders.items(), key=lambda x: x[0])}
 
     def postprocess(self, sample: Tuple[Any]) -> Tuple[Any]:
+        """
+        Perform the Feature Encoding postprocess.
+
+        :params:
+            sample (Tuple[Any]): Data sample.
+        :returns:
+            tuple(sample) (Tuple[Any]): Feature Encoded sample.
+        """
         if not self.encoders:
             return sample
         sample = list(sample)  # need to make this a list because index assignment is not possible with tuples
@@ -115,12 +158,23 @@ class FeatureEncoderPostProcessor(FittablePostProcessorIf):
 
 
 class OneHotEncodedTargetPostProcessor(PostProcessorIf):
+    """
+    Class having functions to perform One Hot Encoding of Targets.
+    """
 
     def __init__(self, target_vector_size: int, target_position: int = 1):
         self.target_vector_size = target_vector_size
         self.target_position = target_position
 
     def postprocess(self, sample: Tuple[Any]) -> Tuple[Any]:
+        """
+        Perform the One Hot Encoding pf Targets postprocess.
+
+        :params:
+            sample (Tuple[Any]): Data sample.
+        :returns:
+            tuple(sample) (Tuple[Any]): One Hot Encoded sample.
+        """
         target_vector = torch.zeros(self.target_vector_size)
         target_vector[sample[self.target_position]] = 1
         sample_list = list(sample)
