@@ -14,45 +14,33 @@ WebWorkers:<br/>
 Video — https://youtu.be/Gcp7triXFjg <br/>
 Blog — https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API <br/><br/>
 
-WebSockets inside WebWorkers — https://jpsam7.medium.com/react-app-with-websocket-implemented-inside-webworker-aba6374e54f0 <br/><br/>
+Main point is that after creating the worker, an `onmessage` callback listener must be initialized to receive communication when the worker sends messages through `postMessage`, and vice versa.
 
 We will be getting streamable data from the our endpoint (can be localhost or a custom url).
 
-The code to achieve this is split across 4 files.
-1. AppNew.js
-2. DedicatedWorkerClass.js
-3. SocketClass.js
-4. worker.js
+The code to achieve this is split across multiple files:
 
-## AppNew.js
-`path: ./src/app/AppNew.js` <br/><br/>
-- Here, from the `componentDidMount` lifecycle method we trigger the `createWorker` function, which will create an instance of `DedicatedWorkerClass` and also sends a message to the worker "`START`" stating to initialise the WebSocket. `DedicatedWorkerClass` is a wrapper around the actual worker API.
+## App.js
+`path: ./src/app/App.js` <br/><br/>
+- Here, from within `useEffect` we create a `Worker` object, giving it the path to `WorkerSocket.ts` and also sends a message to the worker with the `settingsConfig` stating to initialise the WebSocket.
 
-- Inside `createWorker` we give the constructor of `DedicatedWorkerClass` the function `workerOnMessageHandler`.
-This method is responsible for handling the messages sent from the worker to UI and do appropriate actions on the data returned. Here, we will be saving the data in redux state.
+- `workerOnMessageHandler` is callback function that is responsible for handling the messages sent from the worker to UI. Here, we save the data in redux state.
 
-## DedicatedWorkerClass.js
-`path: ./src/webworkers/DedicatedWorkerClass.js` <br/><br/>
-- Inside the constructor of DedicatedWorkerClass we initialise the worker object. The name of the worker file doesn’t necessarily have to be `worker.js` you can name it as per your use case. 
+## WorkerSocket.ts
+`path: ./src/worker_socket\WorkerSocket.ts` <br/><br/>
+- Mainly handles the WebSocket code for connecting, disconnecting, connection_error, pinging, receiving messages and buffering them, keep in mind the code in this file runs in the background.
 
-## worker.js
-`path: ./src/webworkers/worker.js`
-- In this file, the `onmessage` method will set the `onmessage` handler of worker object. This event handler will be triggered whenever the main thread sends any message using the `postMessage` API (eg: I have sent redux data from `AppNew.js` to update it with new data from websocket). Before we transfer the control to `doAction` method we can validate the request data using `validateEventData` to make sure it follows the data communication pattern we have defined (For now I have sent true by default).
+- Also contains `onmessage` which is a listener that's responsible for receiving the communication from `App.ts` (UI thread), to start and terminate the websocket.
 
-- We send the function `workerOnMessageCallback` as one of the parameters for the SocketClass. This function will be used by the Socket to post the data it is retrieving.
+## MainThreadCallbacks.ts
+`path: ./src/worker_socket/MainThreadCallbacks.ts`
+- In this file, convinently named Main Thread Callbacks because it has methods that call `postMessage` which is the way to communicate back with the UI thread in order to update the redux state.
 
-- We are following this pattern wherein we are sending a function to the Socket is that the `postMessage` function will not be available outside the worker scope.
+- Messages are buffered on the websocket endpoint then flushed to be processed here inside `updateMainThreadCallback` before being send to the UI thread. 
 
-- So when we try to access `postMessage` from inside SocketClass it will be `undefined`. Hence we pass a function callback which will be used to send the message from socket to worker and hence to the UI.
+### But because we have different events, the methods to handle each of them is in a separate file inside `path: ./src/worker_socket/event_handlers`.
 
-## SocketClass.js
-`path: ./src/websocket/SocketClass.js`
-- The init function of `SocketClass` in called from `worker.js` which initialises the webSocket with the streaming data URL endpoint.
+Mainly the methods inside each file are responsible for reformating their respective data into the form that is defined in [ReduxDataStructures.md](./ReduxDataStructures.md).
 
-- Once the WebSocket connection is opened, we subscribe to the `mlgym_event` of the websocket connection to the server.
-
-- After we have subscribed to the data we will start receiving information from the back-end continuously. We handle these messages using `handleEventMessage` handler. It processes the data as required by the UI. (For example, `EVALUATION_RESULT` are handled by an event handler: `handleEvaluationResultData`)
-
-- We send this info to the main thread using the `dataCallback` function which is the `workerOnMessageCallback` function in `worker.js` which uses the `postMessage` API of WebWorker to send the data back to the main thread (here, the data goes back to `workerOnMessageHandler` in `AppNew.js` via `onMessage` method from `DedicatedWorkerClass.js`).
 
 ### And that’s how we get streaming data through WebSocket and WebWorker without blocking the main thread and slowing down the application. <br/><br/>
