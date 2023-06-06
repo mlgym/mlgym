@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RoutesMapping } from '../../app/RoutesMapping';
 import { useAppSelector } from "../../app/hooks";
-import { selectFilter } from "../../redux/status/statusSlice";
+import { selectFilter } from "../../redux/globalConfig/globalConfigSlice";
 import { selectAllRows, selectTableHeaders } from "../../redux/table/tableSlice";
 import FilterTableHeaders from './filterTableHeaders/FilterTableHeaders';
 import FilterTextSearch from './filterTextSearch/FilterTextSearch';

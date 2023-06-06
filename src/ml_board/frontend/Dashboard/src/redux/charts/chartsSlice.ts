@@ -25,7 +25,7 @@ const experimentsAdapter = createEntityAdapter<Experiment>({
 
 const initialState: EntityState<Chart> = chartsAdapter.getInitialState({});
 
-export const chartsSlice = createSlice({
+const { actions, reducer }  = createSlice({
     name: 'charts',
     initialState,
     reducers: {
@@ -61,10 +61,13 @@ export const chartsSlice = createSlice({
                 }
             }
         },
+        resetChartState: () => {
+            return initialState
+        },
     }
 });
 
-export const { upsertCharts } = chartsSlice.actions;
+export const { upsertCharts, resetChartState } = actions;
 
 // TODO: memoize these selectors
 export const selectChartLabelsById = (state: RootState, chart_id: string) => state.charts.entities[chart_id]?.x_axis ?? [];
@@ -86,4 +89,4 @@ export const {
     selectTotal: selectChartsCount,
 } = chartsAdapter.getSelectors((state: RootState) => state.charts)
 
-export default chartsSlice.reducer;
+export default reducer;

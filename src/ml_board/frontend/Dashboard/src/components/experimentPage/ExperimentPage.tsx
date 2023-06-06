@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAppSelector } from "../../app/hooks";
 import { selectChartsByExperimentId } from '../../redux/charts/chartsSlice';
-import { isConnected } from "../../redux/status/statusSlice";
+import { isConnected } from "../../redux/globalConfig/globalConfigSlice";
 import { selectRowById } from '../../redux/table/tableSlice';
 import Graph from "../graphs/Graph";
 import CheckpointConfigurations from './CheckpointConfigurations/CheckpointConfigurations';

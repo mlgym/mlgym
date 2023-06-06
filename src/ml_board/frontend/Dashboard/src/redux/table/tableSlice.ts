@@ -55,12 +55,16 @@ const { actions, reducer } = createSlice({
         upsertManyRows: rowsAdapter.upsertMany,
         upsertTableHeaders: (state, { payload }: PayloadAction<string[]>) => {
             state.table_headers = [...new Set([...state.table_headers, ...payload])];
+        },
+        resetTableState: () => {
+            return initialState
         }
     }
 });
 
 
-export const { upsertManyRows, upsertTableHeaders } = actions;
+export const { upsertManyRows, upsertTableHeaders, resetTableState } = actions;
+
 
 // create a set of memoized selectors
 export const {
