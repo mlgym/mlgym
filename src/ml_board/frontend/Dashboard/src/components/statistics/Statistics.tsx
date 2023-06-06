@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import { useAppSelector } from "../../app/hooks";
-import { getLastPing, getReceivevMsgCount, getThroughput, isConnected } from "../../redux/status/statusSlice";
+import { getLastPing, getReceivevMsgCount, getThroughput, isConnected } from "../../redux/globalConfig/globalConfigSlice";
 // styles
 import styles from "./Statistics.module.css";
 
