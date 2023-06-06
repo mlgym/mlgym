@@ -20,8 +20,8 @@ class OptimizerAdapter(Optimizer, object):
         """
         Register Model parameters with the Optimzier.
         :params:
-            - model_params (Dict): Model Parameters Dictionary.
-            - restore_state (bool): Restore Optimizer State.
+                model_params (Dict): Model Parameters Dictionary.
+                restore_state (bool): Restore Optimizer State.
         """
         model_params_list = model_params.values()
         if not restore_state:
@@ -112,8 +112,8 @@ class OptimizerBundle(OptimizerAdapter):
         """
         Register Model parameters with the Optimzier.
         :params:
-            - model_params (Dict): Model Parameters Dictionary.
-            - restore_state (bool): Restore Optimizer State.
+                model_params (Dict): Model Parameters Dictionary.
+                restore_state (bool): Restore Optimizer State.
         """
         for optimizer_key in self.optimizers.keys():
             parameter_key_filters = self.optimizer_key_to_param_key_filters[optimizer_key]

@@ -12,11 +12,11 @@ class ClientFactory:
         """
         Connect to the Webscoket Buffered Client.
         :params:
-            - client_id (str): Client ID wanting to connect to Websocket Server.
-            - host (str): Host of Websocket Server.
-            - port (int): Port of Websocket Server.
-            - disconnect_buffer_size (int): Size of disconnect buffer.
-            - rooms (List[str]): List of rooms to join.
+                client_id (str): Client ID wanting to connect to Websocket Server.
+                host (str): Host of Websocket Server.
+                port (int): Port of Websocket Server.
+                disconnect_buffer_size (int): Size of disconnect buffer.
+                rooms (List[str]): List of rooms to join.
         
         :returns:
             BufferedClient Object: Establish connection to websocket server and return back Object.

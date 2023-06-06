@@ -23,13 +23,13 @@ class DatasetLoaderFactory:
         """
         Get the spliited data based on the wighted sampling. (DEPRECATED)
         :params:
-            - dataset_splits (Dict[str, InformedDatasetIteratorIF]): List of splits of the dataset to be made.
-            - batch_size (int): Batch size for the data set.
-            - collate_fn (Callable): TO DO
-            - weigthed_sampling_split_name (str): Weighted sampling to be used for the splits.
-            - label_pos (int): param for random generator.
-            - seeds (Dict[str, int]): Seeds for random sampler.
-            - drop_last (bool): TO DO
+                dataset_splits (Dict[str, InformedDatasetIteratorIF]): List of splits of the dataset to be made.
+                batch_size (int): Batch size for the data set.
+                collate_fn (Callable): TO DO
+                weigthed_sampling_split_name (str): Weighted sampling to be used for the splits.
+                label_pos (int): param for random generator.
+                seeds (Dict[str, int]): Seeds for random sampler.
+                drop_last (bool): TO DO
 
         :return:
             data_loaders (Dict[str, "DatasetLoader"]): Data loaded based on the splits and sampling stratergy.
@@ -57,11 +57,11 @@ class DatasetLoaderFactory:
         """
         Get the spliited data based on the sampling stratergy.
         :params:
-            - dataset_splits (Dict[str, InformedDatasetIteratorIF]): List of splits of the dataset to be made.
-            - batch_size (int): Batch size for the data set.
-            - collate_fn (Callable): TO DO
-            - drop_last (bool): TO DO
-            - sampling_strategies (Dict[str, Any]): What type of sampling stratergy to be used for the splits.
+                dataset_splits (Dict[str, InformedDatasetIteratorIF]): List of splits of the dataset to be made.
+                batch_size (int): Batch size for the data set.
+                collate_fn (Callable): TO DO
+                drop_last (bool): TO DO
+                sampling_strategies (Dict[str, Any]): What type of sampling stratergy to be used for the splits.
 
         :return:
             data_loaders (Dict[str, "DatasetLoader"]): Data loaded based on the splits and sampling stratergy.
@@ -128,8 +128,8 @@ class SamplerFactory:
         """
         Create sequential sample on the dataset.
         :params:
-            - dataset (InformedDatasetIteratorIF): Dataset
-            - seed (int): Seed for the generator
+                dataset (InformedDatasetIteratorIF): Dataset
+                seed (int): Seed for the generator
             
         :return:
             RandomSampler object created on the dataset to provide randomly generated samples.

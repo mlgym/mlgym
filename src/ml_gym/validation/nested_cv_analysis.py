@@ -161,9 +161,9 @@ class NestedCVAnalyzer(EvaluationAnalyzerIF):
         """
         Select Best model for the inner fold of Nested Cross Validation.
         :params:
-            - outer_fold_id (int): Outer fold id.
-            - nested_cv_representation (NestedCVRepresentation): Nested CV Representation.
-            - scoring_fun (Callable[[ExperimentRepresentation], float]): Scoring function.
+                outer_fold_id (int): Outer fold id.
+                nested_cv_representation (NestedCVRepresentation): Nested CV Representation.
+                scoring_fun (Callable[[ExperimentRepresentation], float]): Scoring function.
         
         :returns:
             best_hpc_id (list): Best model IDs in inner fold.

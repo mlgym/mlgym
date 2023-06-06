@@ -100,8 +100,8 @@ class LastKEpochsImprovementStrategy(EarlyStoppingIF):
         Check if the stopping criteria has been fulfilled.
 
         :params:
-            - evaluation_results (List[EvaluationBatchResult]): Object storing entire evaluation infotmation.
-            - current_epoch (int): Current epoch number.
+                evaluation_results (List[EvaluationBatchResult]): Object storing entire evaluation infotmation.
+                current_epoch (int): Current epoch number.
 
         :returns:
             perform_stop (bool): True or False boolean response if condition is met or not met for early stopping.
@@ -131,11 +131,11 @@ class EarlyStoppingStrategyFactory:
         Perform last K epochs Improvement Early Stopping Stratergy.
 
         :params:
-            - min_relative_improvement (float): value for minimum relative improvement between epochs to be checked.
-            - epoch_window (int): Epochs to be monitored.
-            - split_name (str): Name of the split.
-            - monitoring_key (str): Key of the metric to be monitored.
-            - is_increase_task (bool): Is the task to be monitored an increase or decrease task.
+                min_relative_improvement (float): value for minimum relative improvement between epochs to be checked.
+                epoch_window (int): Epochs to be monitored.
+                split_name (str): Name of the split.
+                monitoring_key (str): Key of the metric to be monitored.
+                is_increase_task (bool): Is the task to be monitored an increase or decrease task.
             
         :returns:
             EarlyStoppingIF object: Initialzied with LastKEpochsImprovementStrategy.

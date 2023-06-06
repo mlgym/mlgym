@@ -18,10 +18,10 @@ class ValidatorFactory:
         """
         Get nested CV Validator
         :params:
-            - gs_config (Dict[str, Any]): Grid Search Configuration.
-            - cv_config (Dict[str, Any]): Cross Validation Configuration.
-            - blue_print_type (Type[BluePrint]): BluePrint Type.
-            - run_mode (RunMode): Validation Mode.
+                gs_config (Dict[str, Any]): Grid Search Configuration.
+                cv_config (Dict[str, Any]): Cross Validation Configuration.
+                blue_print_type (Type[BluePrint]): BluePrint Type.
+                run_mode (RunMode): Validation Mode.
         
         :returns:
             NestedCV object: Initialized NestedCV object.
@@ -39,10 +39,10 @@ class ValidatorFactory:
         """
         Get Cross Validator
         :params:
-            - gs_config (Dict[str, Any]): Grid Search Configuration.
-            - cv_config (Dict[str, Any]): Cross Validation Configuration.
-            - blue_print_type (Type[BluePrint]): BluePrint Type.
-            - run_mode (RunMode): Validation Mode.
+                gs_config (Dict[str, Any]): Grid Search Configuration.
+                cv_config (Dict[str, Any]): Cross Validation Configuration.
+                blue_print_type (Type[BluePrint]): BluePrint Type.
+                run_mode (RunMode): Validation Mode.
             
         :returns:
             CrossValidation object: Initialized CrossValidation object.
@@ -72,11 +72,11 @@ def get_validator(validation_mode: ValidationMode, blue_print_class:  Type[BlueP
     """
     Get Validator.
     :params:
-        - validation_mode (ValidationMode): Validation Mode.
-        - blue_print_class (Type[BluePrint]): BluePrint Type.
-        - run_mode (RunMode): Validation Mode.
-        - cv_config (Dict[str, Any]): Cross Validation Configuration.
-        - gs_config (Dict[str, Any]): Grid Search Configuration.
+            validation_mode (ValidationMode): Validation Mode.
+            blue_print_class (Type[BluePrint]): BluePrint Type.
+            run_mode (RunMode): Validation Mode.
+            cv_config (Dict[str, Any]): Cross Validation Configuration.
+            gs_config (Dict[str, Any]): Grid Search Configuration.
     
     :returns:
         validator (ValidatorIF): Initialized validator stratergy.

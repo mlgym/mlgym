@@ -12,9 +12,9 @@ def binary_auroc_score(y_true: torch.Tensor, y_pred: torch.Tensor, **params: Dic
     Uses sk learn roc_auc_score() function to calculate 
     Area Under the Receiver Operating Characteristic Curve (ROC AUC) from prediction scores.
     :params:
-        - y_true (Tensor): True target scores.
-        - y_pred (Tensor): Prediction target scores.
-        - kwargs: Additional keyword arguments to pass to sk_learn roc_auc_score() function.
+            y_true (Tensor): True target scores.
+            y_pred (Tensor): Prediction target scores.
+            kwargs: Additional keyword arguments to pass to sk_learn roc_auc_score() function.
     :returns:
         score (float): Metric score from ROC AUC Curve.
     """
@@ -27,9 +27,9 @@ def binary_aupr_score(y_true: torch.Tensor, y_pred: torch.Tensor, **params: Dict
     Uses sk learn average_precision_score() function to 
     compute average precision (AP) from prediction scores.
     :params:
-        - y_true (Tensor): True target scores.
-        - y_pred (Tensor): Prediction target scores.
-        - kwargs: Additional keyword arguments to pass to sk_learn roc_auc_score() function.
+            y_true (Tensor): True target scores.
+            y_pred (Tensor): Prediction target scores.
+            kwargs: Additional keyword arguments to pass to sk_learn roc_auc_score() function.
     :returns:
         score (float): average precision score.
     """

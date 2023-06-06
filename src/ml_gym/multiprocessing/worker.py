@@ -18,10 +18,10 @@ class WorkerProcess(Process):
         """
         Work on the Jobs.
         :params:
-            - job_q (Queue): Job Queue.
-            - job_update_q (Queue): Job Update Queue.
-            - num_jobs_to_perform (int): Number of jobs to perform.
-            - device (torch.device): Device to use.
+                job_q (Queue): Job Queue.
+                job_update_q (Queue): Job Update Queue.
+                num_jobs_to_perform (int): Number of jobs to perform.
+                device (torch.device): Device to use.
         """
         jobs_done_count = 0
         while True:

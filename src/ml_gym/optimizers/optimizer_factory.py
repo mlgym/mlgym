@@ -19,8 +19,8 @@ class OptimizerFactory:
         """
         Get the OptimizerAdapter initialzied with the specific optimizer from the optimizer_map.
         :params:
-            - optimizer_key (str): Scheduler key name from lr_scheduler_map.
-            - params (dict): Optimizer parameters.
+                optimizer_key (str): Scheduler key name from lr_scheduler_map.
+                params (dict): Optimizer parameters.
 
         :returns:
             Initilzed OptimizerAdapter object.

@@ -22,8 +22,8 @@ class LRSchedulerFactory:
         """
         Get the LRSchedulerAdapter initialzied with the specific Schduler from the lr_scheduler_map.
         :params:
-            - lr_scheduler_key (str): Scheduler key name from lr_scheduler_map.
-            - params (dict): Parameters for the LRScheduler.
+                lr_scheduler_key (str): Scheduler key name from lr_scheduler_map.
+                params (dict): Parameters for the LRScheduler.
 
         :returns:
             Initilzed LRSchedulerAdapter object.

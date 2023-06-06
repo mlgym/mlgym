@@ -17,9 +17,9 @@ class InferenceComponent:
         Perform prediction on the torch NN Model.
 
         :params:
-           - model (NNModel): Torch Neural Network module.
-           - batch (DatasetBatch): Train Dataset.
-           - post_processors (List[PredictPostProcessingIF]): Batch number for which details to be logged.
+               model (NNModel): Torch Neural Network module.
+               batch (DatasetBatch): Train Dataset.
+               post_processors (List[PredictPostProcessingIF]): Batch number for which details to be logged.
            
         :returns:
             result_batch (InferenceResultBatch): Prediction performed on the model.
@@ -38,8 +38,8 @@ class InferenceComponent:
         Perform prediction on the batches from dataset_loader using the torch NN Model.
 
         :params:
-           - model (NNModel): Torch Neural Network module.
-           - dataset_loader (DatasetLoader): Dataset loader.
+               model (NNModel): Torch Neural Network module.
+               dataset_loader (DatasetLoader): Dataset loader.
            
         :returns:
             InferenceResultBatch object: Combination of all predictions performed on the batches.

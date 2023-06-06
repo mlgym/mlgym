@@ -11,8 +11,8 @@ class PredictPostprocessingComponent:
         Perform prediction on the torch NN Model for the entire btach.
 
         :params:
-           - result_batch (InferenceResultBatch): Prediction performed on the model.
-           - post_processors (List[PredictPostProcessingIF]): Batch number for which details to be logged.
+               result_batch (InferenceResultBatch): Prediction performed on the model.
+               post_processors (List[PredictPostProcessingIF]): Batch number for which details to be logged.
            
         :returns:
             result_batch (InferenceResultBatch): Prediction performed on the model.

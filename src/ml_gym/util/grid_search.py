@@ -14,8 +14,8 @@ class GridSearch:
         """
         Merges two lists into a dictionary, where one acts as the keys and the other one as the values.
         :param:
-            - keys (List[str]): List of Keys.
-            - values (Tuple[Any]): List of Values.
+                keys (List[str]): List of Keys.
+                values (Tuple[Any]): List of Values.
 
         :returns:
             d (Dict[str, Any]): Dictionary of given key and values.
@@ -212,9 +212,9 @@ class GridSearch:
         """
         Update Config from Grid Search.
         :params:
-            - old_config (Dict): Old unpacked Grid Search configuration.
-            - gs (List[Dict]): List of Grid Search Configurations.
-            - negligible_paths (Dict): TODO
+                old_config (Dict): Old unpacked Grid Search configuration.
+                gs (List[Dict]): List of Grid Search Configurations.
+                negligible_paths (Dict): TODO
         """
         for new_config in gs:
             if GridSearch._is_config_equal(old_config, new_config, negligible_paths):
@@ -226,9 +226,9 @@ class GridSearch:
         """
         Update Condig from Grid Search.
         :params:
-            - old_configs (List[Dict]): List of old unpacked Grid Search configurations.
-            - gs (Dict): Grid Search Configurations.
-            - negligible_paths (Dict): TODO
+                old_configs (List[Dict]): List of old unpacked Grid Search configurations.
+                gs (Dict): Grid Search Configurations.
+                negligible_paths (Dict): TODO
         """
         gs_configs = GridSearch.create_gs_from_config_dict(gs)
         return [GridSearch.update_config_from_grid_search(old_config, gs_configs, negligible_paths) for old_config in
@@ -239,8 +239,8 @@ class GridSearch:
         """
         Checking if sweeps are identical.
         :params:
-            - gs_config_path (str): Path to Grid Search Configuration File.
-            - experiment_folder (str): Path to Experiment Folder.
+                gs_config_path (str): Path to Grid Search Configuration File.
+                experiment_folder (str): Path to Experiment Folder.
 
         :returns:
             bool value: True or False based on the sweeps.

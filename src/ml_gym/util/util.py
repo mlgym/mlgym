@@ -82,10 +82,10 @@ class ExportedModel:
         """
         Get predictions perfomed on the model.
         :params:
-            - sample_tensor (torch.Tensor): Sample Data.
-            - targets (torch.Tensor): Target Data.
-            - tags (torch.Tensor): Tags for Data.
-            - no_grad (bool): Whether to return predictions in inference mode.
+                sample_tensor (torch.Tensor): Sample Data.
+                targets (torch.Tensor): Target Data.
+                tags (torch.Tensor): Tags for Data.
+                no_grad (bool): Whether to return predictions in inference mode.
         
         :returns:
             result_batch (InferenceResultBatch): Prediction performed on the model.
@@ -104,8 +104,8 @@ class ExportedModel:
         """
         Get predictions perfomed on the batch of dataset.
         :params:
-            - batch (DatasetBatch): A batch of samples and its targets and tags.
-            - no_grad (bool): Whether to return predictions in inference mode.
+                batch (DatasetBatch): A batch of samples and its targets and tags.
+                no_grad (bool): Whether to return predictions in inference mode.
         
         :returns:
             result_batch (InferenceResultBatch): Prediction performed on the batch of dataset.
@@ -127,10 +127,10 @@ class ExportedModel:
         """
         Get predictions perfomed on the Dataset iterators.
         :params:
-            - dataset_iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
-            - batch_size (int): Batch size.
-            - collate_fn (Callable): Collate function.
-            - no_grad (bool): Whether to return predictions in inference mode.
+                dataset_iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
+                batch_size (int): Batch size.
+                collate_fn (Callable): Collate function.
+                no_grad (bool): Whether to return predictions in inference mode.
         
         :returns:
             irb (InferenceResultBatch): Prediction performed on Dataset iterators.
@@ -147,8 +147,8 @@ class ExportedModel:
         """
         Get predictions perfomed on the Dataset iterators.
         :params:
-            - dataset_loader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.
-            - no_grad (bool): Whether to return predictions in inference mode.
+                dataset_loader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.
+                no_grad (bool): Whether to return predictions in inference mode.
         
         :returns:
             InferenceResultBatch object: Has combined results from batches.
@@ -163,10 +163,10 @@ class ExportedModel:
         """
         Get ExportedModel object.
         :params:
-            - model (NNModel): Torch Neural Network module.
-            - post_processors (List[PredictPostProcessingIF]): List of Post Processors.
-            - model_path (str): Path to save exported model.
-            - device (torch.device): Torch device.
+                model (NNModel): Torch Neural Network module.
+                post_processors (List[PredictPostProcessingIF]): List of Post Processors.
+                model_path (str): Path to save exported model.
+                device (torch.device): Torch device.
         
         :returns:
             ExportedModel object.
@@ -185,11 +185,11 @@ class ComponentLoader:
         """
         Get Trained Exported model.
         :params:
-            - components (List): List of components to be fetched.
-            - experiment_path (str): Path to experiment.
-            - model_id (int): Model id.
-            - split_name (str): Split name.
-            - device (torch.device): Torch device.
+                components (List): List of components to be fetched.
+                experiment_path (str): Path to experiment.
+                model_id (int): Model id.
+                split_name (str): Split name.
+                device (torch.device): Torch device.
         
         :returns:
             exported_model (ExportedModel): ExportedModel object.
@@ -205,9 +205,9 @@ class ComponentLoader:
         """
         Get components from the trained model.
         :params:
-            - experiment_path (str): Path to experiment.
-            - blueprint_type (Type[BluePrint]): BluePrint type.
-            - component_names (List[str]): List of component names.
+                experiment_path (str): Path to experiment.
+                blueprint_type (Type[BluePrint]): BluePrint type.
+                component_names (List[str]): List of component names.
         
         :returns:
             components (list[Any]): List of components constructed based on the blueprint_type.
@@ -224,10 +224,10 @@ class ComponentLoader:
         """
         Get components from Grid Search.
         :params:
-            - gs_path (str): path to gs config file.
-            - blueprint_type (Type[BluePrint]): BluePrint type.
-            - component_names (List[str]): List of component names.
-            - gs_id (int): Grid Search id.
+                gs_path (str): path to gs config file.
+                blueprint_type (Type[BluePrint]): BluePrint type.
+                component_names (List[str]): List of component names.
+                gs_id (int): Grid Search id.
         
         :returns:
             components (list[Any]): List of components constructed based on the blueprint_type.
@@ -242,10 +242,10 @@ class ComponentLoader:
         """
         Get components from Nested CV.
         :params:
-            - gs_path (str): path to gs config file.
-            - cv_path (str): path to cv config file.
-            - blueprint_type (Type[BluePrint]): BluePrint type.
-            - component_names (List[str]): List of component names.
+                gs_path (str): path to gs config file.
+                cv_path (str): path to cv config file.
+                blueprint_type (Type[BluePrint]): BluePrint type.
+                component_names (List[str]): List of component names.
         
         :returns:
             components (list[Any]): List of components constructed based on the blueprint_type.
@@ -265,10 +265,10 @@ class ComponentLoader:
         """
         Get Trained model.
         :params:
-            - components (List): List of components to be used.
-            - experiment_path (str): path to experiment dir.
-            - model_id (int): Model id.
-            - device (torch.device): Device to be used.
+                components (List): List of components to be used.
+                experiment_path (str): path to experiment dir.
+                model_id (int): Model id.
+                device (torch.device): Device to be used.
         
         :returns:
             model (NNModel): Torch Neural Network module.

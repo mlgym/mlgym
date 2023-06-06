@@ -81,8 +81,8 @@ class Pool:
         """
         Create or replace Worker Process to work on Jobs.
         :params:
-            - process_id (int): Process ID.
-            - num_jobs_to_perform (int): Number of Jobs to perform.
+                process_id (int): Process ID.
+                num_jobs_to_perform (int): Number of Jobs to perform.
         """
         process = WorkerProcessWrapper(process_id=process_id,
                                        num_jobs_to_perform=num_jobs_to_perform,

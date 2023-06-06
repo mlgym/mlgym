@@ -57,9 +57,9 @@ class CrossValidation(ValidatorIF):
         """
         Function to create a list of blueprints.
         :params:
-           - grid_search_id (str): Grid Search ID.
-           - blue_print_type (Type[BluePrint]): BluePrint Type.
-           - gs_config (Dict[str, Any]): Grid Search Configuration.
+               grid_search_id (str): Grid Search ID.
+               blue_print_type (Type[BluePrint]): BluePrint Type.
+               gs_config (Dict[str, Any]): Grid Search Configuration.
         
         :returns: 
             blueprints(List[Type[BluePrint]]) : List of blueprint objects.
@@ -92,8 +92,8 @@ class CrossValidation(ValidatorIF):
         """
         Function to create a list of blueprints.
         :params:
-           - blue_print_type (Type[BluePrint]): BluePrint Type.
-           - gs_config (Dict[str, Any]): Grid Search Configuration.
+               blue_print_type (Type[BluePrint]): BluePrint Type.
+               gs_config (Dict[str, Any]): Grid Search Configuration.
         
         :returns: 
             blueprints(List[BluePrint]) : List of blueprint objects.
