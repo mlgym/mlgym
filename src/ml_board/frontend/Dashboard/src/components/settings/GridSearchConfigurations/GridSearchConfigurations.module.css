@@ -12,3 +12,9 @@
 .heading_style {
     font-family: sans-serif;
 }
+
+.error_text {
+    font-family: sans-serif;
+    color: red;
+    font-size: 20px;
+}

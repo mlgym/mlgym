@@ -3,10 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 import { settingConfigsInterface } from "../../app/App";
-import { isConnected } from "../../redux/globalConfig/globalConfigSlice";
+import { getGridSearchId, getRestApiUrl, getSocketConnectionUrl, isConnected } from "../../redux/globalConfig/globalConfigSlice";
 import { useAppSelector } from "../../app/hooks";
 import GridSearchConfigurations from "./GridSearchConfigurations/GridSearchConfigurations";
-import SelectExperimentDropdown from "./SelectExperimentDropdown/SelectExperimentDropdown";
+import RunConfig from "./RunConfig/RunConfig";
 // styles
 import styles from "./Settings.module.css";
 
@@ -15,14 +15,18 @@ export const defaultSocketConnectionUrlHelperText = "eg: http://127.0.0.1:5002";
 export const defaultRestApiUrlHelperText = "eg: http://127.0.0.1:5001";
 
 export interface FuncProps {
-    validateConfigs(value:boolean): void;
+    setSocketConnectionRequest(): void;
     setConfigData(configData:settingConfigsInterface): void;
+    isConfigValidated?: boolean
 }
 
 // Settings file and Config popup file (except render part) might look exactly the same for now. But Settigns will have more functionality later. So we will add more things in Settings which will make it different from popup file.
 const Settings: React.FC<FuncProps> = (props) => {
 
     const isSocketConnected = useAppSelector(isConnected);
+    const grid_search_id = useAppSelector(getGridSearchId);
+    const rest_api_url = useAppSelector(getRestApiUrl);
+    const socket_connection_url = useAppSelector(getSocketConnectionUrl);
 
     const [configTextState, setConfigTextState] = useState({
         gridSearchId: "",
@@ -42,19 +46,21 @@ const Settings: React.FC<FuncProps> = (props) => {
                 setConfigTextState(settingConfigs);
             });
         }
-    },[])
+    },[isSocketConnected && (grid_search_id || rest_api_url || socket_connection_url)])
 
     function changeText(key:string, text:string) {
         setConfigTextState({ ...configTextState, [key]: text });
     }
 
     function clearAllText() {
-        setConfigTextState({ 
+        let reset_config_texts = { 
             gridSearchId: "",
             socketConnectionUrl: "",
             restApiUrl: "" 
-        });
-        localStorage.removeItem("SettingConfigs")
+        }
+        setConfigTextState(reset_config_texts);
+        localStorage.removeItem("SettingConfigs");
+        props.setConfigData(reset_config_texts);
     }
 
     function submitData() {  
@@ -63,7 +69,8 @@ const Settings: React.FC<FuncProps> = (props) => {
             socketConnectionUrl: configTextState.socketConnectionUrl,
             restApiUrl: configTextState.restApiUrl
         }      
-        props.validateConfigs(true);
+        // props.validateConfigs(true);
+        props.setSocketConnectionRequest();
         props.setConfigData(configData);
     }
 
@@ -124,22 +131,6 @@ const Settings: React.FC<FuncProps> = (props) => {
                     </Grid>
                 </Grid>
             </Box>
-            {
-                isSocketConnected ?
-                <Box className={styles.grid_search_config_contianer}>
-                    <SelectExperimentDropdown />
-                </Box>
-                :
-                null
-            }
-            {
-                isSocketConnected ?
-                <Box className={styles.grid_search_config_contianer}>
-                    <GridSearchConfigurations />
-                </Box>
-                :
-                null
-            }
             <Box className={styles.setting_form_btns_box}>
                 <Button 
                     variant="outlined" 
@@ -159,6 +150,23 @@ const Settings: React.FC<FuncProps> = (props) => {
                     Save
                 </Button>
             </Box>
+            {
+                isSocketConnected ?
+                <Grid container className={styles.settings_files_grid}>
+                    <Grid item={true} xs={12} sm={12} md={12} lg={6}>
+                        <Box className={styles.grid_search_config_contianer}>
+                            <GridSearchConfigurations />
+                        </Box>
+                    </Grid>
+                    <Grid item={true} xs={12} sm={12} md={12} lg={6}>
+                        <Box className={styles.grid_search_config_contianer}>
+                            <RunConfig />
+                        </Box>
+                    </Grid>
+                </Grid>
+                :
+                null
+            }
         </Box>
     )
 }

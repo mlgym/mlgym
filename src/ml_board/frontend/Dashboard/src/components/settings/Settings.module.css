@@ -21,7 +21,7 @@
     width: 100%;
     gap: 40px;
     margin-top: 20px;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
 }
 
 .grid_container_basic_fields {
@@ -45,4 +45,8 @@
 
 .heading_style {
     font-family: sans-serif;
+}
+
+.settings_files_grid {
+    margin-bottom: 40px;
 }
