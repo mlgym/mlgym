@@ -17,10 +17,11 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import ModelTrainingIcon from '@mui/icons-material/ModelTraining';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import styles from './ModelCard.module.css';
-import { jsPDF } from "jspdf";
-import { toPng } from 'html-to-image';
+// import { jsPDF } from "jspdf";
+// import { toPng } from 'html-to-image';
 import { useState } from "react";
 import { isConnected } from "../../redux/globalConfig/globalConfigSlice";
+import html2canvas from 'html2canvas';
 
 export default function ModelCard() {
     
@@ -40,48 +41,133 @@ export default function ModelCard() {
         "Training Param": "50M"
     }
 
-    const downloadPdfDocument = () => {
+    // const downloadPdfDocument = (element_id: string) => {
+    //     setTableRows(-1);
+    //     // TODO: show loading spinner till this part is processed
+    //     setTimeout(() => {
+    //         const divElement = document.getElementById(element_id);
+    //         const options = {
+    //             height: divElement!.offsetHeight, // Adjust the scale factor as needed
+    //             style: { transform: 'scale(1)', transformOrigin: 'top left' },
+    //         };
+    //         toPng(divElement!, options)
+    //         .then((dataUrl) => {
+    //             // TODO: getting extra pages in pdf. Adjust height of the content so that we don't get extra pages in the pdf
+    //             const pdf = new jsPDF('p', 'pt', 'a4');
+    //             const pdfWidth = pdf.internal.pageSize.getWidth();
+    //             const pdfHeight = pdf.internal.pageSize.getHeight();
+        
+    //             const imgWidth = pdfWidth;
+    //             const imgHeight = (divElement!.offsetHeight / divElement!.offsetWidth) * imgWidth;
+        
+    //             let position = 0;
+    //             const pageData = dataUrl;
+        
+    //             pdf.addImage(pageData, 'PNG', 0, position, imgWidth, imgHeight);
+    //             position -= pdfHeight;
+        
+    //             while (position > -divElement!.offsetHeight) {
+    //                 pdf.addPage();
+    //                 pdf.addImage(pageData, 'PNG', 0, position, imgWidth, imgHeight);
+    //                 position -= pdfHeight;
+    //             }
+        
+    //             pdf.save(`Experiment_${experiment_id}_ModelCard.pdf`);
+    //             setTableRows(0);
+    //         })
+    //         .catch((error) => {
+    //             console.error('Error saving PDF:', error);
+    //             setTableRows(0);
+    //             // TODO: Show error snackbar
+    //         });
+    //     }, 200);
+    // }
+
+    const handleSaveAsHTML = async () => {
         setTableRows(-1);
-        // TODO: show loading spinner till this part is processed
-        setTimeout(() => {
-            const divElement = document.getElementById("modelcard");
-            const options = {
-                height: divElement!.offsetHeight, // Adjust the scale factor as needed
-                style: { transform: 'scale(1)', transformOrigin: 'top left' },
-            };
-            toPng(divElement!, options)
-            .then((dataUrl) => {
-                // TODO: getting extra pages in pdf. Adjust height of the content so that we don't get extra pages in the pdf
-                const pdf = new jsPDF('p', 'pt', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-        
-                const imgWidth = pdfWidth;
-                const imgHeight = (divElement!.offsetHeight / divElement!.offsetWidth) * imgWidth;
-        
-                let position = 0;
-                const pageData = dataUrl;
-        
-                pdf.addImage(pageData, 'PNG', 0, position, imgWidth, imgHeight);
-                position -= pdfHeight;
-        
-                while (position > -divElement!.offsetHeight) {
-                pdf.addPage();
-                pdf.addImage(pageData, 'PNG', 0, position, imgWidth, imgHeight);
-                position -= pdfHeight;
-                }
-        
-                pdf.save(`Experiment_${experiment_id}_ModelCard.pdf`);
-                setTableRows(0);
-            })
-            .catch((error) => {
-                console.error('Error saving PDF:', error);
-                setTableRows(0);
-                // TODO: Show error snackbar
-            });
-        }, 200);
+        const model_dataset_details = document.getElementById('model_dataset_details') as HTMLElement;
+        const training_evaluation = document.getElementById('training_evaluation') as HTMLElement;
+        const environment = document.getElementById('environment') as HTMLElement;
+
+        const img = await convertDivToPNG('results_visualization');
+
+        // Collect the CSS styles from style elements and chart stylesheets
+        const css_styles = Array.from(document.styleSheets)
+        .map((styleSheet) => {
+            if (styleSheet.cssRules) {
+                return Array.from(styleSheet.cssRules)
+                    .map((rule) => rule.cssText)
+                    .join('\n');
+            }
+            return '';
+        })
+        .join('\n');
+
+        const mainStyles = `
+            background-color: #fff;
+            padding: 20px;
+        `;
+
+        const imgStyles = `
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        `;
+
+        const card_feel = `
+            box-shadow: 0px 0px 3px 2px rgb(0, 0, 0, 0.2);
+            border-radius: 5px;
+            margin-bottom: 20px;
+        `;
+
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <style>
+                        ${css_styles}
+                    </style>
+                </head>
+                <body>
+                    <div style="${mainStyles}">
+                        ${model_dataset_details.outerHTML}
+                        ${training_evaluation.outerHTML}
+                        <div style="${card_feel}">
+                            <img src="${img}" alt="Results Visualizations" style="${imgStyles}"/>
+                        </div>
+                        ${environment.outerHTML}
+                    </div>
+                </body>
+            </html>
+        `;
+
+        setTableRows(0);
+
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'page.html';
+        link.click();
     }
 
+    const convertDivToPNG = async (divId: string) => {
+        const divToCapture = document.getElementById(divId) as HTMLElement;
+
+        try {
+            const canvas = await html2canvas(divToCapture, {
+                scale: 2, // Increase the scale for higher resolution
+                useCORS: true, // Enable CORS to capture images from external domains
+            });
+            const image = canvas.toDataURL('image/png');
+            return image;
+        } catch (error) {
+            console.error('Error converting div to PNG:', error);
+            throw error;
+        }
+    }
+    
     return(
         <div>
             <Toolbar />
@@ -92,12 +178,12 @@ export default function ModelCard() {
                     <Button 
                         style={{ marginTop: "10px", width: "100%" }} 
                         variant="contained" 
-                        onClick={()=>downloadPdfDocument()}
+                        onClick={()=>handleSaveAsHTML()}
                     >
                         Download
                     </Button>
                     <div id="modelcard" className={styles.main}>
-                        <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
+                        <Grid id="model_dataset_details" container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
                             <Grid item={true} xs={12} sm={12} md={4} lg={4}>
                                 <div className={styles.card_feel}>
                                     <div className={styles.title_container}>
@@ -141,7 +227,7 @@ export default function ModelCard() {
                             </Grid>
                         </Grid>
 
-                        <div className={styles.card_feel}>
+                        <div id="environment" className={styles.card_feel}>
                             <div className={styles.title_container}>
                                 <div className={styles.title_container_icon}>
                                     <TravelExploreIcon />
@@ -156,6 +242,7 @@ export default function ModelCard() {
                         </div>
 
                         <Grid 
+                            id="training_evaluation"
                             container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}
                             className={styles.grid_contianer}
                         >
@@ -201,7 +288,7 @@ export default function ModelCard() {
                             </Grid>
                         </Grid>
                         
-                        <div className={styles.card_feel}>
+                        <div id="results_visualization" className={styles.card_feel}>
                             <div className={styles.title_container}>
                                 <div className={styles.title_container_icon}>
                                     <InsightsIcon />
