@@ -125,6 +125,7 @@ export default function ModelCard() {
             <!DOCTYPE html>
             <html>
                 <head>
+                    <title>${`Experiment_${experiment_id}_ModelCard`}</title>
                     <style>
                         ${css_styles}
                     </style>
@@ -148,7 +149,7 @@ export default function ModelCard() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'page.html';
+        link.download = `Experiment_${experiment_id}_ModelCard`;
         link.click();
     }
 
