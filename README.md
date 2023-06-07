@@ -75,7 +75,7 @@ run_configuration:
   config:
     num_epochs: 50 # Number of epochs
     num_batches_per_epoch: 100
-    gs_config_path: C:\Users\Moinam\Documents\GitHub\mlgym\example\grid_search_example\gs_config.yml
+    gs_config_path: ./gs_config.yml
 
 environment:
   type: multiprocessing # multiprocessing,  main_process, accelerate
@@ -89,9 +89,9 @@ logging:
   gs_rest_api_endpoint: http://127.0.0.1:5001 # Endpoint for the grid search API, e.g., http://127.0.0.1:8080
 ```
 
-Let us get into the header `run_configuration`: The parameter `type` tells the mlGym what type of Job is to be executed. `train` for starting fresh training of a model, `warmstart` for resuming training from a specific epoch. `num_epochs` limits the maximum number of epochs to train a model, `num_batches_per_epoch` limits the maximum number of batches in an epoch to train a model, `gs_config_path` gives the path to the grid search config file.
+Let us get into the header `run_configuration`, the parameter `type` tells the mlGym what type of Job is to be executed. `train` for starting fresh training of a model, `warmstart` for resuming training from a specific epoch. `num_epochs` limits the maximum number of epochs to train a model, `num_batches_per_epoch` limits the maximum number of batches in an epoch to train a model and `gs_config_path` gives the path to the grid search config file.
 
-In the header `environment` the parameter `type` says if the training is to be done using only GPU (`accelerate`), CPU (`main_process`) or using both (`multiprocessing`). `process_count` specifies the number of experiments that we run in parallel and `computation_device_ids` indicates the indices of GPUs to distribute the GS over.
+In the header `environment`, the parameter `type` says if the training is to be done using only GPU (`accelerate`), CPU (`main_process`) or using both (`multiprocessing`). `process_count` specifies the number of experiments that we run in parallel and `computation_device_ids` indicates the indices of GPUs to distribute the GS over.
 
 The header `logging` contains the parameters to be used to set up the logging adapter in MlGym. The parameter `websocket_logging_servers` indicates the server address of the websocket server and `gs_rest_api_endpoint` indicates the server address of the restful API to be used for REST HTTP communications in MlGym.
 

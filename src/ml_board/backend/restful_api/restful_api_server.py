@@ -290,22 +290,7 @@ class RestfulAPIServer:
                                 detail=f"Provided invalid payload or grid_search_id {grid_search_id}, experiment_id {experiment_id} or epoch {epoch}.",
                                 ) from e
     
-    def get_system_info(self, grid_search_id: str, experiment_id: str):<<<<<<< fixing_warmstarts
-278
- 
-            - grid_search_id (str): Grid Search ID
-279
- 
-            - experiment_id (str): Experiment ID
-280
- 
-            - epoch (str): Epoch number
-281
- 
-            - checkpoint_file (UploadFile): Pickle file to be added
-282
- 
-
+    def get_system_info(self, grid_search_id: str, experiment_id: str):
         """
         ``HTTP GET`` Fetch System Information for model card.
         :params:
