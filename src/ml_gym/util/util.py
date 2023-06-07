@@ -22,7 +22,48 @@ import platform
 import torch
 import psutil
 import pkg_resources
+from dataclasses import dataclass
 
+@dataclass
+class ModelDetails:
+    model_description: str
+    model_version: int
+    grid_search_id: str
+    train_date: str
+    source_repo: str
+    train_params: int
+
+@dataclass
+class DatasetDetails:
+    considered_dataset: str
+    label_distribution: str
+
+@dataclass
+class ExperimentEnvironment:
+    comp_infra: str
+    carbon_footprint: Dict
+    software_env_dep: Dict
+    entry_point_cmd: Dict
+
+@dataclass
+class TrainingDetails:
+    loss_func: str
+    dataset_splits: Dict
+    hyperparams: Dict
+
+@dataclass
+class EvalDetails:
+    loss_func: str
+    metrics: Dict
+    dataset_splits: Dict
+
+@dataclass
+class ModelCard:
+    model_details: ModelDetails
+    dataset_details: DatasetDetails
+    experiment_environment: ExperimentEnvironment
+    training_details: TrainingDetails
+    eval_details: EvalDetails
 
 class SystemEnv:
     @staticmethod
