@@ -28,10 +28,10 @@ class TrainComponent(StatefulComponent):
         Train torch NN Model with a batch.
 
         :params:
-           - batch (DatasetBatch): Train Dataset
-           - model (NNModel): Torch Neural Network module.
-           - optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
-           - device (torch.device): Torch device either CPUs or a specified GPU.
+               batch (DatasetBatch): Train Dataset
+               model (NNModel): Torch Neural Network module.
+               optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
+               device (torch.device): Torch device either CPUs or a specified GPU.
 
         :returns:
             model (NNModel): Torch Neural Network module.
@@ -62,19 +62,46 @@ class TrainComponent(StatefulComponent):
             next(data_loader_iterable)
         return data_loader_iterable
 
-    def train(self, model: NNModel, optimizer: OptimizerAdapter, dataloader: DatasetLoader, device: torch.device,
+    def train(self, model: NNModel, optimizer: OptimizerAdapter, dataloader: Dataset<<<<<<< fixing_warmstarts
+140
+ 
+           - num_epochs (int): Number of epochs to be trained.
+141
+ 
+           - model (NNModel): Torch Neural Network module.
+142
+ 
+           - optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
+143
+ 
+           - device (torch.device): Torch device either CPUs or a specified GPU.
+144
+ 
+           - batch_done_callback_fun (Callable): Batch number for which details to be logged.
+145
+ 
+           - epoch_done_callback (Callable): numner of batches to be trained.
+146
+ 
+           - num_batches_per_epoch (int): number of batches to be trained per epoch.
+147
+ 
+​
+148
+ 
+=======Loader, device: torch.device,
               batch_done_callback_fun: Callable, epoch_done_callback_fun: Callable,
               num_epochs: int, initial_epoch: int,  num_batches_per_epoch: int = None) -> NNModel:
         """
         Train torch NN Model.
 
         :params:
-           - model (NNModel): Torch Neural Network module.
-           - optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
-           - dataloader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.
-           - device (torch.device): Torch device either CPUs or a specified GPU.
-           - batch_done_callback_fun (Callable): Batch number for which details to be logged.
-           - epoch_done_callback_fun (Callable): numner of batches to be trained.
+               model (NNModel): Torch Neural Network module.
+               optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
+               dataloader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.
+               device (torch.device): Torch device either CPUs or a specified GPU.
+               batch_done_callback_fun (Callable): Batch number for which details to be logged.
+               epoch_done_callback_fun (Callable): numner of batches to be trained.
 
         :returns:
             model (NNModel): Torch Neural Network module.
@@ -109,8 +136,8 @@ class TrainComponent(StatefulComponent):
         Valvulate loss given the loss function.
 
         :params:
-           - model (NNModel): Torch Neural Network module
-           - batch (DatasetBatch); Batch of data for which loss is to be calcualted.
+               model (NNModel): Torch Neural Network module
+               batch (DatasetBatch); Batch of data for which loss is to be calcualted.
 
         :returns:
             loss (List[torch.Tensor]): Loss list for batch.
@@ -136,13 +163,40 @@ class Trainer:
         Train torch NN Model.
 
         :params:
+               num_epochs (int): Number of epochs to be trained.
+               model (NNModel): Torch Neural Network module.<<<<<<< fixing_warmstarts
+140
+ 
            - num_epochs (int): Number of epochs to be trained.
+141
+ 
            - model (NNModel): Torch Neural Network module.
+142
+ 
            - optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
+143
+ 
            - device (torch.device): Torch device either CPUs or a specified GPU.
+144
+ 
            - batch_done_callback_fun (Callable): Batch number for which details to be logged.
+145
+ 
            - epoch_done_callback (Callable): numner of batches to be trained.
+146
+ 
            - num_batches_per_epoch (int): number of batches to be trained per epoch.
+147
+ 
+​
+148
+ 
+=======
+               optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
+               device (torch.device): Torch device either CPUs or a specified GPU.
+               batch_done_callback_fun (Callable): Batch number for which details to be logged.
+               epoch_done_callback (Callable): numner of batches to be trained.
+               num_batches_per_epoch (int): number of batches to be trained per epoch.
 
         :returns:
             model (NNModel): Torch Neural Network module.

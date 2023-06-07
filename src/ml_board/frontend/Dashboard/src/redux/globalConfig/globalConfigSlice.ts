@@ -11,6 +11,7 @@ export interface GlobalConfig {
   grid_search_id: string;
   table_headers: Array<string>;
   rest_api_url: string;
+  socket_connection_url: string;
 }
 
 const initialState: GlobalConfig = {
@@ -22,7 +23,8 @@ const initialState: GlobalConfig = {
   throughput: 0,
   grid_search_id: "",
   table_headers: [], //TODO: will be used to store the ALL column headers
-  rest_api_url: ""
+  rest_api_url: "",
+  socket_connection_url: ""
 };
 
 export const globalConfigSlice = createSlice({
@@ -53,6 +55,9 @@ export const globalConfigSlice = createSlice({
     setRestApiUrl: (state, action: PayloadAction<string>) => {
       state.rest_api_url = action.payload;
     },
+    setSocketConnectionUrl: (state, action: PayloadAction<string>) => {
+      state.socket_connection_url = action.payload;
+    },
     // TODO::
     upsertTableHeaders: (state, { payload }: PayloadAction<string[]>) => {
       state.table_headers.push(...payload);
@@ -73,7 +78,7 @@ export const globalConfigSlice = createSlice({
   // },
 });
 
-export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl } = globalConfigSlice.actions;
+export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl, setSocketConnectionUrl } = globalConfigSlice.actions;
 
 export const selectFilter = (state: RootState) => state.globalConfig.currentFilter;
 export const selectTab = (state: RootState) => state.globalConfig.idTab;
@@ -83,5 +88,6 @@ export const getReceivevMsgCount = (state: RootState) => state.globalConfig.rece
 export const getThroughput = (state: RootState) => state.globalConfig.throughput;
 export const getGridSearchId = (state: RootState) => state.globalConfig.grid_search_id;
 export const getRestApiUrl = (state: RootState) => state.globalConfig.rest_api_url;
+export const getSocketConnectionUrl = (state: RootState) => state.globalConfig.socket_connection_url;
 
 export default globalConfigSlice.reducer;

@@ -152,7 +152,7 @@ if __name__ == '__main__':
         WebSocketWrapper(
             flask_app=create_flask_server(),
             host="127.0.0.1",
-            port=args.get('port', 7000),
+            port=args.get('port', 5002),
             async_mode=None,
             message_delay=float(args.get('delay', 0.1)),  # in seconds
             log_file_path=args['path'],
