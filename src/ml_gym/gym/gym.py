@@ -28,7 +28,6 @@ class Gym(ABC):
         """
         self.job_status_logger = JobStatusLogger(logger_collection_constructable.construct())
 
-
     @abstractmethod
     def run(self, blueprints: List[BluePrint]):
         """
@@ -42,8 +41,8 @@ class Gym(ABC):
         """
         Executes the jobs. Note that this function blocks until all jobs have been executed!
         :params:
-           - blueprints (List[BluePrint]): List of Blueprint class objects.
-           - exec_fun (Callable): Callable function instance
+               blueprints (List[BluePrint]): List of Blueprint class objects.
+               exec_fun (Callable): Callable function instance
         
         :returns:
             jobs (List[Job]): Number of jobs created to run the mlgym model.
@@ -129,12 +128,12 @@ class GymFactory:
         """
         Function to create a Gym Job for Sequential form of processing.
         :params:
-           - logger_collection_constructable (MLgymStatusLoggerCollectionConstructable): Logging interface
-           - gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
-           - num_epochs(int): number of epochs to be trained to.
-           - device_id(int): Device name to run model job on.
-           - num_batches_per_epoch (int): numner of batches to be trained per epoch.
-           - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs
+               logger_collection_constructable (MLgymStatusLoggerCollectionConstructable): Logging interface
+               gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
+               num_epochs(int): number of epochs to be trained to.
+               device_id(int): Device name to run model job on.
+               num_batches_per_epoch (int): numner of batches to be trained per epoch.
+               accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs
 
         :returns: gym(Gym): Gym class object
         """       
@@ -161,13 +160,13 @@ class GymFactory:
         """
         Function to create a Gym Job for parallel form of processing.
         :params:
-           - logger_collection_constructable (MLgymStatusLoggerCollectionConstructable): Logging interface
-           - gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
-           - num_epochs(int): number of epochs to be trained to.
-           - process_count(int): How may processes will the model be running on.
-           - device_ids(List[int]): Device name to run model job on.
-           - num_batches_per_epoch (int): numner of batches to be trained per epoch.
-           - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs
+               logger_collection_constructable (MLgymStatusLoggerCollectionConstructable): Logging interface
+               gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
+               num_epochs(int): number of epochs to be trained to.
+               process_count(int): How may processes will the model be running on.
+               device_ids(List[int]): Device name to run model job on.
+               num_batches_per_epoch (int): numner of batches to be trained per epoch.
+               accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs
 
         :returns: gym(Gym): Gym class object
         """  
@@ -187,12 +186,12 @@ class GymFactory:
         """
         Function to run a standard Gym job.
         :params:
-           - blueprint (BluePrint): Gym Job object.
-           - device (torch.device): CPU or GPU type pf device for the job to run in.
-           - num_epochs(int): number of epochs to be trained to.
-           - logger_collection_constructable (MLgymStatusLoggerCollectionConstructable): Logging interface
-           - gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
-           - num_batches_per_epoch (int): numner of batches to be trained per epoch.
+               blueprint (BluePrint): Gym Job object.
+               device (torch.device): CPU or GPU type pf device for the job to run in.
+               num_epochs(int): number of epochs to be trained to.
+               logger_collection_constructable (MLgymStatusLoggerCollectionConstructable): Logging interface
+               gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
+               num_batches_per_epoch (int): numner of batches to be trained per epoch.
 
         :returns: gym(Gym): Gym class object
         """ 
@@ -211,12 +210,12 @@ class GymFactory:
         """
         Function to run a Accelerate Gym job used to run model on different nodes.
         :params:
-           - blueprint (BluePrint): Gym Job object.
-           - num_epochs(int): number of epochs to be trained to.
-           - logger_collection_constructable (MLgymStatusLoggerCollectionConstructable): Logging interface.
-           - gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient.
-           - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
-           - num_batches_per_epoch (int): numner of batches to be trained per epoch.
+               blueprint (BluePrint): Gym Job object.
+               num_epochs(int): number of epochs to be trained to.
+               logger_collection_constructable (MLgymStatusLoggerCollectionConstructable): Logging interface.
+               gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient.
+               accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
+               num_batches_per_epoch (int): numner of batches to be trained per epoch.
 
         :returns: gym(Gym): Gym class object
         """ 
