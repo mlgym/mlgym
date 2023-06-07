@@ -28,10 +28,10 @@ class AccelerateTrainComponent(StatefulComponent):
         Train torch NN Model with a batch.
 
         :params:
-           - batch (DatasetBatch): Train Dataset.
-           - model (NNModel): Torch Neural Network module.
-           - optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
-           - device (torch.device): Torch device either CPUs or a specified GPU.
+               batch (DatasetBatch): Train Dataset.
+               model (NNModel): Torch Neural Network module.
+               optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
+               device (torch.device): Torch device either CPUs or a specified GPU.
 
         :returns:
             model (NNModel): Torch Neural Network module.
@@ -67,14 +67,14 @@ class AccelerateTrainComponent(StatefulComponent):
         Train torch NN Model.
 
         :params:
-           - model (NNModel): Torch Neural Network module.
-           - optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
-           - dataloader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.
-           - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
-           - batch_done_callback_fun (Callable): Batch number for which details to be logged.
-           - epoch_done_callback_fun (Callable): numner of batches to be trained.
-           - num_epochs(int): number of epochs to be trained to.
-           - num_batches_per_epoch (int): numner of batches to be trained per epoch.
+               model (NNModel): Torch Neural Network module.
+               optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
+               dataloader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.
+               accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
+               batch_done_callback_fun (Callable): Batch number for which details to be logged.
+               epoch_done_callback_fun (Callable): numner of batches to be trained.
+               num_epochs(int): number of epochs to be trained to.
+               num_batches_per_epoch (int): numner of batches to be trained per epoch.
 
         :returns:
             model (NNModel): Torch Neural Network module.
@@ -110,8 +110,8 @@ class AccelerateTrainComponent(StatefulComponent):
         Valvulate loss given the loss function.
 
         :params:
-           - model (NNModel): Torch Neural Network module.
-           - batch (DatasetBatch); Batch of data for which loss is to be calcualted.
+               model (NNModel): Torch Neural Network module.
+               batch (DatasetBatch); Batch of data for which loss is to be calcualted.
 
         :returns:
             loss (List[torch.Tensor]): Loss list for batch.
@@ -136,13 +136,13 @@ class AccelerateTrainer:
         Train torch NN Model.
 
         :params:
-           - num_epochs (int): Number of epochs to be trained.
-           - model (NNModel): Torch Neural Network module.
-           - optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
-           - batch_done_callback_fun (Callable): Batch number for which details to be logged.
-           - epoch_done_callback (Callable): numner of batches to be trained.
-           - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
-           - num_batches_per_epoch (int): number of batches to be trained per epoch.
+               num_epochs (int): Number of epochs to be trained.
+               model (NNModel): Torch Neural Network module.
+               optimizer (OptimizerAdapter): Object of OptimizerAdapter used to initaite optimizer for model.
+               batch_done_callback_fun (Callable): Batch number for which details to be logged.
+               epoch_done_callback (Callable): numner of batches to be trained.
+               accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
+               num_batches_per_epoch (int): number of batches to be trained per epoch.
            
         :returns:
             model (NNModel): Torch Neural Network module.

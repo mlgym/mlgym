@@ -101,7 +101,7 @@ class FileDataAccess(DataAccessIF):
         Fetch experiment status for a Grid Search ID.
         :params:
              grid_search_id (str): Grid Search ID
-        :returns: List - experiment_statuses
+        :returns: List     experiment_statuses
         """
 
         def get_last_checkpoint_ids(top_level_logging_path: str, grid_search_id: str) -> Dict:
@@ -158,9 +158,9 @@ class FileDataAccess(DataAccessIF):
         Add Config for a Grid Search ID to event storage
         
         :params:
-            - grid_search_id (str): Grid Search ID
-            - config_name (str): Name of Configuration file
-            - config_file (RawTextFile) : RawTextFile Object
+                grid_search_id (str): Grid Search ID
+                config_name (str): Name of Configuration file
+                config_file (RawTextFile) : RawTextFile Object
         """
         requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), config_name))
 
@@ -176,10 +176,10 @@ class FileDataAccess(DataAccessIF):
         Add experiment config given the experiment ID & grid search ID to event storage.
 
         :params:
-            - grid_search_id (str): Grid Search ID
-            - experiment_id (str): Experiment ID
-            - config_name (str): Name of Configuration file
-            - config (RawTextFile) : RawTextFile Object
+                grid_search_id (str): Grid Search ID
+                experiment_id (str): Experiment ID
+                config_name (str): Name of Configuration file
+                config (RawTextFile) : RawTextFile Object
         """
         requested_full_path = os.path.realpath(
             os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id), config_name)
@@ -198,8 +198,8 @@ class FileDataAccess(DataAccessIF):
         Fetch grid config for a Grid Search ID from the event storage.
 
         :params:
-            - grid_search_id (str): Grid Search ID
-            - config_name (str): Name of Configuration file
+                grid_search_id (str): Grid Search ID
+                config_name (str): Name of Configuration file
 
         :returns: bytes response of YML file
         """
@@ -218,9 +218,9 @@ class FileDataAccess(DataAccessIF):
         Fetch experiment config given the experiment ID & grid search ID from event storage.
 
         :params:
-            - grid_search_id (str): Grid Search ID
-            - experiment_id (str): Experiment ID
-            - config_name (str): Name of Configuration file
+                grid_search_id (str): Grid Search ID
+                experiment_id (str): Experiment ID
+                config_name (str): Name of Configuration file
 
         :returns: bytes response of JSON file
         """
@@ -242,9 +242,9 @@ class FileDataAccess(DataAccessIF):
         given the epoch, experiment ID & grid search ID.
 
         :params:
-            - grid_search_id (str): Grid Search ID
-            - experiment_id (str): Experiment ID
-            - epoch (str): Epoch number
+                grid_search_id (str): Grid Search ID
+                experiment_id (str): Experiment ID
+                epoch (str): Epoch number
 
         :returns: List of Checkpoint file names in an epoch
         """
@@ -270,8 +270,8 @@ class FileDataAccess(DataAccessIF):
         Fetch all checkpoint resource pickle file names given the experiment ID & grid search ID from event storage.
 
         :params:
-            - grid_search_id (str): Grid Search ID
-            - experiment_id (str): Experiment ID
+                grid_search_id (str): Grid Search ID
+                experiment_id (str): Experiment ID
 
         :returns: List of Checkpoint file names in an experiment
         """
@@ -306,10 +306,10 @@ class FileDataAccess(DataAccessIF):
         Fetch checkpoint resource pickle file given the experiment ID & grid search ID from event storage.
 
         :params:
-            - grid_search_id (str): Grid Search ID
-            - experiment_id (str): Experiment ID
-            - epoch (str): Epoch number
-            - checkpoint_resource (CheckpointResource) : CheckpointResource type
+                grid_search_id (str): Grid Search ID
+                experiment_id (str): Experiment ID
+                epoch (str): Epoch number
+                checkpoint_resource (CheckpointResource) : CheckpointResource type
 
         :returns: bytes response of pickle file
         """
@@ -329,11 +329,11 @@ class FileDataAccess(DataAccessIF):
         Add a checkpoint resource pickle file given the epoch, experiment ID & grid search ID to event storage.
 
         :params:
-            - grid_search_id (str): Grid Search ID
-            - experiment_id (str): Experiment ID
-            - epoch (str): Epoch number
-            - checkpoint_resource (CheckpointResource) : CheckpointResource type
-            - payload_pickle (bytes): Pickle file to be added
+                grid_search_id (str): Grid Search ID
+                experiment_id (str): Experiment ID
+                epoch (str): Epoch number
+                checkpoint_resource (CheckpointResource) : CheckpointResource type
+                payload_pickle (bytes): Pickle file to be added
 
         :returns: Pickle file Stream response
         """
@@ -353,9 +353,9 @@ class FileDataAccess(DataAccessIF):
         Delete checkpoint FOLDER From the event storage
         given the epoch, experiment ID & grid search ID.
         :params:
-            - grid_search_id (str): Grid Search ID
-            - experiment_id (str): Experiment ID
-            - epoch (str): Epoch number
+                grid_search_id (str): Grid Search ID
+                experiment_id (str): Experiment ID
+                epoch (str): Epoch number
         """
 
         requested_full_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id),
@@ -372,10 +372,10 @@ class FileDataAccess(DataAccessIF):
         Delete checkpoint resource pickle file from the event storage
         given the epoch, experiment ID & grid search ID.
         :params:
-            - grid_search_id (str): Grid Search ID
-            - experiment_id (str): Experiment ID
-            - epoch (str): Epoch number
-            - checkpoint_resource (CheckpointResource) : CheckpointResource type
+                grid_search_id (str): Grid Search ID
+                experiment_id (str): Experiment ID
+                epoch (str): Epoch number
+                checkpoint_resource (CheckpointResource) : CheckpointResource type
         """
 
         folder_path = os.path.realpath(os.path.join(self.top_level_logging_path, str(grid_search_id), str(experiment_id), str(epoch)))

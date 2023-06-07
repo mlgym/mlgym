@@ -62,6 +62,9 @@ class SystemEnv:
             raise SystemInfoFetchError(f"Unable to fetch System Info") from e
 
 class ExportedModel:
+    """
+    ExportedModel Class cpontains functions to export model components.
+    """
     def __init__(self, model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str = None, device: torch.device = None):
         self.model = model
         self.post_processors = post_processors
@@ -79,6 +82,17 @@ class ExportedModel:
         self.model.to(self._device)
 
     def predict_tensor(self, sample_tensor: torch.Tensor, targets: torch.Tensor = None, tags: torch.Tensor = None, no_grad: bool = True):
+        """
+        Get predictions perfomed on the model.
+        :params:
+                sample_tensor (torch.Tensor): Sample Data.
+                targets (torch.Tensor): Target Data.
+                tags (torch.Tensor): Tags for Data.
+                no_grad (bool): Whether to return predictions in inference mode.
+        
+        :returns:
+            result_batch (InferenceResultBatch): Prediction performed on the model.
+        """
         sample_tensor = sample_tensor.to(self._device)
         if no_grad:
             with torch.no_grad():
@@ -90,6 +104,15 @@ class ExportedModel:
         return result_batch
 
     def predict_dataset_batch(self, batch: DatasetBatch, no_grad: bool = True) -> InferenceResultBatch:
+        """
+        Get predictions perfomed on the batch of dataset.
+        :params:
+                batch (DatasetBatch): A batch of samples and its targets and tags.
+                no_grad (bool): Whether to return predictions in inference mode.
+        
+        :returns:
+            result_batch (InferenceResultBatch): Prediction performed on the batch of dataset.
+        """
         batch.to(self._device)
         if no_grad:
             with torch.no_grad():
@@ -104,6 +127,17 @@ class ExportedModel:
 
     def predict_dataset_iterator(self, dataset_iterator: InformedDatasetIteratorIF,
                                  batch_size: int, collate_fn: Callable, no_grad: bool = True) -> InferenceResultBatch:
+        """
+        Get predictions perfomed on the Dataset iterators.
+        :params:
+                dataset_iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
+                batch_size (int): Batch size.
+                collate_fn (Callable): Collate function.
+                no_grad (bool): Whether to return predictions in inference mode.
+        
+        :returns:
+            irb (InferenceResultBatch): Prediction performed on Dataset iterators.
+        """
         split_key = "dataset_split"
         sampling_strategies = {split_key: {"strategy": "IN_ORDER"}}
         dataset_loader = DatasetLoaderFactory.get_splitted_data_loaders({split_key: dataset_iterator}, batch_size=batch_size,
@@ -113,6 +147,15 @@ class ExportedModel:
         return irb
 
     def predict_data_loader(self, dataset_loader: DatasetLoader, no_grad: bool = True) -> InferenceResultBatch:
+        """
+        Get predictions perfomed on the Dataset iterators.
+        :params:
+                dataset_loader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.
+                no_grad (bool): Whether to return predictions in inference mode.
+        
+        :returns:
+            InferenceResultBatch object: Has combined results from batches.
+        """
         dataset_loader.device = self._device
         result_batches = [self.predict_dataset_batch(batch, no_grad) for batch in tqdm.tqdm(dataset_loader, desc="Batches processed:")]
         return InferenceResultBatch.combine(result_batches)
@@ -120,14 +163,40 @@ class ExportedModel:
     @staticmethod
     def from_model_and_preprocessors(model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str,
                                      device: torch.device = None) -> "ExportedModel":
+        """
+        Get ExportedModel object.
+        :params:
+                model (NNModel): Torch Neural Network module.
+                post_processors (List[PredictPostProcessingIF]): List of Post Processors.
+                model_path (str): Path to save exported model.
+                device (torch.device): Torch device.
+        
+        :returns:
+            ExportedModel object.
+        """
         return ExportedModel(model, post_processors, model_path, device=device)
 
 
 class ComponentLoader:
+    """
+    ComponentLoader contains functions to load compomnents from exported model.
+    """
 
     @staticmethod
     def get_trained_exported_model(components: List, experiment_path: str, model_id: int,
                                    split_name: str, device: torch.device = None) -> ExportedModel:
+        """
+        Get Trained Exported model.
+        :params:
+                components (List): List of components to be fetched.
+                experiment_path (str): Path to experiment.
+                model_id (int): Model id.
+                split_name (str): Split name.
+                device (torch.device): Torch device.
+        
+        :returns:
+            exported_model (ExportedModel): ExportedModel object.
+        """
         trained_model = ComponentLoader.get_trained_model(components, experiment_path, model_id, device)
         post_processors = components["eval_component"].post_processors[split_name]
         model_path = os.path.join(experiment_path, f"checkpoints/model_{model_id}.pt")
@@ -136,6 +205,16 @@ class ComponentLoader:
 
     @staticmethod
     def get_components(experiment_path: str, blueprint_type: Type[BluePrint], component_names: List[str]):
+        """
+        Get components from the trained model.
+        :params:
+                experiment_path (str): Path to experiment.
+                blueprint_type (Type[BluePrint]): BluePrint type.
+                component_names (List[str]): List of component names.
+        
+        :returns:
+            components (list[Any]): List of components constructed based on the blueprint_type.
+        """
         config_path = os.path.join(experiment_path, "config.json")
 
         with open(config_path, "r") as fd:
@@ -145,6 +224,17 @@ class ComponentLoader:
 
     @staticmethod
     def get_components_from_grid_search(gs_path: str, blueprint_type: Type[BluePrint], component_names: List[str], gs_id: int = 0):
+        """
+        Get components from Grid Search.
+        :params:
+                gs_path (str): path to gs config file.
+                blueprint_type (Type[BluePrint]): BluePrint type.
+                component_names (List[str]): List of component names.
+                gs_id (int): Grid Search id.
+        
+        :returns:
+            components (list[Any]): List of components constructed based on the blueprint_type.
+        """
         run_id_to_config_dict = {str(run_id): config for run_id, config in enumerate(GridSearch.create_gs_configs_from_path(gs_path))}
         experiment_config = run_id_to_config_dict[f"{gs_id}"]
         components = blueprint_type.construct_components(config=experiment_config, component_names=component_names)
@@ -152,6 +242,17 @@ class ComponentLoader:
 
     @staticmethod
     def get_components_from_nested_cv(gs_path: str, cv_path: str, blueprint_type: Type[BluePrint], component_names: List[str]):
+        """
+        Get components from Nested CV.
+        :params:
+                gs_path (str): path to gs config file.
+                cv_path (str): path to cv config file.
+                blueprint_type (Type[BluePrint]): BluePrint type.
+                component_names (List[str]): List of component names.
+        
+        :returns:
+            components (list[Any]): List of components constructed based on the blueprint_type.
+        """
         gs_config = YAMLConfigLoader.load(gs_path)
         cv_config = YAMLConfigLoader.load(cv_path)
         nested_cv = ValidatorFactory.get_nested_cv(gs_config=gs_config,
@@ -164,6 +265,17 @@ class ComponentLoader:
 
     @staticmethod
     def get_trained_model(components: List, experiment_path: str, model_id: int, device: torch.device = None) -> NNModel:
+        """
+        Get Trained model.
+        :params:
+                components (List): List of components to be used.
+                experiment_path (str): path to experiment dir.
+                model_id (int): Model id.
+                device (torch.device): Device to be used.
+        
+        :returns:
+            model (NNModel): Torch Neural Network module.
+        """
         model_state_dict_path = os.path.join(experiment_path, f"checkpoints/model_{model_id}.pt")
         model = deepcopy(components["model"])
         # load model
@@ -173,6 +285,13 @@ class ComponentLoader:
 
     @staticmethod
     def get_datasets(components: List) -> Dict[str, DatasetIteratorIF]:
+        """
+        Get Datasets.
+        :params:
+            components (List): List of components to be used.
+        :returns:
+            datasets_dict (Dict[str, DatasetIteratorIF]): Dict of datasets.
+        """
         dataset_keys = list(
             components["evaluator"].eval_component.dataset_loaders.keys())
         datasets_dict = {
@@ -181,8 +300,22 @@ class ComponentLoader:
 
     @staticmethod
     def get_dataloaders(components: List) -> Dict[str, DatasetLoader]:
+        """
+        Get DataLoaders.
+        :params:
+            components (List): List of components to be used.
+        :returns:
+            dataloaders_dict (Dict[str, DatasetLoader]): Dict of DataLoaders.
+        """
         return components["evaluator"].eval_component.dataset_loaders
 
     @staticmethod
     def get_inference_component(components: List) -> InferenceComponent:
+        """
+        Get InferenceComponent.
+        :params:
+            components (List): List of components to be used.
+        :returns:
+            inference_component (InferenceComponent): InferenceComponent.
+        """
         return components["evaluator"].eval_component.inference_component

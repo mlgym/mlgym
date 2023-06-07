@@ -62,8 +62,8 @@ class StandardGymJob(AbstractGymJob):
         Evaluating the model.
 
         :params:
-           - current_epoch (int): Current epoch number for cerating checkpoints.
-           - device (torch.device): torch device either CPUs or a specified GPU
+               current_epoch (int): Current epoch number for cerating checkpoints.
+               device (torch.device): torch device either CPUs or a specified GPU
 
         :returns:
             evaluation_results (EvaluationBatchResult): Object storing entire evaluation infotmation.
@@ -108,8 +108,8 @@ class StandardGymJob(AbstractGymJob):
         Execute warm start of the model from an epoch.
 
         :params:
-           - device (torch.device): torch device either CPUs or a specified GPU.
-           - warm_start_epoch (int): Epoch to start Training from.
+               device (torch.device): torch device either CPUs or a specified GPU.
+               warm_start_epoch (int): Epoch to start Training from.
         """
         model_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
                                                                               experiment_id=self.experiment_id,
