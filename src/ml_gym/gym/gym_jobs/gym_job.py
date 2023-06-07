@@ -1,4 +1,5 @@
 from abc import abstractmethod
+import io
 import os
 import pickle
 from typing import Callable, List
@@ -93,17 +94,29 @@ class AbstractGymJob(StatefulComponent):
                                                                    custom_file_name=f"{checkpoint_file_name}.zip")
 
             else:
+                model_buffer = io.BytesIO()
+                torch.save(self.model.state_dict(), model_buffer)
+
+                optimizer_buffer = io.BytesIO()
+                torch.save(self.optimizer.state_dict(), optimizer_buffer)
+
+                lr_scheduler_buffer = io.BytesIO()
+                torch.save(self.lr_scheduler.state_dict(), lr_scheduler_buffer)
+
                 payload_dict = {
-                    CheckpointResource.model: pickle.dumps(self.model.state_dict()),
-                    CheckpointResource.optimizer: pickle.dumps(self.optimizer.state_dict()),
-                    CheckpointResource.lr_scheduler: pickle.dumps(self.lr_scheduler.state_dict()),
+                    CheckpointResource.model: model_buffer.getvalue(),
+                    CheckpointResource.optimizer: optimizer_buffer.getvalue(),
+                    CheckpointResource.lr_scheduler: lr_scheduler_buffer.getvalue(),
                     CheckpointResource.stateful_components: pickle.dumps(self.get_state())
                 }
 
                 for checkpoint_resource_key, checkpoint_resource_stream in payload_dict.items():
                     self.gs_api_client.add_checkpoint_resource(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id,
                                                                epoch=current_epoch, payload_stream=checkpoint_resource_stream,
-                                                               custom_file_name=f"{checkpoint_resource_key}.pickle")
+                                                               custom_file_name=checkpoint_resource_key)
+                model_buffer.close()
+                optimizer_buffer.close()
+                lr_scheduler_buffer.close()
 
         if accelerator is None or accelerator is not None and accelerator.is_main_process:
             for epoch in checkpoint_instruction.checkpoints_to_delete:

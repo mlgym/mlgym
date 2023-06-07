@@ -28,7 +28,6 @@ class Gym(ABC):
         """
         self.job_status_logger = JobStatusLogger(logger_collection_constructable.construct())
 
-
     @abstractmethod
     def run(self, blueprints: List[BluePrint]):
         """

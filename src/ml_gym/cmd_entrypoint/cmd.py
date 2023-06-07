@@ -61,7 +61,7 @@ class WarmStartRunConfiguration:
            num_epochs(int): number of epochs to be trained to.
            num_batches_per_epoch (int): numner of batches to be trained per epoch.
     """
-    gridsaerch_id: str
+    gridsearch_id: str
     num_epochs: int
     num_batches_per_epoch: int = None
 
@@ -185,9 +185,9 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
                                             file_format=FileFormat.YAML,
                                             config_name="grid_search_config.yml",
                                             config=gs_config_string)
-            gs_api_client.add_config_string(grid_search_id=gridsearch_id, 
-                                            file_format=FileFormat.YAML, 
-                                            config_name="run_config.yml", 
+            gs_api_client.add_config_string(grid_search_id=gridsearch_id,
+                                            file_format=FileFormat.YAML,
+                                            config_name="run_config.yml",
                                             config=run_config_string)
 
             if validation_strategy_config_raw_string is not None:
@@ -225,7 +225,7 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
                                              gs_config=gs_config)
 
     log_configs(gs_config_string=gs_config_string, run_config_string=run_config_string,      validation_strategy_config_raw_string=validation_strategy_config_string,
-    gs_restful_api_client_constructable=gs_restful_api_client_constructable, accelerator=accelerator)
+                gs_restful_api_client_constructable=gs_restful_api_client_constructable, accelerator=accelerator)
 
     gym.run(blueprints)
 
@@ -313,7 +313,7 @@ def get_logging_constructables(logging_config: LoggingConfiguration) -> Tuple[Lo
     Parsing run_config.yml file to create configs needed for mlGym to run experiments.
     :params:
         logging_config (LoggingConfiguration): Websocket and Restful API Server endpoints.
-    
+
     :returns:  
         Tuple[(GridSearchAPIClientConstructableIF): Initiated Grid Search API Client interface for performing REST calls.
          (LoggerConstructableIF): Initiated Logging interface]
@@ -324,23 +324,21 @@ def get_logging_constructables(logging_config: LoggingConfiguration) -> Tuple[Lo
     return logger_collection_constructable, gs_restful_api_client_constructable
 
 
-def run(blueprint_class: BluePrint, run_configuration_file_path):
+def run(blueprint_class: BluePrint, run_configuration_file_path: Union[TrainRunConfiguration, WarmStartRunConfiguration]):
     """
     Parsing run_config.yml file to create configs needed for mlGym to run experiments.
     :params:
            blueprint_class (BluePrint): Object of blueprint Class used for creating all the components for the GymJob.
            run_configuration_file_path (str): Path ro the run_config file.
-    
     """
     run_config, env_config, logging_config = parse_run_configuration(run_configuration_file_path=run_configuration_file_path)
 
     logger_collection_constructable, gs_restful_api_client_constructable = get_logging_constructables(logging_config)
-    
+
     accelerator: Accelerator = Accelerator() if isinstance(env_config, AccelerateEnvironmentConfig) else None
 
     gym = get_gym_from_environment_config(env_config, logger_collection_constructable, gs_restful_api_client_constructable,
                                           run_config.num_epochs, run_config.num_batches_per_epoch, accelerator)
-
 
     if isinstance(run_config, TrainRunConfiguration):
         gridsearch_id = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
@@ -349,5 +347,5 @@ def run(blueprint_class: BluePrint, run_configuration_file_path):
                     gs_restful_api_client_constructable=gs_restful_api_client_constructable,
                     accelerator=accelerator)
     elif isinstance(run_config, WarmStartRunConfiguration):
-        entry_warm_start(blueprint_class=blueprint_class, gym=gym, grid_search_id=run_config.gridsaerch_id,
+        entry_warm_start(blueprint_class=blueprint_class, gym=gym, grid_search_id=run_config.gridsearch_id,
                          gs_restful_api_client_constructable=gs_restful_api_client_constructable, num_epochs=run_config.num_epochs)

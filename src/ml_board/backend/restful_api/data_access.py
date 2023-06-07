@@ -299,9 +299,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def get_checkpoint_resource(
-        self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str
-    ) -> Generator:
+    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str) -> Generator:
         """
         Fetch checkpoint resource pickle file given the experiment ID & grid search ID from event storage.
 

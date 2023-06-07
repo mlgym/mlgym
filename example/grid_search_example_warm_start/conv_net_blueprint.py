@@ -1,15 +1,12 @@
 from typing import Dict, List, Any
 from ml_gym.modes import RunMode
-from ml_gym.persistency.logging import ExperimentStatusLogger, MLgymStatusLoggerCollectionConstructable
 import torch
 from ml_gym.blueprints.constructables import ModelRegistryConstructable
 from ml_gym.blueprints.blue_prints import BluePrint
-from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob, GymJobFactory
 from ml_gym.batching.batch import DatasetBatch
 from dataclasses import dataclass
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector
 from ml_gym.data_handling.postprocessors.collator import Collator
-from ml_gym.persistency.io import GridSearchAPIClientConstructableIF
 from conv_net import ConvNet
 
 
@@ -44,16 +41,13 @@ class MyModelRegistryConstructable(ModelRegistryConstructable):
 
 
 class ConvNetBluePrint(BluePrint):
-    def __init__(self, run_mode: RunMode, config: Dict, num_epochs: int, grid_search_id: str,
-                 gs_api_client_constructable: GridSearchAPIClientConstructableIF,
-                 experiment_id: str, external_injection: Dict[str, Any] = None,
-                 logger_collection_constructable: MLgymStatusLoggerCollectionConstructable = None,
-                 warm_start_epoch: int = 0):
-        super().__init__(run_mode, num_epochs, config, grid_search_id, gs_api_client_constructable,
-                         experiment_id, external_injection, logger_collection_constructable, warm_start_epoch)
+    def __init__(self, run_mode: RunMode, config: Dict, grid_search_id: str,
+                 experiment_id: str, external_injection: Dict[str, Any] = None, warm_start_epoch: int = 0):
+        super().__init__(run_mode, config, grid_search_id, experiment_id, external_injection, warm_start_epoch)
 
     @staticmethod
-    def construct_components(config: Dict, component_names: List[str], device: torch.device, external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
+    def construct_components(config: Dict, component_names: List[str], device: torch.device,
+                             external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
         if external_injection is not None:
             injection_mapping = {"id_conv_mnist_standard_collator": MNISTCollator,
                                  "id_computation_device": device,
@@ -70,20 +64,8 @@ class ConvNetBluePrint(BluePrint):
         components = component_factory.build_components_from_config(config, component_names)
         return components
 
-    def construct(self, device: torch.device = None) -> AbstractGymJob:
-        component_names = ["model", "trainer", "optimizer", "evaluator", "early_stopping_strategy", "checkpointing_strategy"]
+    def construct(self, device: torch.device = None) -> Dict[str, Any]:
+        component_names = ["model", "trainer", "optimizer", "lr_scheduler", "evaluator", "early_stopping_strategy", "checkpointing_strategy"]
         components = ConvNetBluePrint.construct_components(self.config, component_names, device, self.external_injection)
 
-        logger_collection = self.logger_collection_constructable.construct()
-        experiment_status_logger = ExperimentStatusLogger(logger=logger_collection, grid_search_id=self.grid_search_id,
-                                                          experiment_id=self.experiment_id)
-
-        gym_job = GymJobFactory.get_gym_job(run_mode=self.run_mode,
-                                            grid_search_id=self.grid_search_id,
-                                            experiment_id=self.experiment_id,
-                                            num_epochs=self.num_epochs,
-                                            warm_start_epoch=self.warm_start_epoch,
-                                            experiment_status_logger=experiment_status_logger,
-                                            gs_api_client=self.gs_api_client_constructable.construct(),
-                                            **components)
-        return gym_job
+        return components
