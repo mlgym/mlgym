@@ -5,6 +5,9 @@ from ml_gym.error_handling.exception import LRSchedulerNotInitializedError
 
 
 class LRSchedulerAdapter(object):
+    """
+    LRSchedulerAdapter class uses LR Scheduler selected from LRSchedulerFactory as an Optimizer in mlGym Job.
+    """
     def __init__(self, lr_scheduler_class: Type[_LRScheduler], lr_scheduler_params: Dict = None):
 
         self._lr_scheduler_class = lr_scheduler_class
@@ -14,7 +17,11 @@ class LRSchedulerAdapter(object):
         self._state_dict = None
 
     def register_optimizer(self, optimizer: OptimizerAdapter):
-        # since we instantiate a new optimizer when we register a model, we have to save and restore the optimizer state
+        """
+        Since we instantiate a new optimizer when we register a model, we have to save and restore the optimizer state.
+        :params:
+            optimizer (OptimizerAdapter): OptimizerAdapter object.
+        """
         if self._lr_scheduler is not None:
             state_dict = self.state_dict()
             self._lr_scheduler = self._lr_scheduler_class(optimizer=optimizer, **self._lr_scheduler_params)

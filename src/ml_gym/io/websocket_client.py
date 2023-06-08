@@ -3,9 +3,24 @@ from typing import Dict, List
 
 
 class ClientFactory:
+    """
+    Websocket Client Factory class.
+    """
 
     @staticmethod
     def get_buffered_client(client_id: str, host: str, port: int, disconnect_buffer_size: int, rooms: List[str]):
+        """
+        Connect to the Webscoket Buffered Client.
+        :params:
+                client_id (str): Client ID wanting to connect to Websocket Server.
+                host (str): Host of Websocket Server.
+                port (int): Port of Websocket Server.
+                disconnect_buffer_size (int): Size of disconnect buffer.
+                rooms (List[str]): List of rooms to join.
+        
+        :returns:
+            BufferedClient Object: Establish connection to websocket server and return back Object.
+        """
         sio_client = socketio.Client()
         bc = BufferedClient(client_id=client_id,
                             host=host,
@@ -18,6 +33,9 @@ class ClientFactory:
 
 
 class BufferedClient:
+    """
+    Buffered Client class.
+    """
 
     def __init__(self, client_id: str, host: str, port: int, disconnect_buffer_size: int, sio_client: socketio.Client, rooms: List[str]):
         self._client_id = client_id
@@ -34,6 +52,9 @@ class BufferedClient:
         sio_client.on("mlgym_event", BufferedClient.on_mlgym_event_message)
 
     def connect(self):
+        """
+        Webscoket Buffered Client connection function connecting to the Websocket Server.
+        """
         self._sio_client.connect(f"{self._host}:{self._port}", wait=True, wait_timeout=20, transports="websocket")
         print(f"Connected to {self._host}:{self._port} with transport protocol {self._sio_client.transport()}")
         BufferedClient._register_callback_funs(self._sio_client)

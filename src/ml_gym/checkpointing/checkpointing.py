@@ -50,9 +50,9 @@ class SaveLastEpochOnlyCheckpointingStrategy(CheckpointingIF):
         Fetch Checkpoint Instruction 
 
         :params:
-           - current_epoch (int): Current epoch number for cerating checkpoints.
-           - num_epochs (int): Number of epochs to be trained.
-           - evaluation_result (EvaluationBatchResult): Evaluation results of batches trained on.
+               current_epoch (int): Current epoch number for cerating checkpoints.
+               num_epochs (int): Number of epochs to be trained.
+               evaluation_result (EvaluationBatchResult): Evaluation results of batches trained on.
            
         :returns:
             CheckpointingInstruction: Instruction to save and delete checkpoints.
@@ -74,9 +74,9 @@ class SaveAllCheckpointingStrategy(CheckpointingIF):
         Fetch Checkpoint Instruction 
 
         :params:
-           - current_epoch (int): Current epoch number for cerating checkpoints.
-           - num_epochs (int): Number of epochs to be trained.
-           - evaluation_result (EvaluationBatchResult): Evaluation results of batches trained on.
+               current_epoch (int): Current epoch number for cerating checkpoints.
+               num_epochs (int): Number of epochs to be trained.
+               evaluation_result (EvaluationBatchResult): Evaluation results of batches trained on.
 
         :returns:
             CheckpointingInstruction: Instruction to save and delete checkpoints.

@@ -18,9 +18,9 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
         """
         Get the iterator that can iterate through mapped labels in the dataset.
         :params:
-            - identifier (str): Tag used as an identifier for the dataset.
-            - iterator (DatasetIteratorIF): Dataset Iterator Interface object.
-            - mappings (Dict): Mapping of labels to iterators.
+                identifier (str): Tag used as an identifier for the dataset.
+                iterator (DatasetIteratorIF): Dataset Iterator Interface object.
+                mappings (Dict): Mapping of labels to iterators.
 
         :return:
             InformedDatasetIteratorIF: Initialized Interface containing dataset iterators.
@@ -37,9 +37,9 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
         """
         Get the iterator that can iterate through filtered labels in the dataset.
         :params:
-            - identifier (str): Tag used as an identifier for the dataset.
-            - iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
-            - filtered_labels (List[Any]): List of filtered labels in the dataset.
+                identifier (str): Tag used as an identifier for the dataset.
+                iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
+                filtered_labels (List[Any]): List of filtered labels in the dataset.
 
         :return:
             InformedDatasetIteratorIF: Initialized Interface containing dataset iterators.
@@ -54,10 +54,10 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
         """
         Get the iterator used for accessing elements of a given split only.
         :params:
-            - identifier (str): Tag used as an identifier for the dataset.
-            - iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
-            - selection_fun (Callable[[DatasetIteratorIF]): Callable function
-            - view_tags (Dict[str, Any]): View tags used as an identifier.
+                identifier (str): Tag used as an identifier for the dataset.
+                iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
+                selection_fun (Callable[[DatasetIteratorIF]): Callable function
+                view_tags (Dict[str, Any]): View tags used as an identifier.
 
         :return:
             InformedDatasetIteratorIF: Initialized Interface containing dataset iterators.
@@ -73,9 +73,9 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
         """
         Get the iterator which can iterate through encoded fetures of a dataset.
         :params:
-            - identifier (str): Tag used as an identifier for the dataset.
-            - iterators (Dict[str, InformedDatasetIteratorIF]): Dictionary mapping from iterator_name -> split_name -> iterator
-            - feature_encoding_configs (Dict[str, List[Any]]): Dictionary containing feature encoding configs.
+                identifier (str): Tag used as an identifier for the dataset.
+                iterators (Dict[str, InformedDatasetIteratorIF]): Dictionary mapping from iterator_name -> split_name -> iterator
+                feature_encoding_configs (Dict[str, List[Any]]): Dictionary containing feature encoding configs.
 
         :return:
              Dict[str, DatasetIteratorIF]: Dictionary containing name of iterator and intialzied DatasetIteratorIF object.
@@ -95,9 +95,9 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
         """
         Get the iterator which can iterate through one hot encoded target vector of a dataset.
         :params:
-            - identifier (str): Tag used as an identifier for the dataset.
-            - iterators (Dict[str, InformedDatasetIteratorIF]): Dictionary mapping from iterator_name -> split_name -> iterator
-            - target_vector_size (int): Size of target vector.
+                identifier (str): Tag used as an identifier for the dataset.
+                iterators (Dict[str, InformedDatasetIteratorIF]): Dictionary mapping from iterator_name -> split_name -> iterator
+                target_vector_size (int): Size of target vector.
 
         :return:
              Dict[str, DatasetIteratorIF]: Dictionary containing name of iterator and intialzied DatasetIteratorIF object.
@@ -140,11 +140,11 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
         Get Splits iterators.
 
         params:
-           - identifier (str): Tag used as an identifier for the dataset.
-           - iterators (Dict[str, Dict[str, InformedDatasetIteratorIF]]): Dictionary mapping from iterator_name -> split_name -> iterator
-           - seed (int): Seed for random generator.
-           - stratified (bool): Whether splits should be stratified.
-           - split_config (Dict): Configuration containing split of iterators.
+               identifier (str): Tag used as an identifier for the dataset.
+               iterators (Dict[str, Dict[str, InformedDatasetIteratorIF]]): Dictionary mapping from iterator_name -> split_name -> iterator
+               seed (int): Seed for random generator.
+               stratified (bool): Whether splits should be stratified.
+               split_config (Dict): Configuration containing split of iterators.
 
         :return:
             Dict[str, InformedDatasetIteratorIF]: Dictionary containing name of iterator and intialzied DatasetIteratorIF object.
@@ -179,8 +179,8 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
         Get iterator in memory.
 
         params:
-           - identifier (str): Tag used as an identifier for the dataset.
-           - iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
+               identifier (str): Tag used as an identifier for the dataset.
+               iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
 
         :return:
             InformedDatasetIteratorIF:  intialzied InformedDatasetIteratorIF object in memory.
@@ -194,9 +194,9 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
         Get iterator shuffled.
 
         params:
-           - identifier (str): Tag used as an identifier for the dataset.
-           - iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
-           - seed (int): Random seed.
+               identifier (str): Tag used as an identifier for the dataset.
+               iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
+               seed (int): Random seed.
 
         :return:
             InformedDatasetIteratorIF:  intialzied InformedDatasetIteratorIF object.

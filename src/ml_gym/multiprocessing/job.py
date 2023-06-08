@@ -6,6 +6,9 @@ from typing import Callable, Dict, List
 
 
 class JobIF:
+    """
+    Job Interface having important properties and execute function.
+    """
 
     @property
     def experiment_id(self) -> str:
@@ -20,6 +23,9 @@ class JobIF:
 
 
 class Job(JobIF):
+    """
+    Class to initialzie Job with all meta data.
+    """
     def __init__(self, job_id: str, fun: Callable, blueprint: BluePrint, param_dict: Dict = None, job_type: JobType = JobType.CALC):
         self.job_id = job_id
         self.job_type = job_type
