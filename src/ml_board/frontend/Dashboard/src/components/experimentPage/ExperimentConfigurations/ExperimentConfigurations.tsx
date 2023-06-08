@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import api, { defaultExperimentConfigFileName } from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
-import { getGridSearchId, getRestApiUrl } from '../../../redux/status/statusSlice';
+import { getGridSearchId, getRestApiUrl } from '../../../redux/globalConfig/globalConfigSlice';
 import styles from './ExperimentConfigurations.module.css';
 
 export default function ExperimentConfigurations({experimentIdProp} : {experimentIdProp: string}) {

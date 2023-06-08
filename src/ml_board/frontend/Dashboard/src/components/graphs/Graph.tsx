@@ -7,7 +7,7 @@ import SelectExperimentDropdown from "./SelectExperimentDropdown/SelectExperimen
 // styles
 import styles from "./Graphs.module.css";
 import { RoutesMapping } from "../../app/RoutesMapping";
-import { useLocation } from "react-router-dom";
+import { selectTab } from "../../redux/globalConfig/globalConfigSlice";
 
 const selectColor = (index: number): string => `hsl(${index * 137.5},75%,50%)`;
 
@@ -17,8 +17,8 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
 
     const chartLabels = useAppSelector(state => selectChartLabelsById(state, chart_id));
     const experimentsDict = useAppSelector(state => selectExperimentsPerChartById(state, chart_id));
-    const location = useLocation();
-    
+    const tab = useAppSelector(selectTab);
+
     const data: ChartData<"line"> = {
         // labels = the X-axis:Array<number>
         labels: 
@@ -47,12 +47,12 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
     };
 
     const legendOnClickHandler = function (event:any, legendItem:any, legend:any) {
-        let index = legendItem.datasetIndex;
-        let ci = legend.chart;
-        let meta = ci.getDatasetMeta(index);
+        const index = legendItem.datasetIndex;
+        const ci = legend.chart;
+        const meta = ci.getDatasetMeta(index);
 
         // Get the indexes of datasets with hidden === false
-        let visibleIndexes = ci.data.datasets.reduce(function(acc:any, dataset:any, i:any) {
+        const visibleIndexes = ci.data.datasets.reduce(function(acc:any, dataset:any, i:any) {
             let otherMeta = ci.getDatasetMeta(i);
             if (otherMeta.hidden === false) {
                 acc.push(i);
@@ -62,6 +62,9 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
 
         // Toggle visibility of clicked dataset
         if(meta.hidden === false) {
+            // if the experiment was already selected to be shown and so others were hidden.
+            // so, when only one experiment is been shown and when you click on it again, show all the experiments (i.e unhide all the other experiments)
+            // I suggest that you try playing with hiding and unhiding the experiments on the frontend - you will get a clear idea! :-)
             if(visibleIndexes.length === 1) {
                 ci.data.datasets.forEach(function(dataset:any, i:any) {
                     let otherMeta = ci.getDatasetMeta(i);
@@ -69,12 +72,13 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
                 });
             }
             else {
-                if(meta.hidden === false) {
-                    meta.hidden = true;
-                }
+                // when multiple experiments are selected and been shown, at that time
+                // if this experiment was also been shown and if you click on it again, this will hide it 
+                meta.hidden = true;
             }
         }
         else {
+            // unhide/show the selected experiment and hide the rest of them (that's why forEach loop)
             meta.hidden = false;
             ci.data.datasets.forEach(function(dataset:any, i:any) {
                 let otherMeta = ci.getDatasetMeta(i);
@@ -170,7 +174,7 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
                     />
                 </Box>
                 {
-                    location.pathname.split("/")[1] !== RoutesMapping["ExperimentPage"].url ?
+                    tab !== RoutesMapping["ExperimentPage"].url ?
                     <SelectExperimentDropdown chart_id={chart_id} />
                     :
                     null

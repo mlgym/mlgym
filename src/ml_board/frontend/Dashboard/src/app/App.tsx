@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
+import { Route, Routes, useSearchParams } from 'react-router-dom';
 import { upsertCharts, resetChartState } from '../redux/charts/chartsSlice';
-import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setSocketConnectionUrl, setThroughput } from '../redux/status/statusSlice';
+import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setSocketConnectionUrl, setThroughput, selectTab } from '../redux/globalConfig/globalConfigSlice';
 import { upsertManyRows, resetTableState } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
-import { useAppDispatch } from './hooks';
+import { useAppDispatch, useAppSelector } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
 
 // components & styles
@@ -62,7 +62,7 @@ export default function App() {
         isOpen: false,
         connection: false
     });
-    const location = useLocation();
+    const tab = useAppSelector(selectTab);
     const dispatch = useAppDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
     const [settingConfigs, setSettingConfigs] = useState({
@@ -88,6 +88,8 @@ export default function App() {
 
     useEffect(() => {
         if (socketConnectionRequest) {
+            dispatch(resetChartState());
+            dispatch(resetTableState());
             // save to local storage only after user clicks on submit button - either in popup or in settings page.
             // after the used submits the values & after it is saved, then only we will connect to the socket with the values given by user.
             // TODO:: after Vijul and Osama's code is merged, handle error message from the socket and show to user - so if the socket connection was not successful, user can update the values and try again.
@@ -110,7 +112,7 @@ export default function App() {
                 workerSocket.terminate();
             }
         }
-    }, [socketConnectionRequest && settingConfigs]);
+    }, [socketConnectionRequest, settingConfigs]);
     // recommended way: keeping the second condition blank, fires useEffect just once as there are no conditions to check to fire up useEffect again (just like componentDidMount of React Life cycle).
 
     // NOTE: data is alway created with 2 empty buffers and then populated before being passed to this method, so no need to check for null or undefined!
@@ -167,7 +169,7 @@ export default function App() {
         <div className={styles.main_container}>
             {
                 // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
-                urls.includes(location.pathname.split("/")[1]) && <TopBarWithDrawer />
+                urls.includes(tab) && <TopBarWithDrawer />
             }
             <Routes>
                 {
@@ -204,7 +206,7 @@ export default function App() {
             {
                 // Floating Action Button (FAB) added for filter popup
                 // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar). Also hide it when user is on Settings Page (As - not needed to do filter when viewing/inserting/updating configurations)
-                (urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url) && (location.pathname.split("/")[1] !== RoutesMapping["ExperimentPage"].url) ?
+                (urls.includes(tab) && tab !== RoutesMapping["Settings"].url) && (tab !== RoutesMapping["ExperimentPage"].url) ?
                     <div className={styles.fab}>
                         <Fab
                             variant="extended"
@@ -246,7 +248,7 @@ export default function App() {
             </React.Fragment>
             {
                 // here also, it is same as done above for Setting Component. We need to pass functions as props to the popup - so that when user submits the configured values, we can connect to websocket with the changed parameters.
-                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url && isConfigValidated === false ?
+                urls.includes(tab) && tab !== RoutesMapping["Settings"].url && isConfigValidated === false ?
                     <ConfigPopup
                         isConfigValidated={isConfigValidated}
                         setSocketConnectionRequest={() => setSocketConnectionRequest(true)}

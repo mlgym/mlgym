@@ -7,12 +7,22 @@ from copy import deepcopy
 
 
 class WorkerProcess(Process):
+    """
+    WorkerProcess class.
+    """
     def __init__(self, process_id: int, num_jobs_to_perform: int, job_q: Queue, job_update_q: Queue, device: torch.device):
         super(WorkerProcess, self).__init__(target=self.work, args=(job_q, job_update_q, num_jobs_to_perform, device))
         self.process_id = process_id
 
     def work(self, job_q: Queue, job_update_q: Queue, num_jobs_to_perform: int, device: torch.device):
-
+        """
+        Work on the Jobs.
+        :params:
+                job_q (Queue): Job Queue.
+                job_update_q (Queue): Job Update Queue.
+                num_jobs_to_perform (int): Number of jobs to perform.
+                device (torch.device): Device to use.
+        """
         jobs_done_count = 0
         while True:
             job: Job = job_q.get(block=True)            # https://stackoverflow.com/a/21157892
@@ -41,6 +51,9 @@ class WorkerProcess(Process):
 
 
 class WorkerProcessWrapper:
+    """
+    Wrapper on WorkProcess Class.
+    """
     def __init__(self, process_id: int, num_jobs_to_perform: int, device: torch.device, job_q: Queue, job_update_q: Queue):
         self.jobs_done_count = 0
         self.device = device

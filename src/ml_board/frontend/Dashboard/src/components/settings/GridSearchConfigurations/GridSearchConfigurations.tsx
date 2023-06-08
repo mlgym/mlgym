@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import api, { defaultGridSearchConfigFileName } from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
-import { getGridSearchId, getRestApiUrl, getSocketConnectionUrl, isConnected } from '../../../redux/status/statusSlice';
+import { getGridSearchId, getRestApiUrl, getSocketConnectionUrl, isConnected } from '../../../redux/globalConfig/globalConfigSlice';
 import styles from './GridSearchConfigurations.module.css';
 
 export default function GridSearchConfigurations() {
@@ -43,7 +43,7 @@ export default function GridSearchConfigurations() {
             setError("Oops! an error occurred");
         });
 
-    },[isSocketConnected && (grid_search_id || rest_api_url || socket_connection_url)]);
+    },[isSocketConnected, grid_search_id, rest_api_url, socket_connection_url]);
 
     function downloadFile() {
         const blob = new Blob([yamlString], { type: 'text/yaml' });

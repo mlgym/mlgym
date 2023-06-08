@@ -16,7 +16,7 @@ import * as React from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { RoutesMapping } from '../../app/RoutesMapping';
-import { changeTab, selectTab } from '../../redux/status/statusSlice';
+import { changeTab, selectTab } from '../../redux/globalConfig/globalConfigSlice';
 import { LogoOnly, LogoText } from "../../svgs_and_imgs/Icons";
 import Statistics from '../statistics/Statistics';
 // styles
@@ -121,10 +121,7 @@ export default function TopBarWithDrawer() {
                             And, if the URL === "" then it's the home page, which will be the Graphs page by default. 
                         */}
                         {
-                            location.pathname.split("/")[1] === "" ?
-                            RoutesMapping.Graphs.url.charAt(0).toUpperCase() + RoutesMapping.Graphs.url.slice(1)
-                            :
-                            location.pathname.split("/")[1].charAt(0).toUpperCase() + location.pathname.split("/")[1].slice(1)
+                            currentTab.charAt(0).toUpperCase() + currentTab.slice(1)
                         }
                     </Typography>
                 </Container>
