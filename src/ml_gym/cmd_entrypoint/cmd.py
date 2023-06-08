@@ -42,8 +42,8 @@ class TrainRunConfiguration:
     Class to store configuration to initiate training of a model.
     :params:
            num_epochs(int): number of epochs to be trained to.
-           gs_config_path (str): Path ro the gs_config file.
-           validation_config_path : Path ro the validation_strategy_config file.
+           gs_config_path (str): Path to the gs_config file.
+           validation_config_path : Path to the validation_strategy_config file.
            num_batches_per_epoch (int): numner of batches to be trained per epoch.
     """
     num_epochs: int
@@ -161,8 +161,8 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
            grid_search_id (int): Grid Search ID created for the run.
            blueprint_class (Type[BluePrint]): Blueprint class object having all the components for the GymJob.
            gym (Gym): Gym class object.
-           gs_config_path (str): Path ro the gs_config file.
-           validation_strategy_config_path (str): Path ro the validation_strategy_config file.
+           gs_config_path (str): Path to the gs_config file.
+           validation_strategy_config_path (str): Path to the validation_strategy_config file.
            gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Initiated Grid Search
            API Client interface for performing REST calls.
            accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs
@@ -173,8 +173,8 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
         """
         Log the configuration files in event_storage which are being used to run Gym Model.
         :params:
-               gs_config_path (str): Path ro the gs_config file.
-               validation_strategy_config_path (str): Path ro the validation_strategy_config file.
+               gs_config_path (str): Path to the gs_config file.
+               validation_strategy_config_path (str): Path to the validation_strategy_config file.
                gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Initiated Grid Search
                API Client interface for performing REST calls.
                accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs
@@ -199,8 +199,8 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
                 gs_api_client.add_config_string(grid_search_id=blueprint.grid_search_id, config_name="experiment_config.json",
                                                 config=json.dumps(blueprint.config), experiment_id=blueprint.experiment_id,
                                                 file_format=FileFormat.JSON)
-                gs_api_client.add_config_string(grid_search_id=blueprint.grid_search_id, config_name="system_info.json",
-                                                config=json.dumps(SystemEnv.create_system_info()), experiment_id=blueprint.experiment_id,
+                gs_api_client.add_config_string(grid_search_id=blueprint.grid_search_id, config_name="model_card.json",
+                                                config=json.dumps(SystemEnv.create_model_card(grid_search_id=blueprint.grid_search_id, exp_config = blueprint.config, gs_config = YAMLConfigLoader.load_string(gs_config_string))), experiment_id=blueprint.experiment_id,
                                                 file_format=FileFormat.JSON)
 
     gs_config_string = Path(gs_config_path).read_text()
@@ -276,7 +276,7 @@ def parse_run_configuration(run_configuration_file_path: str) -> Tuple[Union[Tra
     """
     Parsing run_config.yml file to create configs needed for mlGym to run experiments.
     :params:
-        run_configuration_file_path (str): Path ro the run_config file.
+        run_configuration_file_path (str): Path to the run_config file.
     :returns:  
            run_config (Union[..]): Tran Config object from run_config yml file.
            environment_config (Union[..]): Contains the environment config objects for number of processors and
@@ -329,7 +329,7 @@ def run(blueprint_class: BluePrint, run_configuration_file_path: Union[TrainRunC
     Parsing run_config.yml file to create configs needed for mlGym to run experiments.
     :params:
            blueprint_class (BluePrint): Object of blueprint Class used for creating all the components for the GymJob.
-           run_configuration_file_path (str): Path ro the run_config file.
+           run_configuration_file_path (str): Path to the run_config file.
     """
     run_config, env_config, logging_config = parse_run_configuration(run_configuration_file_path=run_configuration_file_path)
 
