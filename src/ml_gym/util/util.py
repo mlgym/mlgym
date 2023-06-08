@@ -34,17 +34,41 @@ class ModelDetails:
     source_repo: str = ""
     train_params: int = 0
 
+    def toJSON(self) -> Dict:
+        model_card ={}
+        model_card["model_description"] = self.model_description
+        model_card["model_version"] = self.model_version
+        model_card["grid_search_id"] = self.grid_search_id
+        model_card["train_date"] = self.train_date
+        model_card["source_repo"] = self.source_repo
+        model_card["train_params"] = self.train_params
+        return model_card
+
 @dataclass
 class DatasetDetails:
+    dataset_splits: dict = None
     considered_dataset: str = ""
     label_distribution: str = ""
-    dataset_splits: dict = {}
+
+    def toJSON(self) -> Dict:
+        model_card ={}
+        model_card["dataset_splits"] = self.dataset_splits
+        model_card["considered_dataset"] = self.considered_dataset
+        model_card["label_distribution"] = self.label_distribution
+        return model_card
 
 @dataclass
 class ExperimentEnvironment:
-    carbon_footprint: Dict = {}
-    system_env: Dict = {}
+    system_env: dict = None
+    carbon_footprint: dict = None
     entry_point_cmd: str = ""
+
+    def toJSON(self) -> Dict:
+        model_card ={}
+        model_card["system_env"] = self.system_env
+        model_card["carbon_footprint"] = self.carbon_footprint
+        model_card["entry_point_cmd"] = self.entry_point_cmd
+        return model_card
 
     def create_system_info() -> Dict:
         """
@@ -84,13 +108,27 @@ class ExperimentEnvironment:
 
 @dataclass
 class TrainingDetails:
-    loss_func: str
-    hyperparams: Dict
+    hyperparams: dict = None
+    loss_func: str = ""
+    optimizer: str = ""
+
+    def toJSON(self) -> Dict:
+        model_card ={}
+        model_card["hyperparams"] = self.hyperparams
+        model_card["loss_func"] = self.loss_func
+        model_card["optimizer"] = self.optimizer
+        return model_card
 
 @dataclass
 class EvalDetails:
-    loss_func: str
-    metrics: Dict
+    loss_funcs: list
+    metrics: list
+
+    def toJSON(self) -> Dict:
+        model_card ={}
+        model_card["loss_funcs"] = self.loss_funcs
+        model_card["metrics"] = self.metrics
+        return model_card
 
 @dataclass
 class ModelCard:
@@ -99,6 +137,15 @@ class ModelCard:
     experiment_environment: ExperimentEnvironment
     training_details: TrainingDetails
     eval_details: EvalDetails
+
+    def toJSON(self) -> Dict:
+        model_card = {}
+        model_card["model_details"] = self.model_details.toJSON()
+        model_card["dataset_details"] = self.dataset_details.toJSON()
+        model_card["training_details"] = self.training_details.toJSON()
+        model_card["eval_details"] = self.eval_details.toJSON()
+        model_card["experiment_environment"] = self.experiment_environment.toJSON()
+        return model_card
 
 class SystemEnv:
 
@@ -121,11 +168,12 @@ class SystemEnv:
                     grid_search_id (str): Grid Search ID created for the run.
                     gs_config (dict): Grid Search configuration.
             :returns:
-                    model_details (ModelDetails): initialized model details object.
+                    obj (ModelDetails): initialized model details object.
             """
             # pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad) 
             train_date = datetime.now().strftime("%d-%m-%Y")
-            return ModelDetails(model_description = gs_config.global_config.model_description, model_version = gs_config.global_config.model_version, grid_search_id = grid_search_id, train_date = train_date, source_repo = gs_config.global_config.source_repo)
+            model_info = gs_config["model_info"]
+            return ModelDetails(model_description = model_info["model_description"], model_version = model_info["model_version"], grid_search_id = grid_search_id, train_date = train_date, source_repo = model_info["source_repo"])
         
         def update_dataset_details(exp_config: dict) -> DatasetDetails:
             """
@@ -133,17 +181,55 @@ class SystemEnv:
             :params:
                     exp_config (dict): Experiment configuration.
             :returns:
-                    dataset_details (DatasetDetails): initialized dataset details object.
+                    obj (DatasetDetails): initialized dataset details object.
             """
-            dataset_splits = {"split_config": exp_config.dataset_iterators.config.split_configs, 
-                              "splits_percentage": exp_config.splitted_dataset_iterators.config.split_configs}
+            dataset_splits = {"split_config": exp_config["dataset_iterators"]["config"]["split_configs"], 
+                              "splits_percentage": exp_config["splitted_dataset_iterators"]["config"]["split_configs"]}
             
-            return DatasetDetails(considered_dataset = exp_config.dataset_iterators.config.dataset_identifier, dataset_splits = dataset_splits)
+            return DatasetDetails(considered_dataset = exp_config["dataset_iterators"]["config"]["dataset_identifier"], dataset_splits = dataset_splits)
+        
+        def update_training_details(exp_config: dict, gs_config: dict) -> TrainingDetails:
+            """
+            Function to initialize TrainingDetails object.
+            :params:
+                    exp_config (dict): Experiment configuration.
+            :returns:
+                    obj (TrainingDetails): initialized training details object.
+            """
+            return TrainingDetails( hyperparams = exp_config["optimizer"]["config"]["params"], loss_func = exp_config["train_component"]["config"]["loss_fun_config"]["tag"], optimizer = exp_config["optimizer"]["config"]["optimizer_key"])
+        
+        def update_evaluation_details(exp_config: dict) -> EvalDetails:
+            """
+            Function to initialize EvalDetails object.
+            :params:
+                    exp_config (dict): Experiment configuration.
+            :returns:
+                    obj (EvalDetails): initialized evaluation details object.
+            """
+            loss_funcs = []
+            metrics = []
+            for loss_func_config in exp_config["eval_component"]["config"]["loss_funs_config"]:
+                loss_funcs.append(loss_func_config["tag"])
+            
+            for metric_config in exp_config["eval_component"]["config"]["metrics_config"]:
+                metrics.append({"name": metric_config["tag"], "params": metric_config["params"]})
+
+            return EvalDetails(loss_funcs = loss_funcs, metrics = metrics)
 
         try:
-            experiment_env = ExperimentEnvironment(system_env= ExperimentEnvironment.create_system_info())
+            experiment_env = ExperimentEnvironment(system_env = ExperimentEnvironment.create_system_info())
             model_details = update_model_details(grid_search_id = grid_search_id, gs_config = gs_config)
-            dataset_details = update_dataset_details(exp_config= exp_config)
+            dataset_details = update_dataset_details(exp_config = exp_config)
+            training_details = update_training_details(exp_config = exp_config, gs_config = gs_config)
+            eval_details = update_evaluation_details(exp_config = exp_config)
+            model_card = ModelCard(
+                model_details = model_details,
+                dataset_details = dataset_details,
+                experiment_environment = experiment_env,
+                training_details = training_details,
+                eval_details =eval_details
+            )
+            return model_card.toJSON()
         except Exception as e:
             raise ModelCardCreationError(f"Unable to fetch System Info") from e
 

@@ -4,6 +4,8 @@ global_config:
   target_key: &target_key_anchor target_key
   model_prediction_key: &model_prediction_key_anchor model_prediction_key
   postprocessing_argmax_key: &postprocessing_argmax_key_anchor postprocessing_argmax_key
+
+model_info:  
   model_description: "Testing 1 2 3 Hopefully it works."
   model_version: 1.0.0
   source_repo: "Github repo link Ex: https://github.com/mlgym/mlgym/tree/dev"

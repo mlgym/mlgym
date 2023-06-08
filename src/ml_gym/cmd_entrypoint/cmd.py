@@ -200,7 +200,7 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
                                                 config=json.dumps(blueprint.config), experiment_id=blueprint.experiment_id,
                                                 file_format=FileFormat.JSON)
                 gs_api_client.add_config_string(grid_search_id=blueprint.grid_search_id, config_name="model_card.json",
-                                                config=json.dumps(SystemEnv.create_model_card(grid_search_id=blueprint.grid_search_id, exp_config = blueprint.config, gs_config = YAMLConfigLoader.load_string(gs_config_string))), experiment_id=blueprint.experiment_id,
+                                                config=json.dumps(SystemEnv.create_model_card(grid_search_id=blueprint.grid_search_id, exp_config = blueprint.config, gs_config = yaml.safe_load(gs_config_string))), experiment_id=blueprint.experiment_id,
                                                 file_format=FileFormat.JSON)
 
     gs_config_string = Path(gs_config_path).read_text()
@@ -215,8 +215,6 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
         validation_strategy_config_string = None
         validation_strategy_config = None
         validation_mode = ValidationMode.GRID_SEARCH
-
-    gs_config = YAMLConfigLoader.load_string(gs_config_string)
 
     validator = get_validator(validation_mode, blueprint_class, RunMode.TRAIN, validation_strategy_config, gs_config)
 
