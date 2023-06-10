@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
+import { Route, Routes, useSearchParams } from 'react-router-dom';
 import { upsertCharts, resetChartState } from '../redux/charts/chartsSlice';
-import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setSocketConnectionUrl, setThroughput } from '../redux/globalConfig/globalConfigSlice';
+import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setSocketConnectionUrl, setThroughput, selectTab } from '../redux/globalConfig/globalConfigSlice';
 import { upsertManyRows, resetTableState } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
-import { useAppDispatch } from './hooks';
+import { useAppDispatch, useAppSelector } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
 
 // components & styles
@@ -62,7 +62,7 @@ export default function App() {
         isOpen: false,
         connection: false
     });
-    const location = useLocation();
+    const tab = useAppSelector(selectTab);
     const dispatch = useAppDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
     const [settingConfigs, setSettingConfigs] = useState({
@@ -169,7 +169,7 @@ export default function App() {
         <div className={styles.main_container}>
             {
                 // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
-                urls.includes(location.pathname.split("/")[1]) && <TopBarWithDrawer />
+                urls.includes(tab) && <TopBarWithDrawer />
             }
             <Routes>
                 {
@@ -206,7 +206,7 @@ export default function App() {
             {
                 // Floating Action Button (FAB) added for filter popup
                 // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar). Also hide it when user is on Settings Page (As - not needed to do filter when viewing/inserting/updating configurations)
-                (urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url) && (location.pathname.split("/")[1] !== RoutesMapping["ExperimentPage"].url) ?
+                (urls.includes(tab) && tab !== RoutesMapping["Settings"].url) && (tab !== RoutesMapping["ExperimentPage"].url) ?
                     <div className={styles.fab}>
                         <Fab
                             variant="extended"
@@ -248,7 +248,7 @@ export default function App() {
             </React.Fragment>
             {
                 // here also, it is same as done above for Setting Component. We need to pass functions as props to the popup - so that when user submits the configured values, we can connect to websocket with the changed parameters.
-                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url && isConfigValidated === false ?
+                urls.includes(tab) && tab !== RoutesMapping["Settings"].url && isConfigValidated === false ?
                     <ConfigPopup
                         isConfigValidated={isConfigValidated}
                         setSocketConnectionRequest={() => setSocketConnectionRequest(true)}
