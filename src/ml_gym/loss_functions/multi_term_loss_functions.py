@@ -6,6 +6,9 @@ import torch
 
 
 class MultiLoss(LossWarmupMixin, Loss):
+    """
+    Multi Term Loss Function Class.
+    """
     def __init__(self, tag: str, scalers: List[Scaler],
                  loss_terms: List[Loss], loss_weights: List[float]):
         LossWarmupMixin.__init__(self)

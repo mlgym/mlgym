@@ -21,12 +21,12 @@ class GymJobFactory:
         """
         Create Gym Job to be used on single CPU or GPU.
         :params:
-           - blueprint (BluePrint): Blueprint class object having all the components for the GymJob.
-           - device (torch.device): Torch device either CPUs or a specified GPU.
-           - num_epochs(int): number of epochs to be trained to.
-           - logger_collection_constructable (LoggerConstructableIF): Logging interface
-           - gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
-           - num_batches_per_epoch (int): Number of batches to be trained per epoch.
+               blueprint (BluePrint): Blueprint class object having all the components for the GymJob.
+               device (torch.device): Torch device either CPUs or a specified GPU.
+               num_epochs(int): number of epochs to be trained to.
+               logger_collection_constructable (LoggerConstructableIF): Logging interface
+               gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
+               num_batches_per_epoch (int): Number of batches to be trained per epoch.
         """ 
         components = blueprint.construct(device)
 
@@ -55,12 +55,12 @@ class GymJobFactory:
         """
         Create Gym Job to be used on multiple GPUs using Accelerate.
         :params:
-           - blueprint (BluePrint): Blueprint class object having all the components for the GymJob.
-           - num_epochs(int): number of epochs to be trained to.
-           - logger_collection_constructable (LoggerConstructableIF): Logging interface
-           - gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
-           - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
-           - num_batches_per_epoch (int): Number of batches to be trained per epoch.
+               blueprint (BluePrint): Blueprint class object having all the components for the GymJob.
+               num_epochs(int): number of epochs to be trained to.
+               logger_collection_constructable (LoggerConstructableIF): Logging interface
+               gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
+               accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
+               num_batches_per_epoch (int): Number of batches to be trained per epoch.
         """ 
         components = blueprint.construct()
 

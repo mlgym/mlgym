@@ -1,4 +1,5 @@
 from abc import abstractmethod
+import io
 import os
 import pickle
 from typing import Callable, List
@@ -73,8 +74,8 @@ class AbstractGymJob(StatefulComponent):
         Create and delete checkpoints for each epoch in experiments.
 
         :params:
-           - checkpoint_instruction (CheckpointingInstruction): CheckpointingInstruction object.
-           - current_epoch (int): Current epoch number for cerating checkpoints.
+               checkpoint_instruction (CheckpointingInstruction): CheckpointingInstruction object.
+               current_epoch (int): Current epoch number for cerating checkpoints.
         """
         if checkpoint_instruction.save_current:
 
@@ -93,17 +94,29 @@ class AbstractGymJob(StatefulComponent):
                                                                    custom_file_name=f"{checkpoint_file_name}.zip")
 
             else:
+                model_buffer = io.BytesIO()
+                torch.save(self.model.state_dict(), model_buffer)
+
+                optimizer_buffer = io.BytesIO()
+                torch.save(self.optimizer.state_dict(), optimizer_buffer)
+
+                lr_scheduler_buffer = io.BytesIO()
+                torch.save(self.lr_scheduler.state_dict(), lr_scheduler_buffer)
+
                 payload_dict = {
-                    CheckpointResource.model: pickle.dumps(self.model.state_dict()),
-                    CheckpointResource.optimizer: pickle.dumps(self.optimizer.state_dict()),
-                    CheckpointResource.lr_scheduler: pickle.dumps(self.lr_scheduler.state_dict()),
+                    CheckpointResource.model: model_buffer.getvalue(),
+                    CheckpointResource.optimizer: optimizer_buffer.getvalue(),
+                    CheckpointResource.lr_scheduler: lr_scheduler_buffer.getvalue(),
                     CheckpointResource.stateful_components: pickle.dumps(self.get_state())
                 }
 
                 for checkpoint_resource_key, checkpoint_resource_stream in payload_dict.items():
                     self.gs_api_client.add_checkpoint_resource(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id,
                                                                epoch=current_epoch, payload_stream=checkpoint_resource_stream,
-                                                               custom_file_name=f"{checkpoint_resource_key}.pickle")
+                                                               custom_file_name=checkpoint_resource_key)
+                model_buffer.close()
+                optimizer_buffer.close()
+                lr_scheduler_buffer.close()
 
         if accelerator is None or accelerator is not None and accelerator.is_main_process:
             for epoch in checkpoint_instruction.checkpoints_to_delete:
@@ -116,14 +129,14 @@ class AbstractGymJob(StatefulComponent):
         Log experiment details for processed batch of data.
 
         :params:
-           - status (str): CheckpointingInstruction object.
-           - experiment_status_logger (ExperimentStatusLogger): Epoch/Experiment number for cerating checkpoints.
-           - num_batches (int): numner of batches to be trained.
-           - current_batch (int): Batch number for which details to be logged.
-           - splits (List[str]): Splits list for the data
-           - current_split (str): Current split of the data.
-           - num_epochs(int): number of epochs to be trained to.
-           - current_epoch (int): Current epoch number.
+               status (str): CheckpointingInstruction object.
+               experiment_status_logger (ExperimentStatusLogger): Epoch/Experiment number for cerating checkpoints.
+               num_batches (int): numner of batches to be trained.
+               current_batch (int): Batch number for which details to be logged.
+               splits (List[str]): Splits list for the data
+               current_split (str): Current split of the data.
+               num_epochs(int): number of epochs to be trained to.
+               current_epoch (int): Current epoch number.
         """
         if (current_batch % max(1, int(num_batches/10))) == 0:  # TODO make update period configurable
             experiment_status_logger.log_experiment_status(status=status,
@@ -141,9 +154,9 @@ class AbstractGymJob(StatefulComponent):
         Log evaluation details for an epoch.
 
         :params:
-           - experiment_status_logger (ExperimentStatusLogger): Epoch/Experiment number for cerating checkpoints.
-           - evaluation_result (EvaluationBatchResult): Object storing entire epoch infotmation.
-           - current_epoch (int): Current epoch number.
+               experiment_status_logger (ExperimentStatusLogger): Epoch/Experiment number for cerating checkpoints.
+               evaluation_result (EvaluationBatchResult): Object storing entire epoch infotmation.
+               current_epoch (int): Current epoch number.
         """
         experiment_status_logger.log_evaluation_results(evaluation_result, current_epoch)
 
@@ -153,11 +166,11 @@ class AbstractGymJob(StatefulComponent):
         Log evaluation details for an epoch.
 
         :params:
-           - num_epochs (int): Number of epochs to be trained.
-           - current_epoch (int): Current epoch number.
-           - model (NNModel): Torch Neural Network module.
-           - evaluation_step_routine (Callable): Epoch/Experiment number for cerating checkpoints.
-           - accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
+               num_epochs (int): Number of epochs to be trained.
+               current_epoch (int): Current epoch number.
+               model (NNModel): Torch Neural Network module.
+               evaluation_step_routine (Callable): Epoch/Experiment number for cerating checkpoints.
+               accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
         """
         evaluation_results = evaluation_step_routine(current_epoch=current_epoch)
         if current_epoch > 0:

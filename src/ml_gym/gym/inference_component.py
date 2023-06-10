@@ -17,12 +17,12 @@ class InferenceComponent:
         Perform prediction on the torch NN Model.
 
         :params:
-           - model (NNModel): Torch Neural Network module.
-           - batch (DatasetBatch): Train Dataset.
-           - post_processors (List[PredictPostProcessingIF]): Batch number for which details to be logged.
+               model (NNModel): Torch Neural Network module.
+               batch (DatasetBatch): Train Dataset.
+               post_processors (List[PredictPostProcessingIF]): Batch number for which details to be logged.
            
         :returns:
-            result_batch (InferenceResultBatch): Predicttion performed on the model.
+            result_batch (InferenceResultBatch): Prediction performed on the model.
         """
         post_processors = post_processors if post_processors is not None else []
         if self.no_grad:
@@ -34,5 +34,15 @@ class InferenceComponent:
         return PredictPostprocessingComponent.post_process(result_batch, post_processors=post_processors)
 
     def predict_data_loader(self, model: NNModel, dataset_loader: DatasetLoader) -> InferenceResultBatch:
+        """
+        Perform prediction on the batches from dataset_loader using the torch NN Model.
+
+        :params:
+               model (NNModel): Torch Neural Network module.
+               dataset_loader (DatasetLoader): Dataset loader.
+           
+        :returns:
+            InferenceResultBatch object: Combination of all predictions performed on the batches.
+        """
         result_batches = [self.predict(model, batch) for batch in tqdm.tqdm(dataset_loader, desc="Batches processed:")]
         return InferenceResultBatch.combine(result_batches)
