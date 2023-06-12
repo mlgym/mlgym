@@ -121,8 +121,8 @@ class TrainingDetails:
 
 @dataclass
 class EvalDetails:
-    loss_funcs: list
-    metrics: list
+    loss_funcs: list = None
+    metrics: list = None
 
     def toJSON(self) -> Dict:
         model_card ={}
@@ -170,10 +170,14 @@ class SystemEnv:
             :returns:
                     obj (ModelDetails): initialized model details object.
             """
-            # pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad) 
-            train_date = datetime.now().strftime("%d-%m-%Y")
-            model_info = gs_config["model_info"]
-            return ModelDetails(model_description = model_info["model_description"], model_version = model_info["model_version"], grid_search_id = grid_search_id, train_date = train_date, source_repo = model_info["source_repo"])
+            # pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+            try:
+                train_date = datetime.now().strftime("%d-%m-%Y")
+                model_info = gs_config["model_info"]
+                return ModelDetails(model_description = model_info["model_description"], model_version = model_info["model_version"], grid_search_id = grid_search_id, train_date = train_date, source_repo = model_info["source_repo"])
+            except Exception as e:
+                print("Error while fetching Model Details for Model card.", e)
+                return ModelDetails()
         
         def update_dataset_details(exp_config: dict) -> DatasetDetails:
             """
@@ -183,10 +187,14 @@ class SystemEnv:
             :returns:
                     obj (DatasetDetails): initialized dataset details object.
             """
-            dataset_splits = {"split_config": exp_config["dataset_iterators"]["config"]["split_configs"], 
+            try:
+                dataset_splits = {"split_config": exp_config["dataset_iterators"]["config"]["split_configs"], 
                               "splits_percentage": exp_config["splitted_dataset_iterators"]["config"]["split_configs"]}
             
-            return DatasetDetails(considered_dataset = exp_config["dataset_iterators"]["config"]["dataset_identifier"], dataset_splits = dataset_splits)
+                return DatasetDetails(considered_dataset = exp_config["dataset_iterators"]["config"]["dataset_identifier"], dataset_splits = dataset_splits)
+            except Exception as e:
+                print("Error while fetching Dataset Details for Model card.", e)
+                return DatasetDetails()
         
         def update_training_details(exp_config: dict, gs_config: dict) -> TrainingDetails:
             """
@@ -196,7 +204,11 @@ class SystemEnv:
             :returns:
                     obj (TrainingDetails): initialized training details object.
             """
-            return TrainingDetails( hyperparams = exp_config["optimizer"]["config"]["params"], loss_func = exp_config["train_component"]["config"]["loss_fun_config"]["tag"], optimizer = exp_config["optimizer"]["config"]["optimizer_key"])
+            try:
+                return TrainingDetails( hyperparams = exp_config["optimizer"]["config"]["params"], loss_func = exp_config["train_component"]["config"]["loss_fun_config"]["tag"], optimizer = exp_config["optimizer"]["config"]["optimizer_key"])
+            except Exception as e:
+                print("Error while fetching Training Details for Model card.", e)
+                return TrainingDetails()
         
         def update_evaluation_details(exp_config: dict) -> EvalDetails:
             """
@@ -208,13 +220,17 @@ class SystemEnv:
             """
             loss_funcs = []
             metrics = []
-            for loss_func_config in exp_config["eval_component"]["config"]["loss_funs_config"]:
-                loss_funcs.append(loss_func_config["tag"])
+            try:
+                for loss_func_config in exp_config["eval_component"]["config"]["loss_funs_config"]:
+                    loss_funcs.append(loss_func_config["tag"])
             
-            for metric_config in exp_config["eval_component"]["config"]["metrics_config"]:
-                metrics.append({"name": metric_config["tag"], "params": metric_config["params"]})
+                for metric_config in exp_config["eval_component"]["config"]["metrics_config"]:
+                    metrics.append({"name": metric_config["tag"], "params": metric_config["params"]})
 
-            return EvalDetails(loss_funcs = loss_funcs, metrics = metrics)
+                return EvalDetails(loss_funcs = loss_funcs, metrics = metrics)
+            except Exception as e:
+                print("Error while fetching Eval Details for Model card.", e)
+                return EvalDetails()
 
         try:
             experiment_env = ExperimentEnvironment(system_env = ExperimentEnvironment.create_system_info())
