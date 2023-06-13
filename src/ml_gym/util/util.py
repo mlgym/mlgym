@@ -150,7 +150,7 @@ class ModelCard:
 class SystemEnv:
 
     @staticmethod
-    def create_model_card(grid_search_id: str, exp_config: dict, gs_config: dict) -> Dict:
+    def create_model_card(grid_search_id: str, exp_config: dict, gs_config: dict, model = None) -> Dict:
         """
         Create Model card.
         :params:
@@ -161,7 +161,7 @@ class SystemEnv:
                 model_card (ModelCard): Model card object to be converted into json file.
         """
         
-        def update_model_details(grid_search_id: str, gs_config: dict) -> ModelDetails:
+        def update_model_details(grid_search_id: str, gs_config: dict, model) -> ModelDetails:
             """
             Function to initialize ModelDetails object.
             :params:
@@ -170,11 +170,14 @@ class SystemEnv:
             :returns:
                     obj (ModelDetails): initialized model details object.
             """
-            # pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
             try:
+                if model != None:
+                    pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+                else:
+                    pytorch_total_params = 0
                 train_date = datetime.now().strftime("%d-%m-%Y")
                 model_info = gs_config["model_info"]
-                return ModelDetails(model_description = model_info["model_description"], model_version = model_info["model_version"], grid_search_id = grid_search_id, train_date = train_date, source_repo = model_info["source_repo"])
+                return ModelDetails(model_description = model_info["model_description"], model_version = model_info["model_version"], grid_search_id = grid_search_id, train_date = train_date, source_repo = model_info["source_repo"], train_params= pytorch_total_params)
             except Exception as e:
                 print("Error while fetching Model Details for Model card.", e)
                 return ModelDetails()
@@ -205,7 +208,9 @@ class SystemEnv:
                     obj (TrainingDetails): initialized training details object.
             """
             try:
-                return TrainingDetails( hyperparams = exp_config["optimizer"]["config"]["params"], loss_func = exp_config["train_component"]["config"]["loss_fun_config"]["tag"], optimizer = exp_config["optimizer"]["config"]["optimizer_key"])
+                hyperparams = {}
+                hyperparams["optimizer"] = exp_config["optimizer"]["config"]["params"]
+                return TrainingDetails( hyperparams = hyperparams, loss_func = exp_config["train_component"]["config"]["loss_fun_config"]["tag"], optimizer = exp_config["optimizer"]["config"]["optimizer_key"])
             except Exception as e:
                 print("Error while fetching Training Details for Model card.", e)
                 return TrainingDetails()
@@ -234,7 +239,7 @@ class SystemEnv:
 
         try:
             experiment_env = ExperimentEnvironment(system_env = ExperimentEnvironment.create_system_info())
-            model_details = update_model_details(grid_search_id = grid_search_id, gs_config = gs_config)
+            model_details = update_model_details(grid_search_id = grid_search_id, gs_config = gs_config, model=model)
             dataset_details = update_dataset_details(exp_config = exp_config)
             training_details = update_training_details(exp_config = exp_config, gs_config = gs_config)
             eval_details = update_evaluation_details(exp_config = exp_config)
