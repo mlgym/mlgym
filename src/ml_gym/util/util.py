@@ -1,3 +1,4 @@
+from datetime import datetime
 from ml_gym.blueprints.blue_prints import BluePrint
 from ml_gym.models.nn.net import NNModel
 import json
@@ -16,21 +17,65 @@ from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingCom
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 import tqdm
 from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob
-from ml_gym.error_handling.exception import SystemInfoFetchError
+from ml_gym.error_handling.exception import ModelCardCreationError, SystemInfoFetchError
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 import platform
 import torch
 import psutil
 import pkg_resources
+from dataclasses import dataclass
 
+@dataclass
+class ModelDetails:
+    model_description: str = ""
+    model_version: str = "" 
+    grid_search_id: str = ""
+    train_date: str = ""
+    source_repo: str = ""
+    train_params: int = 0
 
-class SystemEnv:
-    @staticmethod
+    def toJSON(self) -> Dict:
+        model_card ={}
+        model_card["model_description"] = self.model_description
+        model_card["model_version"] = self.model_version
+        model_card["grid_search_id"] = self.grid_search_id
+        model_card["train_date"] = self.train_date
+        model_card["source_repo"] = self.source_repo
+        model_card["train_params"] = self.train_params
+        return model_card
+
+@dataclass
+class DatasetDetails:
+    dataset_splits: dict = None
+    considered_dataset: str = ""
+    label_distribution: str = ""
+
+    def toJSON(self) -> Dict:
+        model_card ={}
+        model_card["dataset_splits"] = self.dataset_splits
+        model_card["considered_dataset"] = self.considered_dataset
+        model_card["label_distribution"] = self.label_distribution
+        return model_card
+
+@dataclass
+class ExperimentEnvironment:
+    system_env: dict = None
+    carbon_footprint: dict = None
+    entry_point_cmd: str = ""
+
+    def toJSON(self) -> Dict:
+        model_card ={}
+        model_card["system_env"] = self.system_env
+        model_card["carbon_footprint"] = self.carbon_footprint
+        model_card["entry_point_cmd"] = self.entry_point_cmd
+        return model_card
+
     def create_system_info() -> Dict:
         """
         Fetch System Information for model card.
 
-        :returns: Dict- System Information of host machine (CPU & GPU)
+        :returns: 
+            info (Dict): System Information of host machine (CPU & GPU)
         """
         try:
             info = {}
@@ -60,6 +105,154 @@ class SystemEnv:
             return info
         except Exception as e:
             raise SystemInfoFetchError(f"Unable to fetch System Info") from e
+
+@dataclass
+class TrainingDetails:
+    hyperparams: dict = None
+    loss_func: str = ""
+    optimizer: str = ""
+
+    def toJSON(self) -> Dict:
+        model_card ={}
+        model_card["hyperparams"] = self.hyperparams
+        model_card["loss_func"] = self.loss_func
+        model_card["optimizer"] = self.optimizer
+        return model_card
+
+@dataclass
+class EvalDetails:
+    loss_funcs: list = None
+    metrics: list = None
+
+    def toJSON(self) -> Dict:
+        model_card ={}
+        model_card["loss_funcs"] = self.loss_funcs
+        model_card["metrics"] = self.metrics
+        return model_card
+
+@dataclass
+class ModelCard:
+    model_details: ModelDetails
+    dataset_details: DatasetDetails
+    experiment_environment: ExperimentEnvironment
+    training_details: TrainingDetails
+    eval_details: EvalDetails
+
+    def toJSON(self) -> Dict:
+        model_card = {}
+        model_card["model_details"] = self.model_details.toJSON()
+        model_card["dataset_details"] = self.dataset_details.toJSON()
+        model_card["training_details"] = self.training_details.toJSON()
+        model_card["eval_details"] = self.eval_details.toJSON()
+        model_card["experiment_environment"] = self.experiment_environment.toJSON()
+        return model_card
+
+class SystemEnv:
+
+    @staticmethod
+    def create_model_card(grid_search_id: str, exp_config: dict, gs_config: dict, model = None) -> Dict:
+        """
+        Create Model card.
+        :params:
+                grid_search_id (str): Grid Search ID created for the run.
+                exp_config (dict): Experiment configuration.
+                gs_config (dict): Grid Search configuration.
+        :returns:
+                model_card (ModelCard): Model card object to be converted into json file.
+        """
+        
+        def update_model_details(grid_search_id: str, gs_config: dict, model) -> ModelDetails:
+            """
+            Function to initialize ModelDetails object.
+            :params:
+                    grid_search_id (str): Grid Search ID created for the run.
+                    gs_config (dict): Grid Search configuration.
+            :returns:
+                    obj (ModelDetails): initialized model details object.
+            """
+            try:
+                if model != None:
+                    pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+                else:
+                    pytorch_total_params = 0
+                train_date = datetime.now().strftime("%d-%m-%Y")
+                model_info = gs_config["model_info"]
+                return ModelDetails(model_description = model_info["model_description"], model_version = model_info["model_version"], grid_search_id = grid_search_id, train_date = train_date, source_repo = model_info["source_repo"], train_params= pytorch_total_params)
+            except Exception as e:
+                print("Error while fetching Model Details for Model card.", e)
+                return ModelDetails()
+        
+        def update_dataset_details(exp_config: dict) -> DatasetDetails:
+            """
+            Function to initialize DatasetDetails object.
+            :params:
+                    exp_config (dict): Experiment configuration.
+            :returns:
+                    obj (DatasetDetails): initialized dataset details object.
+            """
+            try:
+                dataset_splits = {"split_config": exp_config["dataset_iterators"]["config"]["split_configs"], 
+                              "splits_percentage": exp_config["splitted_dataset_iterators"]["config"]["split_configs"]}
+            
+                return DatasetDetails(considered_dataset = exp_config["dataset_iterators"]["config"]["dataset_identifier"], dataset_splits = dataset_splits)
+            except Exception as e:
+                print("Error while fetching Dataset Details for Model card.", e)
+                return DatasetDetails()
+        
+        def update_training_details(exp_config: dict, gs_config: dict) -> TrainingDetails:
+            """
+            Function to initialize TrainingDetails object.
+            :params:
+                    exp_config (dict): Experiment configuration.
+            :returns:
+                    obj (TrainingDetails): initialized training details object.
+            """
+            try:
+                hyperparams = {}
+                hyperparams["optimizer"] = exp_config["optimizer"]["config"]["params"]
+                return TrainingDetails( hyperparams = hyperparams, loss_func = exp_config["train_component"]["config"]["loss_fun_config"]["tag"], optimizer = exp_config["optimizer"]["config"]["optimizer_key"])
+            except Exception as e:
+                print("Error while fetching Training Details for Model card.", e)
+                return TrainingDetails()
+        
+        def update_evaluation_details(exp_config: dict) -> EvalDetails:
+            """
+            Function to initialize EvalDetails object.
+            :params:
+                    exp_config (dict): Experiment configuration.
+            :returns:
+                    obj (EvalDetails): initialized evaluation details object.
+            """
+            loss_funcs = []
+            metrics = []
+            try:
+                for loss_func_config in exp_config["eval_component"]["config"]["loss_funs_config"]:
+                    loss_funcs.append(loss_func_config["tag"])
+            
+                for metric_config in exp_config["eval_component"]["config"]["metrics_config"]:
+                    metrics.append({"name": metric_config["tag"], "params": metric_config["params"]})
+
+                return EvalDetails(loss_funcs = loss_funcs, metrics = metrics)
+            except Exception as e:
+                print("Error while fetching Eval Details for Model card.", e)
+                return EvalDetails()
+
+        try:
+            experiment_env = ExperimentEnvironment(system_env = ExperimentEnvironment.create_system_info())
+            model_details = update_model_details(grid_search_id = grid_search_id, gs_config = gs_config, model=model)
+            dataset_details = update_dataset_details(exp_config = exp_config)
+            training_details = update_training_details(exp_config = exp_config, gs_config = gs_config)
+            eval_details = update_evaluation_details(exp_config = exp_config)
+            model_card = ModelCard(
+                model_details = model_details,
+                dataset_details = dataset_details,
+                experiment_environment = experiment_env,
+                training_details = training_details,
+                eval_details =eval_details
+            )
+            return model_card.toJSON()
+        except Exception as e:
+            raise ModelCardCreationError(f"Unable to fetch System Info") from e
 
 class ExportedModel:
     """

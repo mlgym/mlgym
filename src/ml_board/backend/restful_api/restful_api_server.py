@@ -67,9 +67,9 @@ class RestfulAPIServer:
             endpoint=self.delete_checkpoint_resource,
         )
         self.app.add_api_route(
-            path="/system-info/{grid_search_id}/{experiment_id}",
+            path="/model-card/{grid_search_id}/{experiment_id}",
             methods=["GET"],
-            endpoint=self.get_system_info,
+            endpoint=self.get_model_card_info,
         )
 
         # self.app.mount("/", StaticFiles(directory="/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_board/frontend/dashboard/build/", html=True), name="static")
@@ -290,19 +290,19 @@ class RestfulAPIServer:
                                 detail=f"Provided invalid payload or grid_search_id {grid_search_id}, experiment_id {experiment_id} or epoch {epoch}.",
                                 ) from e
     
-    def get_system_info(self, grid_search_id: str, experiment_id: str):
+    def get_model_card_info(self, grid_search_id: str, experiment_id: str):
         """
-        ``HTTP GET`` Fetch System Information for model card.
+        ``HTTP GET`` Fetch Model card information.
         :params:
                 grid_search_id (str): Grid Search ID
                 experiment_id (str): Experiment ID
                 config_name (str): Name of Configuration file
 
-        :returns: JSON object: System Information of host machine (CPU & GPU)
+        :returns: JSON object: Model card infomration for the experiment.
         """
         try:
             file_generator = self.data_access.get_experiment_config(
-                grid_search_id=grid_search_id, experiment_id=experiment_id, config_name="system_info"
+                grid_search_id=grid_search_id, experiment_id=experiment_id, config_name="model_card"
             )
             response = StreamingResponse(file_generator, media_type="application/json")
             return response
