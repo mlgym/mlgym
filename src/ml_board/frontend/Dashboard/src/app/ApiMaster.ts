@@ -13,7 +13,6 @@ let api = {
 
     // following API to GET config file for the grid search run
     run_config_file: GRID_SEARCH_BASE_URL + "/" + defaultRunConfigFileName,
-
     // following API to PUT config file for a selected experiment
     experiment_config_file: GRID_SEARCH_BASE_URL + "/<experiment_id>/" + defaultExperimentConfigFileName,
 
