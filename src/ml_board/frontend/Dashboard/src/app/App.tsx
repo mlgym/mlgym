@@ -51,8 +51,6 @@ async function getUrlParamsOrLocalStorageData(searchParams: URLSearchParams, set
 
 export default function App() {
 
-    const [filterText, setFilterText] = useState("");
-    const [filterDrawer, setFilterDrawer] = useState(false);
     const [isConfigValidated, setConfigValidation] = useState(false);
     const [socketConnectionRequest, setSocketConnectionRequest] = useState(false);
     const [connectionSnackBar, setConnectionSnackBar] = useState({

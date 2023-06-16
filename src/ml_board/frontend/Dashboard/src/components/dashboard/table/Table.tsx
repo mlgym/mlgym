@@ -18,7 +18,7 @@ export default function Table({ colNames, rows }: { colNames: string[], rows: an
     (colName: string) => ({
       field: colName,
     })
-  ), colNames);
+  ), [colNames]);
 
   const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), []);
 
