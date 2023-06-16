@@ -138,3 +138,7 @@ class GymError(Exception):
 class SystemInfoFetchError(Exception):
     """Raised when an error occurs during fetching system information."""
     pass
+
+class ModelCardCreationError(Exception):
+    """Raised when an error occurs during creation of model card."""
+    pass
