@@ -26,8 +26,7 @@ export default function Dashboard() {
     const rows = useAppSelector(selectAllRows);
 
     // fetch table headers
-    let colNames: string[] = useAppSelector(selectTableHeaders);
-    colNames = colNames.filter((colName: string) => re.test(colName));
+    const colNames = useAppSelector(selectTableHeaders).filter((colName: string) => re.test(colName));
 
     const [filterHeadersDrawer, setFilterHeadersDrawer] = useState(false);
     const [filterTextSearchDrawer, setFilterTextSearchDrawer] = useState(false);
@@ -39,7 +38,6 @@ export default function Dashboard() {
             urls.push(RoutesMapping[routeMapKey].url);
         }
     });
-    console.log(urls);
 
     const [isExpanded, setIsExpanded] = useState(false);
 

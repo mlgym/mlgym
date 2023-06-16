@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Route, Routes, useLocation, useSearchParams } from 'react-router-dom';
+import { Route, Routes, useSearchParams } from 'react-router-dom';
 import { resetChartState, upsertCharts } from '../redux/charts/chartsSlice';
-import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setSocketConnectionUrl, setThroughput } from '../redux/globalConfig/globalConfigSlice';
+import { incrementReceivedMsgCount, selectTab, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setSocketConnectionUrl, setThroughput } from '../redux/globalConfig/globalConfigSlice';
 import { resetTableState, upsertManyRows, upsertTableHeaders } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
 import { RoutesMapping } from './RoutesMapping';
-import { useAppDispatch } from './hooks';
+import { useAppDispatch, useAppSelector } from './hooks';
 
 // components & styles
 import { Toolbar } from '@mui/material';
@@ -59,7 +59,7 @@ export default function App() {
         isOpen: false,
         connection: false
     });
-    const location = useLocation();
+    const tab = useAppSelector(selectTab);
     const dispatch = useAppDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
     const [settingConfigs, setSettingConfigs] = useState({
@@ -169,7 +169,7 @@ export default function App() {
         <div className={styles.main_container}>
             {
                 // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
-                urls.includes(location.pathname.split("/")[1]) && <TopBarWithDrawer />
+                urls.includes(tab) && <TopBarWithDrawer />
             }
             <Toolbar/> {/* This acts as a padding buffer for the area under the TopBarWithDrawer and nothing more!  */}
             <Routes>
@@ -206,7 +206,7 @@ export default function App() {
             </Routes>
             {
                 // here also, it is same as done above for Setting Component. We need to pass functions as props to the popup - so that when user submits the configured values, we can connect to websocket with the changed parameters.
-                urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url && isConfigValidated === false ?
+                urls.includes(tab) && tab !== RoutesMapping["Settings"].url && isConfigValidated === false ?
                     <ConfigPopup
                         isConfigValidated={isConfigValidated}
                         setSocketConnectionRequest={() => setSocketConnectionRequest(true)}

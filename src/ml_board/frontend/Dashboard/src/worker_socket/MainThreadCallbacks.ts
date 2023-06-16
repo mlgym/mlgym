@@ -56,7 +56,7 @@ function processBuffer(bufferedSocketData: Array<JSON>, updatesHolder: UpdatesOb
         }
         // parse data from socket then extract event_type and payload
         const { data: { event_type, payload } } = data as DataFromSocket;
-        // process the payload and load it into the DataToRedux object
+        // process the payload and load it into the UpdatesObject Object to be later processed into DataToRedux object
         MapEventToProcess[event_type as keyof typeof MapEventToProcess](payload, updatesHolder);
     }
 }

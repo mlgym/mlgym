@@ -22,7 +22,7 @@ export default function Table({ colNames, rows }: { colNames: string[], rows: an
 
   const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), []);
 
-  const onRowDoubleClicked = useCallback((event: RowDoubleClickedEvent) => {
+  const onRowClicked = useCallback((event: RowDoubleClickedEvent) => {
     const selectedRowData = event.api.getSelectedRows()[0];
     navigate({
       pathname: '/experiment',
@@ -45,7 +45,7 @@ export default function Table({ colNames, rows }: { colNames: string[], rows: an
         onGridReady={onGridReady}
         getRowId={getRowId}
         rowSelection={"multiple"}
-        onRowDoubleClicked={onRowDoubleClicked}
+        onRowClicked={onRowClicked}
         rowStyle={{ cursor: "pointer" }}
         animateRows={true} // Optional - set to 'true' to have rows animate when sorted
         enableCellChangeFlash={true}
