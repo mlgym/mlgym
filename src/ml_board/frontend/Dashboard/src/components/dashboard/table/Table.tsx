@@ -1,9 +1,11 @@
-import { ColDef, GetRowIdFunc, GetRowIdParams, GridReadyEvent, RowDoubleClickedEvent } from 'ag-grid-community';
+import { ColDef, GetRowIdFunc, GetRowIdParams, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
 import { AgGridReact } from "ag-grid-react";
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Row } from '../../../redux/table/tableSlice';
 // styles
+import SendIcon from '@mui/icons-material/Send';
+import { IconButton } from '@mui/material';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
 import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
 import styles from './Table.module.css';
@@ -14,21 +16,28 @@ export default function Table({ colNames, rows }: { colNames: string[], rows: an
   const navigate = useNavigate();
 
   // change the array of strings to array of colum definitions
-  const colDefs: ColDef<Row>[] = useMemo(() => colNames.map(
-    (colName: string) => ({
-      field: colName,
-    })
-  ), [colNames]);
+  const colDefs: ColDef<Row>[] = useMemo(() => {
+    const arr: ColDef<Row>[] = colNames.map((colName: string) => ({ field: colName }));
+    arr.push({
+      pinned: "left", minWidth: 50, maxWidth: 50, 
+      resizable: false, sortable: false, filter: false,
+       cellRenderer: (params: ICellRendererParams) => (
+        <IconButton
+          size="small"
+          onClick={() => {
+            navigate({
+              pathname: '/experiment',
+              search: '?experiment_id=' + (params.data as Row).experiment_id.toString(),
+            })
+          }}
+        >
+          <SendIcon />
+        </IconButton>)
+    });
+    return arr;
+  }, [colNames]);
 
   const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), []);
-
-  const onRowClicked = useCallback((event: RowDoubleClickedEvent) => {
-    const selectedRowData = event.api.getSelectedRows()[0];
-    navigate({
-      pathname: '/experiment',
-      search: '?experiment_id=' + selectedRowData.experiment_id,
-    })
-  }, []);
 
   // set background colour for every row based on the rowIndex, as it is the same as experiment_id. BUT this looks bad, should be using CSS classes?
   // const getRowStyle = ({ rowIndex }: RowClassParams): RowStyle => { return { background: `hsl(${rowIndex * 137.5},75%,50%)` }; };
@@ -45,7 +54,6 @@ export default function Table({ colNames, rows }: { colNames: string[], rows: an
         onGridReady={onGridReady}
         getRowId={getRowId}
         rowSelection={"multiple"}
-        onRowClicked={onRowClicked}
         rowStyle={{ cursor: "pointer" }}
         animateRows={true} // Optional - set to 'true' to have rows animate when sorted
         enableCellChangeFlash={true}

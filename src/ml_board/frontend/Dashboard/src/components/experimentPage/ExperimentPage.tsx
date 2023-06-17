@@ -54,6 +54,7 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
     paddingTop: theme.spacing(0),
 }));
 
+// TODO: FIX this rerenders CRAZY with every ping update !!!
 function ExperimentPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     let experiment_id = searchParams.get("experiment_id") as string;
