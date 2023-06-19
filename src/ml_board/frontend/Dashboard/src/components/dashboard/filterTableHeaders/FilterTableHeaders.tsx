@@ -1,20 +1,26 @@
-import React from 'react';
-import Drawer from '@mui/material/Drawer';
-import styles from './FilterTableHeaders.module.css';
-import { Checkbox, FormControlLabel, FormGroup } from '@mui/material';
-import { Button } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import ClearIcon from '@mui/icons-material/Clear';
+import { Button, Checkbox, FormControlLabel, FormGroup } from '@mui/material';
+import Drawer from '@mui/material/Drawer';
+import React, { useContext, useEffect, useState } from 'react';
+import { ColumnsFilter, FilterContext } from '../context/FilterContextProvider';
+import styles from './FilterTableHeaders.module.css';
 
 interface FilterTableHeaderProps {
-    colNames: Array<string>;
     filterDrawer: boolean;
-    setFilterDrawer(filterDrawer:boolean): void;
+    setFilterDrawer(filterDrawer: boolean): void;
 }
 
 const FilterTableHeaders: React.FC<FilterTableHeaderProps> = (props) => {
 
-    return(
+    const { visibleColumns, setVisibleColumns } = useContext(FilterContext);
+    const [localFilter, setLocalFilter] = useState<ColumnsFilter>(visibleColumns);
+
+    useEffect(() => {
+        setLocalFilter(visibleColumns);
+    }, [visibleColumns]);
+
+    return (
         <React.Fragment>
             <Drawer
                 anchor={"right"}
@@ -32,29 +38,41 @@ const FilterTableHeaders: React.FC<FilterTableHeaderProps> = (props) => {
                     <div className={styles.tableheader_filter_checkbox_container}>
                         <FormGroup>
                             <div className={styles.tableheader_row_container}>
-                            {
-                                props.colNames.map((colName, index) => {
-                                    return(
-                                        <div className={styles.tableheader_string_item} key={index}>
-                                            <FormControlLabel control={<Checkbox />} label={colName} />
-                                        </div>
-                                    );
-                                })
-                            }
+                                {
+                                    Object.entries(visibleColumns).map(([colName, visible], index) => {
+                                        return (
+                                            <div className={styles.tableheader_string_item} key={index}>
+                                                <FormControlLabel
+                                                    control={
+                                                        <Checkbox
+                                                            onChange={(_, check) => {
+                                                                setLocalFilter(prev => ({ ...prev, [colName]: check }));
+                                                            }}
+                                                            checked={localFilter[colName] ?? visible}
+                                                        />}
+                                                    label={colName} />
+                                            </div>
+                                        );
+                                    })
+                                }
                             </div>
                         </FormGroup>
                     </div>
                     <div className={styles.tableheader_buttons_contianer}>
-                        <Button 
-                            className={styles.tableheader_button_save} 
-                            variant="contained" 
+                        <Button
+                            className={styles.tableheader_button_save}
+                            variant="contained"
                             startIcon={<CheckIcon />}
+                            onClick={() => {
+                                setVisibleColumns(localFilter);
+                                props.setFilterDrawer(false);
+                            }}
                         >
                             Save
                         </Button>
-                        <Button 
-                            className={styles.tableheader_button_cancel} 
-                            variant="contained" 
+                        <Button
+                            className={styles.tableheader_button_cancel}
+                            variant="contained"
                             endIcon={<ClearIcon />}
                             onClick={() => props.setFilterDrawer(false)}
                         >

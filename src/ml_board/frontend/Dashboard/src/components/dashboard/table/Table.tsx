@@ -1,8 +1,10 @@
 import { ColDef, GetRowIdFunc, GetRowIdParams, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
 import { AgGridReact } from "ag-grid-react";
-import { useCallback, useMemo } from 'react';
+import { useCallback, useContext, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Row } from '../../../redux/table/tableSlice';
+import { useAppSelector } from '../../../app/hooks';
+import { Row, selectAllRows } from '../../../redux/table/tableSlice';
+import { FilterContext } from '../context/FilterContextProvider';
 // styles
 import SendIcon from '@mui/icons-material/Send';
 import { IconButton } from '@mui/material';
@@ -11,17 +13,25 @@ import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
 import styles from './Table.module.css';
 
 // TODO: Maybe merge Table and Dashboard?
-export default function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
+export default function Table() {
 
   const navigate = useNavigate();
 
-  // change the array of strings to array of colum definitions
+  const rows = useAppSelector(selectAllRows);
+
+  const { visibleColumns } = useContext(FilterContext);
+
+  // map the visible columns obejct to an array, every element on the format { field: colName }, only taking the visible ones
   const colDefs: ColDef<Row>[] = useMemo(() => {
-    const arr: ColDef<Row>[] = colNames.map((colName: string) => ({ field: colName }));
-    arr.push({
-      pinned: "left", minWidth: 50, maxWidth: 50, 
+    const arr: ColDef<Row>[] = Object.entries(visibleColumns).reduce((keys: ColDef<Row>[], [colName, visible]) => {
+      if (visible === true) {
+        keys.push({ field: colName });
+      }
+      return keys;
+    }, [{
+      pinned: "left", minWidth: 50, maxWidth: 50,
       resizable: false, sortable: false, filter: false,
-       cellRenderer: (params: ICellRendererParams) => (
+      cellRenderer: (params: ICellRendererParams) => (
         <IconButton
           size="small"
           onClick={() => {
@@ -33,9 +43,9 @@ export default function Table({ colNames, rows }: { colNames: string[], rows: an
         >
           <SendIcon />
         </IconButton>)
-    });
+    }]);
     return arr;
-  }, [colNames]);
+  }, [visibleColumns]);
 
   const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), []);
 

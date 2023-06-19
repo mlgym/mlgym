@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RoutesMapping } from '../../app/RoutesMapping';
-import { useAppSelector } from "../../app/hooks";
-import { selectFilter } from "../../redux/globalConfig/globalConfigSlice";
-import { selectAllRows, selectTableHeaders } from "../../redux/table/tableSlice";
+import FilterProvider from './context/FilterContextProvider';
 import FilterTableHeaders from './filterTableHeaders/FilterTableHeaders';
 import FilterTextSearch from './filterTextSearch/FilterTextSearch';
 import Table from "./table/Table";
@@ -18,15 +16,6 @@ import Zoom from '@mui/material/Zoom';
 import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
-
-    // filter them based on the regEx in the status slice
-    const re = new RegExp(useAppSelector(selectFilter));
-
-    // fetch table data
-    const rows = useAppSelector(selectAllRows);
-
-    // fetch table headers
-    const colNames = useAppSelector(selectTableHeaders).filter((colName: string) => re.test(colName));
 
     const [filterHeadersDrawer, setFilterHeadersDrawer] = useState(false);
     const [filterTextSearchDrawer, setFilterTextSearchDrawer] = useState(false);
@@ -48,8 +37,8 @@ export default function Dashboard() {
     // Table should consist of these columns for minimized view. To get detailed view, user can click on the row and see the job + experiment details:
     // const colNames = ["experiment_id", "job_status", "starting_time", "finishing_time", "model_status", "epoch_progress", "batch_progress"];
     return (
-        <div>
-            <Table colNames={colNames} rows={rows} />
+        <FilterProvider>
+            <Table />
             {
                 // Floating Action Button (FAB) added for filter popup
                 // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar). Also hide it when user is on Settings Page (As - not needed to do filter when viewing/inserting/updating configurations)
@@ -102,19 +91,17 @@ export default function Dashboard() {
                     null
             }
             <FilterTableHeaders
-                colNames={colNames}
                 filterDrawer={filterHeadersDrawer}
                 setFilterDrawer={(filterDrawer: boolean) => {
                     setFilterHeadersDrawer(filterDrawer);
                 }}
             />
             <FilterTextSearch
-                colNames={colNames}
                 filterDrawer={filterTextSearchDrawer}
                 setFilterDrawer={(filterDrawer: boolean) => {
                     setFilterTextSearchDrawer(filterDrawer);
                 }}
             />
-        </div>
+        </FilterProvider>
     );
 }

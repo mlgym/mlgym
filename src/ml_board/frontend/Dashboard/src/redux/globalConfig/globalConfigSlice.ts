@@ -29,7 +29,7 @@ const { actions, reducer } = createSlice({
   name: 'GlobalConfig',
   initialState,
   reducers: {
-    changeFilter: (state, { payload }: PayloadAction<string>) => {
+    setFilter: (state, { payload }: PayloadAction<string>) => {
       state.currentFilter = payload;
     },
     changeTab: (state, { payload }: PayloadAction<string>) => {
@@ -64,7 +64,7 @@ const { actions, reducer } = createSlice({
   // },
 });
 
-export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl, setSocketConnectionUrl } = actions;
+export const { setFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl, setSocketConnectionUrl } = actions;
 
 export const selectFilter = (state: RootState) => state.globalConfig.currentFilter;
 export const selectTab = (state: RootState) => state.globalConfig.idTab;
