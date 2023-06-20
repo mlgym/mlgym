@@ -17,7 +17,7 @@ from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingCom
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 import tqdm
 from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob
-from ml_gym.error_handling.exception import ModelCardCreationError, SystemInfoFetchError, ModelDetailsCreationError, TrainingDetailsCreationError, EvalDetailsCreationError
+from ml_gym.error_handling.exception import ModelCardCreationError, SystemInfoFetchError, ModelDetailsCreationError, TrainingDetailsCreationError, EvalDetailsCreationError, DatasetDetailsCreationError
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 import platform
 import torch
@@ -179,8 +179,7 @@ class ModelCardFactory:
                 model_info = gs_config["model_info"]
                 return ModelDetails(model_description = model_info["model_description"], model_version = model_info["model_version"], grid_search_id = grid_search_id, train_date = train_date, source_repo = model_info["source_repo"], train_params= pytorch_total_params)
             except Exception as e:
-                print("Error while fetching Model Details for Model card.", e)
-                return ModelDetails()
+                raise ModelDetailsCreationError(f"Error while fetching Model Details for Model card") from e
         
         def update_dataset_details(exp_config: dict) -> DatasetDetails:
             """
@@ -196,8 +195,7 @@ class ModelCardFactory:
             
                 return DatasetDetails(considered_dataset = exp_config["dataset_iterators"]["config"]["dataset_identifier"], dataset_splits = dataset_splits)
             except Exception as e:
-                print("Error while fetching Dataset Details for Model card.", e)
-                return DatasetDetails()
+                raise DatasetDetailsCreationError(f"Error while fetching Dataset Details for Model card.") from e
         
         def update_training_details(exp_config: dict, gs_config: dict) -> TrainingDetails:
             """
@@ -212,8 +210,7 @@ class ModelCardFactory:
                 hyperparams["optimizer"] = exp_config["optimizer"]["config"]["params"]
                 return TrainingDetails( hyperparams = hyperparams, loss_func = exp_config["train_component"]["config"]["loss_fun_config"]["tag"], optimizer = exp_config["optimizer"]["config"]["optimizer_key"])
             except Exception as e:
-                print("Error while fetching Training Details for Model card.", e)
-                return TrainingDetails()
+                raise TrainingDetailsCreationError(f"Error while fetching Training Details for Model card.") from e
         
         def update_evaluation_details(exp_config: dict) -> EvalDetails:
             """
@@ -234,8 +231,7 @@ class ModelCardFactory:
 
                 return EvalDetails(loss_funcs = loss_funcs, metrics = metrics)
             except Exception as e:
-                print("Error while fetching Eval Details for Model card.", e)
-                return EvalDetails()
+                raise EvalDetails(f"Error while fetching Eval Details for Model card.") from e
 
         try:
             experiment_env = ExperimentEnvironment(system_env = ExperimentEnvironment.create_system_info())
