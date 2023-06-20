@@ -17,7 +17,7 @@ from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingCom
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 import tqdm
 from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob
-from ml_gym.error_handling.exception import ModelCardCreationError, SystemInfoFetchError
+from ml_gym.error_handling.exception import ModelCardCreationError, SystemInfoFetchError, ModelDetailsCreationError, TrainingDetailsCreationError, EvalDetailsCreationError
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 import platform
 import torch
@@ -147,7 +147,7 @@ class ModelCard:
         model_card["experiment_environment"] = self.experiment_environment.toJSON()
         return model_card
 
-class SystemEnv:
+class ModelCardFactory:
 
     @staticmethod
     def create_model_card(grid_search_id: str, exp_config: dict, gs_config: dict, model = None) -> Dict:
@@ -171,7 +171,7 @@ class SystemEnv:
                     obj (ModelDetails): initialized model details object.
             """
             try:
-                if model != None:
+                if model is not None:
                     pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
                 else:
                     pytorch_total_params = 0
@@ -252,7 +252,7 @@ class SystemEnv:
             )
             return model_card.toJSON()
         except Exception as e:
-            raise ModelCardCreationError(f"Unable to fetch System Info") from e
+            raise ModelCardCreationError(f"Unable to create Model Card") from e
 
 class ExportedModel:
     """
