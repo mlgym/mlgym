@@ -5,7 +5,7 @@ export const defaultRunConfigFileName = "run_config";
 const GRID_SEARCH_BASE_URL = "/grid_searches/<grid_search_id>";
 const CHECKPOINT_BASE_URL = "/checkpoints/<grid_search_id>/<experiment_id>/<checkpoint_id>";
 const CHECKPOINT_LIST_BASE_URL = "/checkpoint_list/<grid_search_id>/<experiment_id>";
-const MODEL_CARDS_BASE_URL = "/system-info/<grid_search_id>";
+const MODEL_CARDS_BASE_URL = "/model-card/<grid_search_id>";
 
 let api = {
     // following API to GET config file for the whole grid search
@@ -13,6 +13,7 @@ let api = {
 
     // following API to GET config file for the grid search run
     run_config_file: GRID_SEARCH_BASE_URL + "/" + defaultRunConfigFileName,
+    
     // following API to PUT config file for a selected experiment
     experiment_config_file: GRID_SEARCH_BASE_URL + "/<experiment_id>/" + defaultExperimentConfigFileName,
 

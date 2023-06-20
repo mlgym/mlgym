@@ -1,6 +1,6 @@
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
+import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
@@ -9,24 +9,7 @@ import { cudaDeviceListInterface } from './EnvironmentDetails';
 import { Box, Card, CardContent, TableFooter, TablePagination } from '@mui/material';
 import styles from './EnvironmentDetails.module.css';
 import { useEffect, useState } from 'react';
-import { styled } from '@mui/material/styles';
-
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
-    [`&.${tableCellClasses.head}`]: {
-      backgroundColor: theme.palette.common.black,
-      color: theme.palette.common.white,
-    }
-}));
-
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
-    '&:nth-of-type(odd)': {
-      backgroundColor: theme.palette.action.hover,
-    },
-    // hide last border
-    '&:last-child td, &:last-child th': {
-      border: 0,
-    },
-}));
+import { StyledTableCell, StyledTableRow } from './PythonPackagesList';
 
 export default function CudaList({cardTitle, cudaDeviceList, tableRows} : {cardTitle: string, cudaDeviceList: Array<cudaDeviceListInterface>, tableRows?: number}) {
 

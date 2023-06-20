@@ -113,7 +113,7 @@ function ExperimentPage() {
                             </div>
                         </AccordionSummary>
                         <AccordionDetails>
-                            <EnvironmentDetails experiment_id={experiment_id.toString()}/>
+                            <EnvironmentDetails fromPage="ExperimentPage" experiment_id={experiment_id.toString()}/>
                         </AccordionDetails>
                     </Accordion>
                     {
