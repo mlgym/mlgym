@@ -281,7 +281,7 @@ export default function ModelCard() {
                             <div id="modelcard" className={styles.main}>
                                 <Grid id="model_dataset_details" container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
                                     
-                                    <Grid item={true} xs={12} sm={12} md={4} lg={4}>
+                                    <Grid item={true} xs={12} sm={12} md={6} lg={6}>
                                         <div className={styles.card_feel}>
                                             <div className={styles.title_container}>
                                                 <div className={styles.title_container_icon}>
@@ -300,7 +300,7 @@ export default function ModelCard() {
                                         </div>
                                     </Grid>
 
-                                    <Grid item={true} xs={12} sm={12} md={8} lg={8}>
+                                    <Grid item={true} xs={12} sm={12} md={6} lg={6}>
                                         <div className={styles.card_feel}>
                                             <div className={styles.title_container}>
                                                 <div className={styles.title_container_icon}>
@@ -311,8 +311,7 @@ export default function ModelCard() {
                                                 </div>
                                             </div>
                                             <div>
-                                                <DatasetDetails 
-                                                    experiment_id={experiment_id}
+                                                <DatasetDetails
                                                     datasetDetails={datasetDetails}
                                                 />
                                             </div>
