@@ -8,7 +8,6 @@ import { RoutesMapping } from './RoutesMapping';
 import { useAppDispatch, useAppSelector } from './hooks';
 
 // components & styles
-import { Toolbar } from '@mui/material';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import ConfigPopup from '../components/configPopup/ConfigPopup';
@@ -113,7 +112,7 @@ export default function App() {
     // NOTE: data is alway created with 2 empty buffers and then populated before being passed to this method, so no need to check for null or undefined!
     const workerOnMessageHandler = (data: DataToRedux, workerSocket: Worker) => {
         if (data.status) {
-            if(data.status.isSocketConnected === false) {
+            if (data.status.isSocketConnected === false) {
                 setConnectionSnackBar({
                     isOpen: true,
                     connection: data.status["isSocketConnected"]
@@ -127,7 +126,7 @@ export default function App() {
 
                 setConfigValidation(false);
             }
-            else if(data.status.isSocketConnected === true) {
+            else if (data.status.isSocketConnected === true) {
                 setConnectionSnackBar({
                     isOpen: true,
                     connection: data.status["isSocketConnected"]
@@ -143,13 +142,13 @@ export default function App() {
             }
             else if (data.status === "msg_count_increment") {
                 dispatch(incrementReceivedMsgCount());
-            } 
+            }
             else if (data.status.ping !== undefined) {
                 dispatch(setLastPing(data.status["ping"]));
-            } 
+            }
             else if (data.status.throughput !== undefined) {
                 dispatch(setThroughput(data.status["throughput"]));
-            } 
+            }
         } else if (data.chartsUpdates.length > 0) {
             // update the Charts Slice
             dispatch(upsertCharts(data.chartsUpdates!));
@@ -169,7 +168,6 @@ export default function App() {
                 // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
                 urls.includes(tab) && <TopBarWithDrawer />
             }
-            <Toolbar/> {/* This acts as a padding buffer for the area under the TopBarWithDrawer and nothing more!  */}
             <Routes>
                 {
                     // Dynamic Routes added as a functionality. 

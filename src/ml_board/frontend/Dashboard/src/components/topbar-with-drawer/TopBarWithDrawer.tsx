@@ -14,8 +14,8 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { RoutesMapping } from '../../app/RoutesMapping';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { changeTab, selectTab } from '../../redux/globalConfig/globalConfigSlice';
 import { LogoOnly, LogoText } from "../../svgs_and_imgs/Icons";
 import Statistics from '../statistics/Statistics';
@@ -137,7 +137,7 @@ export default function TopBarWithDrawer() {
                 </IconButton>
             </Toolbar>
         </AppBar>
-
+        <Toolbar/> {/* This acts as a padding buffer for the area under the TopBarWithDrawer and nothing more! */}
         {/* Drawer Menu */}
         <React.Fragment>
             <Drawer
