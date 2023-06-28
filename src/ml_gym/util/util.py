@@ -190,8 +190,25 @@ class ModelCardFactory:
                     obj (DatasetDetails): initialized dataset details object.
             """
             try:
-                dataset_splits = {"split_config": exp_config["dataset_iterators"]["config"]["split_configs"], 
-                              "splits_percentage": exp_config["splitted_dataset_iterators"]["config"]["split_configs"]}
+                splits_percentage = []
+                split_subscription = set()
+                key = "splitted_dataset_iterators"
+                proc = 2
+                splits_percentage.append(exp_config["splitted_dataset_iterators"]["config"]["split_configs"])
+                split_subscription.add(exp_config["splitted_dataset_iterators"]["requirements"]["subscription"])
+                while (proc >= 2):
+                    new_key = key + str(proc)
+                    if new_key in exp_config:
+                        splits_percentage.append(exp_config["splitted_dataset_iterators"]["config"]["split_configs"])
+                        split_subscription.add(exp_config["splitted_dataset_iterators"]["requirements"]["subscription"])
+                        proc+=1
+                    else:
+                        break
+                split_config = exp_config["dataset_iterators"]["config"]["split_configs"] if "split_configs" in exp_config["dataset_iterators"]["config"] else None
+
+                dataset_splits = {"split_config": split_config,
+                                  "split_subscription": list(split_subscription), 
+                                  "splits_percentage": splits_percentage}
             
                 return DatasetDetails(considered_dataset = exp_config["dataset_iterators"]["config"]["dataset_identifier"], dataset_splits = dataset_splits)
             except Exception as e:
