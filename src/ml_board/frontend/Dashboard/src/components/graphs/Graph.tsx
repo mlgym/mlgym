@@ -166,7 +166,7 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
     }
 
     // using Memo didn't solve the problem of the selectExperimentsPerChartById selector inside SelectExperimentDropdown
-    const selectExpDropDown = useMemo(() => <SelectExperimentDropdown chart_id={chart_id} />, [chart_id]);
+    // const selectExpDropDown = useMemo(() => <SelectExperimentDropdown chart_id={chart_id} />, [chart_id]);
     
     return (
         <Grid item={true} xs={12} sm={12} md={6} key={chart_id}>
@@ -179,7 +179,11 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
                     />
                 </Box>
                 {
-                    tab !== RoutesMapping["ExperimentPage"].url ? selectExpDropDown : null
+                    tab === RoutesMapping["ExperimentPage"].url || tab === RoutesMapping["ModelCard"].url ?
+                    null
+                    :
+                    <SelectExperimentDropdown chart_id={chart_id} />
+
                 }
             </Card>
         </Grid>

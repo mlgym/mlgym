@@ -14,6 +14,7 @@ import ConfigPopup from '../components/configPopup/ConfigPopup';
 import Settings from '../components/settings/Settings';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import styles from './App.module.css';
+import { Toolbar } from '@mui/material';
 
 export interface settingConfigsInterface {
     gridSearchId: string,
@@ -167,6 +168,10 @@ export default function App() {
             {
                 // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
                 urls.includes(tab) && <TopBarWithDrawer />
+            }
+            {
+                // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
+                urls.includes(tab) && <Toolbar />
             }
             <Routes>
                 {

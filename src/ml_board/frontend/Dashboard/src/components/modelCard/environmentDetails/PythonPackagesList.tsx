@@ -6,19 +6,19 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Box, Card, CardContent, TableFooter, TablePagination } from '@mui/material';
-import styles from './ModelCards.module.css';
-import { useState } from 'react';
+import styles from './EnvironmentDetails.module.css';
+import { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
-import { pythonPackagesListInterface } from './ModelCards';
+import { pythonPackagesListInterface } from './EnvironmentDetails';
 
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
+export const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
       backgroundColor: theme.palette.common.black,
       color: theme.palette.common.white,
     }
 }));
 
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
+export const StyledTableRow = styled(TableRow)(({ theme }) => ({
     '&:nth-of-type(odd)': {
       backgroundColor: theme.palette.action.hover,
     },
@@ -28,7 +28,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     },
 }));
 
-export default function ModelCardCudaList({cardTitle, pythonPackagesList} : {cardTitle: string, pythonPackagesList: Array<pythonPackagesListInterface>}) {
+export default function PythonPackagesList({cardTitle, pythonPackagesList, tableRows} : {cardTitle: string, pythonPackagesList: Array<pythonPackagesListInterface>, tableRows?: number}) {
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -39,6 +39,14 @@ export default function ModelCardCudaList({cardTitle, pythonPackagesList} : {car
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
+    useEffect(()=>{
+        if(tableRows !== undefined) {
+            setRowsPerPage(tableRows)
+        }
+        else {
+            setRowsPerPage(5);
+        }
+    },[tableRows]);
 
     return(
         <Box>

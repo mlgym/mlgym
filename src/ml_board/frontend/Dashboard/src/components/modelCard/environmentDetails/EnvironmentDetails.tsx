@@ -3,12 +3,12 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import api from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
-import { getGridSearchId, getRestApiUrl } from '../../../redux/globalConfig/globalConfigSlice';
-import styles from './ModelCards.module.css';
-import { AnyKeyValuePairsInterface } from '../ExperimentPage';
-import { CardDetails } from '../ExperimentDetails/CardDetails';
-import ModelCardCudaList from './ModelCardCudaList';
-import ModelCardPythonPackagesList from './ModelCardPythonPackagesList';
+import { getGridSearchId, getRestApiUrl, isConnected } from '../../../redux/globalConfig/globalConfigSlice';
+import styles from './EnvironmentDetails.module.css';
+import { AnyKeyValuePairsInterface } from '../../experimentPage/ExperimentPage';
+import { CardDetails } from '../../experimentPage/ExperimentDetails/CardDetails';
+import CudaList from './CudaList';
+import PythonPackagesList from './PythonPackagesList';
 
 export interface pythonPackagesListInterface {
     "name": string,
@@ -22,26 +22,37 @@ export interface cudaDeviceListInterface {
 }
 let sysInfoAnyKeyObj:AnyKeyValuePairsInterface = {};
 
-export default function ModelCards({experimentIdProp} : {experimentIdProp: string}) {
+export default function EnvironmentDetails({fromPage, experiment_id, tableRows, sysInfoBasicDataProps, sysInfoCudaDevicesDataProps, sysInfoPythonPackagesProps, sysInfoArchitectureProps, sysInfoCarbonFootPrintDetailsProps, sysInfoEntryPointCmdDetailsProps} : {fromPage: string, experiment_id: string, tableRows?: number, sysInfoBasicDataProps?: AnyKeyValuePairsInterface, sysInfoCudaDevicesDataProps?: Array<cudaDeviceListInterface>, sysInfoPythonPackagesProps?: Array<pythonPackagesListInterface>, sysInfoArchitectureProps?: Array<"">, sysInfoCarbonFootPrintDetailsProps?: string, sysInfoEntryPointCmdDetailsProps?: string}) {
 
+    const isSocketConnected = useAppSelector(isConnected);
     const grid_search_id = useAppSelector(getGridSearchId);
     const rest_api_url = useAppSelector(getRestApiUrl);
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const[sysInfoBasicData, setSysInfoBasicData] = useState(sysInfoAnyKeyObj);
     const[sysInfoCudaDevicesData, setSysInfoCudaDevicesData] = useState(Array<cudaDeviceListInterface>);
-    const[sysInfoPythonPackages, setSysInfoPythonPackages] = useState([]);
-
+    const [sysInfoPythonPackages, setSysInfoPythonPackages] = useState(Array<pythonPackagesListInterface>);
+    const [sysInfoArchitecture, setSysInfoArchitecture] = useState(Array<"">);
+    const [sysInfoCarbonFootPrintDetails,setSysInfoCarbonFootPrintDetails] = useState("");
+    const [sysInfoEntryPointCmdDetails,setSysInfoEntryPointCmdDetails] = useState("");
 
     useEffect(() => {
-        if(experimentIdProp) {
+        if(fromPage === "ModelCard") {
+            setSysInfoBasicData(sysInfoBasicDataProps!);
+            setSysInfoCudaDevicesData(sysInfoCudaDevicesDataProps!);
+            setSysInfoPythonPackages(sysInfoPythonPackagesProps!);
+            setSysInfoArchitecture(sysInfoArchitectureProps!);
+            setSysInfoCarbonFootPrintDetails(sysInfoCarbonFootPrintDetailsProps!);
+            setSysInfoEntryPointCmdDetails(sysInfoEntryPointCmdDetailsProps!);
+        }
+        else {
             getSysInfo();
         }
-    },[experimentIdProp]);
+    },[]);
 
     function getSysInfo() {
         let model_card_sys_info = api.model_card_sys_info.replace("<grid_search_id>", grid_search_id);
-        model_card_sys_info = model_card_sys_info.replace("<experiment_id>", experimentIdProp);
+        model_card_sys_info = model_card_sys_info.replace("<experiment_id>", experiment_id);
 
         setError("");
         setIsLoading(true);
@@ -50,15 +61,21 @@ export default function ModelCards({experimentIdProp} : {experimentIdProp: strin
             console.log("Got response from model_card_sys_info API: ", response);
             if (response.status === 200) {
                 let resp_data = response.data;
-                Object.keys(resp_data).map((sysInfoKeyName) => {
+                setSysInfoCarbonFootPrintDetails(resp_data.experiment_environment.carbon_footprint);
+                setSysInfoEntryPointCmdDetails(resp_data.experiment_environment.entry_point_cmd);
+                Object.keys(resp_data.experiment_environment.system_env).map((sysInfoKeyName) => {
+                    let data = resp_data.experiment_environment.system_env[sysInfoKeyName];
                     if(sysInfoKeyName === "cuda_device_list") {
-                        setSysInfoCudaDevicesData(resp_data[sysInfoKeyName]);
+                        setSysInfoCudaDevicesData(data);
                     }
                     else if(sysInfoKeyName === "python-packages") {
-                        setSysInfoPythonPackages(resp_data[sysInfoKeyName])
+                        setSysInfoPythonPackages(data)
+                    }
+                    else if (sysInfoKeyName === "architecture") {
+                        setSysInfoArchitecture(data)
                     }
                     else {
-                        sysInfoBasicData[sysInfoKeyName] = resp_data[sysInfoKeyName];
+                        sysInfoBasicData[sysInfoKeyName] = data;
                     }
                 });
                 setSysInfoBasicData(sysInfoBasicData);
@@ -105,15 +122,27 @@ export default function ModelCards({experimentIdProp} : {experimentIdProp: strin
                         />
                     </Grid>
                     <Grid item={true} xs={12} sm={12} md={4}>
-                        <ModelCardCudaList 
+                        <CudaList 
                             cardTitle="Cuda Devices List" 
                             cudaDeviceList={sysInfoCudaDevicesData}
+                            tableRows={
+                                tableRows && tableRows !== 0?
+                                tableRows
+                                :
+                                undefined
+                            }
                         />
                     </Grid>
                     <Grid item={true} xs={12} sm={12} md={4}>
-                        <ModelCardPythonPackagesList 
+                        <PythonPackagesList 
                             cardTitle="Python Packages List" 
                             pythonPackagesList={sysInfoPythonPackages}
+                            tableRows={
+                                tableRows && tableRows !== 0?
+                                tableRows
+                                :
+                                undefined
+                            }
                         />
                     </Grid>
                 </Grid>

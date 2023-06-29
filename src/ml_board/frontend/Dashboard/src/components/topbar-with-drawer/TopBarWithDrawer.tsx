@@ -13,9 +13,9 @@ import ListItemText from '@mui/material/ListItemText';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
-import { useLocation, useNavigate } from "react-router-dom";
-import { RoutesMapping } from '../../app/RoutesMapping';
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { RoutesMapping } from '../../app/RoutesMapping';
 import { changeTab, selectTab } from '../../redux/globalConfig/globalConfigSlice';
 import { LogoOnly, LogoText } from "../../svgs_and_imgs/Icons";
 import Statistics from '../statistics/Statistics';
@@ -24,6 +24,7 @@ import styles from './TopBarWithDrawer.module.css';
 
 export default function TopBarWithDrawer() {
 
+    const [searchParams, setSearchParams] = useSearchParams();
     const location = useLocation();
     let currentTab = useAppSelector(selectTab);
     const dispatch = useAppDispatch();
@@ -123,6 +124,18 @@ export default function TopBarWithDrawer() {
                         {
                             currentTab.charAt(0).toUpperCase() + currentTab.slice(1)
                         }
+                        {
+                            location.pathname.split("/")[1] === RoutesMapping["ExperimentPage"].url?
+                            ": " + searchParams.get("experiment_id")
+                            :
+                            null
+                        }
+                        {
+                            location.pathname.split("/")[1] === RoutesMapping["ModelCard"].url?
+                            " - Experiment: " + searchParams.get("experiment_id")
+                            :
+                            null
+                        }
                     </Typography>
                 </Container>
 
@@ -137,7 +150,6 @@ export default function TopBarWithDrawer() {
                 </IconButton>
             </Toolbar>
         </AppBar>
-        <Toolbar/> {/* This acts as a padding buffer for the area under the TopBarWithDrawer and nothing more! */}
         {/* Drawer Menu */}
         <React.Fragment>
             <Drawer

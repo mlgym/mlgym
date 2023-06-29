@@ -4,6 +4,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import Dashboard from '../components/dashboard/Dashboard';
 import PageNotFound from '../components/error/PageNotFound';
 import ExperimentPage from '../components/experimentPage/ExperimentPage';
+import ModelCard from '../components/modelCard/ModelCard';
 import Graphs from '../components/graphs/Graphs';
 
 interface RoutesMappingInterface {
@@ -32,6 +33,12 @@ export const RoutesMapping:RoutesMappingInterface = {
     ExperimentPage: {
         url: "experiment",
         component: <ExperimentPage/>,
+        showInMenu: false,
+        menuIcon: null
+    },
+    ModelCard: {
+        url: "modelcard",
+        component: <ModelCard/>,
         showInMenu: false,
         menuIcon: null
     },
