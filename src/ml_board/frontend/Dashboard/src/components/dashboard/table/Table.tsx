@@ -6,8 +6,8 @@ import { useAppSelector } from '../../../app/hooks';
 import { Row, selectAllRows } from '../../../redux/table/tableSlice';
 import { FilterContext } from '../context/FilterContextProvider';
 // styles
-import SendIcon from '@mui/icons-material/Send';
-import { IconButton } from '@mui/material';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { IconButton, Tooltip } from '@mui/material';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
 import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
 import styles from './Table.module.css';
@@ -29,20 +29,22 @@ export default function Table() {
       }
       return keys;
     }, [{
-      pinned: "left", minWidth: 50, maxWidth: 50,
+      pinned: "right", minWidth: 50, maxWidth: 50,
       resizable: false, sortable: false, filter: false,
       cellRenderer: (params: ICellRendererParams) => (
-        <IconButton
-          size="small"
-          onClick={() => {
-            navigate({
-              pathname: '/experiment',
-              search: '?experiment_id=' + (params.data as Row).experiment_id.toString(),
-            })
-          }}
-        >
-          <SendIcon />
-        </IconButton>)
+        <Tooltip title="Go to the Experiment Page" arrow placement='top-start'>
+          <IconButton
+            size="small"
+            onClick={() => {
+              navigate({
+                pathname: '/experiment',
+                search: '?experiment_id=' + (params.data as Row).experiment_id.toString(),
+              })
+            }}
+          >
+            <OpenInNewIcon />
+          </IconButton>
+        </Tooltip>)
     }]);
     return arr;
   }, [visibleColumns]);
