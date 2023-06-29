@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardContent, Grid, Toolbar } from "@mui/material";
+import { Box, Button, Card, CardContent, Fab, Grid } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
 import DatasetDetails from "./datasetDetails/DatasetDetails";
 import TrainingDetails from "./trainingDetails/TrainingDetails";
@@ -25,6 +25,7 @@ import html2canvas from 'html2canvas';
 import axios from 'axios';
 import api from '../../app/ApiMaster';
 import { AnyKeyValuePairsInterface } from '../experimentPage/ExperimentPage';
+import DownloadIcon from '@mui/icons-material/Download';
 
 export interface pythonPackagesListInterface {
     "name": string,
@@ -245,7 +246,6 @@ export default function ModelCard() {
     
     return(
         <div>
-            <Toolbar />
             {
                 isSocketConnected ?
                 <div>
@@ -268,16 +268,13 @@ export default function ModelCard() {
                             </CardContent>
                         </Card>
                         :
-                        <>
-                            {/* TODO: remove this button and make a floating download button */}
-                            <Button 
-                                style={{ marginTop: "10px", width: "100%" }} 
-                                variant="contained" 
-                                onClick={()=>handleSaveAsHTML()}
-                            >
-                                Download
-                            </Button>
-
+                        <>  
+                            <div className={styles.fab}>
+                                <Fab color="primary" onClick={()=>handleSaveAsHTML()}>
+                                    <DownloadIcon />
+                                </Fab>
+                            </div>
+                            
                             <div id="modelcard" className={styles.main}>
                                 <Grid id="model_dataset_details" container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
                                     
@@ -418,7 +415,6 @@ export default function ModelCard() {
                                         />
                                     </div>
                                 </div>
-
                             </div>
                         </>
                     }

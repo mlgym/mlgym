@@ -1,38 +1,60 @@
-import { RowDoubleClickedEvent } from 'ag-grid-community';
+import { ColDef, GetRowIdFunc, GetRowIdParams, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
+import { AgGridReact } from "ag-grid-react";
+import { useCallback, useContext, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppSelector } from '../../../app/hooks';
+import { Row, selectAllRows } from '../../../redux/table/tableSlice';
+import { FilterContext } from '../context/FilterContextProvider';
+// styles
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { IconButton, Tooltip } from '@mui/material';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
 import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
-import { AgGridReact } from "ag-grid-react";
-import { useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-// styles
 import styles from './Table.module.css';
 
-interface columnDefinition { field: string; }
-
 // TODO: Maybe merge Table and Dashboard?
-export default function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
+export default function Table() {
 
   const navigate = useNavigate();
 
-  // change the array of strings to array of colum definitions
-  const colDefs: columnDefinition[] = colNames.map(
-    (colName: string) => ({
-      field: colName,
-    })
-  );
+  const rows = useAppSelector(selectAllRows);
+
+  const { visibleColumns } = useContext(FilterContext);
+
+  // map the visible columns obejct to an array, every element on the format { field: colName }, only taking the visible ones
+  const colDefs: ColDef<Row>[] = useMemo(() => {
+    const arr: ColDef<Row>[] = Object.entries(visibleColumns).reduce((keys: ColDef<Row>[], [colName, visible]) => {
+      if (visible === true) {
+        keys.push({ field: colName });
+      }
+      return keys;
+    }, [{
+      pinned: "right", minWidth: 50, maxWidth: 50,
+      resizable: false, sortable: false, filter: false,
+      cellRenderer: (params: ICellRendererParams) => (
+        <Tooltip title="Go to the Experiment Page" arrow placement='top-start'>
+          <IconButton
+            size="small"
+            onClick={() => {
+              navigate({
+                pathname: '/experiment',
+                search: '?experiment_id=' + (params.data as Row).experiment_id.toString(),
+              })
+            }}
+          >
+            <OpenInNewIcon />
+          </IconButton>
+        </Tooltip>)
+    }]);
+    return arr;
+  }, [visibleColumns]);
 
   const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), []);
 
-  const onRowDoubleClicked = useCallback((event: RowDoubleClickedEvent) => {
-    const selectedRowData = event.api.getSelectedRows()[0];
-    navigate({
-      pathname: '/experiment',
-      search: '?experiment_id=' + selectedRowData.experiment_id,
-    })
-  }, []);
-
   // set background colour for every row based on the rowIndex, as it is the same as experiment_id. BUT this looks bad, should be using CSS classes?
   // const getRowStyle = ({ rowIndex }: RowClassParams): RowStyle => { return { background: `hsl(${rowIndex * 137.5},75%,50%)` }; };
+  const onGridReady: (params: GridReadyEvent<Row>) => void = useCallback(params => params.api.sizeColumnsToFit(), []);
+  const getRowId: GetRowIdFunc<Row> = useCallback((params: GetRowIdParams<Row>) => params.data.experiment_id.toString(), []);
 
   return (
     <div className="ag-theme-alpine" id={styles.ag_grid_container_table}>
@@ -41,12 +63,12 @@ export default function Table({ colNames, rows }: { colNames: string[], rows: an
         defaultColDef={defaultColDef}
         columnDefs={colDefs}
         rowData={rows}
-        onGridReady={params => params.api.sizeColumnsToFit()}
-        getRowId={(params: any) => params.data.job_id}
+        onGridReady={onGridReady}
+        getRowId={getRowId}
         rowSelection={"multiple"}
-        onRowDoubleClicked={onRowDoubleClicked}
         rowStyle={{ cursor: "pointer" }}
         animateRows={true} // Optional - set to 'true' to have rows animate when sorted
+        enableCellChangeFlash={true}
       >
       </AgGridReact>
     </div>

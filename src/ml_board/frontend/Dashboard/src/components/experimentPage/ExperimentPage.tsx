@@ -1,24 +1,25 @@
-import { Toolbar, styled, AccordionProps, AccordionSummaryProps, Card, CardContent, Box, Grid, Button } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppSelector } from "../../app/hooks";
+import { selectChartsByExperimentId } from '../../redux/charts/chartsSlice';
+import { isConnected } from "../../redux/globalConfig/globalConfigSlice";
 import { selectRowById } from '../../redux/table/tableSlice';
-import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
-import MuiAccordion from '@mui/material/Accordion';
-import MuiAccordionSummary from '@mui/material/AccordionSummary';
-import MuiAccordionDetails from '@mui/material/AccordionDetails';
-import styles from './ExperimentPage.module.css';
-import styles_graphs from "../graphs/Graphs.module.css";
 import Graph from "../graphs/Graph";
 import CheckpointConfigurations from './CheckpointConfigurations/CheckpointConfigurations';
 import ExperimentConfigurations from './ExperimentConfigurations/ExperimentConfigurations';
 import EnvironmentDetails from '../modelCard/environmentDetails/EnvironmentDetails';
-import { isConnected } from "../../redux/globalConfig/globalConfigSlice";
 import { ExperimentDetails } from './ExperimentDetails/ExperimentDetails';
 import { ExperimentProgress } from './ExperimentProgress/ExperimentProgress';
-import { selectChartsByExperimentId } from '../../redux/charts/chartsSlice';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import { RoutesMapping } from '../../app/RoutesMapping';
+// mui components & styles
+import { styled, AccordionProps, AccordionSummaryProps, Box, Grid, Button } from '@mui/material';
+import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
+import MuiAccordion from '@mui/material/Accordion';
+import MuiAccordionDetails from '@mui/material/AccordionDetails';
+import MuiAccordionSummary from '@mui/material/AccordionSummary';
+import styles_graphs from "../graphs/Graphs.module.css";
+import styles from './ExperimentPage.module.css';
 
 export interface AnyKeyValuePairsInterface {
     [key: string]: any
@@ -54,6 +55,7 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
     paddingTop: theme.spacing(0),
 }));
 
+// TODO: FIX this rerenders CRAZY with every ping update !!!
 function ExperimentPage() {
     
     const navigate = useNavigate();
@@ -73,7 +75,6 @@ function ExperimentPage() {
 
     return(
         <div className={styles.main}>
-            <Toolbar />
             {
                 filteredExp && isSocketConnected ?
                 <>

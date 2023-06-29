@@ -1,17 +1,21 @@
 import { useState } from 'react';
-import { IconButton, Box} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { useAppSelector } from '../../../app/hooks';
+import { selectExperimentsPerChartById } from '../../../redux/charts/chartsSlice';
+// components & styles
+import SendIcon from '@mui/icons-material/Send';
+import { Box, IconButton } from '@mui/material';
 import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
-import SendIcon from '@mui/icons-material/Send';
-import { useNavigate } from 'react-router-dom';
-import { selectExperimentsPerChartById } from '../../../redux/charts/chartsSlice';
-import { useAppSelector } from '../../../app/hooks';
+import Select from '@mui/material/Select';
 import styles from "./SelectExperimentDropdown.module.css";
 
 export default function SelectExperimentDropdown({chart_id} : {chart_id:string}) {
     
+    // TODO: this selector is causing the FC to be rerendered multiple times
+    // first: understand why this is the case?!
+    // second: maybe use createSelector from Reselect (https://redux.js.org/usage/deriving-data-selectors#createselector-overview)
     const experimentsDict = useAppSelector(state => selectExperimentsPerChartById(state, chart_id));
     const [selectedExperiment, setSelectedExperiment] = useState("");
     const navigate = useNavigate();

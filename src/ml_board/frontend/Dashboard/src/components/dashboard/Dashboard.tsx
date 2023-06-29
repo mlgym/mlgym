@@ -1,60 +1,107 @@
-import { useAppSelector } from "../../app/hooks";
-import { selectFilter } from "../../redux/globalConfig/globalConfigSlice";
-import { selectAllRows } from "../../redux/table/tableSlice";
+import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { RoutesMapping } from '../../app/RoutesMapping';
+import FilterProvider from './context/FilterContextProvider';
+import FilterTableHeaders from './filterTableHeaders/FilterTableHeaders';
+import FilterTextSearch from './filterTextSearch/FilterTextSearch';
 import Table from "./table/Table";
-import { Toolbar } from '@mui/material';
 
-export interface TableRow {
-  // Job
-  job_id: string; // format <grid_search_id>-<job index>
-  job_type: string; // <CALC, TERMINATE>
-  job_status: string; // <INIT, RUNNING, DONE>
-  starting_time: number;
-  finishing_time: number;
-  error: string;
-  stacktrace: string;
-  device: string;
-  // Experiment
-  experiment_id: number;
-  model_status?: string;   // <TRAINING, EVALUATING>,
-  current_split?: string;
-  splits?: string[]; //e.g.: ["train", "val", "test"],
-  num_epochs?: number;
-  current_epoch?: number;
-  num_batches?: number;
-  current_batch?: number;
-  // special Experiment keys for "latest_split_metric"
-  F1?: string;
-  Precision?: string;
-  Recall?: string;
-  // calculations
-  epoch_progress?: number;
-  batch_progress?: number;
-  // TODO: maybe get color???
-  color?: string;
-}
+// mui components & styles
+import ClearIcon from '@mui/icons-material/Clear';
+import DragHandleIcon from '@mui/icons-material/DragHandle';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import SearchIcon from '@mui/icons-material/Search';
+import Fab from '@mui/material/Fab';
+import Zoom from '@mui/material/Zoom';
+import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
-  // filter them based on the regEx in the status slice
-  const re = new RegExp(useAppSelector(selectFilter));
-  // const colorMap = useAppSelector(selectColorMap);
-  const rows = useAppSelector(selectAllRows);
-  const colNames: string[] = [];
 
-  // Table should consist of these columns for minimized view. To get detailed view, user can click on the row and see the job + experiment details:
-  // const colNames = ["experiment_id", "job_status", "starting_time", "finishing_time",
-  // "model_status", "epoch_progress", "batch_progress"];
+    const [filterHeadersDrawer, setFilterHeadersDrawer] = useState(false);
+    const [filterTextSearchDrawer, setFilterTextSearchDrawer] = useState(false);
 
-  // TODO: get them from the Redux store better, otherwise this checks the first row ONLY!!!
-  // getting the columns' headers dynamically
-  if (rows.length > 1) {
-    colNames.push(...Object.keys(rows[0]).filter((colName: string) => re.test(colName)));
-  }
+    const location = useLocation();
+    const urls: Array<string> = [];
+    Object.keys(RoutesMapping).forEach((routeMapKey) => {
+        if (routeMapKey !== "ErrorComponent") {
+            urls.push(RoutesMapping[routeMapKey].url);
+        }
+    });
 
-  return (
-    <div>
-      <Toolbar />
-      <Table colNames={colNames} rows={rows} />
-    </div>
-  );
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const handleFabClick = () => {
+        setIsExpanded(!isExpanded);
+    };
+
+    // Table should consist of these columns for minimized view. To get detailed view, user can click on the row and see the job + experiment details:
+    // const colNames = ["experiment_id", "job_status", "starting_time", "finishing_time", "model_status", "epoch_progress", "batch_progress"];
+    return (
+        <FilterProvider>
+            <Table />
+            {
+                // Floating Action Button (FAB) added for filter popup
+                // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar). Also hide it when user is on Settings Page (As - not needed to do filter when viewing/inserting/updating configurations)
+                (urls.includes(location.pathname.split("/")[1]) && location.pathname.split("/")[1] !== RoutesMapping["Settings"].url) && (location.pathname.split("/")[1] !== RoutesMapping["ExperimentPage"].url) ?
+                    <div>
+                        <div className={styles.fab_search}>
+                            <Zoom in={isExpanded}>
+                                <Fab
+                                    className={styles.fab_children}
+                                    variant="extended"
+                                    onClick={() => {
+                                        setFilterTextSearchDrawer(true);
+                                        handleFabClick();
+                                    }}
+                                >
+                                    <SearchIcon /> Text Search
+                                </Fab>
+                            </Zoom>
+                        </div>
+
+                        <div className={styles.fab_headers}>
+                            <Zoom in={isExpanded}>
+                                <Fab
+                                    className={styles.fab_children}
+                                    variant="extended"
+                                    onClick={() => {
+                                        setFilterHeadersDrawer(true);
+                                        handleFabClick();
+                                    }}
+                                >
+                                    <DragHandleIcon /> Headers
+                                </Fab>
+                            </Zoom>
+                        </div>
+
+                        <div className={styles.fab_main}>
+                            <Zoom in={true}>
+                                <Fab
+                                    color="primary"
+                                    variant="extended"
+                                    onClick={handleFabClick}
+                                >
+                                    {isExpanded ? <ClearIcon /> : <FilterAltIcon />}
+                                    {isExpanded ? "Close" : "Filter"}
+                                </Fab>
+                            </Zoom>
+                        </div>
+                    </div>
+                    :
+                    null
+            }
+            <FilterTableHeaders
+                filterDrawer={filterHeadersDrawer}
+                setFilterDrawer={(filterDrawer: boolean) => {
+                    setFilterHeadersDrawer(filterDrawer);
+                }}
+            />
+            <FilterTextSearch
+                filterDrawer={filterTextSearchDrawer}
+                setFilterDrawer={(filterDrawer: boolean) => {
+                    setFilterTextSearchDrawer(filterDrawer);
+                }}
+            />
+        </FilterProvider>
+    );
 }

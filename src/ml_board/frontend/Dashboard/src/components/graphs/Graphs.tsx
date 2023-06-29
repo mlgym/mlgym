@@ -1,11 +1,10 @@
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import Toolbar from '@mui/material/Toolbar';
 import { CategoryScale, Chart as ChartJS, Filler, Legend, LinearScale, LineElement, PointElement, Title, Tooltip } from 'chart.js';
 import { useAppSelector } from "../../app/hooks";
 import { selectChartIds, selectChartsCount } from "../../redux/charts/chartsSlice";
 import Graph from './Graph';
-// styles
+// mui components & styles
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
 import styles from "./Graphs.module.css";
 //NOTE: react-chartjs-2 is a wrapper around vanila javascript chart.js and this is why registering is needed!
 ChartJS.register(
@@ -26,7 +25,6 @@ export default function Graphs() {
 
     return (
         <Box component="main" className={styles.graphs_main_container}>
-            <Toolbar />
             {
                 chartsCount > 0 ?
                     <Grid container rowSpacing={1} spacing={{ xs: 2, md: 3 }} className={styles.grid_container}>

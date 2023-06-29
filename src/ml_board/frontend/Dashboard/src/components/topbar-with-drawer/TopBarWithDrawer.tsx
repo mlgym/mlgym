@@ -150,7 +150,6 @@ export default function TopBarWithDrawer() {
                 </IconButton>
             </Toolbar>
         </AppBar>
-
         {/* Drawer Menu */}
         <React.Fragment>
             <Drawer

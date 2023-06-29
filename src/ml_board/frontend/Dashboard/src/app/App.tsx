@@ -1,23 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Route, Routes, useSearchParams } from 'react-router-dom';
-import { upsertCharts, resetChartState } from '../redux/charts/chartsSlice';
-import { incrementReceivedMsgCount, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setSocketConnectionUrl, setThroughput, selectTab } from '../redux/globalConfig/globalConfigSlice';
-import { upsertManyRows, resetTableState } from '../redux/table/tableSlice';
+import { resetChartState, upsertCharts } from '../redux/charts/chartsSlice';
+import { incrementReceivedMsgCount, selectTab, setGridSearchId, setLastPing, setRestApiUrl, setSocketConnection, setSocketConnectionUrl, setThroughput } from '../redux/globalConfig/globalConfigSlice';
+import { resetTableState, upsertManyRows, upsertTableHeaders } from '../redux/table/tableSlice';
 import { DataToRedux } from '../worker_socket/DataTypes';
-import { useAppDispatch, useAppSelector } from './hooks';
 import { RoutesMapping } from './RoutesMapping';
+import { useAppDispatch, useAppSelector } from './hooks';
 
 // components & styles
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import Alert from '@mui/material/Alert';
-import Drawer from '@mui/material/Drawer';
-import Fab from '@mui/material/Fab';
 import Snackbar from '@mui/material/Snackbar';
-import TextField from '@mui/material/TextField';
 import ConfigPopup from '../components/configPopup/ConfigPopup';
 import Settings from '../components/settings/Settings';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import styles from './App.module.css';
+import { Toolbar } from '@mui/material';
 
 export interface settingConfigsInterface {
     gridSearchId: string,
@@ -54,8 +51,6 @@ async function getUrlParamsOrLocalStorageData(searchParams: URLSearchParams, set
 
 export default function App() {
 
-    const [filterText, setFilterText] = useState("");
-    const [filterDrawer, setFilterDrawer] = useState(false);
     const [isConfigValidated, setConfigValidation] = useState(false);
     const [socketConnectionRequest, setSocketConnectionRequest] = useState(false);
     const [connectionSnackBar, setConnectionSnackBar] = useState({
@@ -99,9 +94,7 @@ export default function App() {
             // NOTE:using URL because create-react-app throws error since it has not found the worker file during load/bundling
             const workerSocket = new Worker(new URL('../worker_socket/WorkerSocket.ts', import.meta.url));
             // setting the redux update methods on the incoming data from the worker thread
-            workerSocket.onmessage = ({ data }: MessageEvent) => {
-                workerOnMessageHandler(data as DataToRedux, workerSocket);
-            };
+            workerSocket.onmessage = ({ data }: MessageEvent) => workerOnMessageHandler(data as DataToRedux, workerSocket);
             // starting the worker
             workerSocket.postMessage(settingConfigs);
 
@@ -115,10 +108,12 @@ export default function App() {
     }, [socketConnectionRequest, settingConfigs]);
     // recommended way: keeping the second condition blank, fires useEffect just once as there are no conditions to check to fire up useEffect again (just like componentDidMount of React Life cycle).
 
+
+    // TODO: maybe useCallback, how many times does App get rendered???
     // NOTE: data is alway created with 2 empty buffers and then populated before being passed to this method, so no need to check for null or undefined!
     const workerOnMessageHandler = (data: DataToRedux, workerSocket: Worker) => {
         if (data.status) {
-            if(data.status.isSocketConnected === false) {
+            if (data.status.isSocketConnected === false) {
                 setConnectionSnackBar({
                     isOpen: true,
                     connection: data.status["isSocketConnected"]
@@ -132,7 +127,7 @@ export default function App() {
 
                 setConfigValidation(false);
             }
-            else if(data.status.isSocketConnected === true) {
+            else if (data.status.isSocketConnected === true) {
                 setConnectionSnackBar({
                     isOpen: true,
                     connection: data.status["isSocketConnected"]
@@ -148,28 +143,35 @@ export default function App() {
             }
             else if (data.status === "msg_count_increment") {
                 dispatch(incrementReceivedMsgCount());
-            } 
+            }
             else if (data.status.ping !== undefined) {
                 dispatch(setLastPing(data.status["ping"]));
-            } 
+            }
             else if (data.status.throughput !== undefined) {
                 dispatch(setThroughput(data.status["throughput"]));
-            } 
-        } 
-        else if (data.chartsUpdates.length > 0) {
+            }
+        } else if (data.chartsUpdates.length > 0) {
+            // update the Charts Slice
             dispatch(upsertCharts(data.chartsUpdates!));
             dispatch(upsertManyRows(data.tableData!));
-        } 
-        else if (data.tableData.length > 0) {
+            dispatchTableHeadersUpdate(data.tableHeaders);
+        } else if (data.tableData.length > 0) {
             dispatch(upsertManyRows(data.tableData!));
+            dispatchTableHeadersUpdate(data.tableHeaders);
         }
     }
+
+    function dispatchTableHeadersUpdate(tableHeaders: Array<string> | undefined) { tableHeaders && dispatch(upsertTableHeaders(tableHeaders)); }
 
     return (
         <div className={styles.main_container}>
             {
                 // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
                 urls.includes(tab) && <TopBarWithDrawer />
+            }
+            {
+                // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
+                urls.includes(tab) && <Toolbar />
             }
             <Routes>
                 {
@@ -203,49 +205,6 @@ export default function App() {
                     })
                 }
             </Routes>
-            {
-                // Floating Action Button (FAB) added for filter popup
-                // Show filter - FAB only if valid url is there. Else hide the button (Just as mentioned above - for the case of TopBar). Also hide it when user is on Settings Page (As - not needed to do filter when viewing/inserting/updating configurations)
-                (urls.includes(tab) && tab !== RoutesMapping["Settings"].url) && (tab !== RoutesMapping["ExperimentPage"].url) ?
-                    <div className={styles.fab}>
-                        <Fab
-                            variant="extended"
-                            color="primary"
-                            aria-label="add"
-                            onClick={() => setFilterDrawer(true)}
-                        >
-                            <FilterAltIcon /> Filter
-                        </Fab>
-                    </div>
-                    :
-                    null
-            }
-            {/* Filter Popup */}
-            <React.Fragment>
-                <Drawer
-                    anchor={"bottom"} // MUI-Drawer property: tells from which side of the screen, the drawer should appear
-                    open={filterDrawer}
-                    onClose={() => setFilterDrawer(false)}
-                    // Drawer wraps your content inside a <Paper /> component. A Materiaul-UI paper component has shadows and a non-transparent background.
-                    classes={{ paper: styles.filter_drawer_container }}
-                >
-                    <div className={styles.filter_container}>
-                        <h3>
-                            Filter Your Results
-                        </h3>
-                        <TextField
-                            id="outlined-multiline-flexible"
-                            label="Filter"
-                            placeholder="Filter your experiments here!..."
-                            multiline
-                            maxRows={4}
-                            value={filterText}
-                            onChange={(e) => setFilterText(e.target.value)}
-                            className={styles.filter_textfield}
-                        />
-                    </div>
-                </Drawer>
-            </React.Fragment>
             {
                 // here also, it is same as done above for Setting Component. We need to pass functions as props to the popup - so that when user submits the configured values, we can connect to websocket with the changed parameters.
                 urls.includes(tab) && tab !== RoutesMapping["Settings"].url && isConfigValidated === false ?

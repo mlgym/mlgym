@@ -33,3 +33,9 @@
     border-radius: 5px;
     margin-bottom: 20px;
 }
+
+.fab {
+    position: fixed;
+    bottom: 30px;
+    right: 20px;
+}

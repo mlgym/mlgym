@@ -7,7 +7,7 @@ const CHECKPOINT_BASE_URL = "/checkpoints/<grid_search_id>/<experiment_id>/<chec
 const CHECKPOINT_LIST_BASE_URL = "/checkpoint_list/<grid_search_id>/<experiment_id>";
 const MODEL_CARDS_BASE_URL = "/model-card/<grid_search_id>";
 
-let api = {
+export default {
     // following API to GET config file for the whole grid search
     gridsearch_config_file: GRID_SEARCH_BASE_URL + "/" + defaultGridSearchConfigFileName,
 
@@ -32,6 +32,4 @@ let api = {
 
     // following API to GET system details like CPU & GPU for model card
     model_card_sys_info: MODEL_CARDS_BASE_URL + "/<experiment_id>",
-}
-
-export default api;
+};

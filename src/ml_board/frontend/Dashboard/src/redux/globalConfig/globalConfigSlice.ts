@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 
-export interface GlobalConfig {
+interface GlobalConfig {
   currentFilter: string;
   idTab: string;
   wsConnected: boolean;
@@ -9,7 +9,6 @@ export interface GlobalConfig {
   received_msg_count: number;
   throughput: number;
   grid_search_id: string;
-  table_headers: Array<string>;
   rest_api_url: string;
   socket_connection_url: string;
 }
@@ -22,16 +21,15 @@ const initialState: GlobalConfig = {
   received_msg_count: 0,
   throughput: 0,
   grid_search_id: "",
-  table_headers: [], //TODO: will be used to store the ALL column headers
   rest_api_url: "",
   socket_connection_url: ""
 };
 
-export const globalConfigSlice = createSlice({
+const { actions, reducer } = createSlice({
   name: 'GlobalConfig',
   initialState,
   reducers: {
-    changeFilter: (state, { payload }: PayloadAction<string>) => {
+    setFilter: (state, { payload }: PayloadAction<string>) => {
       state.currentFilter = payload;
     },
     changeTab: (state, { payload }: PayloadAction<string>) => {
@@ -58,27 +56,15 @@ export const globalConfigSlice = createSlice({
     setSocketConnectionUrl: (state, action: PayloadAction<string>) => {
       state.socket_connection_url = action.payload;
     },
-    // TODO::
-    upsertTableHeaders: (state, { payload }: PayloadAction<string[]>) => {
-      state.table_headers.push(...payload);
-    }
-  }, 
+  },
   // extraReducers(builder) {
-  //   builder.addCase(upsertCharts, (state, { payload }) => {
-  //     // NOTE: very important to notice here that +4 increment
-  //     // because in the testing file every evaluation_result held 4 values for the same experiment
-  //     // this might not be true with other data
-  //     for (let i = 0; i < payload.length; i+=4) {
-  //       if (!state.color_map.hasOwnProperty(payload[i].exp_id)) {
-  //         // one can only hope that it doesn't produce a blue blue blue blue blue... pattern :')
-  //         state.color_map[payload[i].exp_id] = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-  //       }
-  //     }
+  //   builder.addCase(upsertManyRows, (state, { payload }) => {
+  //     // TODO:: Loop over all and check the type, if already there add new headers, else skip
   //   })
   // },
 });
 
-export const { changeFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl, setSocketConnectionUrl } = globalConfigSlice.actions;
+export const { setFilter, changeTab, setSocketConnection, setLastPing, incrementReceivedMsgCount, setThroughput, setGridSearchId, setRestApiUrl, setSocketConnectionUrl } = actions;
 
 export const selectFilter = (state: RootState) => state.globalConfig.currentFilter;
 export const selectTab = (state: RootState) => state.globalConfig.idTab;
@@ -90,4 +76,4 @@ export const getGridSearchId = (state: RootState) => state.globalConfig.grid_sea
 export const getRestApiUrl = (state: RootState) => state.globalConfig.rest_api_url;
 export const getSocketConnectionUrl = (state: RootState) => state.globalConfig.socket_connection_url;
 
-export default globalConfigSlice.reducer;
+export default reducer;
