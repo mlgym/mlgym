@@ -158,3 +158,7 @@ class TrainingDetailsCreationError(Exception):
 class EvalDetailsCreationError(Exception):
     """Raised when an error occurs during creation of EvalDetails object in model card."""
     pass
+
+class PipelineDetailsCreationError(Exception):
+    """Raised when an error occurs during creation of PipelineDetails object in model card."""
+    pass

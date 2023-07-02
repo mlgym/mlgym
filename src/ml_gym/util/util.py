@@ -17,7 +17,7 @@ from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingCom
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 import tqdm
 from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob
-from ml_gym.error_handling.exception import ModelCardCreationError, SystemInfoFetchError, ModelDetailsCreationError, TrainingDetailsCreationError, EvalDetailsCreationError, DatasetDetailsCreationError
+from ml_gym.error_handling.exception import ModelCardCreationError, SystemInfoFetchError, ModelDetailsCreationError, TrainingDetailsCreationError, EvalDetailsCreationError, DatasetDetailsCreationError, PipelineDetailsCreationError
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 import platform
 import torch
@@ -55,6 +55,15 @@ class DatasetDetails:
         model_card["dataset_splits"] = self.dataset_splits
         model_card["considered_dataset"] = self.considered_dataset
         model_card["label_distribution"] = self.label_distribution
+        return model_card
+
+@dataclass
+class PipelineDetails:
+    pipeline_details: dict = None
+
+    def toJSON(self) -> Dict:
+        model_card ={}
+        model_card["pipeline_details"] = self.pipeline_details
         return model_card
 
 @dataclass
@@ -137,6 +146,7 @@ class ModelCard:
     experiment_environment: ExperimentEnvironment
     training_details: TrainingDetails
     eval_details: EvalDetails
+    pipeline_details: PipelineDetails
 
     def toJSON(self) -> Dict:
         model_card = {}
@@ -145,6 +155,7 @@ class ModelCard:
         model_card["training_details"] = self.training_details.toJSON()
         model_card["eval_details"] = self.eval_details.toJSON()
         model_card["experiment_environment"] = self.experiment_environment.toJSON()
+        model_card["pipeline_details"] = self.pipeline_details.toJSON()
         return model_card
 
 class ModelCardFactory:
@@ -157,16 +168,18 @@ class ModelCardFactory:
                 grid_search_id (str): Grid Search ID created for the run.
                 exp_config (dict): Experiment configuration.
                 gs_config (dict): Grid Search configuration.
+                model (NNModel): Torch Neural Network module.
         :returns:
                 model_card (ModelCard): Model card object to be converted into json file.
         """
         
-        def update_model_details(grid_search_id: str, gs_config: dict, model) -> ModelDetails:
+        def update_model_details(grid_search_id: str, gs_config: dict, model = None) -> ModelDetails:
             """
             Function to initialize ModelDetails object.
             :params:
                     grid_search_id (str): Grid Search ID created for the run.
                     gs_config (dict): Grid Search configuration.
+                    model (NNModel): Torch Neural Network module.
             :returns:
                     obj (ModelDetails): initialized model details object.
             """
@@ -192,16 +205,11 @@ class ModelCardFactory:
             try:
                 splits_percentage = []
                 split_subscription = set()
-                key = "splitted_dataset_iterators"
-                proc = 2
-                splits_percentage.append(exp_config["splitted_dataset_iterators"]["config"]["split_configs"])
-                split_subscription.add(exp_config["splitted_dataset_iterators"]["requirements"]["subscription"])
-                while (proc >= 2):
-                    new_key = key + str(proc)
-                    if new_key in exp_config:
-                        splits_percentage.append(exp_config["splitted_dataset_iterators"]["config"]["split_configs"])
-                        split_subscription.add(exp_config["splitted_dataset_iterators"]["requirements"]["subscription"])
-                        proc+=1
+                find_key = "splitted_dataset_iterators"
+                for key, val in exp_config:
+                    if find_key in key:
+                        splits_percentage.append(exp_config[key]["config"]["split_configs"])
+                        split_subscription.add(exp_config[key]["requirements"]["subscription"])
                     else:
                         break
                 split_config = exp_config["dataset_iterators"]["config"]["split_configs"] if "split_configs" in exp_config["dataset_iterators"]["config"] else None
@@ -214,7 +222,7 @@ class ModelCardFactory:
             except Exception as e:
                 raise DatasetDetailsCreationError(f"Error while fetching Dataset Details for Model card.") from e
         
-        def update_training_details(exp_config: dict, gs_config: dict) -> TrainingDetails:
+        def update_training_details(exp_config: dict) -> TrainingDetails:
             """
             Function to initialize TrainingDetails object.
             :params:
@@ -248,20 +256,32 @@ class ModelCardFactory:
 
                 return EvalDetails(loss_funcs = loss_funcs, metrics = metrics)
             except Exception as e:
-                raise EvalDetails(f"Error while fetching Eval Details for Model card.") from e
+                raise EvalDetailsCreationError(f"Error while fetching Eval Details for Model card.") from e
+        
+        def update_pipeline_details(exp_config: dict) -> PipelineDetails:
+            """
+            Function to initialize PipelineDetails object.
+            :params:
+                    exp_config (dict): Experiment configuration.
+            :returns:
+                    obj (PipelineDetails): initialized pipeline details object.
+            """
+            try:
+                pipeline_details = {}
+                for key, val in exp_config:
+                    pipeline_details[key] = exp_config[key]
+                return PipelineDetails(pipeline_details = pipeline_details)
+            except Exception as e:
+                raise PipelineDetailsCreationError(f"Error while fetching Pipeline Details for Model card.") from e
 
         try:
-            experiment_env = ExperimentEnvironment(system_env = ExperimentEnvironment.create_system_info())
-            model_details = update_model_details(grid_search_id = grid_search_id, gs_config = gs_config, model=model)
-            dataset_details = update_dataset_details(exp_config = exp_config)
-            training_details = update_training_details(exp_config = exp_config, gs_config = gs_config)
-            eval_details = update_evaluation_details(exp_config = exp_config)
             model_card = ModelCard(
-                model_details = model_details,
-                dataset_details = dataset_details,
-                experiment_environment = experiment_env,
-                training_details = training_details,
-                eval_details =eval_details
+                model_details = update_model_details(grid_search_id = grid_search_id, gs_config = gs_config, model=model),
+                dataset_details = update_dataset_details(exp_config = exp_config),
+                experiment_environment = ExperimentEnvironment(system_env = ExperimentEnvironment.create_system_info()),
+                training_details = update_training_details(exp_config = exp_config, gs_config = gs_config),
+                eval_details = update_evaluation_details(exp_config = exp_config),
+                pipeline_details = update_pipeline_details(exp_config = exp_config)
             )
             return model_card.toJSON()
         except Exception as e:
