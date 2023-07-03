@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from io import BytesIO
 import os
 import glob
 import re
@@ -95,6 +96,12 @@ class FileDataAccess(DataAccessIF):
     def iterfile(file_path: str):
         with open(file_path, mode="rb") as file_like:
             yield from file_like
+    
+    @staticmethod
+    def iterbytefile(file_path: str):
+        with open(file_path, mode="rb") as f:
+             buffer = BytesIO(f.read())
+        return buffer
 
     def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
         """
@@ -317,8 +324,11 @@ class FileDataAccess(DataAccessIF):
             if not os.path.isfile(requested_full_path):
                 raise InvalidPathError(f"Resource {requested_full_path} not found.")
 
-            generator = FileDataAccess.iterfile(requested_full_path)
-            return generator
+            if (checkpoint_resource is not CheckpointResource.stateful_components):
+                data = FileDataAccess.iterbytefile(requested_full_path)
+            else:
+                data = FileDataAccess.iterfile(requested_full_path)
+            return data
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
