@@ -62,8 +62,7 @@ class PipelineDetails:
     pipeline_details: dict = None
 
     def toJSON(self) -> Dict:
-        model_card ={}
-        model_card["pipeline_details"] = self.pipeline_details
+        model_card = self.pipeline_details
         return model_card
 
 @dataclass
@@ -205,14 +204,14 @@ class ModelCardFactory:
             try:
                 splits_percentage = []
                 split_subscription = set()
-                find_key = "splitted_dataset_iterators"
-                for key, val in exp_config:
-                    if find_key in key:
+                find_key = "dataset_iterator"
+                for key in exp_config:
+                    if find_key in key and exp_config[key]["component_type_key"] == "SPLITTED_DATASET_ITERATORS":
                         splits_percentage.append(exp_config[key]["config"]["split_configs"])
-                        split_subscription.add(exp_config[key]["requirements"]["subscription"])
-                    else:
-                        break
-                split_config = exp_config["dataset_iterators"]["config"]["split_configs"] if "split_configs" in exp_config["dataset_iterators"]["config"] else None
+                        for req in exp_config[key]["requirements"]:
+                            split_subscription.update(req["subscription"])
+                    elif exp_config[key]["component_type_key"] == "DATASET_ITERATORS":
+                        split_config = exp_config["dataset_iterators"]["config"]["split_configs"] if "split_configs" in exp_config["dataset_iterators"]["config"] else None
 
                 dataset_splits = {"split_config": split_config,
                                   "split_subscription": list(split_subscription), 
@@ -268,7 +267,7 @@ class ModelCardFactory:
             """
             try:
                 pipeline_details = {}
-                for key, val in exp_config:
+                for key in exp_config:
                     pipeline_details[key] = exp_config[key]
                 return PipelineDetails(pipeline_details = pipeline_details)
             except Exception as e:
@@ -279,7 +278,7 @@ class ModelCardFactory:
                 model_details = update_model_details(grid_search_id = grid_search_id, gs_config = gs_config, model=model),
                 dataset_details = update_dataset_details(exp_config = exp_config),
                 experiment_environment = ExperimentEnvironment(system_env = ExperimentEnvironment.create_system_info()),
-                training_details = update_training_details(exp_config = exp_config, gs_config = gs_config),
+                training_details = update_training_details(exp_config = exp_config),
                 eval_details = update_evaluation_details(exp_config = exp_config),
                 pipeline_details = update_pipeline_details(exp_config = exp_config)
             )
