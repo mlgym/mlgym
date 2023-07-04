@@ -162,3 +162,7 @@ class EvalDetailsCreationError(Exception):
 class PipelineDetailsCreationError(Exception):
     """Raised when an error occurs during creation of PipelineDetails object in model card."""
     pass
+
+class ModelCardFetchError(Exception):
+    """Raised when an error occurs during fetching model card."""
+    pass

@@ -1,16 +1,11 @@
-from io import BytesIO
-from fastapi import FastAPI, UploadFile
-from fastapi import status, HTTPException
-from fastapi.responses import StreamingResponse
-from ml_board.backend.restful_api.data_access import DataAccessIF
-from ml_gym.error_handling.exception import InvalidPathError, SystemInfoFetchError
-from ml_board.backend.restful_api.data_models import FileFormat, RawTextFile, CheckpointResource
 from typing import Callable
+from fastapi import FastAPI, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
-import json
-
-from ml_gym.util.util import ModelCardFactory
-import torch
+from fastapi.responses import JSONResponse, StreamingResponse
+from ml_board.backend.restful_api.data_access import DataAccessIF
+from ml_board.backend.restful_api.data_models import RawTextFile
+from ml_gym.error_handling.exception import (InvalidPathError,
+                                             SystemInfoFetchError)
 
 # from fastapi.staticfiles import StaticFiles
 
@@ -306,30 +301,8 @@ class RestfulAPIServer:
         :returns: JSON object: Model card infomration for the experiment.
         """
         try:
-            checkpoint_list = self.data_access.get_checkpoint_list(grid_search_id=grid_search_id, experiment_id=experiment_id)
-            epoch = checkpoint_list[0]["epoch"]
-            for checkpoint in checkpoint_list:
-                if checkpoint["epoch"] > epoch:
-                    epoch = checkpoint["epoch"]
-
-            model_state_buffer = BytesIO(self.data_access.get_checkpoint_resource(grid_search_id=grid_search_id,
-                                                                                    experiment_id=experiment_id,
-                                                                                    epoch=epoch,
-                                                                                    checkpoint_resource=CheckpointResource.model))
-            
-            model = torch.load(model_state_buffer, map_location=torch.device)
-
-            exp_config = self.data_access.get_experiment_config(
-                grid_search_id=grid_search_id, experiment_id=experiment_id, config_name="experiment_config"
-            )
-            gs_config = self.data_access.get_grid_config(grid_search_id=grid_search_id, config_name="grid_search_config")
-
-            model_card = json.dumps(ModelCardFactory.create_model_card(grid_search_id=grid_search_id, exp_config=exp_config, gs_config=gs_config, model = model))
-
-            self.data_access.add_config_to_experiment(
-                grid_search_id=grid_search_id, experiment_id=experiment_id, config_name="model_card", config=model_card
-            )
-            response = StreamingResponse(model_card, media_type="application/json")
+            model_card = self.data_access.create_model_card(grid_search_id = grid_search_id, experiment_id = experiment_id)
+            response = JSONResponse(model_card, media_type="application/json")
             return response
         except SystemInfoFetchError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Error while fetching server system information") from e

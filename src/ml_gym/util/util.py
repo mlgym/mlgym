@@ -160,7 +160,7 @@ class ModelCard:
 class ModelCardFactory:
 
     @staticmethod
-    def create_model_card(grid_search_id: str, exp_config: dict, gs_config: dict, model = None) -> Dict:
+    def create_model_card(grid_search_id: str, exp_config: dict, gs_config: dict, model: NNModel = None) -> Dict:
         """
         Create Model card.
         :params:
@@ -172,7 +172,7 @@ class ModelCardFactory:
                 model_card (ModelCard): Model card object to be converted into json file.
         """
         
-        def update_model_details(grid_search_id: str, gs_config: dict, model = None) -> ModelDetails:
+        def update_model_details(grid_search_id: str, gs_config: dict, model: NNModel = None) -> ModelDetails:
             """
             Function to initialize ModelDetails object.
             :params:
