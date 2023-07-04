@@ -37,11 +37,11 @@ class DataAccessIF(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_grid_config(self, grid_search_id: str, config_name: str):
+    def get_grid_config(self, grid_search_id: str, config_name: str) -> Generator:
         raise NotImplementedError
 
     @abstractmethod
-    def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str):
+    def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str) -> Generator:
         raise NotImplementedError
 
     @abstractmethod
@@ -72,7 +72,8 @@ class DataAccessIF(ABC):
     def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str) -> List[Dict]:
         raise NotImplementedError
 
-    def create_model_card(self, grid_search_id: str, experiment_id: str):
+    @abstractmethod
+    def create_model_card(self, grid_search_id: str, experiment_id: str) -> Dict:
         raise NotImplementedError
 
 
@@ -212,7 +213,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def get_grid_config(self, grid_search_id: str, config_name: str):
+    def get_grid_config(self, grid_search_id: str, config_name: str) -> Generator:
         """
         Fetch grid config for a Grid Search ID from the event storage.
 
@@ -232,7 +233,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str):
+    def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str) -> Generator:
         """
         Fetch experiment config given the experiment ID & grid search ID from event storage.
 
@@ -443,15 +444,14 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"Path {requested_full_path} is not safe.")
 
-    def create_model_card(self, grid_search_id: str, experiment_id: str):
+    def create_model_card(self, grid_search_id: str, experiment_id: str) -> Dict:
         """
-        ``HTTP GET`` Fetch Model card information.
+        Fetch Model card info if available or else create & store model card info in event storage.
         :params:
                 grid_search_id (str): Grid Search ID
                 experiment_id (str): Experiment ID
-                config_name (str): Name of Configuration file
 
-        :returns: JSON object: Model card infomration for the experiment.
+        :returns: model_card (Dict): Model card infomration for the experiment.
         """
         try:
             requested_full_path = os.path.realpath(
