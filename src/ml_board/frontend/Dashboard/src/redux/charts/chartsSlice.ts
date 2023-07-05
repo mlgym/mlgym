@@ -1,4 +1,4 @@
-import { createEntityAdapter, createSlice, EntityState, PayloadAction } from "@reduxjs/toolkit";
+import { createEntityAdapter, createSelector, createSlice, EntityState, PayloadAction } from "@reduxjs/toolkit";
 import { ChartUpdate } from "../../worker_socket/event_handlers/EvaluationResultHandler";
 import { RootState } from "../store";
 
@@ -25,7 +25,7 @@ const experimentsAdapter = createEntityAdapter<Experiment>({
 
 const initialState: EntityState<Chart> = chartsAdapter.getInitialState({});
 
-const { actions, reducer }  = createSlice({
+const { actions, reducer } = createSlice({
     name: 'charts',
     initialState,
     reducers: {
@@ -72,16 +72,21 @@ export const { upsertCharts, resetChartState } = actions;
 // TODO: memoize these selectors
 export const selectChartLabelsById = (state: RootState, chart_id: string) => state.charts.entities[chart_id]?.x_axis ?? [];
 export const selectExperimentsPerChartById = (state: RootState, chart_id: string) => state.charts.entities[chart_id]?.experiments.entities ?? {};
-export const selectChartsByExperimentId = (state: RootState, exp_id: string) =>{
-    const allExp: {[key: string]: any} = {};
-    for (const chart_id in state.charts.entities) {
-        const experiments = state.charts.entities[chart_id]?.experiments.entities ?? {};
-        if(experiments[exp_id]) {
-            allExp[chart_id] = experiments[exp_id];
+// memoized to avoid unnecessary rerendering
+export const selectChartsByExperimentId = createSelector(
+    (state: RootState) => state.charts.entities,
+    (_: RootState, exp_id: string) => exp_id,
+    (charts, exp_id) => {
+        const allExp: { [key: string]: any } = {};
+        for (const chart_id in charts) {
+            const experiments = charts[chart_id]?.experiments.entities ?? {};
+            if (experiments[exp_id]) {
+                allExp[chart_id] = experiments[exp_id];
+            }
         }
+        return allExp;
     }
-    return allExp;
-}
+);
 
 // create a set of memoized selectors
 export const {
