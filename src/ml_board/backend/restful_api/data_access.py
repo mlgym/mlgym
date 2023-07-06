@@ -45,7 +45,7 @@ class DataAccessIF(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def load_config(self, grid_search_id: str, experiment_id: str, config_name: str, file_type: str):
+    def load_config(self, grid_search_id: str, experiment_id: str, config_name: str, file_type: str) -> Dict:
         raise NotImplementedError
 
     @abstractmethod
@@ -53,7 +53,7 @@ class DataAccessIF(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_checkpoint_resource(self, grid_search_id: str, epoch: str, checkpoint_resource: str, experiment_id: str = None):
+    def get_checkpoint_resource(self, grid_search_id: str, epoch: str, checkpoint_resource: str, experiment_id: str = None) -> BytesIO | Generator:
         raise NotImplementedError
 
     @abstractmethod
@@ -256,7 +256,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def load_config(self, grid_search_id: str, config_name: str, file_type: str, experiment_id: str = None):
+    def load_config(self, grid_search_id: str, config_name: str, file_type: str, experiment_id: str = None) -> Dict:
         """
         Load config to be used in backend buisness logic.
 
@@ -351,7 +351,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str) -> Generator:
+    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str) -> BytesIO | Generator:
         """
         Fetch checkpoint resource pickle file given the experiment ID & grid search ID from event storage.
 

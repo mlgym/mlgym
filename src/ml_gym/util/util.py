@@ -204,14 +204,13 @@ class ModelCardFactory:
             try:
                 splits_percentage = []
                 split_subscription = set()
-                find_key = "dataset_iterator"
                 for key in exp_config:
-                    if find_key in key and exp_config[key]["component_type_key"] == "SPLITTED_DATASET_ITERATORS":
+                    if exp_config[key]["component_type_key"] == "SPLITTED_DATASET_ITERATORS":
                         splits_percentage.append(exp_config[key]["config"]["split_configs"])
                         for req in exp_config[key]["requirements"]:
                             split_subscription.update(req["subscription"])
                     elif exp_config[key]["component_type_key"] == "DATASET_ITERATORS":
-                        split_config = exp_config["dataset_iterators"]["config"]["split_configs"] if "split_configs" in exp_config["dataset_iterators"]["config"] else None
+                        split_config = exp_config[key]["config"]["split_configs"] if "split_configs" in exp_config[key]["config"] else None
 
                 dataset_splits = {"split_config": split_config,
                                   "split_subscription": list(split_subscription), 
