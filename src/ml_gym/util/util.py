@@ -20,7 +20,6 @@ from ml_gym.gym.gym_jobs.standard_gym_job import AbstractGymJob
 from ml_gym.error_handling.exception import ModelCardCreationError, SystemInfoFetchError, ModelDetailsCreationError, TrainingDetailsCreationError, EvalDetailsCreationError, DatasetDetailsCreationError, PipelineDetailsCreationError
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 import platform
-import torch
 import psutil
 import pkg_resources
 from dataclasses import dataclass
@@ -265,19 +264,19 @@ class ModelCardFactory:
                     obj (PipelineDetails): initialized pipeline details object.
             """
             try:
-                pipeline_details = {}
-                found_keys = set()
-                all_keys = set(key for key in exp_config)
-                find_key_arr = ["data", "model", "eval", "train", "early_stopping", "checkpointing"]
-                for find_key in find_key_arr:
-                    temp = {key : exp_config[key] for key in exp_config if find_key in key and find_key.upper() in exp_config[key]["component_type_key"]}
-                    found_keys.update(key for key in temp)
-                    pipeline_details[find_key] = temp
+                # pipeline_details = {}
+                # found_keys = set()
+                # all_keys = set(key for key in exp_config)
+                # find_key_arr = ["data", "model", "eval", "train", "early_stopping", "checkpointing"]
+                # for find_key in find_key_arr:
+                #     temp = {key : exp_config[key] for key in exp_config if find_key in key and find_key.upper() in exp_config[key]["component_type_key"]}
+                #     found_keys.update(key for key in temp)
+                #     pipeline_details[find_key] = temp
                     
-                for val in list(all_keys - found_keys):
-                    pipeline_details[val] = exp_config[val]
+                # for val in list(all_keys - found_keys):
+                #     pipeline_details[val] = exp_config[val]
 
-                return PipelineDetails(pipeline_details = pipeline_details)
+                return PipelineDetails(pipeline_details = exp_config)
             except Exception as e:
                 raise PipelineDetailsCreationError(f"Error while fetching Pipeline Details for Model card.") from e
 

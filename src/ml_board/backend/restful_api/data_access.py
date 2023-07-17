@@ -53,7 +53,7 @@ class DataAccessIF(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_checkpoint_resource(self, grid_search_id: str, epoch: str, checkpoint_resource: str, experiment_id: str = None) -> BytesIO | Generator:
+    def get_checkpoint_resource(self, grid_search_id: str, epoch: str, checkpoint_resource: str, experiment_id: str = None, apiCall: bool = True) -> BytesIO | Generator:
         raise NotImplementedError
 
     @abstractmethod
@@ -351,7 +351,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str) -> BytesIO | Generator:
+    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str, apiCall: bool = True) -> BytesIO | Generator:
         """
         Fetch checkpoint resource pickle file given the experiment ID & grid search ID from event storage.
 
@@ -360,6 +360,7 @@ class FileDataAccess(DataAccessIF):
                 experiment_id (str): Experiment ID
                 epoch (str): Epoch number
                 checkpoint_resource (CheckpointResource) : CheckpointResource type
+                apiCall (bool): API call or internal call. (Default: True)
 
         :returns: bytes response of pickle file
         """
@@ -370,10 +371,10 @@ class FileDataAccess(DataAccessIF):
             if not os.path.isfile(requested_full_path):
                 raise InvalidPathError(f"Resource {requested_full_path} not found.")
 
-            if checkpoint_resource is not CheckpointResource.stateful_components:
-                data = FileDataAccess.iterbytefile(requested_full_path)
-            else:
+            if apiCall:
                 data = FileDataAccess.iterfile(requested_full_path)
+            else:
+                data = FileDataAccess.iterbytefile(requested_full_path)
             return data
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
@@ -470,6 +471,7 @@ class FileDataAccess(DataAccessIF):
                         experiment_id=experiment_id,
                         epoch=epoch,
                         checkpoint_resource=CheckpointResource.model,
+                        apiCall=False
                     )
 
                     model_state = torch.load(model_state_buffer)
