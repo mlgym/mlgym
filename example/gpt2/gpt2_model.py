@@ -1,15 +1,16 @@
 from ml_gym.models.nn.net import NNModel
 import torch
-from transformers import GPT2Tokenizer, GPT2Model
+from transformers import GPT2TokenizerFast, GPT2Model, GPT2Config
+from typing import Dict
 
+gpt_version: str = "gpt2"
+class GPT2LLM(NNModel):
 
-class BERTLM(NNModel):
-
-    def __init__(self, prediction_publication_key: str, bert_version: str = "bert-base-uncased"):
+    def __init__(self, prediction_publication_key: str, gpt_version: str = gpt_version):
         super().__init__()
         self.prediction_publication_key = prediction_publication_key
-        config = AutoConfig.from_pretrained(bert_version)
-        self.model = AutoModelForMaskedLM.from_config(config)
+        config = GPT2Config.from_pretrained(gpt_version)
+        self.model = GPT2Model._from_config(config)
 
     def forward_impl(self, inputs: torch.Tensor) -> Dict[str, torch.Tensor]:
         outputs = self.model(inputs)
@@ -24,9 +25,8 @@ if __name__ == '__main__':
     from datasets import load_from_disk
     from transformers import DataCollatorForLanguageModeling, BertTokenizerFast
     from torch.utils.data import DataLoader
-
-    tokenizer = BertTokenizerFast(tokenizer_file="/scratch/max/mlgym/example/transformer/tokenizers/trained_wiki_tokenizer/tokenizer.json")
-    chunked_tokenized_dataset = load_from_disk("example/transformer/preprocessed_datasets/chunked_tokenized_dataset_train")
+    tokenizer = GPT2TokenizerFast(tokenizer_file="./tokenizer.json")
+    chunked_tokenized_dataset = load_from_disk("./wikitext-2-v1/train")
     mlm_probability = 0.15
     batch_size = 30
 
@@ -35,6 +35,6 @@ if __name__ == '__main__':
     train_dataloader = DataLoader(chunked_tokenized_dataset, shuffle=True, batch_size=batch_size, collate_fn=data_collator)
 
     sample = next(iter(train_dataloader))
-    model = BERTLM("")
+    model = GPT2LLM("")
     prediction = model(sample["input_ids"])
     print("")

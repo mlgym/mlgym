@@ -9,7 +9,7 @@ from ml_gym.batching.batch import DatasetBatch
 from dataclasses import dataclass
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector
 from ml_gym.data_handling.postprocessors.collator import Collator
-from bert_model import BERTLM
+from gpt2_model import GPT2LLM
 from transformers import DataCollatorForLanguageModeling, BertTokenizerFast
 from data_stack.dataset.meta import MetaFactory
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
@@ -19,25 +19,25 @@ from mlm_loss_function import LMLossFunctionRegistryConstructable
 
 @dataclass
 class LMWikiBookCorpusDatasetConstructable(ComponentConstructable):
-    dataset_identifier: str = ""
-    dataset_folder_path: str = None
+    dataset_identifier: str = "wikitext-2-v1"
+    dataset_folder_path: str = "./wikitext-2-v1/train"
 
     def _construct_impl(self) -> Dict[str, InformedDatasetIteratorIF]:
         if self.dataset_folder_path is None:
             raise DatasetNotFoundError("Dataset path not specified")
-        chunked_tokenized_dataset = load_from_disk(self.dataset_folder_path)
+        wiki_dataset = load_from_disk(self.dataset_folder_path)
         split_name = "train"
         iterator_meta = MetaFactory.get_iterator_meta(sample_pos=0, target_pos=1, tag_pos=0)
         dataset_meta = MetaFactory.get_dataset_meta(identifier=self.component_identifier,
                                                     dataset_name=self.dataset_identifier,
                                                     dataset_tag=split_name,
                                                     iterator_meta=iterator_meta)
-        dataset_dict = {split_name: ModelGymInformedIteratorFactory.get_dataset_iterator(chunked_tokenized_dataset, dataset_meta)}
+        dataset_dict = {split_name: ModelGymInformedIteratorFactory.get_dataset_iterator(wiki_dataset, dataset_meta)}
         return dataset_dict
 
 
 @dataclass
-class BERRTLMCollator(Collator):
+class GPT2LLMCollator(Collator):
 
     def __init__(self, target_publication_key: str, tokenizer_file_path: str, pad_to_multiple_of: int = 8, mlm_probability: float = 0.15):
         self.target_publication_key = target_publication_key
@@ -62,11 +62,11 @@ class BERRTLMCollator(Collator):
 class MyModelRegistryConstructable(ModelRegistryConstructable):
     def _construct_impl(self):
         super()._construct_impl()
-        self.model_registry.add_class("lm_bert", BERTLM)
+        self.model_registry.add_class("llm_gpt2", GPT2LLM)
         return self.model_registry
 
 
-class BERTLMBluePrint(BluePrint):
+class GPT2LLMBluePrint(BluePrint):
     def __init__(self, run_mode: RunMode, config: Dict, grid_search_id: str,
                  experiment_id: str, external_injection: Dict[str, Any] = None,
                  warm_start_epoch: int = 0):
@@ -76,13 +76,13 @@ class BERTLMBluePrint(BluePrint):
     def construct_components(config: Dict, component_names: List[str], device: torch.device,
                              external_injection: Dict[str, Any] = None) -> Dict[str, Any]:
         if external_injection is not None:
-            injection_mapping = {"id_bert_lm_collator": BERRTLMCollator,
+            injection_mapping = {"id_gpt2_llm_collator": GPT2LLMCollator,
                                  "id_computation_device": device,
                                  **external_injection}
             injector = Injector(injection_mapping, raise_mapping_not_found=True)
 
         else:
-            injection_mapping = {"id_bert_lm_collator": BERRTLMCollator}
+            injection_mapping = {"id_gpt2_llm_collator": GPT2LLMCollator}
             injector = Injector(injection_mapping, raise_mapping_not_found=False)
 
         component_factory = ComponentFactory(injector)
@@ -95,6 +95,6 @@ class BERTLMBluePrint(BluePrint):
 
     def construct(self, device: torch.device = None) -> Dict[str, Any]:
         component_names = ["model", "trainer", "optimizer", "evaluator", "early_stopping_strategy", "checkpointing_strategy", "lr_scheduler"]
-        components = BERTLMBluePrint.construct_components(self.config, component_names, device, self.external_injection)
+        components = GPT2LLMBluePrint.construct_components(self.config, component_names, device, self.external_injection)
 
         return components

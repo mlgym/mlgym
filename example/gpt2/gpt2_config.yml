@@ -10,7 +10,7 @@ dataset_iterators:
   variant_key: LMWikiBookCorpusDataset
   config:
     dataset_identifier: LMWikiBookCorpus
-    dataset_folder_path: /scratch/max/mlgym/example/bert/chunked_tokenized_dataset_train
+    dataset_folder_path: C:/Users/Moinam/Documents/GitHub/mlgym/example/gpt2/wikitext-2-v1/train
 
 split_dataset_iterators:
   component_type_key: SPLITTED_DATASET_ITERATORS
@@ -48,10 +48,10 @@ data_collator:
   config:
     collator_type:
       injectable:
-        id: id_bert_lm_collator
+        id: id_gpt2_llm_collator
     collator_params:
       target_publication_key: *target_key_anchor
-      tokenizer_file_path: /scratch/max/mlgym/example/bert/tokenizers/trained_wiki_tokenizer/tokenizer.json
+      tokenizer_file_path: C:/Users/Moinam/Documents/GitHub/mlgym/example/gpt2/tokenizer.json
       pad_to_multiple_of: 8
       mlm_probability: 0.15
 
@@ -82,7 +82,7 @@ model:
   requirements:
     - name: model_registry
       component_name: model_registry
-      subscription: lm_bert
+      subscription: llm_gpt2
   config:
     prediction_publication_keys:
       prediction_publication_key: *model_prediction_key_anchor
