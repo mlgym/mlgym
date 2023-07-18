@@ -10,9 +10,9 @@ import ExperimentConfigurations from './ExperimentConfigurations/ExperimentConfi
 import EnvironmentDetails from '../modelCard/environmentDetails/EnvironmentDetails';
 import { ExperimentDetails } from './ExperimentDetails/ExperimentDetails';
 import { ExperimentProgress } from './ExperimentProgress/ExperimentProgress';
-import AnalyticsIcon from '@mui/icons-material/Analytics';
 import { RoutesMapping } from '../../app/RoutesMapping';
 // mui components & styles
+import AnalyticsIcon from '@mui/icons-material/Analytics';
 import { styled, AccordionProps, AccordionSummaryProps, Box, Grid, Button } from '@mui/material';
 import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
 import MuiAccordion from '@mui/material/Accordion';
@@ -67,7 +67,7 @@ function ExperimentPage() {
     const isSocketConnected = useAppSelector(isConnected);
 
     useEffect(() => {
-        console.log("filteredExp: ",filteredExp);
+        console.count(`filteredExp: ${filteredExp}`);
         if (filteredExp) {
             setSelectedExperiment(filteredExp);
         }
