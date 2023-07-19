@@ -10,17 +10,17 @@ from dataclasses import dataclass
 from ml_gym.blueprints.component_factory import ComponentFactory, Injector
 from ml_gym.data_handling.postprocessors.collator import Collator
 from gpt2_model import GPT2LLM
-from transformers import DataCollatorForLanguageModeling, BertTokenizerFast
+from transformers import DataCollatorForLanguageModeling, GPT2TokenizerFast
 from data_stack.dataset.meta import MetaFactory
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 from datasets import load_from_disk
-from mlm_loss_function import LMLossFunctionRegistryConstructable
+from clm_loss_function import LMLossFunctionRegistryConstructable
 
 
 @dataclass
 class LMWikiBookCorpusDatasetConstructable(ComponentConstructable):
-    dataset_identifier: str = "wikitext-2-v1"
-    dataset_folder_path: str = "./wikitext-2-v1/train"
+    dataset_identifier: str = ""
+    dataset_folder_path: str = None
 
     def _construct_impl(self) -> Dict[str, InformedDatasetIteratorIF]:
         if self.dataset_folder_path is None:
@@ -39,11 +39,11 @@ class LMWikiBookCorpusDatasetConstructable(ComponentConstructable):
 @dataclass
 class GPT2LLMCollator(Collator):
 
-    def __init__(self, target_publication_key: str, tokenizer_file_path: str, pad_to_multiple_of: int = 8, mlm_probability: float = 0.15):
+    def __init__(self, target_publication_key: str, tokenizer_file_path: str, pad_to_multiple_of: int = 8):
         self.target_publication_key = target_publication_key
-        tokenizer = BertTokenizerFast(tokenizer_file=tokenizer_file_path)  # "trained_wiki_tokenizer/tokenizer.json"
+        tokenizer = GPT2TokenizerFast(tokenizer_file=tokenizer_file_path)  # "trained_wiki_tokenizer/tokenizer.json"
         self.data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer,
-                                                             mlm_probability=mlm_probability,
+                                                             mlm=False,
                                                              pad_to_multiple_of=pad_to_multiple_of)
 
     def __call__(self, batch: List[torch.Tensor]) -> DatasetBatch:

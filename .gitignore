@@ -129,4 +129,4 @@ event_storage
 *.arrow
 transformer/
 core.*
-example/gpt2/wikitext-2-v1
+example/gpt2/wikitext-2-raw-v1-tokenized

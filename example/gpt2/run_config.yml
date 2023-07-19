@@ -3,7 +3,7 @@ run_configuration:
   config:
     num_epochs: 1000 # Number of epochs
     num_batches_per_epoch: 100
-    gs_config_path: ./gpt_config.yml
+    gs_config_path: C:\Users\Moinam\Documents\GitHub\mlgym\example\gpt2\gpt2_config.yml
 
 environment:
   # type: accelerate # multiprocessing,  main_process, accelerate

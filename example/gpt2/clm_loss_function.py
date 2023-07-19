@@ -10,12 +10,12 @@ from ml_gym.blueprints.constructables import LossFunctionRegistryConstructable
 @dataclass
 class LMLossFunctionRegistryConstructable(LossFunctionRegistryConstructable):
     class LossKeys:
-        MLMCrossEntropyLoss = "MLMCrossEntropyLoss"
+        CLMCrossEntropyLoss = "CLMCrossEntropyLoss"
 
     def _construct_impl(self):
         loss_fun_registry = super()._construct_impl()
         default_mapping: Dict[str, Any] = {
-            self.LossKeys.MLMCrossEntropyLoss: MLMCrossEntropyLoss
+            self.LossKeys.CLMCrossEntropyLoss: CLMCrossEntropyLoss
         }
 
         for key, loss_type in default_mapping.items():
@@ -24,7 +24,7 @@ class LMLossFunctionRegistryConstructable(LossFunctionRegistryConstructable):
         return loss_fun_registry
 
 
-class MLMCrossEntropyLoss(Loss):
+class CLMCrossEntropyLoss(Loss):
     def __init__(self, target_subscription_key: str, prediction_subscription_key: str, vocab_size: int,
                  tag: str = ""):
         super().__init__(tag)
@@ -36,5 +36,5 @@ class MLMCrossEntropyLoss(Loss):
     def __call__(self, forward_batch: InferenceResultBatch) -> torch.Tensor:
         t = forward_batch.get_targets(self.target_subscription_key)
         p = forward_batch.get_predictions(self.prediction_subscription_key)
-        masked_lm_loss = self.loss_fun(p.view(-1, self.vocab_size), t.view(-1))
-        return masked_lm_loss
+        casual_lm_loss = self.loss_fun(p.view(-1, self.vocab_size), t.view(-1))
+        return casual_lm_loss
