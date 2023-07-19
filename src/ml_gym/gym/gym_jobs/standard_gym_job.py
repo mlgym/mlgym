@@ -115,31 +115,28 @@ class StandardGymJob(AbstractGymJob):
         """
 
         if self.warm_start_epoch > -1:
-            model_state_buffer = BytesIO(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                    experiment_id=self.experiment_id,
-                                                                                    checkpoint_id=self.warm_start_epoch,
-                                                                                    checkpoint_resource=CheckpointResource.model))
+            model_state_buffer = self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
+                                                                            experiment_id=self.experiment_id,
+                                                                            checkpoint_id=self.warm_start_epoch,
+                                                                            checkpoint_resource=CheckpointResource.model)
             model_state = torch.load(model_state_buffer, map_location=device)
             self.model.load_state_dict(model_state)
-            model_state_buffer.close()
 
             self.model = self.model.to(device)
 
-            optimizer_state_buffer = BytesIO(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                        experiment_id=self.experiment_id,
-                                                                                        checkpoint_id=self.warm_start_epoch,
-                                                                                        checkpoint_resource=CheckpointResource.optimizer))
+            optimizer_state_buffer = self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
+                                                                                experiment_id=self.experiment_id,
+                                                                                checkpoint_id=self.warm_start_epoch,
+                                                                                checkpoint_resource=CheckpointResource.optimizer)
             optimizer_state = torch.load(optimizer_state_buffer, map_location=device)
             self.optimizer.load_state_dict(optimizer_state)
-            optimizer_state_buffer.close()
 
-            lr_scheduler_state_buffer = BytesIO(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
-                                                                                           experiment_id=self.experiment_id,
-                                                                                           checkpoint_id=self.warm_start_epoch,
-                                                                                           checkpoint_resource=CheckpointResource.lr_scheduler))
+            lr_scheduler_state_buffer = self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
+                                                                                    experiment_id=self.experiment_id,
+                                                                                    checkpoint_id=self.warm_start_epoch,
+                                                                                    checkpoint_resource=CheckpointResource.lr_scheduler)
             lr_scheduler_state = torch.load(lr_scheduler_state_buffer, map_location=device)
             self.lr_scheduler.load_state_dict(lr_scheduler_state)
-            lr_scheduler_state_buffer.close()
 
             stateful_component_state = pickle.loads(self.gs_api_client.get_checkpoint_resource(grid_search_id=self.grid_search_id,
                                                                                                experiment_id=self.experiment_id,

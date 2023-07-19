@@ -130,7 +130,8 @@ _GET /model-card/<grid_search_id>/<experiment_id>_
         },
         "carbon_footprint": < Carbon footprint >,
         "entry_point_cmd": < Commands executed >
-    }
+    },
+    "pipeline_details": < description of the pipeline used for the experiment i.e., nested JSON>
 }
 ```
 

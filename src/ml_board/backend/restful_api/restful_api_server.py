@@ -1,11 +1,11 @@
-from fastapi import FastAPI, UploadFile
-from fastapi import status, HTTPException
-from fastapi.responses import StreamingResponse
-from ml_board.backend.restful_api.data_access import DataAccessIF
-from ml_gym.error_handling.exception import InvalidPathError, SystemInfoFetchError
-from ml_board.backend.restful_api.data_models import FileFormat, RawTextFile, CheckpointResource
 from typing import Callable
+from fastapi import FastAPI, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, StreamingResponse
+from ml_board.backend.restful_api.data_access import DataAccessIF
+from ml_board.backend.restful_api.data_models import RawTextFile
+from ml_gym.error_handling.exception import (InvalidPathError,
+                                             SystemInfoFetchError)
 
 # from fastapi.staticfiles import StaticFiles
 
@@ -79,7 +79,7 @@ class RestfulAPIServer:
         ``HTTP GET`` Experiment Status for a Grid Search ID.
         :params:
              grid_search_id (str): Grid Search ID
-        :returns: JSON object     experiment_statuses
+        :returns: experiment_statuses(Dict): Satus of Experiments for the given Grid Search ID
         """
         try:
             experiment_statuses = self.data_access.get_experiment_statuses(grid_search_id)
@@ -96,7 +96,7 @@ class RestfulAPIServer:
                 experiment_id (str): Experiment ID
                 config_name (str): Name of Configuration file
 
-        :returns: JSON stream response
+        :returns: response(StreamingResponse): JSON stream response
         """
         try:
             file_generator = self.data_access.get_experiment_config(
@@ -114,7 +114,7 @@ class RestfulAPIServer:
                 grid_search_id (str): Grid Search ID
                 config_name (str): Name of Configuration file
 
-        :returns: YML stream response
+        :returns: response(StreamingResponse): YML stream response
         """
         try:
             file_generator = self.data_access.get_grid_config(grid_search_id=grid_search_id, config_name=config_name)
@@ -179,7 +179,7 @@ class RestfulAPIServer:
                 experiment_id (str): Experiment ID
                 epoch (str): Epoch number
 
-        :returns: List of Checkpoints
+        :returns: checkpoint_list (List[Dict]): List of Checkpoints
         """
         try:
             checkpoint_list = self.data_access.get_checkpoint_dict_epoch(
@@ -195,12 +195,12 @@ class RestfulAPIServer:
     def get_checkpoint_list(self, grid_search_id: str, experiment_id: str):
         """
         ``HTTP GET`` Fetch all checkpoint resource pickle files
-          given the epoch, experiment ID & grid search ID.
+          given the experiment ID & grid search ID.
         :params:
                 grid_search_id (str): Grid Search ID
                 experiment_id (str): Experiment ID
 
-        :returns: List of checkpoints
+        :returns: checkpoint_list (List[Dict]): List of Checkpoints
         """
         try:
             checkpoint_list = self.data_access.get_checkpoint_list(grid_search_id=grid_search_id, experiment_id=experiment_id)
@@ -220,7 +220,7 @@ class RestfulAPIServer:
                 epoch (str): Epoch number
                 checkpoint_resource (CheckpointResource) : CheckpointResource type
 
-        :returns: Pickle file Stream response
+        :returns: response(StreamingResponse): Byte/Pickle file Stream response 
         """
         try:
             file_generator = self.data_access.get_checkpoint_resource(
@@ -296,15 +296,12 @@ class RestfulAPIServer:
         :params:
                 grid_search_id (str): Grid Search ID
                 experiment_id (str): Experiment ID
-                config_name (str): Name of Configuration file
 
-        :returns: JSON object: Model card infomration for the experiment.
+        :returns: response (JSONResponse): Model card infomration for the experiment.
         """
         try:
-            file_generator = self.data_access.get_experiment_config(
-                grid_search_id=grid_search_id, experiment_id=experiment_id, config_name="model_card"
-            )
-            response = StreamingResponse(file_generator, media_type="application/json")
+            model_card = self.data_access.create_model_card(grid_search_id = grid_search_id, experiment_id = experiment_id)
+            response = JSONResponse(model_card, media_type="application/json")
             return response
         except SystemInfoFetchError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Error while fetching server system information") from e
