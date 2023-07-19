@@ -42,6 +42,7 @@ class GPT2LLMCollator(Collator):
     def __init__(self, target_publication_key: str, tokenizer_file_path: str, pad_to_multiple_of: int = 8):
         self.target_publication_key = target_publication_key
         tokenizer = GPT2TokenizerFast(tokenizer_file=tokenizer_file_path)  # "trained_wiki_tokenizer/tokenizer.json"
+        tokenizer.pad_token = tokenizer.eos_token
         self.data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer,
                                                              mlm=False,
                                                              pad_to_multiple_of=pad_to_multiple_of)
