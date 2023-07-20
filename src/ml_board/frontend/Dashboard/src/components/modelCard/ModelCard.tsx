@@ -26,6 +26,7 @@ import axios from 'axios';
 import api from '../../app/ApiMaster';
 import { AnyKeyValuePairsInterface } from '../experimentPage/ExperimentPage';
 import DownloadIcon from '@mui/icons-material/Download';
+import PipelineDetails from "./pipelineDetails/PipelineDetails";
 
 export interface pythonPackagesListInterface {
     "name": string,
@@ -56,6 +57,7 @@ export default function ModelCard() {
     const [evalDetails, setEvalDetails] = useState(sysInfoAnyKeyObj);
     const [modelDetails, setModelDetails] = useState(sysInfoAnyKeyObj);
     const [trainingDetails, setTrainingDetails] = useState(sysInfoAnyKeyObj);
+    const [pipelineDetails, setPipelineDetails] = useState({});
 
     const [sysInfoBasicData, setSysInfoBasicData] = useState(sysInfoAnyKeyObj);
     const [sysInfoCudaDevicesData, setSysInfoCudaDevicesData] = useState(Array<cudaDeviceListInterface>);
@@ -85,6 +87,7 @@ export default function ModelCard() {
                 setTrainingDetails(resp_data.training_details);
                 setEvalDetails(resp_data.eval_details);
                 setDatasetDetails(resp_data.dataset_details);
+                setPipelineDetails(resp_data.pipeline_details);
                 setSysInfoCarbonFootPrintDetails(resp_data.experiment_environment.carbon_footprint);
                 setSysInfoEntryPointCmdDetails(resp_data.experiment_environment.entry_point_cmd);
                 Object.keys(resp_data.experiment_environment.system_env).map((sysInfoKeyName) => {
@@ -316,7 +319,30 @@ export default function ModelCard() {
                                     </Grid>
 
                                 </Grid>
-
+                                <Grid
+                                    id="pipeline_details"
+                                    container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}
+                                    className={styles.grid_contianer}
+                                >
+                                    <Grid item={true} xs={12} sm={12} md={12} lg={12}>
+                                        <div className={styles.card_feel}>
+                                            <div className={styles.title_container}>
+                                                <div className={styles.title_container_icon}>
+                                                    <StorageIcon/>
+                                                </div>
+                                                <div className={styles.title_container_text}>
+                                                    Pipeline Details
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <PipelineDetails
+                                                    pipelineDetails={pipelineDetails}
+                                                    experiment_id={experiment_id}
+                                                />
+                                            </div>
+                                        </div>
+                                    </Grid>
+                                </Grid>
                                 <Grid 
                                     id="training_evaluation"
                                     container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}
