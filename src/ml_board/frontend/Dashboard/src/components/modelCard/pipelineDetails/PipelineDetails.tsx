@@ -9,7 +9,7 @@ var treeDataObj: RawNodeDatum = {
     name: ''
 }
 
-export default function PipelineDetails({pipelineDetails, experiment_id} : {pipelineDetails: AnyKeyValuePairsInterface, experiment_id: string}) {
+export default function PipelineDetails({pipelineDetails, experiment_id, treeOrientationProp} : {pipelineDetails: AnyKeyValuePairsInterface, experiment_id: string, treeOrientationProp: any}) {
 
     const [treeData, setTreeData] = useState(treeDataObj);
 
@@ -66,42 +66,17 @@ export default function PipelineDetails({pipelineDetails, experiment_id} : {pipe
         }
     }, [pipelineDetails])
 
-    // function renderNodeWithCustomEvents(a: any) {
-    //     return(
-    //         <g>
-    //             <foreignObject x="0" height="120px" width="500px" y="-60px">
-    //                 <div
-    //                     title={"Hi"}
-    //                     className="elemental-node"
-    //                     // style={a.nodeDatum.style}
-    //                 >
-    //                 <span title={"FN"} className="elemental-name">
-    //                     {"SN"}
-    //                 </span>
-    //                 {/* {a.nodeDatum.fullName === false && (
-    //                     <div className="elemental-node--hover">
-    //                         <span>{a.nodeDatum.fullName}</span>
-    //                     </div>
-    //                 )} */}
-    //                 </div>
-    //             </foreignObject>
-    //         </g>
-    //     )
-    // }
-
     return(
         <Grid container>
             <Grid item={true} xs={12} sm={12} md={12} lg={12} className={styles.tree_container}>
                 <Tree
                     data={treeData}
-                    // renderCustomNodeElement={(rd3tProps) =>
-                    //     renderNodeWithCustomEvents({ ...rd3tProps })
-                    // }
+                    initialDepth={1}
                     pathFunc="diagonal"
-                    orientation="horizontal"
+                    orientation={treeOrientationProp}
                     separation={{ siblings: 1, nonSiblings: 1.5 }}
                     enableLegacyTransitions={true}
-                    translate={{ x: 200, y: 180 }}
+                    translate={{ x: window.innerWidth/2 - 80, y: 150 }}
                 />
             </Grid>
       </Grid>

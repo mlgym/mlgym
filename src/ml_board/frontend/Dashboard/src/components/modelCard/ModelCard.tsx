@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardContent, Fab, Grid } from "@mui/material";
+import { Box, Card, CardContent, Fab, FormControl, Grid, InputLabel, MenuItem, Select } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
 import DatasetDetails from "./datasetDetails/DatasetDetails";
 import TrainingDetails from "./trainingDetails/TrainingDetails";
@@ -52,6 +52,7 @@ export default function ModelCard() {
     const selectedExpGraphs = useAppSelector(state => selectChartsByExperimentId(state, experiment_id));
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [treeOrientation, setTreeOrientation] = useState("horizontal");
 
     const [datasetDetails, setDatasetDetails] = useState(sysInfoAnyKeyObj);
     const [evalDetails, setEvalDetails] = useState(sysInfoAnyKeyObj);
@@ -319,30 +320,6 @@ export default function ModelCard() {
                                     </Grid>
 
                                 </Grid>
-                                <Grid
-                                    id="pipeline_details"
-                                    container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}
-                                    className={styles.grid_contianer}
-                                >
-                                    <Grid item={true} xs={12} sm={12} md={12} lg={12}>
-                                        <div className={styles.card_feel}>
-                                            <div className={styles.title_container}>
-                                                <div className={styles.title_container_icon}>
-                                                    <StorageIcon/>
-                                                </div>
-                                                <div className={styles.title_container_text}>
-                                                    Pipeline Details
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <PipelineDetails
-                                                    pipelineDetails={pipelineDetails}
-                                                    experiment_id={experiment_id}
-                                                />
-                                            </div>
-                                        </div>
-                                    </Grid>
-                                </Grid>
                                 <Grid 
                                     id="training_evaluation"
                                     container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}
@@ -383,7 +360,46 @@ export default function ModelCard() {
                                         </div>
                                     </Grid>
                                 </Grid>
-                                
+                                <Grid
+                                    id="pipeline_details"
+                                    container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}
+                                    className={styles.grid_contianer}
+                                >
+                                    <Grid item={true} xs={12} sm={12} md={12} lg={12}>
+                                        <div className={styles.card_feel}>
+                                            <div className={styles.title_container_w_select}>
+                                                <div className={styles.title_sub_container}>
+                                                    <div className={styles.title_container_icon}>
+                                                        <StorageIcon/>
+                                                    </div>
+                                                    <div className={styles.title_container_text}>
+                                                        Pipeline Details
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <FormControl fullWidth>
+                                                        <InputLabel>Orientation</InputLabel>
+                                                        <Select
+                                                            value={treeOrientation}
+                                                            label="Orientation"
+                                                            onChange={(e) => setTreeOrientation(e.target.value)}
+                                                        >
+                                                            <MenuItem value={"vertical"}>vertical</MenuItem>
+                                                            <MenuItem value={"horizontal"}>horizontal</MenuItem>
+                                                        </Select>
+                                                    </FormControl>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <PipelineDetails
+                                                    pipelineDetails={pipelineDetails}
+                                                    experiment_id={experiment_id}
+                                                    treeOrientationProp={treeOrientation}
+                                                />
+                                            </div>
+                                        </div>
+                                    </Grid>
+                                </Grid>
                                 <div id="results_visualization" className={styles.card_feel}>
                                     <div className={styles.title_container}>
                                         <div className={styles.title_container_icon}>
