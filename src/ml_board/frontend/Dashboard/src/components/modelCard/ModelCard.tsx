@@ -164,10 +164,10 @@ export default function ModelCard() {
 
     const handleSaveAsHTML = async () => {
         setTableRows(-1);
-        const model_dataset_details = document.getElementById('model_dataset_details') as HTMLElement;
+        const dataset_details = document.getElementById('dataset_details') as HTMLElement;
         const training_evaluation = document.getElementById('training_evaluation') as HTMLElement;
         const environment = document.getElementById('environment') as HTMLElement;
-
+        const pipeline_details = document.getElementById('pipeline_details') as HTMLElement;
         const img = await convertDivToPNG('results_visualization');
 
         // Collect the CSS styles from style elements and chart stylesheets
@@ -211,8 +211,9 @@ export default function ModelCard() {
                 </head>
                 <body>
                     <div style="${mainStyles}">
-                        ${model_dataset_details.outerHTML}
+                        ${dataset_details.outerHTML}
                         ${training_evaluation.outerHTML}
+                        ${pipeline_details.outerHTML}
                         <div style="${card_feel}">
                             <img src="${img}" alt="Results Visualizations" style="${imgStyles}"/>
                         </div>
@@ -280,7 +281,7 @@ export default function ModelCard() {
                             </div>
                             
                             <div id="modelcard" className={styles.main}>
-                                <Grid id="model_dataset_details" container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
+                                <Grid id="dataset_details" container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
                                     
                                     <Grid item={true} xs={12} sm={12} md={6} lg={6}>
                                         <div className={styles.card_feel}>
