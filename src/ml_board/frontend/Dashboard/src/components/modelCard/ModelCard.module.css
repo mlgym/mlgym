@@ -20,6 +20,29 @@
     border-bottom: 1px solid black;
 }
 
+.title_sub_container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.title_container_w_select {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: bold;
+    font-size: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid black;
+}
+
+
 .title_container_icon {
     
 }
