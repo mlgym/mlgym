@@ -1,9 +1,12 @@
+import React, { useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../../app/hooks';
+import { ColumnsFilter, selectTableHeaders, updateTableHeaderVisibility } from '../../../redux/table/tableSlice';
+
+// components & styles
 import CheckIcon from '@mui/icons-material/Check';
 import ClearIcon from '@mui/icons-material/Clear';
 import { Button, Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 import Drawer from '@mui/material/Drawer';
-import React, { useContext, useEffect, useState } from 'react';
-import { ColumnsFilter, FilterContext } from '../context/FilterContextProvider';
 import styles from './FilterTableHeaders.module.css';
 
 interface FilterTableHeaderProps {
@@ -13,12 +16,9 @@ interface FilterTableHeaderProps {
 
 const FilterTableHeaders: React.FC<FilterTableHeaderProps> = (props) => {
 
-    const { visibleColumns, setVisibleColumns } = useContext(FilterContext);
-    const [localFilter, setLocalFilter] = useState<ColumnsFilter>(visibleColumns);
-
-    useEffect(() => {
-        setLocalFilter(visibleColumns);
-    }, [visibleColumns]);
+    const dispatch = useAppDispatch();
+    const headers = useAppSelector(selectTableHeaders);
+    const [localFilter, setLocalFilter] = useState<ColumnsFilter>(headers);
 
     return (
         <React.Fragment>
@@ -39,7 +39,7 @@ const FilterTableHeaders: React.FC<FilterTableHeaderProps> = (props) => {
                         <FormGroup>
                             <div className={styles.tableheader_row_container}>
                                 {
-                                    Object.entries(visibleColumns).map(([colName, visible], index) => {
+                                    Object.entries(headers).map(([colName, visible], index) => {
                                         return (
                                             <div className={styles.tableheader_string_item} key={index}>
                                                 <FormControlLabel
@@ -64,7 +64,7 @@ const FilterTableHeaders: React.FC<FilterTableHeaderProps> = (props) => {
                             variant="contained"
                             startIcon={<CheckIcon />}
                             onClick={() => {
-                                setVisibleColumns(localFilter);
+                                dispatch(updateTableHeaderVisibility(localFilter));
                                 props.setFilterDrawer(false);
                             }}
                         >
