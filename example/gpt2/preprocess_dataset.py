@@ -1,7 +1,6 @@
 from itertools import chain
 from datasets import load_dataset
 from transformers import GPT2TokenizerFast, GPT2LMHeadModel, GPT2Config
-import accelerate
 from accelerate import Accelerator
 
 def main():
@@ -23,7 +22,7 @@ def main():
         return tokenizer(examples[text_column_name])
 
     accelerator = Accelerator(gradient_accumulation_steps=1)
-    tokenizer = GPT2TokenizerFast(tokenizer_file="C:/Users/Moinam/Documents/GitHub/mlgym/example/gpt2/tokenizer.json")
+    tokenizer = GPT2TokenizerFast(tokenizer_file="/root/mlgym/example/gpt2/tokenizer.json")
     raw_datasets = load_dataset(path="wikitext", name="wikitext-2-raw-v1")
     column_names = raw_datasets["train"].column_names
     text_column_name = "text" if "text" in column_names else column_names[0]

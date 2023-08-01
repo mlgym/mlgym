@@ -10,7 +10,7 @@ dataset_iterators:
   variant_key: LMWikiBookCorpusDataset
   config:
     dataset_identifier: LMWikiBookCorpus
-    dataset_folder_path: C:\Users\Moinam\Documents\GitHub\mlgym\example\gpt2\wikitext-2-v1-tokenized\train
+    dataset_folder_path: /root/mlgym/example/gpt2/wikitext-2-raw-v1-tokenized/train
 
 split_dataset_iterators:
   component_type_key: SPLITTED_DATASET_ITERATORS
@@ -51,7 +51,7 @@ data_collator:
         id: id_gpt2_llm_collator
     collator_params:
       target_publication_key: *target_key_anchor
-      tokenizer_file_path: C:\Users\Moinam\Documents\GitHub\mlgym\example\gpt2\tokenizer.json
+      tokenizer_file_path: /root/mlgym/example/gpt2/tokenizer.json
       pad_to_multiple_of: 8
 
 data_loaders:

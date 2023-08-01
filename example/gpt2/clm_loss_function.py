@@ -34,7 +34,7 @@ class CLMCrossEntropyLoss(Loss):
         self.loss_fun = CrossEntropyLoss()
 
     def __call__(self, forward_batch: InferenceResultBatch) -> torch.Tensor:
-        t = forward_batch.get_targets(self.target_subscription_key)
+        # t = forward_batch.get_targets(self.target_subscription_key)
         p = forward_batch.get_predictions(self.prediction_subscription_key)
-        casual_lm_loss = self.loss_fun(p.view(-1, self.vocab_size), t.view(-1))
-        return casual_lm_loss
+        # casual_lm_loss = self.loss_fun(p.view(-1, self.vocab_size), t.view(-1))
+        return p

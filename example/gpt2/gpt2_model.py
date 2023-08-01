@@ -25,9 +25,9 @@ if __name__ == '__main__':
     from datasets import load_from_disk
     from transformers import DataCollatorForLanguageModeling, GPT2TokenizerFast
     from torch.utils.data import DataLoader
-    tokenizer = GPT2TokenizerFast(tokenizer_file="C:/Users/Moinam/Documents/GitHub/mlgym/example/gpt2/tokenizer.json")
+    tokenizer = GPT2TokenizerFast(tokenizer_file="/root/mlgym/example/gpt2/tokenizer.json")
     tokenizer.pad_token = tokenizer.eos_token
-    chunked_tokenized_dataset = load_from_disk("C:/Users/Moinam/Documents/GitHub/mlgym/example/gpt2/wikitext-2-raw-v1-tokenized/train")
+    chunked_tokenized_dataset = load_from_disk("/root/mlgym/example/gpt2/wikitext-2-raw-v1-tokenized/train")
     batch_size = 30
 
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
