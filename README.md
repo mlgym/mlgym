@@ -134,6 +134,20 @@ cd event_storage/2022-11-06--17-59-10/
 tail -f event_storage.log
 ```
 
+## Implementation
+
+If you have followed the instructions in the Usage section above then now mlgym should be all setup and working in your system. In the
+above section we used the scripts in the example folder to show how easy it can be to train and test a model with mlgym. In this section
+we will focus on what components are to be used if you want to train your own custom model using mlgym.
+
+### Creating Blueprint
+
+### Using custom Neural net model
+
+### Creating custom activation, loss, metric functions
+
+### Using a local dataset
+
 ## MLboard
 
 Since MLboard frontend is still under heavy development, we would like to give you an overview of its current state and a sneak peek about what is going to come in the foreseeable future.
