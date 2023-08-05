@@ -20,17 +20,17 @@ const GraphComponent: React.FC<GraphProps> = ({ data }) => {
       const masterNode = {
         id: 'MasterNode',
         config: {},
-        isMaster: true, // Mark master node
+        isMaster: true
       }
       
-      let nodes: any = []
-      let links: any = []
+      let nodes: any = [];
+      let links: any = [];
       // Create links based on the "requirements" field
       Object.keys(data).forEach((key) => {
         nodes.push({
           id: key,
           config: data[key]["config"]
-        })
+        });
 
         // Check if the node is a parent (not a requirement)
         if (!data[key].requirements || data[key].requirements.length === 0) {
@@ -58,12 +58,7 @@ const GraphComponent: React.FC<GraphProps> = ({ data }) => {
       console.log("graphData = ",graphData);
       setNodeClick(masterNode);
     }
-  },[data])
-
-  function handleNodeClick(node: any) {
-    console.log("node = ",node);
-    setNodeClick(node);
-  }
+  },[data]);
 
   return (
     <div className={styles.main_contianer}>
@@ -74,21 +69,20 @@ const GraphComponent: React.FC<GraphProps> = ({ data }) => {
         <Grid item={true} xs={12} sm={12} md={6} lg={6}>
         {
           graphData !== null ?
-          <div className={styles.graph_container}>
+          <div id="pipeline_graph_component">
             <ForceGraph2D
               graphData={graphData}
               height={window.innerHeight}
-              width={window.innerWidth/2 + 80}
+              width={window.innerWidth/2 - 15}
               autoPauseRedraw={true}
               linkDirectionalArrowLength={8} 
               linkDirectionalArrowRelPos={1} 
               linkCurvature={0.25}
-              onNodeClick={(node: any, e: MouseEvent) => handleNodeClick(node)}
+              onNodeClick={(node: any, e: MouseEvent) => setNodeClick(node)}
               d3AlphaMin={0}
               minZoom={2.5}
               d3VelocityDecay={0.1}
               onNodeHover={(node: any) => {
-                // setNodeClick(node);
                 if (graphCanvasRef.current) {
                   graphCanvasRef.current.style.cursor = node ? 'pointer' : 'default';
                 }

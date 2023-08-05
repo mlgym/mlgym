@@ -42,11 +42,6 @@
     border-bottom: 1px solid black;
 }
 
-
-.title_container_icon {
-    
-}
-
 .title_container_text {
     margin-left: 10px;
 }
@@ -61,4 +56,5 @@
     position: fixed;
     bottom: 30px;
     right: 20px;
+    z-index: 1;
 }
