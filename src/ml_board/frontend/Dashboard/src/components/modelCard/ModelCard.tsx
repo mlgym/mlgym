@@ -1,6 +1,6 @@
 import { Box, Card, CardContent, Fab, FormControl, Grid, InputLabel, MenuItem, Select } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
-import DatasetDetails from "./datasetDetails/DatasetDetails";
+// import DatasetDetails from "./datasetDetails/DatasetDetails";
 import TrainingDetails from "./trainingDetails/TrainingDetails";
 import EvaluationDetails from "./evaluationDetails/EvaluationDetails";
 import EnvironmentDetails from "./environmentDetails/EnvironmentDetails";
@@ -26,7 +26,8 @@ import axios from 'axios';
 import api from '../../app/ApiMaster';
 import { AnyKeyValuePairsInterface } from '../experimentPage/ExperimentPage';
 import DownloadIcon from '@mui/icons-material/Download';
-import PipelineDetails from "./pipelineDetails/PipelineDetails";
+// import PipelineDetails from "./pipelineDetails/PipelineDetails";
+import GraphComponent from "./pipelineDetails/GraphComponent";
 
 export interface pythonPackagesListInterface {
     "name": string,
@@ -52,7 +53,7 @@ export default function ModelCard() {
     const selectedExpGraphs = useAppSelector(state => selectChartsByExperimentId(state, experiment_id));
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [treeOrientation, setTreeOrientation] = useState("horizontal");
+    // const [treeOrientation, setTreeOrientation] = useState("horizontal");
 
     const [datasetDetails, setDatasetDetails] = useState(sysInfoAnyKeyObj);
     const [evalDetails, setEvalDetails] = useState(sysInfoAnyKeyObj);
@@ -283,7 +284,7 @@ export default function ModelCard() {
                             <div id="modelcard" className={styles.main}>
                                 <Grid id="dataset_details" container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
                                     
-                                    <Grid item={true} xs={12} sm={12} md={6} lg={6}>
+                                    <Grid item={true} xs={12} sm={12} md={12} lg={12}>
                                         <div className={styles.card_feel}>
                                             <div className={styles.title_container}>
                                                 <div className={styles.title_container_icon}>
@@ -302,7 +303,7 @@ export default function ModelCard() {
                                         </div>
                                     </Grid>
 
-                                    <Grid item={true} xs={12} sm={12} md={6} lg={6}>
+                                    {/* <Grid item={true} xs={12} sm={12} md={6} lg={6}>
                                         <div className={styles.card_feel}>
                                             <div className={styles.title_container}>
                                                 <div className={styles.title_container_icon}>
@@ -318,7 +319,7 @@ export default function ModelCard() {
                                                 />
                                             </div>
                                         </div>
-                                    </Grid>
+                                    </Grid> */}
 
                                 </Grid>
                                 <Grid 
@@ -374,10 +375,10 @@ export default function ModelCard() {
                                                         <StorageIcon/>
                                                     </div>
                                                     <div className={styles.title_container_text}>
-                                                        Pipeline Details
+                                                        Pipeline Graph
                                                     </div>
                                                 </div>
-                                                <div>
+                                                {/* <div>
                                                     <FormControl fullWidth>
                                                         <InputLabel>Orientation</InputLabel>
                                                         <Select
@@ -389,14 +390,17 @@ export default function ModelCard() {
                                                             <MenuItem value={"horizontal"}>horizontal</MenuItem>
                                                         </Select>
                                                     </FormControl>
-                                                </div>
+                                                </div> */}
                                             </div>
-                                            <div>
+                                            {/* <div>
                                                 <PipelineDetails
                                                     pipelineDetails={pipelineDetails}
                                                     experiment_id={experiment_id}
                                                     treeOrientationProp={treeOrientation}
                                                 />
+                                            </div> */}
+                                            <div>
+                                                <GraphComponent data={pipelineDetails}/>
                                             </div>
                                         </div>
                                     </Grid>
