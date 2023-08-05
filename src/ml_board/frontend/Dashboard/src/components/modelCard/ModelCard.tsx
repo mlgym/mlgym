@@ -1,6 +1,5 @@
-import { Box, Card, CardContent, Fab, FormControl, Grid, InputLabel, MenuItem, Select } from "@mui/material";
+import { Box, Card, CardContent, Fab, Grid } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
-// import DatasetDetails from "./datasetDetails/DatasetDetails";
 import TrainingDetails from "./trainingDetails/TrainingDetails";
 import EvaluationDetails from "./evaluationDetails/EvaluationDetails";
 import EnvironmentDetails from "./environmentDetails/EnvironmentDetails";
@@ -12,13 +11,10 @@ import { CardDetails } from "../experimentPage/ExperimentDetails/CardDetails";
 import WorkspacesIcon from '@mui/icons-material/Workspaces';
 import StorageIcon from '@mui/icons-material/Storage';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
-// import SettingsSuggestIcon from '@mui/icons-material/SettingsSuggest';
 import InsightsIcon from '@mui/icons-material/Insights';
 import ModelTrainingIcon from '@mui/icons-material/ModelTraining';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import styles from './ModelCard.module.css';
-// import { jsPDF } from "jspdf";
-// import { toPng } from 'html-to-image';
 import { useEffect, useState } from "react";
 import { getGridSearchId, getRestApiUrl, isConnected } from '../../redux/globalConfig/globalConfigSlice';
 import html2canvas from 'html2canvas';
@@ -26,7 +22,6 @@ import axios from 'axios';
 import api from '../../app/ApiMaster';
 import { AnyKeyValuePairsInterface } from '../experimentPage/ExperimentPage';
 import DownloadIcon from '@mui/icons-material/Download';
-// import PipelineDetails from "./pipelineDetails/PipelineDetails";
 import GraphComponent from "./pipelineDetails/GraphComponent";
 
 export interface pythonPackagesListInterface {
@@ -41,6 +36,24 @@ export interface cudaDeviceListInterface {
 }
 let sysInfoAnyKeyObj:AnyKeyValuePairsInterface = {};
 
+const mainStyles = `
+    background-color: #fff;
+    padding: 20px;
+`;
+
+const imgStyles = `
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+`;
+
+const card_feel = `
+    box-shadow: 0px 0px 3px 2px rgb(0, 0, 0, 0.2);
+    border-radius: 5px;
+    margin-bottom: 20px;
+`;
+    
 export default function ModelCard() {
     
     const isSocketConnected = useAppSelector(isConnected);
@@ -53,7 +66,6 @@ export default function ModelCard() {
     const selectedExpGraphs = useAppSelector(state => selectChartsByExperimentId(state, experiment_id));
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    // const [treeOrientation, setTreeOrientation] = useState("horizontal");
 
     const [datasetDetails, setDatasetDetails] = useState(sysInfoAnyKeyObj);
     const [evalDetails, setEvalDetails] = useState(sysInfoAnyKeyObj);
@@ -121,56 +133,24 @@ export default function ModelCard() {
         });
     }
 
-    // const downloadPdfDocument = (element_id: string) => {
-    //     setTableRows(-1);
-    //     // TODO: show loading spinner till this part is processed
-    //     setTimeout(() => {
-    //         const divElement = document.getElementById(element_id);
-    //         const options = {
-    //             height: divElement!.offsetHeight, // Adjust the scale factor as needed
-    //             style: { transform: 'scale(1)', transformOrigin: 'top left' },
-    //         };
-    //         toPng(divElement!, options)
-    //         .then((dataUrl) => {
-    //             // TODO: getting extra pages in pdf. Adjust height of the content so that we don't get extra pages in the pdf
-    //             const pdf = new jsPDF('p', 'pt', 'a4');
-    //             const pdfWidth = pdf.internal.pageSize.getWidth();
-    //             const pdfHeight = pdf.internal.pageSize.getHeight();
-        
-    //             const imgWidth = pdfWidth;
-    //             const imgHeight = (divElement!.offsetHeight / divElement!.offsetWidth) * imgWidth;
-        
-    //             let position = 0;
-    //             const pageData = dataUrl;
-        
-    //             pdf.addImage(pageData, 'PNG', 0, position, imgWidth, imgHeight);
-    //             position -= pdfHeight;
-        
-    //             while (position > -divElement!.offsetHeight) {
-    //                 pdf.addPage();
-    //                 pdf.addImage(pageData, 'PNG', 0, position, imgWidth, imgHeight);
-    //                 position -= pdfHeight;
-    //             }
-        
-    //             pdf.save(`Experiment_${experiment_id}_ModelCard.pdf`);
-    //             setTableRows(0);
-    //         })
-    //         .catch((error) => {
-    //             console.error('Error saving PDF:', error);
-    //             setTableRows(0);
-    //             // TODO: Show error snackbar
-    //         });
-    //     }, 200);
-    // }
-
     const handleSaveAsHTML = async () => {
         setTableRows(-1);
         const dataset_details = document.getElementById('dataset_details') as HTMLElement;
         const training_evaluation = document.getElementById('training_evaluation') as HTMLElement;
         const environment = document.getElementById('environment') as HTMLElement;
-        const pipeline_details = document.getElementById('pipeline_details') as HTMLElement;
         const img = await convertDivToPNG('results_visualization');
-
+        const pipeline_details = document.getElementById('pipeline_details') as HTMLElement;
+        let pipeline_graph_component = document.getElementById('pipeline_graph_component') as HTMLElement;
+        let pipeline_graph_component_img = await convertDivToPNG("", pipeline_graph_component); // returns img string
+        // replace id = #pipeline_graph_component (div present in GraphComponent) with the generated image as the graph is unable to convert into HTML, so converting the graph to image in the above line and saving it as an image in a new div as below.
+        let newHTML = `
+            <div style="${card_feel}">
+                <img src="${pipeline_graph_component_img}" alt="Pipeline Graph" style="${imgStyles}"/>
+            </div>
+        `;
+        const tempContainer = document.createElement('div');
+        tempContainer.innerHTML = newHTML;
+        pipeline_graph_component.innerHTML = tempContainer.innerHTML;
         // Collect the CSS styles from style elements and chart stylesheets
         const css_styles = Array.from(document.styleSheets)
         .map((styleSheet) => {
@@ -182,24 +162,6 @@ export default function ModelCard() {
             return '';
         })
         .join('\n');
-
-        const mainStyles = `
-            background-color: #fff;
-            padding: 20px;
-        `;
-
-        const imgStyles = `
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        `;
-
-        const card_feel = `
-            box-shadow: 0px 0px 3px 2px rgb(0, 0, 0, 0.2);
-            border-radius: 5px;
-            margin-bottom: 20px;
-        `;
 
         const htmlContent = `
             <!DOCTYPE html>
@@ -231,14 +193,23 @@ export default function ModelCard() {
         const link = document.createElement('a');
         link.href = url;
         link.download = `Experiment_${experiment_id}_ModelCard`;
-        link.click();
+        link.click();   
+        
+        // had to call this method again. Otherwise, the graph would remain converted to image and couldn't be interacted with again. So it's a hack. Might need to find a better solution later.
+        getModelCardData();
     }
 
-    const convertDivToPNG = async (divId: string) => {
-        const divToCapture = document.getElementById(divId) as HTMLElement;
+    const convertDivToPNG = async (divId: string, divToCaptureCustom?: HTMLElement) => {
+        let divToCapture = null;
+        if(divId !== "") {
+            divToCapture = document.getElementById(divId!) as HTMLElement;            
+        }
+        else {
+            divToCapture = divToCaptureCustom;
+        }
 
         try {
-            const canvas = await html2canvas(divToCapture, {
+            const canvas = await html2canvas(divToCapture!, {
                 scale: 2, // Increase the scale for higher resolution
                 useCORS: true, // Enable CORS to capture images from external domains
             });
@@ -287,7 +258,7 @@ export default function ModelCard() {
                                     <Grid item={true} xs={12} sm={12} md={12} lg={12}>
                                         <div className={styles.card_feel}>
                                             <div className={styles.title_container}>
-                                                <div className={styles.title_container_icon}>
+                                                <div>
                                                     <WorkspacesIcon/>
                                                 </div>
                                                 <div className={styles.title_container_text}>
@@ -302,25 +273,6 @@ export default function ModelCard() {
                                             </div>
                                         </div>
                                     </Grid>
-
-                                    {/* <Grid item={true} xs={12} sm={12} md={6} lg={6}>
-                                        <div className={styles.card_feel}>
-                                            <div className={styles.title_container}>
-                                                <div className={styles.title_container_icon}>
-                                                    <StorageIcon/>
-                                                </div>
-                                                <div className={styles.title_container_text}>
-                                                    Dataset Details
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <DatasetDetails
-                                                    datasetDetails={datasetDetails}
-                                                />
-                                            </div>
-                                        </div>
-                                    </Grid> */}
-
                                 </Grid>
                                 <Grid 
                                     id="training_evaluation"
@@ -330,7 +282,7 @@ export default function ModelCard() {
                                     <Grid item={true} xs={12} sm={12} md={6} lg={6}>
                                         <div className={styles.card_feel}>
                                             <div className={styles.title_container}>
-                                                <div className={styles.title_container_icon}>
+                                                <div>
                                                     <ModelTrainingIcon />
                                                 </div>
                                                 <div className={styles.title_container_text}>
@@ -347,7 +299,7 @@ export default function ModelCard() {
                                     <Grid item={true} xs={12} sm={12} md={6} lg={6}>
                                         <div className={styles.card_feel}>
                                             <div className={styles.title_container}>
-                                                <div className={styles.title_container_icon}>
+                                                <div>
                                                     <QueryStatsIcon />
                                                 </div>
                                                 <div className={styles.title_container_text}>
@@ -362,52 +314,22 @@ export default function ModelCard() {
                                         </div>
                                     </Grid>
                                 </Grid>
-                                <Grid
-                                    id="pipeline_details"
-                                    container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}
-                                    className={styles.grid_contianer}
-                                >
-                                    <Grid item={true} xs={12} sm={12} md={12} lg={12}>
-                                        <div className={styles.card_feel}>
-                                            <div className={styles.title_container_w_select}>
-                                                <div className={styles.title_sub_container}>
-                                                    <div className={styles.title_container_icon}>
-                                                        <StorageIcon/>
-                                                    </div>
-                                                    <div className={styles.title_container_text}>
-                                                        Pipeline Graph
-                                                    </div>
-                                                </div>
-                                                {/* <div>
-                                                    <FormControl fullWidth>
-                                                        <InputLabel>Orientation</InputLabel>
-                                                        <Select
-                                                            value={treeOrientation}
-                                                            label="Orientation"
-                                                            onChange={(e) => setTreeOrientation(e.target.value)}
-                                                        >
-                                                            <MenuItem value={"vertical"}>vertical</MenuItem>
-                                                            <MenuItem value={"horizontal"}>horizontal</MenuItem>
-                                                        </Select>
-                                                    </FormControl>
-                                                </div> */}
-                                            </div>
-                                            {/* <div>
-                                                <PipelineDetails
-                                                    pipelineDetails={pipelineDetails}
-                                                    experiment_id={experiment_id}
-                                                    treeOrientationProp={treeOrientation}
-                                                />
-                                            </div> */}
-                                            <div>
-                                                <GraphComponent data={pipelineDetails}/>
-                                            </div>
+                                <div id="pipeline_details" className={styles.card_feel}>
+                                    <div className={styles.title_container}>
+                                        <div>
+                                            <StorageIcon/>
                                         </div>
-                                    </Grid>
-                                </Grid>
+                                        <div className={styles.title_container_text}>
+                                            Pipeline Graph
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <GraphComponent data={pipelineDetails}/>
+                                    </div>
+                                </div>
                                 <div id="results_visualization" className={styles.card_feel}>
                                     <div className={styles.title_container}>
-                                        <div className={styles.title_container_icon}>
+                                        <div>
                                             <InsightsIcon />
                                         </div>
                                         <div className={styles.title_container_text}>
@@ -441,7 +363,7 @@ export default function ModelCard() {
 
                                 <div id="environment" className={styles.card_feel}>
                                     <div className={styles.title_container}>
-                                        <div className={styles.title_container_icon}>
+                                        <div>
                                             <TravelExploreIcon />
                                         </div>
                                         <div className={styles.title_container_text}>
