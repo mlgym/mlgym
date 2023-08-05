@@ -1,10 +1,11 @@
-import Graphs from '../components/graphs/Graphs';
+import AutoGraphIcon from '@mui/icons-material/AutoGraph';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import SettingsIcon from '@mui/icons-material/Settings';
 import Dashboard from '../components/dashboard/Dashboard';
 import PageNotFound from '../components/error/PageNotFound';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import AutoGraphIcon from '@mui/icons-material/AutoGraph';
-import SettingsIcon from '@mui/icons-material/Settings';
 import ExperimentPage from '../components/experimentPage/ExperimentPage';
+import ModelCard from '../components/modelCard/ModelCard';
+import Graphs from '../components/graphs/Graphs';
 
 interface RoutesMappingInterface {
     // Object's Key name will be the name shown in Menu List
@@ -32,6 +33,12 @@ export const RoutesMapping:RoutesMappingInterface = {
     ExperimentPage: {
         url: "experiment",
         component: <ExperimentPage/>,
+        showInMenu: false,
+        menuIcon: null
+    },
+    ModelCard: {
+        url: "modelcard",
+        component: <ModelCard/>,
         showInMenu: false,
         menuIcon: null
     },

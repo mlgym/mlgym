@@ -1,0 +1,64 @@
+.tableheader_filter_drawer_container {
+    background: transparent;
+    width: 450px !important;
+}
+
+.tableheader_filter_header_container {
+    border-bottom: 1px solid black;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.tableheader_filter_checkbox_container {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.tableheader_row_container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+  
+.tableheader_string_item {
+    flex-basis: 50%; /* Each string takes up 25% of the row */
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.tableheader_buttons_contianer {
+    position: fixed;
+    bottom: 0px;
+    width: 450px;
+    margin-top: 20px;
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+    .tableheader_string_item {
+        flex-basis: 100%; /* Each string takes up 50% of the row on smaller screens */
+    }
+    .tableheader_filter_drawer_container {
+        width: 280px !important;
+    }
+    .tableheader_buttons_contianer {
+        width: 280px;
+    }
+}
+
+.tableheader_button_save {
+    width: 50%;
+    padding: 15px !important;
+    border-radius: 0px !important;
+}
+
+.tableheader_button_cancel {
+    width: 50%;
+    padding: 15px !important;
+    border-radius: 0px !important;
+    background-color: rgb(170, 171, 172) !important;
+}
+
+.tableheader_button_cancel:hover {
+    background-color: rgb(147, 147, 148) !important;
+}

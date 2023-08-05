@@ -1,15 +1,17 @@
-import { Box, Card, Grid } from "@mui/material";
 import { ChartData, ChartOptions } from "chart.js";
+import { useMemo } from 'react';
 import { Line } from "react-chartjs-2";
+import { RoutesMapping } from "../../app/RoutesMapping";
 import { useAppSelector } from "../../app/hooks";
 import { selectChartLabelsById, selectExperimentsPerChartById } from "../../redux/charts/chartsSlice";
+import { selectTab } from "../../redux/globalConfig/globalConfigSlice";
 import SelectExperimentDropdown from "./SelectExperimentDropdown/SelectExperimentDropdown";
 // styles
+import { Box, Card, Grid } from "@mui/material";
 import styles from "./Graphs.module.css";
-import { RoutesMapping } from "../../app/RoutesMapping";
-import { selectTab } from "../../redux/globalConfig/globalConfigSlice";
 
 const selectColor = (index: number): string => `hsl(${index * 137.5},75%,50%)`;
+// `#${Math.floor(Math.random() * 16777215).toString(16)}`; // totally random and so one can only hope that it doesn't produce a blue blue blue blue blue... pattern :')
 
 // https://www.chartjs.org/docs/latest/general/data-structures.html
 
@@ -163,6 +165,9 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
         maintainAspectRatio: false,
     }
 
+    // using Memo didn't solve the problem of the selectExperimentsPerChartById selector inside SelectExperimentDropdown
+    // const selectExpDropDown = useMemo(() => <SelectExperimentDropdown chart_id={chart_id} />, [chart_id]);
+    
     return (
         <Grid item={true} xs={12} sm={12} md={6} key={chart_id}>
             <Card className={styles.grid_card}>
@@ -174,10 +179,11 @@ export default function Graph({ chart_id, exp_id, exp_data }: { chart_id: string
                     />
                 </Box>
                 {
-                    tab !== RoutesMapping["ExperimentPage"].url ?
-                    <SelectExperimentDropdown chart_id={chart_id} />
-                    :
+                    tab === RoutesMapping["ExperimentPage"].url || tab === RoutesMapping["ModelCard"].url ?
                     null
+                    :
+                    <SelectExperimentDropdown chart_id={chart_id} />
+
                 }
             </Card>
         </Grid>

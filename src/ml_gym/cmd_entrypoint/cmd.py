@@ -8,7 +8,6 @@ from ml_gym.gym.gym import Gym, GymFactory
 from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable, LoggerConstructableIF, MLgymStatusLoggerConfig, \
     MLgymStatusLoggerTypes
 from ml_gym.modes import RunMode, ValidationMode
-from ml_gym.util.util import SystemEnv
 from ml_gym.validation.validator_factory import get_validator
 from ml_gym.io.config_parser import YAMLConfigLoader
 from typing import Callable, List, Tuple, Type, Dict, Union
@@ -198,9 +197,6 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
             for blueprint in blueprints:
                 gs_api_client.add_config_string(grid_search_id=blueprint.grid_search_id, config_name="experiment_config.json",
                                                 config=json.dumps(blueprint.config), experiment_id=blueprint.experiment_id,
-                                                file_format=FileFormat.JSON)
-                gs_api_client.add_config_string(grid_search_id=blueprint.grid_search_id, config_name="model_card.json",
-                                                config=json.dumps(SystemEnv.create_model_card(grid_search_id=blueprint.grid_search_id, exp_config = blueprint.config, gs_config = yaml.safe_load(gs_config_string))), experiment_id=blueprint.experiment_id,
                                                 file_format=FileFormat.JSON)
 
     gs_config_string = Path(gs_config_path).read_text()

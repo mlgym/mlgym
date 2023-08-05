@@ -150,3 +150,13 @@
     align-items: center;
     margin-top: 30px;
 }
+
+.accordian_heading_moedl_card_btn {
+    margin-left: 10px !important;
+    background-color: rgb(241, 99, 47) !important;
+    font-weight: bold !important;
+}
+
+.accordian_heading_moedl_card_btn:hover {
+    background-color: rgb(241, 99, 47) !important;
+}

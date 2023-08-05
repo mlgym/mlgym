@@ -1,5 +1,5 @@
 import { useAppDispatch } from "../../app/hooks";
-import { changeFilter } from "../../redux/globalConfig/globalConfigSlice";
+import { setFilter } from "../../redux/globalConfig/globalConfigSlice";
 
 function Filter() {
   const dispatch = useAppDispatch();
@@ -8,7 +8,7 @@ function Filter() {
   const OnChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = event.currentTarget.value || defaultValue;
     // TODO: check the rules here!
-    dispatch(changeFilter(value));
+    dispatch(setFilter(value));
   }
 
   return (
@@ -19,3 +19,5 @@ function Filter() {
 }
 
 export default Filter;
+
+// ASK: is this file needed?

@@ -142,3 +142,27 @@ class SystemInfoFetchError(Exception):
 class ModelCardCreationError(Exception):
     """Raised when an error occurs during creation of model card."""
     pass
+
+class ModelDetailsCreationError(Exception):
+    """Raised when an error occurs during creation of ModelDetails object in model card."""
+    pass
+
+class DatasetDetailsCreationError(Exception):
+    """Raised when an error occurs during creation of DatasetDetails object in model card."""
+    pass
+
+class TrainingDetailsCreationError(Exception):
+    """Raised when an error occurs during creation of TrainingDetails object in model card."""
+    pass
+
+class EvalDetailsCreationError(Exception):
+    """Raised when an error occurs during creation of EvalDetails object in model card."""
+    pass
+
+class PipelineDetailsCreationError(Exception):
+    """Raised when an error occurs during creation of PipelineDetails object in model card."""
+    pass
+
+class ModelCardFetchError(Exception):
+    """Raised when an error occurs during fetching model card."""
+    pass

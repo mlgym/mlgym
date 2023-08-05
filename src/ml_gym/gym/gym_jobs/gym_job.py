@@ -104,10 +104,10 @@ class AbstractGymJob(StatefulComponent):
                 torch.save(self.lr_scheduler.state_dict(), lr_scheduler_buffer)
 
                 payload_dict = {
-                    CheckpointResource.model: model_buffer.getvalue(),
-                    CheckpointResource.optimizer: optimizer_buffer.getvalue(),
-                    CheckpointResource.lr_scheduler: lr_scheduler_buffer.getvalue(),
-                    CheckpointResource.stateful_components: pickle.dumps(self.get_state())
+                    CheckpointResource.model.value: model_buffer.getvalue(),
+                    CheckpointResource.optimizer.value: optimizer_buffer.getvalue(),
+                    CheckpointResource.lr_scheduler.value: lr_scheduler_buffer.getvalue(),
+                    CheckpointResource.stateful_components.value: pickle.dumps(self.get_state())
                 }
 
                 for checkpoint_resource_key, checkpoint_resource_stream in payload_dict.items():

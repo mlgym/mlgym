@@ -1,6 +1,10 @@
-import { createEntityAdapter, createSlice, EntityState } from "@reduxjs/toolkit";
+import { createEntityAdapter, createSlice, EntityState, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 
+
+interface TableHeaders {
+    table_headers: Array<string>
+}
 
 // NOTE: Row = JobStatusPayload + ExperimentStatusPayload + scores
 export interface Row {
@@ -38,14 +42,20 @@ const rowsAdapter = createEntityAdapter<Row>({
     sortComparer: ({ experiment_id: id1 }: Row, { experiment_id: id2 }: Row) => id1 - id2
 });
 
-const initialState: EntityState<Row> = rowsAdapter.getInitialState({});
+const initialState: EntityState<Row> & TableHeaders = rowsAdapter.getInitialState({
+    table_headers: [],
+});
 
-export const tableSlice = createSlice({
+const { actions, reducer } = createSlice({
     name: 'table',
     initialState,
     reducers: {
-        upsertOneRow: rowsAdapter.upsertOne,
+        // NOTE: when multiple updates targets the same ID, they will be merged into a single update, with later updates
+        // overwriting the earlier ones. (https://redux-toolkit.js.org/api/createEntityAdapter#applying-multiple-updates)
         upsertManyRows: rowsAdapter.upsertMany,
+        upsertTableHeaders: (state, { payload }: PayloadAction<string[]>) => {
+            state.table_headers = [...new Set([...state.table_headers, ...payload])];
+        },
         resetTableState: () => {
             return initialState
         }
@@ -53,7 +63,8 @@ export const tableSlice = createSlice({
 });
 
 
-export const { upsertOneRow, upsertManyRows, resetTableState } = tableSlice.actions;
+export const { upsertManyRows, upsertTableHeaders, resetTableState } = actions;
+
 
 // create a set of memoized selectors
 export const {
@@ -61,4 +72,6 @@ export const {
     selectById: selectRowById
 } = rowsAdapter.getSelectors((state: RootState) => state.table)
 
-export default tableSlice.reducer;
+export const selectTableHeaders = (state: RootState) => state.table.table_headers;
+
+export default reducer;

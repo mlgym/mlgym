@@ -1,13 +1,13 @@
-import { Box, Button, TextField, Toolbar, Grid } from "@mui/material";
 import { useCallback, useEffect, useState } from 'react';
+import { settingConfigsInterface } from "../../app/App";
+import { useAppSelector } from "../../app/hooks";
+import { getGridSearchId, getRestApiUrl, getSocketConnectionUrl, isConnected } from "../../redux/globalConfig/globalConfigSlice";
+import GridSearchConfigurations from "./GridSearchConfigurations/GridSearchConfigurations";
+// mui components & styles
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
-import { settingConfigsInterface } from "../../app/App";
-import { getGridSearchId, getRestApiUrl, getSocketConnectionUrl, isConnected } from "../../redux/globalConfig/globalConfigSlice";
-import { useAppSelector } from "../../app/hooks";
-import GridSearchConfigurations from "./GridSearchConfigurations/GridSearchConfigurations";
+import { Box, Button, Grid, TextField } from "@mui/material";
 import RunConfig from "./RunConfig/RunConfig";
-// styles
 import styles from "./Settings.module.css";
 
 export const defaultGridSearchIdHelperText = "eg: 2022-11-06--17-59-10";
@@ -90,7 +90,6 @@ const Settings: React.FC<FuncProps> = (props) => {
 
     return (
         <Box>
-            <Toolbar/>
             <Box className={styles.settings_main_box}>
                 <Grid container rowSpacing={1} rowGap={3} spacing={{ xs: 1, md: 2, lg: 2 }} className={styles.grid_container_basic_fields}>
                     <Grid item={true} xs={12} sm={12} md={12} lg={isSocketConnected?4:12} className={styles.grid_item_basic_fields}>
