@@ -263,20 +263,39 @@ class ModelCardFactory:
             :returns:
                     obj (PipelineDetails): initialized pipeline details object.
             """
-            try:
-                # pipeline_details = {}
-                # found_keys = set()
-                # all_keys = set(key for key in exp_config)
-                # find_key_arr = ["data", "model", "eval", "train", "early_stopping", "checkpointing"]
-                # for find_key in find_key_arr:
-                #     temp = {key : exp_config[key] for key in exp_config if find_key in key and find_key.upper() in exp_config[key]["component_type_key"]}
-                #     found_keys.update(key for key in temp)
-                #     pipeline_details[find_key] = temp
-                    
-                # for val in list(all_keys - found_keys):
-                #     pipeline_details[val] = exp_config[val]
+            def create_nodes(exp_config):
+                temp = {}
+                for key in exp_config:
+                    temp[key] = {
+                    "config_str": json.dumps(exp_config[key]["config"]) if "config" in exp_config[key] else None,
+                    "requirements": list(req["component_name"] for req in exp_config[key]["requirements"]) 
+                    if "requirements" in exp_config[key] else [],
+                    "nodes": {}}
+                return temp
+            def create_requirement_chain(all_keys):
+                root_nodes = {}
+                other_nodes = {}
+                for key in all_keys:
+                    if all_keys[key]["requirements"] == []:
+                        root_nodes[key] = all_keys[key]
+                    else:
+                        other_nodes[key] = all_keys[key]
 
-                return PipelineDetails(pipeline_details = exp_config)
+                for node in other_nodes:
+                    for req_node in other_nodes[node]["requirements"]:
+                        if req_node in other_nodes:
+                            other_nodes[req_node]["nodes"][node] = other_nodes[node]
+                for node in other_nodes:
+                    for req_node in other_nodes[node]["requirements"]:
+                        if req_node in root_nodes:
+                            root_nodes[req_node]["nodes"][node] = other_nodes[node]
+                return root_nodes
+
+            try:
+                all_keys = create_nodes(exp_config)
+                pipeline_details = create_requirement_chain(all_keys = all_keys)
+                # return PipelineDetails(pipeline_details = exp_config)
+                return PipelineDetails(pipeline_details = pipeline_details)
             except Exception as e:
                 raise PipelineDetailsCreationError(f"Error while fetching Pipeline Details for Model card.") from e
 
