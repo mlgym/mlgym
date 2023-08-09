@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Fab, Grid } from "@mui/material";
+import { Box, Card, CardContent, Fab, Grid, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
 import TrainingDetails from "./trainingDetails/TrainingDetails";
 import EvaluationDetails from "./evaluationDetails/EvaluationDetails";
@@ -23,6 +23,7 @@ import api from '../../app/ApiMaster';
 import { AnyKeyValuePairsInterface } from '../experimentPage/ExperimentPage';
 import DownloadIcon from '@mui/icons-material/Download';
 import GraphComponent from "./pipelineDetails/GraphComponent";
+import PipelineDetails from "./pipelineDetails/PipelineDetails";
 
 export interface pythonPackagesListInterface {
     "name": string,
@@ -71,8 +72,8 @@ export default function ModelCard() {
     const [evalDetails, setEvalDetails] = useState(sysInfoAnyKeyObj);
     const [modelDetails, setModelDetails] = useState(sysInfoAnyKeyObj);
     const [trainingDetails, setTrainingDetails] = useState(sysInfoAnyKeyObj);
-    const [pipelineDetails, setPipelineDetails] = useState({});
-
+    const [pipelineDetails, setPipelineDetails] = useState<AnyKeyValuePairsInterface>({});
+    const [treeOrientation, setTreeOrientation] = useState("horizontal");
     const [sysInfoBasicData, setSysInfoBasicData] = useState(sysInfoAnyKeyObj);
     const [sysInfoCudaDevicesData, setSysInfoCudaDevicesData] = useState(Array<cudaDeviceListInterface>);
     const [sysInfoPythonPackages, setSysInfoPythonPackages] = useState(Array<pythonPackagesListInterface>);
@@ -140,6 +141,7 @@ export default function ModelCard() {
         const environment = document.getElementById('environment') as HTMLElement;
         const img = await convertDivToPNG('results_visualization');
         const pipeline_details = document.getElementById('pipeline_details') as HTMLElement;
+
         let pipeline_graph_component = document.getElementById('pipeline_graph_component') as HTMLElement;
         let pipeline_graph_component_img = await convertDivToPNG("", pipeline_graph_component); // returns img string
         // replace id = #pipeline_graph_component (div present in GraphComponent) with the generated image as the graph is unable to convert into HTML, so converting the graph to image in the above line and saving it as an image in a new div as below.
@@ -151,6 +153,7 @@ export default function ModelCard() {
         const tempContainer = document.createElement('div');
         tempContainer.innerHTML = newHTML;
         pipeline_graph_component.innerHTML = tempContainer.innerHTML;
+        
         // Collect the CSS styles from style elements and chart stylesheets
         const css_styles = Array.from(document.styleSheets)
         .map((styleSheet) => {
@@ -315,16 +318,45 @@ export default function ModelCard() {
                                     </Grid>
                                 </Grid>
                                 <div id="pipeline_details" className={styles.card_feel}>
-                                    <div className={styles.title_container}>
-                                        <div>
-                                            <StorageIcon/>
+                                    <div className={styles.title_container_w_select}>
+                                        <div className={styles.title_sub_container}>
+                                            <div className={styles.title_container_icon}>
+                                                <StorageIcon/>
+                                            </div>
+                                            <div className={styles.title_container_text}>
+                                                Pipeline Graph
+                                            </div>
                                         </div>
-                                        <div className={styles.title_container_text}>
-                                            Pipeline Graph
-                                        </div>
+                                        {
+                                            pipelineDetails && pipelineDetails[Object.keys(pipelineDetails)[0]]?.hasOwnProperty('nodes') ?
+                                            <div>
+                                                <FormControl fullWidth>
+                                                    <InputLabel>Orientation</InputLabel>
+                                                    <Select
+                                                        value={treeOrientation}
+                                                        label="Orientation"
+                                                        onChange={(e) => setTreeOrientation(e.target.value)}
+                                                    >
+                                                        <MenuItem value={"vertical"}>vertical</MenuItem>
+                                                        <MenuItem value={"horizontal"}>horizontal</MenuItem>
+                                                    </Select>
+                                                </FormControl>
+                                            </div>
+                                            :
+                                            null
+                                        }
                                     </div>
                                     <div>
-                                        <GraphComponent data={pipelineDetails}/>
+                                        {
+                                            pipelineDetails && pipelineDetails[Object.keys(pipelineDetails)[0]]?.hasOwnProperty('nodes') ?
+                                            <PipelineDetails 
+                                                pipelineDetails={pipelineDetails}
+                                                experiment_id={experiment_id}
+                                                treeOrientationProp={treeOrientation}
+                                            />
+                                            :
+                                            <GraphComponent data={pipelineDetails}/>
+                                        }
                                     </div>
                                 </div>
                                 <div id="results_visualization" className={styles.card_feel}>

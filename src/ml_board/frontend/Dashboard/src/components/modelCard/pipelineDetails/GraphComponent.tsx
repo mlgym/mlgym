@@ -16,6 +16,7 @@ const GraphComponent: React.FC<GraphProps> = ({ data }) => {
   
   useEffect(()=>{
     if(data) {  
+      console.log("data: ",data)
       // Create a master node
       const masterNode = {
         id: 'MasterNode',
