@@ -78,7 +78,10 @@ const FilterTableHeaders: React.FC<FilterTableHeaderProps> = (props) => {
                             className={styles.tableheader_button_cancel}
                             variant="contained"
                             endIcon={<ClearIcon />}
-                            onClick={() => props.setFilterDrawer(false)}
+                            onClick={() => {
+                                props.setFilterDrawer(false);
+                                setLocalFilter(headers);
+                            }}
                         >
                             Cancel
                         </Button>
