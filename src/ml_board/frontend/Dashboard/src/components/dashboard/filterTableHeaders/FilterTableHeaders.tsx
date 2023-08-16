@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import { ColumnsFilter, selectTableHeaders, updateTableHeaderVisibility } from '../../../redux/table/tableSlice';
 
@@ -19,6 +19,10 @@ const FilterTableHeaders: React.FC<FilterTableHeaderProps> = (props) => {
     const dispatch = useAppDispatch();
     const headers = useAppSelector(selectTableHeaders);
     const [localFilter, setLocalFilter] = useState<ColumnsFilter>(headers);
+
+    useEffect(() => {
+        setLocalFilter(headers);
+    }, [headers]);
 
     return (
         <React.Fragment>

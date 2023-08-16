@@ -10,6 +10,9 @@ import Drawer from '@mui/material/Drawer';
 import TextField from '@mui/material/TextField';
 import styles from './FilterTextSearch.module.css';
 
+
+const TEXT_FILTER_SEPARATOR = ";";
+
 interface FilterTextSearchProps {
     filterDrawer: boolean;
     setFilterDrawer(filterDrawer: boolean): void;
@@ -24,7 +27,7 @@ const FilterTextSearch: React.FC<FilterTextSearchProps> = (props) => {
 
     function processFilter(input: string) {
         const temp: ColumnsFilter = {}
-        for (const inputChunk of input.split(";")) {
+        for (const inputChunk of input.split(TEXT_FILTER_SEPARATOR)) {
             const re = new RegExp(inputChunk);
             for (const header in headers) {
                 if (!temp[header])
