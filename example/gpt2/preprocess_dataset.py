@@ -22,7 +22,7 @@ def main():
         return tokenizer(examples[text_column_name])
 
     accelerator = Accelerator(gradient_accumulation_steps=1)
-    tokenizer = GPT2TokenizerFast(tokenizer_file="/root/mlgym/example/gpt2/tokenizer.json")
+    tokenizer = GPT2TokenizerFast(tokenizer_file="/cluster/home/mlgym/example/gpt2/tokenizer.json")
     raw_datasets = load_dataset(path="wikitext", name="wikitext-2-raw-v1")
     column_names = raw_datasets["train"].column_names
     text_column_name = "text" if "text" in column_names else column_names[0]
@@ -31,8 +31,8 @@ def main():
         block_size = 1024
     # datasets.save_to_disk('wikitext-2-raw-v1')
     gpt_version: str = "gpt2"
-    config = GPT2Config.from_pretrained(gpt_version)
-    model = GPT2LMHeadModel._from_config(config)
+    config = GPT2Config.from_pretrained(gpt_version, output_hidden_stages=False)
+    model = GPT2LMHeadModel.from_pretrained(gpt_version, config=config)
     embedding_size = model.get_input_embeddings().weight.shape[0]
     if len(tokenizer) > embedding_size:
         model.resize_token_embeddings(len(tokenizer))

@@ -1,6 +1,6 @@
 from ml_gym.models.nn.net import NNModel
 import torch
-from transformers import GPT2Config, GPT2LMHeadModel
+from transformers import GPT2LMHeadModel, GPT2Config
 from typing import Dict
 
 gpt_version: str = "gpt2"
@@ -9,8 +9,8 @@ class GPT2LLM(NNModel):
     def __init__(self, prediction_publication_key: str, gpt_version: str = gpt_version):
         super().__init__()
         self.prediction_publication_key = prediction_publication_key
-        config = GPT2Config.from_pretrained(gpt_version)
-        self.model = GPT2LMHeadModel._from_config(config)
+        config = GPT2Config.from_pretrained(gpt_version, output_hidden_stages=False)
+        self.model = GPT2LMHeadModel.from_pretrained(gpt_version, config=config)
 
     def forward_impl(self, inputs: torch.Tensor) -> Dict[str, torch.Tensor]:
         outputs = self.model(inputs)
@@ -25,9 +25,9 @@ if __name__ == '__main__':
     from datasets import load_from_disk
     from transformers import DataCollatorForLanguageModeling, GPT2TokenizerFast
     from torch.utils.data import DataLoader
-    tokenizer = GPT2TokenizerFast(tokenizer_file="/root/mlgym/example/gpt2/tokenizer.json")
+    tokenizer = GPT2TokenizerFast(tokenizer_file="/cluster/home/mlgym/example/gpt2/tokenizer.json")
     tokenizer.pad_token = tokenizer.eos_token
-    chunked_tokenized_dataset = load_from_disk("/root/mlgym/example/gpt2/wikitext-2-raw-v1-tokenized/train")
+    chunked_tokenized_dataset = load_from_disk("/cluster/home/mlgym/example/gpt2/wikitext-2-raw-v1-tokenized/train")
     batch_size = 30
 
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)

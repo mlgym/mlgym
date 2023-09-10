@@ -10,7 +10,7 @@ dataset_iterators:
   variant_key: LMWikiBookCorpusDataset
   config:
     dataset_identifier: LMWikiBookCorpus
-    dataset_folder_path: /root/mlgym/example/gpt2/wikitext-2-raw-v1-tokenized/train
+    dataset_folder_path: /cluster/home/mlgym/example/gpt2/wikitext-2-raw-v1-tokenized/train
 
 split_dataset_iterators:
   component_type_key: SPLITTED_DATASET_ITERATORS
@@ -51,7 +51,7 @@ data_collator:
         id: id_gpt2_llm_collator
     collator_params:
       target_publication_key: *target_key_anchor
-      tokenizer_file_path: /root/mlgym/example/gpt2/tokenizer.json
+      tokenizer_file_path: /cluster/home/mlgym/example/gpt2/tokenizer.json
       pad_to_multiple_of: 8
 
 data_loaders:
@@ -64,7 +64,7 @@ data_loaders:
     - name: data_collator
       component_name: data_collator
   config:
-    batch_size: 20
+    batch_size: 8
     seeds:
       train_lm: 1
       train_small: 2
@@ -132,7 +132,7 @@ train_component:
       target_subscription_key: *target_key_anchor
       key: CLMCrossEntropyLoss
       tag: clm_entropy_loss
-      vocab_size: 30522
+      vocab_size: 1024
 
 trainer:
   component_type_key: TRAINER
