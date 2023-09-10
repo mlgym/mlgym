@@ -203,7 +203,7 @@ early_stopping_strategy:
     early_stopping_key: LAST_K_EPOCHS_IMPROVEMENT_STRATEGY
     early_stopping_config:
       min_relative_improvement: 0.00001
-      epochs_window: 50
+      epochs_window: 25
       split_name: val
       monitoring_key: "clm_entropy_loss"
       is_increase_task: false

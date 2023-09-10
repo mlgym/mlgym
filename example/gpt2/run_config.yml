@@ -1,7 +1,7 @@
 run_configuration:
   type: train # train, warmstart
   config:
-    num_epochs: 100 # Number of epochs
+    num_epochs: 50 # Number of epochs
     num_batches_per_epoch: 32
     gs_config_path: /cluster/home/mlgym/example/gpt2/gpt2_config.yml
 
