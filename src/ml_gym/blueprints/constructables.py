@@ -59,6 +59,11 @@ class ComponentConstructable(ABC):
     """
     ComponentConstructable is an Abstract class which is used to create all the other constructable calsses.
     The abstract class allows the other Constructables to maintain a common single structure to be used to access the classes.
+
+    :params:
+        component_identifier (str): Name of component that will be created by this object. This will be used as a key when registering the component with the registry.
+        requirement (Requirement): The requirements of this component. This parameter defines what kind
+
     """
     component_identifier: str = ""
     constructed: Any = None
@@ -89,6 +94,9 @@ class DatasetRepositoryConstructable(ComponentConstructable):
     """
     DatasetRepositoryConstructable class initializes DatasetRepository & StorageConnectorFactory object from datastack library
     to be used for accessing data for models used in MlGym.
+
+    :params:
+        storage_connector_path (str): Path to the dataset.
     """
     storage_connector_path: str = ""
 
@@ -104,6 +112,10 @@ class DatasetIteratorConstructable(ComponentConstructable):
     """
     DatasetIteratorConstructable class is used to make the dataset iterable
     to be used for accessing specific split for models used in MlGym.
+
+    :params:
+        dataset_identifier (str): Name of dataset that will be used. This will be used as a key when registering the dataset with the registry.
+        split_configs (Dict): Dictionary contains meta data about the split configutations that will be used for iterating through the dataset.
     """
     dataset_identifier: str = ""
     split_configs: Dict[str, Any] = field(default_factory=dict)
@@ -127,6 +139,11 @@ class DatasetIteratorSplitsConstructable(ComponentConstructable):
     """
     DatasetIteratorSplitsConstructable class is used to make the dataset iterable.
     to be used for accessing all data splits for models used in MlGym.
+
+    :params:
+        split_configs (Dict): Dictionary contains meta data about the split configutations that will be used for iterating through the dataset.
+        seed (int): Seed value
+        stratified (bool): If the split will be stratified or not.
     """
     split_configs: Dict = None
     seed: int = 1
@@ -389,6 +406,9 @@ class ModelRegistryConstructable(ComponentConstructable):
 class LossFunctionRegistryConstructable(ComponentConstructable):
     """
     LossFunctionRegistryConstructable class is used to create a ClassRegistry object for all available Loss Functions.
+
+    Strategies:
+        LPLoss, LPPredictionLoss, CrossEntropyLoss, BCEWithLogitsLoss, BCELoss, NLLLoss .
     """
     class LossKeys:
         LPLoss = "LPLoss"
@@ -420,6 +440,10 @@ class LossFunctionRegistryConstructable(ComponentConstructable):
 class MetricFunctionRegistryConstructable(ComponentConstructable):
     """
     MetricFunctionRegistryConstructable class is used to create a ClassRegistry object for all available Evaluation Metrics.
+
+    Strategies:
+        F1_SCORE, ACCURACY. BALANCED_ACCURACY, RECALL, PRECISION, AUROC, AUPR, RECALL_AT_K, AREA_UNDER_RECALL_AT_K, BRIER_SCORE, 
+        EXPECTED_CALIBRATION_ERROR, BINARY_CLASSWISE_EXPECTED_CALIBRATION_ERROR .
     """
     class MetricKeys:
         F1_SCORE = "F1_SCORE"
@@ -481,6 +505,9 @@ class PredictionPostProcessingRegistryConstructable(ComponentConstructable):
     """
     PredictionPostProcessingRegistryConstructable class is used to create a ClassRegistry object for 
     all available Prediction Functions used in post processing.
+
+    Strategies:
+        SOFT_MAX, ARG_MAX, MIN_OR_MAX, SIGMOIDAL, BINARIZATION .
     """
     class FunctionKeys:
         SOFT_MAX = "SOFT_MAX"
@@ -705,7 +732,12 @@ class AccelerateEvaluatorConstructable(ComponentConstructable):
 @dataclass
 class EarlyStoppingRegistryConstructable(ComponentConstructable):
     """
-    EarlyStoppingRegistryConstructable creates a ClassRegistry object for all available Early Stopping Stratergies.
+    Early stopping registry constructable class which registers early stoppers with their corresponding parameters 
+    and returns them as an instance of `ClassRegistry`.
+
+    Strategies:
+        LAST_K_EPOCHS_IMPROVEMENT_STRATEGY : Check for last K epochs for improvement. If the improvement value is less 
+        than threshold then early stop the experiment.
     """
     class StrategyKeys:
         LAST_K_EPOCHS_IMPROVEMENT_STRATEGY = "LAST_K_EPOCHS_IMPROVEMENT_STRATEGY"
@@ -725,7 +757,7 @@ class EarlyStoppingRegistryConstructable(ComponentConstructable):
 @dataclass
 class EarlyStoppingStrategyConstructable(ComponentConstructable):
     """
-    EarlyStoppingStrategyConstructable initializes the EarlyStoppingIF  for all available Early Stopping Stratergies.
+    EarlyStoppingStrategyConstructable initializes the EarlyStoppingIF for all available Early Stopping Stratergies.
     """
     early_stopping_config: Dict = field(default_factory=dict)
     early_stopping_key: str = ""
@@ -739,7 +771,11 @@ class EarlyStoppingStrategyConstructable(ComponentConstructable):
 @dataclass
 class CheckpointingRegistryConstructable(ComponentConstructable):
     """
-    CheckpointingRegistryConstructable creates a ClassRegistry object for all available Checkpointing Stratergies.
+    Checkpointing Registry Constructable is responsible of creating and registering all checkpointing strategies.
+
+    Strategies:
+        SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY : Save checkpoint only for the last epoch.
+        SAVE_ALL_CHECKPOINTING_STRATEGY : Save checkpoints for all epochs.
     """
     class StrategyKeys:
         SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY = "SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY"
