@@ -15,7 +15,7 @@ from transformers import DataCollatorForLanguageModeling, GPT2TokenizerFast
 from data_stack.dataset.meta import MetaFactory
 from data_stack.dataset.iterator import InformedDatasetIteratorIF
 from datasets import load_from_disk
-from clm_loss_function import LMLossFunctionRegistryConstructable, LMMetricFunctionRegistryConstructable
+from clm_loss_function import LMLossFunctionRegistryConstructable, LMMetricFunctionRegistryConstructable, LMPredictionPostProcessingRegistryConstructable
 
 
 @dataclass
@@ -93,7 +93,8 @@ class GPT2LLMBluePrint(BluePrint):
         component_factory.register_component_type("MODEL_REGISTRY", "DEFAULT", MyModelRegistryConstructable)
         component_factory.register_component_type("DATASET_ITERATORS", "LMWikiBookCorpusDataset", LMWikiBookCorpusDatasetConstructable),
         component_factory.register_component_type("LOSS_FUNCTION_REGISTRY", "LM", LMLossFunctionRegistryConstructable)
-        # component_factory.register_component_type("METRIC_REGISTRY", "LM", LMMetricFunctionRegistryConstructable)
+        component_factory.register_component_type("METRIC_REGISTRY", "LM", LMMetricFunctionRegistryConstructable)
+        component_factory.register_component_type("PREDICTION_POSTPROCESSING_REGISTRY", "LM", LMPredictionPostProcessingRegistryConstructable)
 
         components = component_factory.build_components_from_config(config, component_names)
         return components

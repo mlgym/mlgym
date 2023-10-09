@@ -3,7 +3,7 @@ global_config:
   seed: &seed_value 2
   target_key: &target_key_anchor target_key
   model_prediction_key: &model_prediction_key_anchor model_prediction_key
-  postprocessing_argmax_key: &postprocessing_argmax_key_anchor postprocessing_argmax_key
+  postprocessing_perpex_key: &postprocessing_perpex_key_anchor postprocessing_perpex_key
 
 model_info:  
   model_description: "GPT 2 Model"
@@ -98,7 +98,7 @@ optimizer:
     params:
       lr:
         sweep: absolute
-        values: [5.e-5]
+        values: [1.e-4]
 
 lr_scheduler:
   component_type_key: LR_SCHEDULER
@@ -116,11 +116,11 @@ loss_function_registry:
 
 metric_registry:
   component_type_key: METRIC_REGISTRY
-  variant_key: DEFAULT
+  variant_key: LM
 
 prediction_postprocessing_registry:
   component_type_key: PREDICTION_POSTPROCESSING_REGISTRY
-  variant_key: DEFAULT
+  variant_key: LM
 
 train_component:
   component_type_key: TRAIN_COMPONENT
@@ -170,19 +170,18 @@ eval_component:
   config:
     cpu_target_subscription_keys:
       - *target_key_anchor
-    cpu_prediction_subscription_keys: []
-    #   - *postprocessing_argmax_key_anchor
-    #   - *model_prediction_key_anchor
-    # post_processors_config:
-    #   - key: "ARG_MAX"
-    #     prediction_subscription_key: *model_prediction_key_anchor
-    #     prediction_publication_key: *postprocessing_argmax_key_anchor
-    metrics_config: []
-      # - key: PerplexityMetric
-      #   prediction_subscription_key: *postprocessing_argmax_key_anchor
-      #   target_subscription_key: *target_key_anchor
-      #   tag: perplexity_metric
-      #   identifier: PERPLEXITY_METRIC
+    cpu_prediction_subscription_keys:
+      - *postprocessing_perpex_key_anchor
+    post_processors_config:
+      - key: "PerplexityPostProcessing"
+        target_subscription_key: *target_key_anchor
+        prediction_subscription_key: *model_prediction_key_anchor
+        prediction_publication_key: *postprocessing_perpex_key_anchor
+    metrics_config:
+      - key: PerplexityMetric
+        prediction_subscription_key: *postprocessing_perpex_key_anchor
+        tag: perplexity_metric
+        identifier: PERPLEXITY_METRIC
     loss_funs_config:
       - prediction_subscription_key: *model_prediction_key_anchor
         target_subscription_key: *target_key_anchor

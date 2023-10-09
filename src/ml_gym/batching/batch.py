@@ -68,7 +68,11 @@ class Batch(ABC):
                 combined_tensor_dict[key] = Batch._combine_tensor_dicts(sub_tensor_dicts)
             else:
                 try:
-                    combined_tensor_dict[key] = torch.cat([d[key] for d in tensor_dicts])
+                    dim = len(tensor_dicts[0][key].size())
+                    if dim == 0:
+                        combined_tensor_dict[key] = torch.cat([d[key].reshape(1) for d in tensor_dicts], dim=0)
+                    else:
+                        combined_tensor_dict[key] = torch.cat([d[key] for d in tensor_dicts])
                 except Exception as e:
                     raise BatchStateError(f"Error concatenating list of tensors for key {key}.") from e
 
