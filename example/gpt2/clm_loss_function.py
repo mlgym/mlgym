@@ -78,7 +78,7 @@ class PerplexityMetric(Metric):
 
     def __call__(self, forward_batch: InferenceResultBatch) -> torch.Tensor:
         loss = forward_batch.get_predictions(self.prediction_subscription_key)
-        perplexity = torch.exp(torch.mean(loss))
+        perplexity = torch.exp(torch.mean(loss)).item()
         return perplexity
 
 class CLMCrossEntropyLoss(Loss):
