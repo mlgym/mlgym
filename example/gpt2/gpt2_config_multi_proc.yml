@@ -1,0 +1,228 @@
+global_config:
+  storage_connector_path: &storage_path_anchor ./file_storage/
+  seed: &seed_value 2
+  target_key: &target_key_anchor target_key
+  model_prediction_key: &model_prediction_key_anchor model_prediction_key
+  postprocessing_perpex_key: &postprocessing_perpex_key_anchor postprocessing_perpex_key
+
+model_info:  
+  model_description: "GPT 2 Model"
+  model_version: 1.0.0
+  source_repo: "Github repo link Ex: https://github.com/mlgym/mlgym/tree/dev"
+
+dataset_iterators:
+  component_type_key: DATASET_ITERATORS
+  variant_key: LMWikiBookCorpusDataset
+  config:
+    dataset_identifier: LMWikiBookCorpus
+    dataset_folder_path: /cluster/home/mlgym/example/gpt2/wikitext-2-raw-v1-tokenized
+
+split_dataset_iterators:
+  component_type_key: SPLITTED_DATASET_ITERATORS
+  variant_key: RANDOM
+  requirements:
+    - name: iterators
+      component_name: dataset_iterators
+      subscription:
+        - train
+        - test
+        - validation
+  config:
+    split_configs:
+      validation:
+        val: 1
+    seed: 2
+
+# split_dataset_iterator_2:
+#   component_type_key: SPLITTED_DATASET_ITERATORS
+#   variant_key: RANDOM
+#   requirements:
+#     - name: iterators
+#       component_name: split_dataset_iterators
+#       subscription: [train_lm, val, test]
+#   config:
+#     split_configs:
+#       train_lm:
+#         rest: 0.999
+#         train_small: 0.001
+#     seed: 3
+
+data_collator:
+  component_type_key: DATA_COLLATOR
+  variant_key: DEFAULT
+  config:
+    collator_type:
+      injectable:
+        id: id_gpt2_llm_collator
+    collator_params:
+      target_publication_key: *target_key_anchor
+      tokenizer_file_path: /cluster/home/mlgym/example/gpt2/tokenizer.json
+      pad_to_multiple_of: 8
+
+data_loaders:
+  component_type_key: DATA_LOADER
+  variant_key: DEFAULT
+  requirements:
+    - name: iterators
+      component_name: split_dataset_iterators
+      subscription: ["train", "test", "val"]
+    - name: data_collator
+      component_name: data_collator
+  config:
+    batch_size: 9
+    seeds:
+      train: 1
+      test: 2
+      validation: 3
+
+model_registry:
+  component_type_key: MODEL_REGISTRY
+  variant_key: DEFAULT
+
+model:
+  component_type_key: MODEL
+  variant_key: DEFAULT
+  requirements:
+    - name: model_registry
+      component_name: model_registry
+      subscription: llm_gpt2
+  config:
+    prediction_publication_keys:
+      prediction_publication_key: *model_prediction_key_anchor
+
+optimizer:
+  component_type_key: OPTIMIZER
+  variant_key: DEFAULT
+  config:
+    optimizer_key: ADAMW
+    params:
+      lr:
+        sweep: absolute
+        values: [1.e-4]
+
+lr_scheduler:
+  component_type_key: LR_SCHEDULER
+  variant_key: DEFAULT
+  config:
+    lr_scheduler_key: hugging_face_scheduler
+    params:
+      name: linear
+      num_warmup_steps: 50
+      num_training_steps: 1000
+
+loss_function_registry:
+  component_type_key: LOSS_FUNCTION_REGISTRY
+  variant_key: LM
+
+metric_registry:
+  component_type_key: METRIC_REGISTRY
+  variant_key: LM
+
+prediction_postprocessing_registry:
+  component_type_key: PREDICTION_POSTPROCESSING_REGISTRY
+  variant_key: LM
+
+train_component:
+  component_type_key: TRAIN_COMPONENT
+  variant_key: DEFAULT
+  requirements:
+    - name: loss_function_registry
+      component_name: loss_function_registry
+    - name: prediction_postprocessing_registry
+      component_name: prediction_postprocessing_registry
+  config:
+    loss_fun_config:
+      prediction_subscription_key: *model_prediction_key_anchor
+      target_subscription_key: *target_key_anchor
+      key: CLMCrossEntropyLoss
+      tag: clm_entropy_loss
+
+trainer:
+  component_type_key: TRAINER
+  variant_key: DEFAULT
+  requirements:
+    - name: train_component
+      component_name: train_component
+    - name: model
+      component_name: model
+      subscription: null
+    - name: data_loaders
+      component_name: data_loaders
+      subscription: train
+  config: {}
+
+eval_component:
+  component_type_key: EVAL_COMPONENT
+  variant_key: DEFAULT
+  requirements:
+    - name: model
+      component_name: model
+      subscription: null
+    - name: data_loaders
+      component_name: data_loaders
+      subscription: [train, val, test]
+    - name: loss_function_registry
+      component_name: loss_function_registry
+    - name: metric_registry
+      component_name: metric_registry
+    - name: prediction_postprocessing_registry
+      component_name: prediction_postprocessing_registry
+  config:
+    cpu_target_subscription_keys:
+      - *target_key_anchor
+    cpu_prediction_subscription_keys:
+      - *postprocessing_perpex_key_anchor
+    post_processors_config:
+      - key: "PerplexityPostProcessing"
+        target_subscription_key: *target_key_anchor
+        prediction_subscription_key: *model_prediction_key_anchor
+        prediction_publication_key: *postprocessing_perpex_key_anchor
+    metrics_config:
+      - key: PerplexityMetric
+        prediction_subscription_key: *postprocessing_perpex_key_anchor
+        tag: perplexity_metric
+        identifier: PERPLEXITY_METRIC
+    loss_funs_config:
+      - prediction_subscription_key: *model_prediction_key_anchor
+        target_subscription_key: *target_key_anchor
+        key: CLMCrossEntropyLoss
+        tag: clm_entropy_loss
+
+evaluator:
+  component_type_key: EVALUATOR
+  variant_key: DEFAULT
+  requirements:
+    - name: eval_component
+      component_name: eval_component
+
+early_stopping_strategy_registry:
+  component_type_key: EARLY_STOPPING_STRATEGY_REGISTRY
+  variant_key: DEFAULT
+
+early_stopping_strategy:
+  component_type_key: EARLY_STOPPING_STRATEGY
+  variant_key: DEFAULT
+  requirements:
+    - name: early_stopping_strategy_registry
+      component_name: early_stopping_strategy_registry
+  config:
+    early_stopping_key: LAST_K_EPOCHS_IMPROVEMENT_STRATEGY
+    early_stopping_config:
+      min_relative_improvement: 0.001
+      epochs_window: 20
+      split_name: val
+      monitoring_key: "clm_entropy_loss"
+      is_increase_task: false
+
+checkpointing_strategy_registry:
+  component_type_key: CHECKPOINTING_STRATEGY_REGISTRY
+  variant_key: DEFAULT
+
+checkpointing_strategy:
+  component_type_key: CHECKPOINTING_STRATEGY
+  variant_key: DEFAULT
+  requirements:
+    - name: checkpointing_strategy_registry
+      component_name: checkpointing_strategy_registry
+  config:
+    checkpointing_key: SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY
