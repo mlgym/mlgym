@@ -15,7 +15,7 @@ dataset_iterators:
   variant_key: LMWikiBookCorpusDataset
   config:
     dataset_identifier: LMWikiBookCorpus
-    dataset_folder_path: /cluster/home/mlgym/example/gpt2/wikitext-2-raw-v1-tokenized
+    dataset_folder_path: /scratch/repositories/mlgym/example/gpt2/data/wikitext-2-raw-v1-tokenized
 
 split_dataset_iterators:
   component_type_key: SPLITTED_DATASET_ITERATORS
@@ -56,7 +56,7 @@ data_collator:
         id: id_gpt2_llm_collator
     collator_params:
       target_publication_key: *target_key_anchor
-      tokenizer_file_path: /cluster/home/mlgym/example/gpt2/tokenizer.json
+      tokenizer_file_path: /scratch/repositories/mlgym/example/gpt2/tokenizer.json
       pad_to_multiple_of: 8
 
 data_loaders:
