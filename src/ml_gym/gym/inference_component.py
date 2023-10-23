@@ -1,6 +1,7 @@
 from ml_gym.models.nn.net import NNModel
 from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch
 from typing import List
+from ml_gym.util.timer import timeit_ns
 import torch
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent
 from ml_gym.gym.post_processing import PredictPostProcessingIF
@@ -12,6 +13,7 @@ class InferenceComponent:
     def __init__(self, no_grad=True):
         self.no_grad = no_grad
 
+    @timeit_ns
     def predict(self, model: NNModel, batch: DatasetBatch, post_processors: List[PredictPostProcessingIF] = None) -> InferenceResultBatch:
         """
         Perform prediction on the torch NN Model.

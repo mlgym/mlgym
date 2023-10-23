@@ -89,6 +89,7 @@ class TrainComponent(StatefulComponent):
                                                                         initial_epoch=initial_epoch,
                                                                         num_batches_per_epoch=num_batches_per_epoch)
 
+        epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=-1, model=model)
         for batch_id, batch in dataloader_iterable:
             current_epoch = initial_epoch + int(batch_id / num_batches_per_epoch)
             model = self._train_batch(batch=batch, model=model, optimizer=optimizer, device=device)

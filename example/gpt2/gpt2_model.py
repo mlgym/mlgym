@@ -12,12 +12,12 @@ class GPT2LLM(NNModel):
         config = GPT2Config.from_pretrained(gpt_version, output_hidden_stages=False)
         self.model = GPT2LMHeadModel.from_pretrained(gpt_version, config=config)
 
-    def forward_impl(self, inputs: torch.Tensor) -> Dict[str, torch.Tensor]:
-        outputs = self.model(inputs)
+    def forward_impl(self, inputs: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+        outputs = self.model(**inputs)
         output_dict = {self.prediction_publication_key: outputs.logits}
         return output_dict
 
-    def forward(self, inputs: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(self, inputs: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         return self.forward_impl(inputs)
 
 

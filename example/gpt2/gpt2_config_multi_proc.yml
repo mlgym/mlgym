@@ -15,36 +15,36 @@ dataset_iterators:
   variant_key: LMWikiBookCorpusDataset
   config:
     dataset_identifier: LMWikiBookCorpus
-    dataset_folder_path: /cluster/home/mlgym/example/gpt2/wikitext-2-raw-v1-tokenized
+    dataset_folder_path: /scratch/repositories/mlgym/example/gpt2/data/wikitext-2-raw-v1-tokenized
 
-split_dataset_iterators:
-  component_type_key: SPLITTED_DATASET_ITERATORS
-  variant_key: RANDOM
-  requirements:
-    - name: iterators
-      component_name: dataset_iterators
-      subscription:
-        - train
-        - test
-        - validation
-  config:
-    split_configs:
-      validation:
-        val: 1
-    seed: 2
+# split_dataset_iterators:
+#   component_type_key: SPLITTED_DATASET_ITERATORS
+#   variant_key: RANDOM
+#   requirements:
+#     - name: iterators
+#       component_name: dataset_iterators
+#       subscription:
+#         - train
+#         - test
+#         - validation
+#   config:
+#     split_configs:
+#       validation:
+#         val: 1
+#     seed: 2
 
 # split_dataset_iterator_2:
 #   component_type_key: SPLITTED_DATASET_ITERATORS
 #   variant_key: RANDOM
 #   requirements:
 #     - name: iterators
-#       component_name: split_dataset_iterators
-#       subscription: [train_lm, val, test]
+#       component_name: dataset_iterators
+#       subscription: [train, validation, test]
 #   config:
 #     split_configs:
-#       train_lm:
-#         rest: 0.999
-#         train_small: 0.001
+#       train:
+#         rest: 0.99
+#         train: 0.01
 #     seed: 3
 
 data_collator:
@@ -56,24 +56,27 @@ data_collator:
         id: id_gpt2_llm_collator
     collator_params:
       target_publication_key: *target_key_anchor
-      tokenizer_file_path: /cluster/home/mlgym/example/gpt2/tokenizer.json
+      tokenizer_file_path: /scratch/repositories/mlgym/example/gpt2/tokenizer.json
       pad_to_multiple_of: 8
 
 data_loaders:
   component_type_key: DATA_LOADER
-  variant_key: DEFAULT
+  variant_key: FUTURE
   requirements:
     - name: iterators
-      component_name: split_dataset_iterators
-      subscription: ["train", "test", "val"]
+      component_name: dataset_iterators
+      subscription: [train, validation, test]
     - name: data_collator
       component_name: data_collator
   config:
-    batch_size: 9
-    seeds:
-      train: 1
-      test: 2
-      validation: 3
+    batch_size: 8
+    sampling_strategies:
+      train: 
+        strategy: IN_ORDER
+      validation: 
+        strategy: IN_ORDER
+      test: 
+        strategy: IN_ORDER
 
 model_registry:
   component_type_key: MODEL_REGISTRY
@@ -160,7 +163,7 @@ eval_component:
       subscription: null
     - name: data_loaders
       component_name: data_loaders
-      subscription: [train, val, test]
+      subscription: [train, validation, test]
     - name: loss_function_registry
       component_name: loss_function_registry
     - name: metric_registry
@@ -210,7 +213,7 @@ early_stopping_strategy:
     early_stopping_config:
       min_relative_improvement: 0.001
       epochs_window: 20
-      split_name: val
+      split_name: validation
       monitoring_key: "clm_entropy_loss"
       is_increase_task: false
 

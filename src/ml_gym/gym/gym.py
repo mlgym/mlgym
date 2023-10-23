@@ -116,7 +116,7 @@ class GymType(Enum):
 
 class GymFactory:
     """
-    GymFactory is a class which contains all of the methods which initialzie what type of job to run for the mlgym model.
+    GymFactory is a class which contains all of the methods which initialize what type of job to run for the mlgym model.
     """
 
     @staticmethod

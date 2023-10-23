@@ -56,10 +56,13 @@ class GPT2LLMCollator(Collator):
         :return:
         """
         collated_batch = self.data_collator(batch)
-        samples = collated_batch["input_ids"]
+        samples = {"input_ids": collated_batch["input_ids"], 
+                   "attention_mask": collated_batch["attention_mask"]}
         targets = {self.target_publication_key: collated_batch["labels"],
                    "attention_mask": collated_batch["attention_mask"]}
-        return DatasetBatch(targets=targets, tags=None, samples=samples)
+        
+        samples_require_grad={key: False for key in samples.keys()}
+        return DatasetBatch(targets=targets, tags=None, samples=samples, samples_require_grad=samples_require_grad)
 
 
 @dataclass

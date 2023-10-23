@@ -323,7 +323,7 @@ class DeprecatedDataLoadersConstructable(ComponentConstructable):
 @dataclass
 class DataLoadersConstructable(ComponentConstructable):
     """
-    DataLoadersConstructable class is used to get the spliited data based on the sampling stratergy.
+    DataLoadersConstructable class is used to get the splitted data based on the sampling strategy.
     """
     batch_size: int = 1
     sampling_strategies: Dict[str, Any] = field(default_factory=dict)

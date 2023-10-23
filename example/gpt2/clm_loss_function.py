@@ -64,9 +64,16 @@ class PerplexityPostProcessing(PredictPostProcessingIF):
         self.loss_fun = CrossEntropyLoss()
 
     def postprocess(self, result_batch: InferenceResultBatch) -> InferenceResultBatch:
-        t = result_batch.get_targets(self.target_subscription_key)
-        p = result_batch.get_predictions(self.prediction_subscription_key)
-        loss = self.loss_fun(p.view(-1, p.size(-1)), t.view(-1))
+        labels = result_batch.get_targets(self.target_subscription_key)
+        lm_logits = result_batch.get_predictions(self.prediction_subscription_key)
+   
+        # move labels to correct device to enable model parallelism
+        labels = labels.to(lm_logits.device)
+        # Shift so that tokens < n predict n
+        shift_logits = lm_logits[..., :-1, :].contiguous()
+        shift_labels = labels[..., 1:].contiguous()
+        # Flatten the tokens
+        loss = self.loss_fun(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
         result_batch.add_predictions(key=self.prediction_publication_key, predictions=loss)
         return result_batch
 
@@ -89,7 +96,14 @@ class CLMCrossEntropyLoss(Loss):
         self.loss_fun = CrossEntropyLoss()
 
     def __call__(self, forward_batch: InferenceResultBatch) -> torch.Tensor:
-        t = forward_batch.get_targets(self.target_subscription_key)
-        p = forward_batch.get_predictions(self.prediction_subscription_key)
-        casual_lm_loss = self.loss_fun(p.view(-1, p.size(-1)), t.view(-1))
-        return casual_lm_loss
+        labels = forward_batch.get_targets(self.target_subscription_key)
+        lm_logits = forward_batch.get_predictions(self.prediction_subscription_key)
+   
+        # move labels to correct device to enable model parallelism
+        labels = labels.to(lm_logits.device)
+        # Shift so that tokens < n predict n
+        shift_logits = lm_logits[..., :-1, :].contiguous()
+        shift_labels = labels[..., 1:].contiguous()
+        # Flatten the tokens
+        loss = self.loss_fun(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+        return loss

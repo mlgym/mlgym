@@ -111,7 +111,7 @@ class AccelerateTrainComponent(StatefulComponent):
 
         :params:
                model (NNModel): Torch Neural Network module.
-               batch (DatasetBatch); Batch of data for which loss is to be calcualted.
+               batch (DatasetBatch); Batch of data for which loss is to be calculated.
 
         :returns:
             loss (List[torch.Tensor]): Loss list for batch.

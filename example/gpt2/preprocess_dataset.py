@@ -22,11 +22,13 @@ def main():
     
     def tokenize_function(examples):
         return tokenizer(examples[text_column_name])
+    
+    dataset_name = "wikitext-103-raw-v1"  # "wikitext-2-raw-v1"
 
     accelerator = Accelerator(gradient_accumulation_steps=1)
     tokenizer_file_path = os.path.join(os.path.dirname(__file__), "tokenizer.json")
     tokenizer = GPT2TokenizerFast(tokenizer_file=tokenizer_file_path)
-    raw_datasets = load_dataset(path="wikitext", name="wikitext-2-raw-v1")
+    raw_datasets = load_dataset(path="wikitext", name=dataset_name)
     column_names = raw_datasets["train"].column_names
     text_column_name = "text" if "text" in column_names else column_names[0]
     block_size = tokenizer.model_max_length
@@ -46,7 +48,7 @@ def main():
     with accelerator.main_process_first():
         llm_datasets = tokenized_datasets.map(group_texts, batched=True, num_proc=2)
     print(llm_datasets)
-    dataset_path = os.path.join(os.path.dirname(__file__), "data/wikitext-2-raw-v1-tokenized")
+    dataset_path = os.path.join(os.path.dirname(__file__), f"data/{dataset_name}-tokenized")
     llm_datasets.save_to_disk(dataset_path)
 
 if __name__ == "__main__":
