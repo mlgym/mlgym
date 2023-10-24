@@ -1,16 +1,23 @@
 import "reactflow/dist/style.css";
-import ReactFlow, { Node, Edge, Controls, Background, applyEdgeChanges, applyNodeChanges, NodeChange, EdgeChange } from "reactflow";
-import { useCallback, useState } from "react";
-
+import ReactFlow, { Node, Edge, Controls, Background, useNodesState, useEdgesState } from "reactflow";
 
 export default function FlowGraph({ initialNodes, initialEdges }: { initialNodes: Node[], initialEdges: Edge[] }) {
 
-    const [nodes, setNodes] = useState(initialNodes);
-    const [edges, setEdges] = useState(initialEdges);
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-    const onNodesChange = useCallback((changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
-    const onEdgesChange = useCallback((changes: EdgeChange[]) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
-
+    // return (
+    //     <div style={{ height: "100vh" }}>
+    //         <ReactFlow fitView
+    //             defaultNodes={initialNodes}
+    //             defaultEdges={initialEdges}
+    //             defaultEdgeOptions={{ animated: true }}
+    //         >
+    //             <Background />
+    //             <Controls />
+    //         </ReactFlow>
+    //     </div>
+    // );
     return (
         <div style={{ height: "100vh" }}>
             <ReactFlow fitView
