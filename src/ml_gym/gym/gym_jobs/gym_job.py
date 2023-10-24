@@ -18,6 +18,7 @@ from ml_gym.optimizers.lr_schedulers import LRSchedulerAdapter
 from ml_gym.optimizers.optimizer import OptimizerAdapter
 from ml_gym.persistency.io import GridSearchAPIClientIF
 from ml_gym.persistency.logging import ExperimentStatusLogger
+from ml_gym.util.timer import NSTimer
 import torch
 from accelerate import Accelerator
 import shutil
@@ -58,7 +59,8 @@ class AbstractGymJob(StatefulComponent):
         # components
         self.model = model
         self.optimizer = optimizer
-        self.lr_scheduler = lr_scheduler if lr_scheduler is not None else LRSchedulerFactory.get_lr_scheduler("dummy")
+        self.lr_scheduler = lr_scheduler if lr_scheduler is not None else LRSchedulerFactory.get_lr_scheduler(
+            "dummy")
         self.evaluator = evaluator
         self.trainer = trainer
 
@@ -120,7 +122,8 @@ class AbstractGymJob(StatefulComponent):
 
         if accelerator is None or accelerator is not None and accelerator.is_main_process:
             for epoch in checkpoint_instruction.checkpoints_to_delete:
-                self.gs_api_client.delete_checkpoints(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id, epoch=epoch)
+                self.gs_api_client.delete_checkpoints(
+                    grid_search_id=self.grid_search_id, experiment_id=self.experiment_id, epoch=epoch)
 
     @staticmethod
     def batch_processed_callback(status: str, experiment_status_logger: ExperimentStatusLogger, num_batches: int,
@@ -158,7 +161,8 @@ class AbstractGymJob(StatefulComponent):
                evaluation_result (EvaluationBatchResult): Object storing entire epoch infotmation.
                current_epoch (int): Current epoch number.
         """
-        experiment_status_logger.log_evaluation_results(evaluation_result, current_epoch)
+        experiment_status_logger.log_evaluation_results(
+            evaluation_result, current_epoch)
 
     def train_epoch_done_callback(self, num_epochs: int, current_epoch: int, model: NNModel, evaluation_step_routine: Callable,
                                   accelerator: Accelerator = None):
@@ -172,13 +176,16 @@ class AbstractGymJob(StatefulComponent):
                evaluation_step_routine (Callable): Epoch/Experiment number for cerating checkpoints.
                accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
         """
-        evaluation_results = evaluation_step_routine(current_epoch=current_epoch)
+        with NSTimer(key="eval_epoch"):
+            evaluation_results = evaluation_step_routine(current_epoch=current_epoch)
         if current_epoch > 0:
             self.lr_scheduler.step()
+
         checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=num_epochs,
                                                                                                  current_epoch=current_epoch,
                                                                                                  evaluation_result=evaluation_results)
-        self.run_checkpointing(checkpointing_instruction, current_epoch=current_epoch, accelerator=accelerator)
+        with NSTimer(key="checkpointing"):
+            self.run_checkpointing(checkpointing_instruction, current_epoch=current_epoch, accelerator=accelerator)
 
         if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=current_epoch,
                                                                         evaluation_results=evaluation_results):

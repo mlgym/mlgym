@@ -45,6 +45,12 @@ dataset_iterators:
 #       train:
 #         rest: 0.99
 #         train: 0.01
+#       validation:
+#         rest: 0.99
+#         validation: 0.01
+#       test:
+#         rest: 0.99
+#         test: 0.01
 #     seed: 3
 
 data_collator:
@@ -110,7 +116,7 @@ lr_scheduler:
     lr_scheduler_key: hugging_face_scheduler
     params:
       name: linear
-      num_warmup_steps: 50
+      num_warmup_steps: 0
       num_training_steps: 1000
 
 loss_function_registry:

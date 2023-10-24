@@ -10,7 +10,7 @@ class GPT2LLM(NNModel):
         super().__init__()
         self.prediction_publication_key = prediction_publication_key
         config = GPT2Config.from_pretrained(gpt_version, output_hidden_stages=False)
-        self.model = GPT2LMHeadModel.from_pretrained(gpt_version, config=config)
+        self.model: GPT2LMHeadModel = GPT2LMHeadModel.from_pretrained(gpt_version, config=config)
 
     def forward_impl(self, inputs: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         outputs = self.model(**inputs)

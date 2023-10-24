@@ -3,6 +3,7 @@ from typing import List, Callable
 from ml_gym.loss_functions.loss_functions import Loss
 from ml_gym.models.nn.net import NNModel
 from ml_gym.data_handling.dataset_loader import DatasetLoader
+from ml_gym.util.timer import NSTimer
 import torch
 from ml_gym.batching.batch import DatasetBatch
 from ml_gym.gym.inference_component import InferenceComponent
@@ -37,7 +38,7 @@ class AccelerateTrainComponent(StatefulComponent):
             model (NNModel): Torch Neural Network module.
         """
         model.zero_grad()
-        loss = self.calc_loss(model, batch).sum()
+        loss = self._calc_loss(model, batch).sum()
 
         # if accelerator.is_main_process:
         #     w = model.module.fc_layers[0].weight
@@ -54,9 +55,10 @@ class AccelerateTrainComponent(StatefulComponent):
         #     w = model.module.fc_layers[0].weight
         #     print(f"\n\nAfter 2nd thread: {w}")
         #     print("\n")
-
-        accelerator.backward(loss)
-        optimizer.step()
+        with NSTimer(key="train_backward_pass"):
+            accelerator.backward(loss)
+        with NSTimer(key="train_optimizer_step"):
+            optimizer.step()
 
         return model
 
@@ -89,6 +91,9 @@ class AccelerateTrainComponent(StatefulComponent):
         num_dataloaders = int(np.ceil(num_total_batches/len(dataloader)))
         data_loaders = chain(*([dataloader]*num_dataloaders))
 
+        timer_train_epoch = NSTimer(key="train_epoch")
+
+        timer_train_epoch.start()
         for batch_id, batch in zip(range(num_total_batches), data_loaders):
             current_epoch = int(batch_id / num_batches_per_epoch)
             model = self._train_batch(accelerator=accelerator, batch=batch, model=model, optimizer=optimizer)
@@ -101,11 +106,14 @@ class AccelerateTrainComponent(StatefulComponent):
                                         num_epochs=num_epochs,
                                         current_epoch=current_epoch)
             if (batch_id + 1) % num_batches_per_epoch == 0:  # when epoch done
+                timer_train_epoch.stop()
                 epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=current_epoch, model=model, accelerator=accelerator)
+                timer_train_epoch.start()
                 model.train()
+
         return model
 
-    def calc_loss(self, model: NNModel, batch: DatasetBatch) -> torch.Tensor:
+    def _calc_loss(self, model: NNModel, batch: DatasetBatch) -> torch.Tensor:
         """
         Valvulate loss given the loss function.
 
