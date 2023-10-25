@@ -15,7 +15,7 @@ dataset_iterators:
   variant_key: LMWikiBookCorpusDataset
   config:
     dataset_identifier: LMWikiBookCorpus
-    dataset_folder_path: /scratch/repositories/mlgym/example/gpt2/data/wikitext-103-raw-v1-tokenized
+    dataset_folder_path: /scratch/repositories/mlgym/example/gpt2/data/wikitext-2-raw-v1-tokenized # /scratch/repositories/mlgym/example/gpt2/data/wikitext-103-raw-v1-tokenized
 
 # split_dataset_iterators:
 #   component_type_key: SPLITTED_DATASET_ITERATORS
@@ -218,8 +218,8 @@ early_stopping_strategy:
   config:
     early_stopping_key: LAST_K_EPOCHS_IMPROVEMENT_STRATEGY
     early_stopping_config:
-      min_relative_improvement: 0.001
-      epochs_window: 20
+      min_relative_improvement: 0.0001
+      epochs_window: 3
       split_name: validation
       monitoring_key: "clm_entropy_loss"
       is_increase_task: false

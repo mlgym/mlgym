@@ -1,7 +1,7 @@
 run_configuration:
   type: train # train, warmstart
   config:
-    num_epochs: 50 # Number of epochs
+    num_epochs: 5 # Number of epochs
     gs_config_path: /scratch/repositories/mlgym/example/gpt2/gpt2_config_multi_proc.yml
 
 environment:
