@@ -85,11 +85,14 @@ class AbstractGymJob(StatefulComponent):
                 global_rank = accelerator.process_index
                 # TODO replace with an in-memory file system solution
                 with tempfile.TemporaryDirectory() as tmpdirname:
-                    root_dir = os.path.join(tmpdirname, f"epoch_{current_epoch}/rank_{global_rank}")
+                    root_dir = os.path.join(
+                        tmpdirname, f"epoch_{current_epoch}/rank_{global_rank}")
                     checkpoint_file_name = f"checkpoint_rank_{global_rank}"
-                    checkpoint_path = os.path.join(root_dir, f"rank_{global_rank}/")
+                    checkpoint_path = os.path.join(
+                        root_dir, f"rank_{global_rank}/")
                     accelerator.save_state(output_dir=checkpoint_path)
-                    shutil.make_archive(base_name=os.path.join(root_dir, checkpoint_file_name), format='zip', root_dir=checkpoint_path)
+                    shutil.make_archive(base_name=os.path.join(
+                        root_dir, checkpoint_file_name), format='zip', root_dir=checkpoint_path)
                     with open(os.path.join(root_dir, f"{checkpoint_file_name}.zip"), 'rb') as fd:
                         self.gs_api_client.add_checkpoint_resource(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id,
                                                                    epoch=current_epoch, payload_stream=fd,
@@ -109,7 +112,8 @@ class AbstractGymJob(StatefulComponent):
                     CheckpointResource.model.value: model_buffer.getvalue(),
                     CheckpointResource.optimizer.value: optimizer_buffer.getvalue(),
                     CheckpointResource.lr_scheduler.value: lr_scheduler_buffer.getvalue(),
-                    CheckpointResource.stateful_components.value: pickle.dumps(self.get_state())
+                    CheckpointResource.stateful_components.value: pickle.dumps(
+                        self.get_state())
                 }
 
                 for checkpoint_resource_key, checkpoint_resource_stream in payload_dict.items():
@@ -161,8 +165,7 @@ class AbstractGymJob(StatefulComponent):
                evaluation_result (EvaluationBatchResult): Object storing entire epoch infotmation.
                current_epoch (int): Current epoch number.
         """
-        experiment_status_logger.log_evaluation_results(
-            evaluation_result, current_epoch)
+        experiment_status_logger.log_evaluation_results(evaluation_result, current_epoch)
 
     def train_epoch_done_callback(self, num_epochs: int, current_epoch: int, model: NNModel, evaluation_step_routine: Callable,
                                   accelerator: Accelerator = None):
@@ -181,10 +184,11 @@ class AbstractGymJob(StatefulComponent):
         if current_epoch > 0:
             self.lr_scheduler.step()
 
-        checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=num_epochs,
-                                                                                                 current_epoch=current_epoch,
-                                                                                                 evaluation_result=evaluation_results)
         with NSTimer(key="checkpointing"):
+            checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=num_epochs,
+                                                                                                     current_epoch=current_epoch,
+                                                                                                     evaluation_result=evaluation_results)
+
             self.run_checkpointing(checkpointing_instruction, current_epoch=current_epoch, accelerator=accelerator)
 
         if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=current_epoch,

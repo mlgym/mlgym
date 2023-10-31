@@ -58,7 +58,7 @@ class StandardGymJob(AbstractGymJob):
         return model
 
     def _evaluation_step(self, current_epoch: int, device: torch.device) -> List[EvaluationBatchResult]:
-        """ 
+        """
         Evaluating the model.
 
         :params:

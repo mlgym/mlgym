@@ -33,8 +33,11 @@ class InferenceComponent:
         else:
             with NSTimer(key="train_forward_pass"):
                 forward_result = model.forward(batch.samples)
-        result_batch = InferenceResultBatch(targets=batch.targets, tags=batch.tags, predictions=forward_result)
-        return PredictPostprocessingComponent.post_process(result_batch, post_processors=post_processors)
+        
+        with NSTimer(key="eval_post_processing" if self.no_grad else "train_post_processing"):
+            result_batch = InferenceResultBatch(targets=batch.targets, tags=batch.tags, predictions=forward_result)
+            irb = PredictPostprocessingComponent.post_process(result_batch, post_processors=post_processors)
+        return irb
 
     def predict_data_loader(self, model: NNModel, dataset_loader: DatasetLoader) -> InferenceResultBatch:
         """
