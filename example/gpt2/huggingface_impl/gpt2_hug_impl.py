@@ -5,7 +5,7 @@ import torch
 from transformers import GPT2LMHeadModel, GPT2Config
 from typing import Dict
 from datasets import load_from_disk
-from transformers import DataCollatorForLanguageModeling, GPT2TokenizerFast, AdamW
+from transformers import DataCollatorForLanguageModeling, GPT2TokenizerFast
 from torch.utils.data import DataLoader
 import numpy as np
 import random
@@ -18,7 +18,7 @@ class GPT2():
         # Tell pytorch to run this model on the GPU.
         self.device = torch.device("cuda")
         self.model.cuda()
-        base_dir = os.path.join(list(os.path.dirname(__file__).split(os.sep)[0:-1]))
+        base_dir = os.path.join(os.sep, *list(os.path.dirname(__file__).split(os.sep)[0:-1]))
         tokenizer = GPT2TokenizerFast(tokenizer_file=os.path.join(base_dir,"tokenizer.json"))
         tokenizer.pad_token = tokenizer.eos_token
         data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
@@ -34,7 +34,7 @@ class GPT2():
         
         self.learning_rate = learning_rate
         self.epochs = epochs
-        self.optimizer = AdamW(self.model.parameters(), lr = learning_rate)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr = learning_rate)
     
     def format_time(self, elapsed):
         return str(datetime.timedelta(seconds=int(round((elapsed)))))
@@ -54,9 +54,9 @@ class GPT2():
 
             for step, batch in enumerate(self.train_dataloader):
 
-                b_input_ids = batch[0].to(device)
-                b_labels = batch[0].to(device)
-                b_masks = batch[1].to(device)
+                b_input_ids = batch['input_ids'].to(device)
+                b_labels = batch['input_ids'].to(device)
+                b_masks = batch['attention_mask'].to(device)
 
                 model.zero_grad()        
 
@@ -71,6 +71,11 @@ class GPT2():
                 batch_loss = loss.item()
                 total_train_loss += batch_loss
 
+                if step % 20 == 0 and not step == 0:
+
+                    elapsed = self.format_time(time.time() - t0)
+                    print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(self.train_dataloader), batch_loss, elapsed))
+
                 loss.backward()
 
                 self.optimizer.step()
@@ -79,14 +84,14 @@ class GPT2():
             avg_train_loss = total_train_loss / len(self.train_dataloader)       
         
             # Measure how long this epoch took.
-            training_time = self.format_time(time.time() - t0)
+            training_time = time.time() - t0
 
             print("")
             print(" Average training loss: {0:.2f}".format(avg_train_loss))
-            print(" Training epoch took: {:}".format(training_time))
+            print(" Training epoch took: {:}".format(self.format_time(training_time)))
             training_stats.append({"epoch": epoch_i, 
                                    "train_loss": avg_train_loss, 
-                                   "train_time": float(training_time)})
+                                   "train_time": training_time})
 
         return training_stats
 
@@ -102,9 +107,9 @@ class GPT2():
         # Evaluate data for one epoch
         for batch in dataloader:
 
-            b_input_ids = batch[0].to(device)
-            b_labels = batch[0].to(device)
-            b_masks = batch[1].to(device)
+            b_input_ids = batch['input_ids'].to(device)
+            b_labels = batch['input_ids'].to(device)
+            b_masks = batch['attention_mask'].to(device)
         
             with torch.no_grad():        
                 outputs  = model(b_input_ids, 
@@ -118,16 +123,16 @@ class GPT2():
             total_eval_loss += batch_loss
 
         avg_eval_loss = total_eval_loss / len(dataloader)
-        eval_time = self.format_time(time.time() - t0)
+        eval_time = time.time() - t0
         # Calcukate Perplexity
         perplexity = torch.exp(avg_eval_loss)
-        print(f" {eval_type} Loss: {avg_eval_loss}")
+        print(" {} Loss: {0:.2f}".format(eval_type, avg_eval_loss))
         print(" {} Perplexity: {0:.2f}".format(eval_type, perplexity))
-        print(f" {eval_type} took: {eval_time}")
+        print(" {} took: {:}".format(eval_type, self.format_time(eval_time)))
 
         return {f"{eval_type}_loss": avg_eval_loss, 
                 f"{eval_type}_perplexity": perplexity,
-                f"{eval_type}_time": float(eval_time)}
+                f"{eval_type}_time": eval_time}
     
     def evaluate(self):
         eval_results = []
