@@ -31,6 +31,7 @@ class GPT2():
     
         validation_tokenized_dataset = load_from_disk(os.path.join(base_dir, f"{dataset_name}-tokenized", "validation"))
         self.validation_dataloader = DataLoader(validation_tokenized_dataset, shuffle=True, batch_size=batch_size, collate_fn=data_collator)
+        
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.optimizer = AdamW(self.model.parameters(), lr = learning_rate)
@@ -70,27 +71,32 @@ class GPT2():
                 batch_loss = loss.item()
                 total_train_loss += batch_loss
 
-            loss.backward()
+                loss.backward()
 
-            self.optimizer.step()
+                self.optimizer.step()
 
-        # Calculate the average loss over all of the batches.
-        avg_train_loss = total_train_loss / len(self.train_dataloader)       
-    
-        # Measure how long this epoch took.
-        training_time = self.format_time(time.time() - t0)
+            # Calculate the average loss over all of the batches.
+            avg_train_loss = total_train_loss / len(self.train_dataloader)       
+        
+            # Measure how long this epoch took.
+            training_time = self.format_time(time.time() - t0)
 
-        print("")
-        print(" Average training loss: {0:.2f}".format(avg_train_loss))
-        print(" Training epoch took: {:}".format(training_time))
+            print("")
+            print(" Average training loss: {0:.2f}".format(avg_train_loss))
+            print(" Training epoch took: {:}".format(training_time))
+            training_stats.append({"epoch": epoch_i, 
+                                   "train_loss": avg_train_loss, 
+                                   "train_time": float(training_time)})
+
+        return training_stats
 
     def eval(self, dataloader, eval_type:str):
         print("")
         print(f"Running {eval_type}...")
         model = self.model.to(self.device)
         device = self.device
-        t0 = time.time()
 
+        t0 = time.time()
         model.eval()
         total_eval_loss = 0
         # Evaluate data for one epoch
@@ -111,11 +117,24 @@ class GPT2():
             batch_loss = loss.item()
             total_eval_loss += batch_loss
 
-        avg_val_loss = total_eval_loss / len(dataloader)
+        avg_eval_loss = total_eval_loss / len(dataloader)
         eval_time = self.format_time(time.time() - t0)
-
-        print(f" {eval_type} Loss: {avg_val_loss}")
+        # Calcukate Perplexity
+        perplexity = torch.exp(avg_eval_loss)
+        print(f" {eval_type} Loss: {avg_eval_loss}")
+        print(" {} Perplexity: {0:.2f}".format(eval_type, perplexity))
         print(f" {eval_type} took: {eval_time}")
+
+        return {f"{eval_type}_loss": avg_eval_loss, 
+                f"{eval_type}_perplexity": perplexity,
+                f"{eval_type}_time": float(eval_time)}
+    
+    def evaluate(self):
+        eval_results = []
+        eval_results.append(self.eval(dataloader=self.train_dataloader, eval_type= "train"))
+        eval_results.append(self.eval(dataloader=self.test_dataloader, eval_type= "test"))
+        eval_results.append(self.eval(dataloader=self.validation_dataloader, eval_type= "validation"))
+        return eval_results
 
 if __name__ == '__main__':
     dataset_name = "wikitext-2-raw-v1"
@@ -135,3 +154,6 @@ if __name__ == '__main__':
                 epochs=EPOCHS,
                 batch_size=BATCH_SIZE,
                 dataset_name=dataset_name)
+    
+    train_stats = gpt2.train()
+    eval_stats = gpt2.evaluate()
