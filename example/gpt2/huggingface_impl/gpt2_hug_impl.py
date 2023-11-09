@@ -1,4 +1,6 @@
 import datetime
+import json
+import math
 import os
 import time
 import torch
@@ -17,7 +19,7 @@ class GPT2():
         self.model: GPT2LMHeadModel = GPT2LMHeadModel.from_pretrained(gpt_version, config=config)
         # Tell pytorch to run this model on the GPU.
         self.device = torch.device("cuda")
-        self.model.cuda()
+        self.model.to("cuda")
         base_dir = os.path.join(os.sep, *list(os.path.dirname(__file__).split(os.sep)[0:-1]))
         tokenizer = GPT2TokenizerFast(tokenizer_file=os.path.join(base_dir,"tokenizer.json"))
         tokenizer.pad_token = tokenizer.eos_token
@@ -39,9 +41,9 @@ class GPT2():
     def format_time(self, elapsed):
         return str(datetime.timedelta(seconds=int(round((elapsed)))))
 
-    def train(self):
-        training_stats = []
-        model = self.model.to(self.device)
+    def run(self):
+        run_stats = []
+        self.model.to(self.device)
         device = self.device
         for epoch_i in range(0, self.epochs):
             print("")
@@ -50,7 +52,7 @@ class GPT2():
 
             t0 = time.time()
             total_train_loss = 0
-            model.train()
+            self.model.train()
 
             for step, batch in enumerate(self.train_dataloader):
 
@@ -58,9 +60,9 @@ class GPT2():
                 b_labels = batch['input_ids'].to(device)
                 b_masks = batch['attention_mask'].to(device)
 
-                model.zero_grad()        
+                self.model.zero_grad()        
 
-                outputs = model(  b_input_ids,
+                outputs = self.model(  b_input_ids,
                             labels=b_labels, 
                             attention_mask = b_masks,
                             token_type_ids=None
@@ -71,7 +73,7 @@ class GPT2():
                 batch_loss = loss.item()
                 total_train_loss += batch_loss
 
-                if step % 20 == 0 and not step == 0:
+                if step % 50 == 0 and not step == 0:
 
                     elapsed = self.format_time(time.time() - t0)
                     print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(self.train_dataloader), batch_loss, elapsed))
@@ -89,30 +91,30 @@ class GPT2():
             print("")
             print(" Average training loss: {0:.2f}".format(avg_train_loss))
             print(" Training epoch took: {:}".format(self.format_time(training_time)))
-            training_stats.append({"epoch": epoch_i, 
-                                   "train_loss": avg_train_loss, 
-                                   "train_time": training_time})
+            run_stats.append(self.evaluate_and_log(epoch_i=epoch_i,
+                                                    avg_train_loss=avg_train_loss,
+                                                    training_time=training_time))
 
-        return training_stats
+        return run_stats
 
     def eval(self, dataloader, eval_type:str):
         print("")
-        print(f"Running {eval_type}...")
-        model = self.model.to(self.device)
+        print(f"Running evaluation for {eval_type} split...")
+        self.model.to(self.device)
         device = self.device
 
         t0 = time.time()
-        model.eval()
+        self.model.eval()
         total_eval_loss = 0
         # Evaluate data for one epoch
-        for batch in dataloader:
+        for step, batch in enumerate(dataloader):
 
             b_input_ids = batch['input_ids'].to(device)
             b_labels = batch['input_ids'].to(device)
             b_masks = batch['attention_mask'].to(device)
         
             with torch.no_grad():        
-                outputs  = model(b_input_ids, 
+                outputs  = self.model(b_input_ids, 
 #                               token_type_ids=None, 
                                 attention_mask = b_masks,
                                 labels=b_labels)
@@ -122,31 +124,51 @@ class GPT2():
             batch_loss = loss.item()
             total_eval_loss += batch_loss
 
-        avg_eval_loss = total_eval_loss / len(dataloader)
-        eval_time = time.time() - t0
-        # Calcukate Perplexity
-        perplexity = torch.exp(avg_eval_loss)
-        print(" {} Loss: {0:.2f}".format(eval_type, avg_eval_loss))
-        print(" {} Perplexity: {0:.2f}".format(eval_type, perplexity))
-        print(" {} took: {:}".format(eval_type, self.format_time(eval_time)))
+            if step % 50 == 0 and not step == 0:
 
-        return {f"{eval_type}_loss": avg_eval_loss, 
-                f"{eval_type}_perplexity": perplexity,
-                f"{eval_type}_time": eval_time}
+                elapsed = self.format_time(time.time() - t0)
+                print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(self.train_dataloader), batch_loss, elapsed))
+
+        avg_eval_loss = total_eval_loss / len(dataloader)
+        # Calcukate Perplexity
+        perplexity = math.exp(avg_eval_loss)
+        eval_time = time.time() - t0
+        print(" {0} Loss: {1:.2f}".format(eval_type, avg_eval_loss))
+        print(" {0} Perplexity: {1:.2f}".format(eval_type, perplexity))
+        print(" {0} took: {1:}".format(eval_type, self.format_time(eval_time)))
+
+        return avg_eval_loss, perplexity, eval_time
     
-    def evaluate(self):
-        eval_results = []
-        eval_results.append(self.eval(dataloader=self.train_dataloader, eval_type= "train"))
-        eval_results.append(self.eval(dataloader=self.test_dataloader, eval_type= "test"))
-        eval_results.append(self.eval(dataloader=self.validation_dataloader, eval_type= "validation"))
-        return eval_results
+    def evaluate_and_log(self, epoch_i:int, avg_train_loss:float, training_time:float):
+        total_eval_time = 0.0
+        eval_result_payload = {}
+
+        eval_prep = []
+        eval_prep.append({"eval_type": "train", "dataloader": self.train_dataloader})
+        eval_prep.append({"eval_type": "test", "dataloader": self.test_dataloader})
+        eval_prep.append({"eval_type": "validation", "dataloader": self.validation_dataloader})
+
+        eval_result_payload["epoch"] = epoch_i
+        eval_result_payload["training_loss"] = avg_train_loss
+        eval_result_payload["training_time"] = training_time      
+        for eval_t in eval_prep:
+            avg_eval_loss, perplexity, eval_time = self.eval(dataloader=eval_t["dataloader"], eval_type= eval_t["eval_type"])
+            eval_result_payload[f"eval_{eval_t['eval_type']}_split_loss"] = avg_eval_loss
+            eval_result_payload[f"eval_{eval_t['eval_type']}_split_perplexity"] = perplexity
+            eval_result_payload[f"eval_{eval_t['eval_type']}_split_time"] = eval_time
+            total_eval_time += eval_time
+
+        eval_result_payload["total_eval_time"] = total_eval_time
+        return eval_result_payload
 
 if __name__ == '__main__':
+    gridsearch_id = datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    log_path = os.path.join(os.sep, os.path.dirname(__file__), "logs", f"{gridsearch_id}.json")
     dataset_name = "wikitext-2-raw-v1"
     gpt_version = "gpt2"
     LR = 1e-4
     BATCH_SIZE = 8
-    EPOCHS = 20
+    EPOCHS = 1
     # Set the seed value all over the place to make this reproducible.
     seed_val = 42
     random.seed(seed_val)
@@ -160,5 +182,7 @@ if __name__ == '__main__':
                 batch_size=BATCH_SIZE,
                 dataset_name=dataset_name)
     
-    train_stats = gpt2.train()
-    eval_stats = gpt2.evaluate()
+    log_stats = gpt2.run()
+    with open(log_path, "w") as outfile:
+        json.dump(log_stats, outfile)
+    
