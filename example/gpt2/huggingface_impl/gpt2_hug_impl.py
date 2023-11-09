@@ -163,7 +163,8 @@ class GPT2():
 
 if __name__ == '__main__':
     gridsearch_id = datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
-    log_path = os.path.join(os.sep, os.path.dirname(__file__), "logs", f"{gridsearch_id}.json")
+    log_path = os.path.join(os.path.dirname(__file__), "logs", f"{gridsearch_id}.json")
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
     dataset_name = "wikitext-2-raw-v1"
     gpt_version = "gpt2"
     LR = 1e-4
