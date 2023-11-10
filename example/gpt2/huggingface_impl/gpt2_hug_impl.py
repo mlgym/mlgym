@@ -19,6 +19,7 @@ class GPT2():
         self.model: GPT2LMHeadModel = GPT2LMHeadModel.from_pretrained(gpt_version, config=config)
         # Tell pytorch to run this model on the GPU.
         self.device = torch.device("cuda")
+        self.model= torch.nn.DataParallel(self.model)
         self.model.to("cuda")
         base_dir = os.path.join(os.sep, *list(os.path.dirname(__file__).split(os.sep)[0:-1]))
         tokenizer = GPT2TokenizerFast(tokenizer_file=os.path.join(base_dir,"tokenizer.json"))
@@ -68,7 +69,7 @@ class GPT2():
                             token_type_ids=None
                         )
 
-                loss = outputs[0]  
+                loss = outputs[0].mean()
 
                 batch_loss = loss.item()
                 total_train_loss += batch_loss
@@ -119,7 +120,7 @@ class GPT2():
                                 attention_mask = b_masks,
                                 labels=b_labels)
           
-                loss = outputs[0]  
+                loss = outputs[0].mean()
             
             batch_loss = loss.item()
             total_eval_loss += batch_loss
@@ -163,13 +164,14 @@ class GPT2():
 
 if __name__ == '__main__':
     gridsearch_id = datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
-    log_path = os.path.join(os.path.dirname(__file__), "logs", f"{gridsearch_id}.json")
+    device_count = torch.cuda.device_count()
+    log_path = os.path.join(os.path.dirname(__file__), "logs", f"{gridsearch_id}_{device_count}.json")
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     dataset_name = "wikitext-2-raw-v1"
     gpt_version = "gpt2"
     LR = 1e-4
     BATCH_SIZE = 8
-    EPOCHS = 1
+    EPOCHS = 10
     # Set the seed value all over the place to make this reproducible.
     seed_val = 42
     random.seed(seed_val)
