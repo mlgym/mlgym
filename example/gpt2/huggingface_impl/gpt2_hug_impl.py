@@ -5,7 +5,6 @@ import os
 import time
 import torch
 from transformers import GPT2LMHeadModel, GPT2Config
-from typing import Dict
 from datasets import load_from_disk
 from transformers import DataCollatorForLanguageModeling, GPT2TokenizerFast
 from torch.utils.data import DataLoader
@@ -19,7 +18,7 @@ class GPT2():
         self.model: GPT2LMHeadModel = GPT2LMHeadModel.from_pretrained(gpt_version, config=config)
         # Tell pytorch to run this model on the GPU.
         self.device = torch.device("cuda")
-        self.model= torch.nn.DataParallel(self.model)
+        self.model= torch.nn.parallel.DistributedDataParallel(self.model)
         self.model.to("cuda")
         base_dir = os.path.join(os.sep, *list(os.path.dirname(__file__).split(os.sep)[0:-1]))
         tokenizer = GPT2TokenizerFast(tokenizer_file=os.path.join(base_dir,"tokenizer.json"))
@@ -92,7 +91,7 @@ class GPT2():
                 batch_loss = loss.item()
                 total_train_loss += batch_loss
 
-                if step % 50 == 0 and not step == 0:
+                if step % NUM_BATCHES_EPOCH == 0 and not step == 0:
 
                     elapsed = self.format_time(time.time() - t0)
                     print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(self.train_dataloader), batch_loss, elapsed))
@@ -225,7 +224,8 @@ if __name__ == '__main__':
     gpt_version = "gpt2"
     LR = 1e-4
     BATCH_SIZE = 8
-    EPOCHS = 10
+    NUM_BATCHES_EPOCH = 100
+    EPOCHS = 500
     # Set the seed value all over the place to make this reproducible.
     seed_val = 42
     random.seed(seed_val)
