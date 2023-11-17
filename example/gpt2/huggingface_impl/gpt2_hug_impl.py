@@ -18,9 +18,9 @@ class GPT2():
         self.model: GPT2LMHeadModel = GPT2LMHeadModel.from_pretrained(gpt_version, config=config)
         # Tell pytorch to run this model on the GPU.
         self.device = torch.device("cuda")
-        self.model= torch.nn.parallel.DistributedDataParallel(self.model)
+        self.model= torch.nn.DataParallel(self.model)
         self.model.to("cuda")
-        base_dir = os.path.join(os.sep, *list(os.path.dirname(__file__).split(os.sep)[0:-1]))
+        base_dir = os.path.join(os.sep, *list(os.path.dirname(__file__).split(os.sep)[0:-1]), "data")
         tokenizer = GPT2TokenizerFast(tokenizer_file=os.path.join(base_dir,"tokenizer.json"))
         tokenizer.pad_token = tokenizer.eos_token
         data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
@@ -28,8 +28,8 @@ class GPT2():
         train_tokenized_dataset = load_from_disk(os.path.join(base_dir, f"{dataset_name}-tokenized", "train"))
         self.train_dataloader = DataLoader(train_tokenized_dataset, shuffle=True, batch_size=batch_size, collate_fn=data_collator)
     
-        test_tokenized_dataset = load_from_disk(os.path.join(base_dir, f"{dataset_name}-tokenized", "test"))
-        self.test_dataloader = DataLoader(test_tokenized_dataset, shuffle=True, batch_size=batch_size, collate_fn=data_collator)
+        # test_tokenized_dataset = load_from_disk(os.path.join(base_dir, f"{dataset_name}-tokenized", "test"))
+        # self.test_dataloader = DataLoader(test_tokenized_dataset, shuffle=True, batch_size=batch_size, collate_fn=data_collator)
     
         validation_tokenized_dataset = load_from_disk(os.path.join(base_dir, f"{dataset_name}-tokenized", "validation"))
         self.validation_dataloader = DataLoader(validation_tokenized_dataset, shuffle=True, batch_size=batch_size, collate_fn=data_collator)
@@ -56,7 +56,10 @@ class GPT2():
         run_stats = []
         self.model.to(self.device)
         device = self.device
+        flag_exit = False
         for epoch_i in range(0, self.epochs):
+            if flag_exit:
+                break
             print("")
             print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, self.epochs))
             print('Training...')
@@ -91,10 +94,11 @@ class GPT2():
                 batch_loss = loss.item()
                 total_train_loss += batch_loss
 
-                if step % NUM_BATCHES_EPOCH == 0 and not step == 0:
-
+                if step % 50 == 0 and not step == 0:
+                    if step >= NUM_BATCHES_EPOCH:
+                        el_step = step - NUM_BATCHES_EPOCH
                     elapsed = self.format_time(time.time() - t0)
-                    print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(self.train_dataloader), batch_loss, elapsed))
+                    print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(el_step, NUM_BATCHES_EPOCH, batch_loss, elapsed))
 
                 tbp_t0 = time.time()
                 loss.backward()
@@ -104,32 +108,51 @@ class GPT2():
                 self.optimizer.step()
                 tos = tos + (time.time() - tos_t0)
 
-            # Calculate the average loss over all of the batches.
-            avg_train_loss = total_train_loss / len(self.train_dataloader)       
+                if step % NUM_BATCHES_EPOCH == 0 and not step == 0:
+
+                    # Calculate the average loss over all of the batches.
+                    avg_train_loss = total_train_loss / NUM_BATCHES_EPOCH       
         
-            # Measure how long this epoch took.
-            training_time = time.time() - t0
+                    # Measure how long this epoch took.
+                    training_time = time.time() - t0
 
-            check_t0 = time.time()
-            torch.save({
-            'epoch': epoch_i,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict()
-            }, CHECK_PATH)
-            checkpointing = time.time() - check_t0
+                    check_t0 = time.time()
+                    torch.save({
+                    'epoch': epoch_i,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict': self.optimizer.state_dict()
+                    }, CHECK_PATH)
+                    checkpointing = time.time() - check_t0
 
-            print("")
-            print(" Average training loss: {0:.2f}".format(avg_train_loss))
-            print(" Training epoch took: {:}".format(self.format_time(training_time)))
-            run_stats.append(self.evaluate_and_log(epoch_i=epoch_i,
-                                                    avg_train_loss=avg_train_loss,
-                                                    training_time=training_time,
-                                                    train_forward_pass=tfp,
-                                                    train_backward_pass=tbp,
-                                                    train_opt_step=tos,
-                                                    train_pp=tpp,
-                                                    check_time=checkpointing))
+                    print("")
+                    print(" Average training loss: {0:.2f}".format(avg_train_loss))
+                    print(" Training epoch took: {:}".format(self.format_time(training_time)))
+                    run_stats.append(self.evaluate_and_log( epoch_i=epoch_i,
+                                                            avg_train_loss=avg_train_loss,
+                                                            training_time=training_time,
+                                                            train_forward_pass=tfp,
+                                                            train_backward_pass=tbp,
+                                                            train_opt_step=tos,
+                                                            train_pp=tpp,
+                                                            check_time=checkpointing))
+                    
+                    epoch_i += 1
+                    if epoch_i == self.epochs:
+                        flag_exit = True
+                        break
 
+                    print("")
+                    print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, self.epochs))
+                    print('Training...')
+
+                    t0 = time.time()
+                    total_train_loss = 0.0
+                    tfp = 0.0
+                    tpp = 0.0
+                    tos = 0.0
+                    tbp = 0.0
+                    self.model.train()
+                    
         return run_stats
 
     def eval(self, dataloader, eval_type:str):
@@ -185,12 +208,11 @@ class GPT2():
     
     def evaluate_and_log(self, epoch_i:int, avg_train_loss:float, training_time:float, train_forward_pass: float, 
                          train_backward_pass: float, train_opt_step: float, train_pp: float, check_time: float):
-        total_eval_time = 0.0
         eval_result_payload = {}
 
         eval_prep = []
-        eval_prep.append({"eval_type": "train", "dataloader": self.train_dataloader})
-        eval_prep.append({"eval_type": "test", "dataloader": self.test_dataloader})
+        # eval_prep.append({"eval_type": "train", "dataloader": self.train_dataloader})
+        # eval_prep.append({"eval_type": "test", "dataloader": self.test_dataloader})
         eval_prep.append({"eval_type": "validation", "dataloader": self.validation_dataloader})
 
         eval_result_payload["epoch"] = epoch_i
@@ -198,29 +220,28 @@ class GPT2():
         eval_result_payload["training_time"] = training_time
         eval_result_payload["train_forward_pass"] = train_forward_pass
         eval_result_payload["train_backward_pass"] = train_backward_pass
-        eval_result_payload["train_opt_step"] = train_opt_step
-        eval_result_payload["train_pp"] = train_pp
+        eval_result_payload["train_optimizer_step"] = train_opt_step
+        eval_result_payload["train_post_processing"] = train_pp
         eval_result_payload["checkpointing"] = check_time
         for eval_t in eval_prep:
             avg_eval_loss, perplexity, eval_time, eval_pp, eval_forward_pass = self.eval(dataloader=eval_t["dataloader"], eval_type= eval_t["eval_type"])
             eval_result_payload[f"eval_{eval_t['eval_type']}_split_loss"] = avg_eval_loss
             eval_result_payload[f"eval_{eval_t['eval_type']}_split_perplexity"] = perplexity
-            eval_result_payload[f"eval_{eval_t['eval_type']}_split_time"] = eval_time
-            eval_result_payload[f"eval_{eval_t['eval_type']}_split_pp"] = eval_pp
-            eval_result_payload[f"eval_{eval_t['eval_type']}_split_forward pass"] = eval_forward_pass
-            total_eval_time += eval_time
+            eval_result_payload[f"eval_time"] = eval_time
+            eval_result_payload[f"eval_post_processing"] = eval_pp
+            eval_result_payload[f"eval_forward_pass"] = eval_forward_pass
 
-        eval_result_payload["total_eval_time"] = total_eval_time
+        eval_result_payload["total_experiment_time"] = training_time + eval_time + check_time
         return eval_result_payload
 
 if __name__ == '__main__':
-    gridsearch_id = datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
     device_count = torch.cuda.device_count()
-    CHECK_PATH = os.path.join(os.path.dirname(__file__), "checkpoints", f"{gridsearch_id}_{device_count}.pt")
-    log_path = os.path.join(os.path.dirname(__file__), "logs", f"{gridsearch_id}_{device_count}.json")
+    CHECK_PATH = os.path.join(os.path.dirname(__file__), "checkpoints", f"rank_{device_count}.pth")
+    log_path = os.path.join(os.path.dirname(__file__), "logs", f"rank_{device_count}.json")
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     os.makedirs(os.path.dirname(CHECK_PATH), exist_ok=True)
-    dataset_name = "wikitext-2-raw-v1"
+    # dataset_name = "wikitext-2-raw-v1"
+    dataset_name = "wikitext-103-raw-v1" 
     gpt_version = "gpt2"
     LR = 1e-4
     BATCH_SIZE = 8
