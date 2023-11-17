@@ -41,6 +41,17 @@ class GPT2():
     
     def format_time(self, elapsed):
         return str(datetime.timedelta(seconds=int(round((elapsed)))))
+    
+    def clm_loss(self, lm_logits, labels):
+        loss_fn = torch.nn.CrossEntropyLoss()
+        # move labels to correct device to enable model parallelism
+        labels = labels.to(lm_logits.device)
+        # Shift so that tokens < n predict n
+        shift_logits = lm_logits[..., :-1, :].contiguous()
+        shift_labels = labels[..., 1:].contiguous()
+        # Flatten the tokens
+        loss = loss_fn(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+        return loss
 
     def run(self):
         run_stats = []
@@ -52,24 +63,31 @@ class GPT2():
             print('Training...')
 
             t0 = time.time()
-            total_train_loss = 0
+            total_train_loss = 0.0
+            tfp = 0.0
+            tpp = 0.0
+            tos = 0.0
+            tbp = 0.0
             self.model.train()
-
             for step, batch in enumerate(self.train_dataloader):
 
                 b_input_ids = batch['input_ids'].to(device)
                 b_labels = batch['input_ids'].to(device)
                 b_masks = batch['attention_mask'].to(device)
 
-                self.model.zero_grad()        
+                self.model.zero_grad()
 
-                outputs = self.model(  b_input_ids,
-                            labels=b_labels, 
+                tfp_t0 = time.time()
+                outputs = self.model( b_input_ids,
                             attention_mask = b_masks,
                             token_type_ids=None
                         )
+                tfp = tfp + (time.time() - tfp_t0)
+                logits = outputs.logits
 
-                loss = outputs[0].mean()
+                tpp_t0 = time.time()
+                loss = self.clm_loss(lm_logits=logits, labels=b_labels)
+                tpp = tpp + (time.time() - tpp_t0)
 
                 batch_loss = loss.item()
                 total_train_loss += batch_loss
@@ -79,9 +97,13 @@ class GPT2():
                     elapsed = self.format_time(time.time() - t0)
                     print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(self.train_dataloader), batch_loss, elapsed))
 
+                tbp_t0 = time.time()
                 loss.backward()
+                tbp = tbp + (time.time() - tbp_t0)
 
+                tos_t0 = time.time()
                 self.optimizer.step()
+                tos = tos + (time.time() - tos_t0)
 
             # Calculate the average loss over all of the batches.
             avg_train_loss = total_train_loss / len(self.train_dataloader)       
@@ -89,12 +111,25 @@ class GPT2():
             # Measure how long this epoch took.
             training_time = time.time() - t0
 
+            check_t0 = time.time()
+            torch.save({
+            'epoch': epoch_i,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict()
+            }, CHECK_PATH)
+            checkpointing = time.time() - check_t0
+
             print("")
             print(" Average training loss: {0:.2f}".format(avg_train_loss))
             print(" Training epoch took: {:}".format(self.format_time(training_time)))
             run_stats.append(self.evaluate_and_log(epoch_i=epoch_i,
                                                     avg_train_loss=avg_train_loss,
-                                                    training_time=training_time))
+                                                    training_time=training_time,
+                                                    train_forward_pass=tfp,
+                                                    train_backward_pass=tbp,
+                                                    train_opt_step=tos,
+                                                    train_pp=tpp,
+                                                    check_time=checkpointing))
 
         return run_stats
 
@@ -107,6 +142,8 @@ class GPT2():
         t0 = time.time()
         self.model.eval()
         total_eval_loss = 0
+        efp = 0.0
+        epp = 0.0
         # Evaluate data for one epoch
         for step, batch in enumerate(dataloader):
 
@@ -114,13 +151,18 @@ class GPT2():
             b_labels = batch['input_ids'].to(device)
             b_masks = batch['attention_mask'].to(device)
         
-            with torch.no_grad():        
-                outputs  = self.model(b_input_ids, 
-#                               token_type_ids=None, 
-                                attention_mask = b_masks,
-                                labels=b_labels)
-          
-                loss = outputs[0].mean()
+            with torch.no_grad():
+                efp_t0 = time.time()
+                outputs = self.model( b_input_ids,
+                            attention_mask = b_masks,
+                            token_type_ids=None
+                        )
+                efp = efp + (time.time() - efp_t0)
+
+                logits = outputs.logits
+                epp_t0 = time.time()
+                loss = self.clm_loss(lm_logits=logits, labels=b_labels)
+                epp = epp + (time.time() - epp_t0)
             
             batch_loss = loss.item()
             total_eval_loss += batch_loss
@@ -132,15 +174,18 @@ class GPT2():
 
         avg_eval_loss = total_eval_loss / len(dataloader)
         # Calcukate Perplexity
+        epp_t0 = time.time()
         perplexity = math.exp(avg_eval_loss)
+        epp = epp + (time.time() - epp_t0)
         eval_time = time.time() - t0
         print(" {0} Loss: {1:.2f}".format(eval_type, avg_eval_loss))
         print(" {0} Perplexity: {1:.2f}".format(eval_type, perplexity))
         print(" {0} took: {1:}".format(eval_type, self.format_time(eval_time)))
 
-        return avg_eval_loss, perplexity, eval_time
+        return avg_eval_loss, perplexity, eval_time, epp, efp
     
-    def evaluate_and_log(self, epoch_i:int, avg_train_loss:float, training_time:float):
+    def evaluate_and_log(self, epoch_i:int, avg_train_loss:float, training_time:float, train_forward_pass: float, 
+                         train_backward_pass: float, train_opt_step: float, train_pp: float, check_time: float):
         total_eval_time = 0.0
         eval_result_payload = {}
 
@@ -151,12 +196,19 @@ class GPT2():
 
         eval_result_payload["epoch"] = epoch_i
         eval_result_payload["training_loss"] = avg_train_loss
-        eval_result_payload["training_time"] = training_time      
+        eval_result_payload["training_time"] = training_time
+        eval_result_payload["train_forward_pass"] = train_forward_pass
+        eval_result_payload["train_backward_pass"] = train_backward_pass
+        eval_result_payload["train_opt_step"] = train_opt_step
+        eval_result_payload["train_pp"] = train_pp
+        eval_result_payload["checkpointing"] = check_time
         for eval_t in eval_prep:
-            avg_eval_loss, perplexity, eval_time = self.eval(dataloader=eval_t["dataloader"], eval_type= eval_t["eval_type"])
+            avg_eval_loss, perplexity, eval_time, eval_pp, eval_forward_pass = self.eval(dataloader=eval_t["dataloader"], eval_type= eval_t["eval_type"])
             eval_result_payload[f"eval_{eval_t['eval_type']}_split_loss"] = avg_eval_loss
             eval_result_payload[f"eval_{eval_t['eval_type']}_split_perplexity"] = perplexity
             eval_result_payload[f"eval_{eval_t['eval_type']}_split_time"] = eval_time
+            eval_result_payload[f"eval_{eval_t['eval_type']}_split_pp"] = eval_pp
+            eval_result_payload[f"eval_{eval_t['eval_type']}_split_forward pass"] = eval_forward_pass
             total_eval_time += eval_time
 
         eval_result_payload["total_eval_time"] = total_eval_time
@@ -165,8 +217,10 @@ class GPT2():
 if __name__ == '__main__':
     gridsearch_id = datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
     device_count = torch.cuda.device_count()
+    CHECK_PATH = os.path.join(os.path.dirname(__file__), "checkpoints", f"{gridsearch_id}_{device_count}.pt")
     log_path = os.path.join(os.path.dirname(__file__), "logs", f"{gridsearch_id}_{device_count}.json")
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    os.makedirs(os.path.dirname(CHECK_PATH), exist_ok=True)
     dataset_name = "wikitext-2-raw-v1"
     gpt_version = "gpt2"
     LR = 1e-4
