@@ -129,4 +129,5 @@ event_storage
 *.arrow
 transformer/
 core.*
-example/gpt2/wikitext-2-raw-v1-tokenized
+example/gpt2/data/
+example/gpt2/huggingface_impl/checkpoints/
