@@ -10,16 +10,20 @@ from transformers import DataCollatorForLanguageModeling, GPT2TokenizerFast
 from torch.utils.data import DataLoader
 import numpy as np
 import random
+import torch.distributed as dist
+from torch.utils.data.distributed import DistributedSampler
+import torch.multiprocessing as mp
 
 class GPT2():
-    def __init__(self, gpt_version: str, learning_rate: float, epochs: int, batch_size: int, dataset_name: str):
-        
+    def __init__(self, gpt_version: str, learning_rate: float, epochs: int, batch_size: int, dataset_name: str, rank, world_size):
+        # self.setup(rank, world_size)
         config = GPT2Config.from_pretrained(gpt_version, output_hidden_stages=False)
         self.model: GPT2LMHeadModel = GPT2LMHeadModel.from_pretrained(gpt_version, config=config)
         # Tell pytorch to run this model on the GPU.
         self.device = torch.device("cuda")
-        self.model= torch.nn.DataParallel(self.model)
-        self.model.to("cuda")
+        self.model.to(self.device)
+        # self.model= torch.nn.parallel.DistributedDataParallel(self.model, device_ids=[rank])
+        self.model = torch.nn.DataParallel(self.model)
         base_dir = os.path.join(os.sep, *list(os.path.dirname(__file__).split(os.sep)[0:-1]), "data")
         tokenizer = GPT2TokenizerFast(tokenizer_file=os.path.join(base_dir,"tokenizer.json"))
         tokenizer.pad_token = tokenizer.eos_token
@@ -27,17 +31,37 @@ class GPT2():
 
         train_tokenized_dataset = load_from_disk(os.path.join(base_dir, f"{dataset_name}-tokenized", "train"))
         self.train_dataloader = DataLoader(train_tokenized_dataset, shuffle=True, batch_size=batch_size, collate_fn=data_collator)
-    
+        # self.train_dataloader = self.prepare(rank = rank, world_size= world_size, dataset= train_tokenized_dataset, 
+        #                                      data_collator= data_collator, batch_size= batch_size)
+        
         # test_tokenized_dataset = load_from_disk(os.path.join(base_dir, f"{dataset_name}-tokenized", "test"))
         # self.test_dataloader = DataLoader(test_tokenized_dataset, shuffle=True, batch_size=batch_size, collate_fn=data_collator)
     
         validation_tokenized_dataset = load_from_disk(os.path.join(base_dir, f"{dataset_name}-tokenized", "validation"))
         self.validation_dataloader = DataLoader(validation_tokenized_dataset, shuffle=True, batch_size=batch_size, collate_fn=data_collator)
-        
+        # self.validation_dataloader = self.prepare(rank = rank, world_size= world_size, dataset= validation_tokenized_dataset,
+        #                                           data_collator=data_collator, batch_size= batch_size)
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = learning_rate)
     
+    def setup(self, rank, world_size):
+        os.environ['MASTER_ADDR'] = 'localhost'
+        os.environ['MASTER_PORT'] = '12355'
+        if world_size > 1:
+            backend = "nccl"
+        else:
+            backend = "gloo"
+        dist.init_process_group(backend, rank=rank, world_size=world_size)
+    
+    def cleanup():
+        dist.destroy_process_group()
+
+    def prepare(self, rank, world_size, dataset, batch_size, data_collator, pin_memory=False, num_workers=0):
+        sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=False, drop_last=False)
+        dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=pin_memory, num_workers=num_workers, drop_last=False, shuffle=False, sampler=sampler, collate_fn=data_collator)
+        return dataloader
+
     def format_time(self, elapsed):
         return str(datetime.timedelta(seconds=int(round((elapsed)))))
     
@@ -56,10 +80,9 @@ class GPT2():
         run_stats = []
         self.model.to(self.device)
         device = self.device
-        flag_exit = False
-        for epoch_i in range(0, self.epochs):
-            if flag_exit:
-                break
+        flag_run = True
+        epoch_i = 0
+        while flag_run:
             print("")
             print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, self.epochs))
             print('Training...')
@@ -71,6 +94,7 @@ class GPT2():
             tos = 0.0
             tbp = 0.0
             self.model.train()
+            # self.train_dataloader.sampler.set_epoch(epoch_i)
             for step, batch in enumerate(self.train_dataloader):
 
                 b_input_ids = batch['input_ids'].to(device)
@@ -96,7 +120,10 @@ class GPT2():
 
                 if step % 50 == 0 and not step == 0:
                     if step >= NUM_BATCHES_EPOCH:
-                        el_step = step - NUM_BATCHES_EPOCH
+                        el_step = step - (math.floor(step/NUM_BATCHES_EPOCH) * NUM_BATCHES_EPOCH)
+                        if el_step == 0: el_step = 100
+                    else:
+                        el_step = step
                     elapsed = self.format_time(time.time() - t0)
                     print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(el_step, NUM_BATCHES_EPOCH, batch_loss, elapsed))
 
@@ -138,7 +165,7 @@ class GPT2():
                     
                     epoch_i += 1
                     if epoch_i == self.epochs:
-                        flag_exit = True
+                        flag_run = False
                         break
 
                     print("")
@@ -152,7 +179,8 @@ class GPT2():
                     tos = 0.0
                     tbp = 0.0
                     self.model.train()
-                    
+
+        # self.cleanup()
         return run_stats
 
     def eval(self, dataloader, eval_type:str):
@@ -192,7 +220,7 @@ class GPT2():
             if step % 50 == 0 and not step == 0:
 
                 elapsed = self.format_time(time.time() - t0)
-                print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(self.train_dataloader), batch_loss, elapsed))
+                print('  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}.   Elapsed: {:}.'.format(step, len(dataloader), batch_loss, elapsed))
 
         avg_eval_loss = total_eval_loss / len(dataloader)
         # Calcukate Perplexity
@@ -234,33 +262,52 @@ class GPT2():
         eval_result_payload["total_experiment_time"] = training_time + eval_time + check_time
         return eval_result_payload
 
+def main(rank, world_size, gpt_version, lr, epochs, batch_size, dataset_name):
+    gpt2 = GPT2(gpt_version=gpt_version,
+                learning_rate=lr,
+                epochs=epochs,
+                batch_size=batch_size,
+                dataset_name=dataset_name,
+                rank=rank,
+                world_size=world_size)
+    
+    log_stats = gpt2.run()
+    with open(log_path, "w") as outfile:
+        json.dump(log_stats, outfile)
+
 if __name__ == '__main__':
     device_count = torch.cuda.device_count()
     CHECK_PATH = os.path.join(os.path.dirname(__file__), "checkpoints", f"rank_{device_count}.pth")
     log_path = os.path.join(os.path.dirname(__file__), "logs", f"rank_{device_count}.json")
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     os.makedirs(os.path.dirname(CHECK_PATH), exist_ok=True)
-    # dataset_name = "wikitext-2-raw-v1"
-    dataset_name = "wikitext-103-raw-v1" 
-    gpt_version = "gpt2"
     LR = 1e-4
     BATCH_SIZE = 8
     NUM_BATCHES_EPOCH = 100
-    EPOCHS = 500
+    EPOCHS = 100
+    # dataset_name = "wikitext-2-raw-v1"
+    DATASET_NAME = "wikitext-103-raw-v1" 
+    GPT_VERSION = "gpt2"
     # Set the seed value all over the place to make this reproducible.
     seed_val = 42
     random.seed(seed_val)
     np.random.seed(seed_val)
     torch.manual_seed(seed_val)
     torch.cuda.manual_seed_all(seed_val)
-
-    gpt2 = GPT2(gpt_version=gpt_version,
+    gpt2 = GPT2(gpt_version=GPT_VERSION,
                 learning_rate=LR,
                 epochs=EPOCHS,
                 batch_size=BATCH_SIZE,
-                dataset_name=dataset_name)
+                dataset_name=DATASET_NAME,
+                rank=None,
+                world_size=None)
     
     log_stats = gpt2.run()
     with open(log_path, "w") as outfile:
         json.dump(log_stats, outfile)
-    
+    # mp.spawn(
+    #     main,
+    #     args=(device_count, GPT_VERSION, LR, EPOCHS, BATCH_SIZE, DATASET_NAME,),
+    #     nprocs=device_count,
+    #     join=True
+    # )
