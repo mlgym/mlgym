@@ -3,6 +3,7 @@ import json
 import math
 import os
 import time
+from typing import Union
 import torch
 from transformers import GPT2LMHeadModel, GPT2Config
 from datasets import load_from_disk
@@ -19,10 +20,11 @@ class GPT2():
         self.setup(rank, world_size)
         config = GPT2Config.from_pretrained(gpt_version, output_hidden_stages=False)
         self.model: GPT2LMHeadModel = GPT2LMHeadModel.from_pretrained(gpt_version, config=config)
-        # Tell pytorch to run this model on the GPU.
+
         self.device = rank
         self.model.to(self.device)
         self.model= torch.nn.parallel.DistributedDataParallel(self.model, device_ids=[rank])
+
         base_dir = os.path.join(os.sep, *list(os.path.dirname(__file__).split(os.sep)[0:-1]))
         tokenizer = GPT2TokenizerFast(tokenizer_file=os.path.join(base_dir,"tokenizer.json"))
         tokenizer.pad_token = tokenizer.eos_token
@@ -39,13 +41,15 @@ class GPT2():
         self.epochs = epochs
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = learning_rate)
         self.check_path = check_path
-        self.num_batches_epoch = num_batches_epoch
+        self.num_batches_epoch = num_batches_epoch // world_size
+        self.world_size = world_size
     
     def setup(self, rank, world_size):
         os.environ['MASTER_ADDR'] = 'localhost'
         os.environ['MASTER_PORT'] = '12355'
         backend = "nccl"
         dist.init_process_group(backend, rank=rank, world_size=world_size)
+        torch.cuda.set_device(rank)
     
     def cleanup(self):
         dist.destroy_process_group()
@@ -69,6 +73,31 @@ class GPT2():
         loss = loss_fn(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
         return loss
 
+    def gather_loss_across_gpus(self, logits: Union[torch.Tensor, None], labels: Union[torch.Tensor, None]
+                            ) -> float:
+        loss = 0.0
+        group = dist.group.WORLD
+        group_size = torch.distributed.get_world_size(group)
+        gather_logits_tensor = [torch.zeros_like(logits) for _ in
+                       range(group_size)]
+        gather_labels_tensor = [torch.zeros_like(labels) for _ in
+                       range(group_size)]
+        dist.all_gather(gather_logits_tensor, logits)
+        dist.all_gather(gather_labels_tensor, labels)
+        for i in range(0, len(gather_logits_tensor)):
+            loss += self.clm_loss(lm_logits=gather_logits_tensor[i], labels= gather_labels_tensor[i])
+        return loss
+    
+    def save_checkpoint(self, epoch_i):
+        check_t0 = time.time()
+        torch.save({
+        'epoch': epoch_i,
+        'model_state_dict': self.model.module.state_dict(),
+        'optimizer_state_dict': self.optimizer.state_dict()
+        }, self.check_path)
+        checkpointing = time.time() - check_t0
+        return checkpointing
+
     def run(self):
         run_stats = []
         self.model.to(self.device)
@@ -76,16 +105,14 @@ class GPT2():
         flag_run = True
         epoch_i = 0
         while flag_run:
-            print("")
-            print('======== GPU {:} Epoch {:} / {:} ========'.format(self.device, epoch_i + 1, self.epochs))
-            print('Training...')
-
             t0 = time.time()
             total_train_loss = 0.0
+            total_cl_loss = 0.0
             tfp = 0.0
             tpp = 0.0
             tos = 0.0
             tbp = 0.0
+            tag = 0.0
             self.model.train()
             self.train_dataloader.sampler.set_epoch(epoch_i)
             for step, batch in enumerate(self.train_dataloader):
@@ -101,17 +128,17 @@ class GPT2():
                             attention_mask = b_masks,
                             token_type_ids=None
                         )
-                tfp = tfp + (time.time() - tfp_t0)
+                tfp += (time.time() - tfp_t0)
                 logits = outputs.logits
 
                 tpp_t0 = time.time()
                 loss = self.clm_loss(lm_logits=logits, labels=b_labels)
-                tpp = tpp + (time.time() - tpp_t0)
+                tpp += (time.time() - tpp_t0)
 
                 batch_loss = loss.item()
                 total_train_loss += batch_loss
 
-                if step % 50 == 0 and not step == 0:
+                if step % 20 == 0 and not step == 0:
                     if step >= self.num_batches_epoch:
                         el_step = step - (math.floor(step/self.num_batches_epoch) * self.num_batches_epoch)
                         if el_step == 0: el_step = 100
@@ -122,48 +149,44 @@ class GPT2():
 
                 tbp_t0 = time.time()
                 loss.backward()
-                tbp = tbp + (time.time() - tbp_t0)
+                tbp += (time.time() - tbp_t0)
 
                 tos_t0 = time.time()
                 self.optimizer.step()
-                tos = tos + (time.time() - tos_t0)
+                tos += (time.time() - tos_t0)
 
-                if step % self.num_batches_epoch == 0 and not step == 0:
+                tag_t0 = time.time()
+                cl_loss = self.gather_loss_across_gpus(logits, b_labels)
+                total_cl_loss += cl_loss.item()
+                tag += (time.time() - tag_t0)
 
-                    # Calculate the average loss over all of the batches.
-                    avg_train_loss = total_train_loss / self.num_batches_epoch       
-        
+                if step % self.num_batches_epoch == 0 and not step == 0:     
+
                     # Measure how long this epoch took.
-                    training_time = time.time() - t0
+                    training_time = time.time() - t0                                                                                  
 
-                    check_t0 = time.time()
-                    torch.save({
-                    'epoch': epoch_i,
-                    'model_state_dict': self.model.state_dict(),
-                    'optimizer_state_dict': self.optimizer.state_dict()
-                    }, self.check_path)
-                    checkpointing = time.time() - check_t0
+                    if self.device == 0:
+                        checkpointing = self.save_checkpoint(epoch_i=epoch_i)
+                        training_time += checkpointing
+                        # Calculate the average loss over all of the batches in all gpus.
+                        avg_cl_train_loss = total_cl_loss / (self.num_batches_epoch * self.world_size)
+                        print("Epoch {:} / {:} Average training loss: {:.2f} Training epoch took: {:}".format(epoch_i + 1, self.epochs,
+                                                                                    avg_cl_train_loss, self.format_time(training_time)))
 
-                    print("")
-                    print(" Average training loss: {0:.2f}".format(avg_train_loss))
-                    print(" Training epoch took: {:}".format(self.format_time(training_time)))
-                    run_stats.append(self.evaluate_and_log( epoch_i=epoch_i,
-                                                            avg_train_loss=avg_train_loss,
+                        run_stats.append(self.evaluate_and_log( epoch_i=epoch_i,
+                                                            avg_train_loss=avg_cl_train_loss,
                                                             training_time=training_time,
                                                             train_forward_pass=tfp,
                                                             train_backward_pass=tbp,
                                                             train_opt_step=tos,
                                                             train_pp=tpp,
-                                                            check_time=checkpointing))
+                                                            check_time=checkpointing,
+                                                            aggregate_and_calc_loss= tag))
                     
                     epoch_i += 1
                     if epoch_i == self.epochs:
                         flag_run = False
                         break
-
-                    print("")
-                    print('======== GPU {:} Epoch {:} / {:} ========'.format(self.device, epoch_i + 1, self.epochs))
-                    print('Training...')
 
                     t0 = time.time()
                     total_train_loss = 0.0
@@ -204,16 +227,11 @@ class GPT2():
 
                 logits = outputs.logits
                 epp_t0 = time.time()
-                loss = self.clm_loss(lm_logits=logits, labels=b_labels)
+                loss = self.gather_loss_across_gpus(logits, b_labels)
                 epp = epp + (time.time() - epp_t0)
             
             batch_loss = loss.item()
             total_eval_loss += batch_loss
-
-            if step % 10 == 0 and not step == 0:
-
-                elapsed = self.format_time(time.time() - t0)
-                print('GPU {:}  Batch {:>5,}  of  {:>5,}. Loss: {:>5,}. Elapsed: {:}.'.format(self.device, step, len(dataloader), batch_loss, elapsed))
 
         avg_eval_loss = total_eval_loss / len(dataloader)
         # Calcukate Perplexity
@@ -221,14 +239,14 @@ class GPT2():
         perplexity = math.exp(avg_eval_loss)
         epp = epp + (time.time() - epp_t0)
         eval_time = time.time() - t0
-        print(" {0} Loss: {1:.2f}".format(eval_type, avg_eval_loss))
-        print(" {0} Perplexity: {1:.2f}".format(eval_type, perplexity))
-        print(" {0} took: {1:}".format(eval_type, self.format_time(eval_time)))
-
+        print("GPU {:} {:} Loss: {:.2f} Perplexity: {:.2f}, time taken: {:}".format(eval_type, 
+                                                                            avg_eval_loss, perplexity, 
+                                                                            self.format_time(eval_time)))
         return avg_eval_loss, perplexity, eval_time, epp, efp
     
     def evaluate_and_log(self, epoch_i:int, avg_train_loss:float, training_time:float, train_forward_pass: float, 
-                         train_backward_pass: float, train_opt_step: float, train_pp: float, check_time: float):
+                         train_backward_pass: float, train_opt_step: float, train_pp: float, check_time: float,
+                         aggregate_and_calc_loss: float):
         eval_result_payload = {}
 
         eval_prep = []
@@ -242,6 +260,7 @@ class GPT2():
         eval_result_payload["train_optimizer_step"] = train_opt_step
         eval_result_payload["train_post_processing"] = train_pp
         eval_result_payload["checkpointing"] = check_time
+        eval_result_payload["train_aggregate_and_calc_loss"] = aggregate_and_calc_loss
         for eval_t in eval_prep:
             avg_eval_loss, perplexity, eval_time, eval_pp, eval_forward_pass = self.eval(dataloader=eval_t["dataloader"], eval_type= eval_t["eval_type"])
             eval_result_payload[f"eval_{eval_t['eval_type']}_split_loss"] = avg_eval_loss
@@ -253,7 +272,7 @@ class GPT2():
         eval_result_payload["total_experiment_time"] = training_time + eval_time + check_time
         return eval_result_payload
 
-def main(rank, world_size, gpt_version, lr, epochs, batch_size, dataset_name, check_path, log_path, num_batches_epoch):
+def main(rank, world_size, gpt_version, lr, epochs, batch_size, dataset_name, check_path, num_batches_epoch, conn):
     gpt2 = GPT2(gpt_version=gpt_version,
                 learning_rate=lr,
                 epochs=epochs,
@@ -265,8 +284,7 @@ def main(rank, world_size, gpt_version, lr, epochs, batch_size, dataset_name, ch
                 num_batches_epoch = num_batches_epoch)
     
     log_stats = gpt2.run()
-    with open(log_path, "w") as outfile:
-        json.dump(log_stats, outfile)
+    conn.send(log_stats)
 
 if __name__ == '__main__':
     device_count = torch.cuda.device_count()
@@ -287,9 +305,23 @@ if __name__ == '__main__':
     np.random.seed(seed_val)
     torch.manual_seed(seed_val)
     torch.cuda.manual_seed_all(seed_val)
+    parent_conn, child_conn = mp.Pipe()
     mp.spawn(
         main,
-        args=(device_count, GPT_VERSION, LR, EPOCHS, BATCH_SIZE, DATASET_NAME, check_path, log_path, NUM_BATCHES_EPOCH, ),
+        args=(device_count, 
+              GPT_VERSION, 
+              LR, 
+              EPOCHS, 
+              BATCH_SIZE, 
+              DATASET_NAME, 
+              check_path, 
+              NUM_BATCHES_EPOCH, 
+              child_conn, ),
         nprocs=device_count,
         join=True
     )
+    log_stats = []
+    while parent_conn.poll():
+        log_stats.append(parent_conn.recv())
+    with open(log_path, "w") as outfile:
+        json.dump(log_stats, outfile)
