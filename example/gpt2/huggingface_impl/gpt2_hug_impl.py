@@ -244,7 +244,7 @@ if __name__ == '__main__':
     LR = 1e-4
     BATCH_SIZE = 8
     NUM_BATCHES_EPOCH = 100
-    EPOCHS = 100
+    EPOCHS = 1
     # dataset_name = "wikitext-2-raw-v1"
     DATASET_NAME = "wikitext-103-raw-v1" 
     GPT_VERSION = "gpt2"
