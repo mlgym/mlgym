@@ -217,6 +217,7 @@ class GPT2():
         eval_prep.append({"eval_type": "validation", "dataloader": self.validation_dataloader})
 
         eval_result_payload["epoch"] = epoch_i
+        eval_result_payload["experiment_key"] = f"rank_{torch.cuda.device_count()}"
         eval_result_payload["training_loss"] = avg_train_loss
         eval_result_payload["training_time"] = training_time
         eval_result_payload["train_forward_pass"] = train_forward_pass
@@ -232,10 +233,11 @@ class GPT2():
             eval_result_payload[f"eval_post_processing"] = eval_pp
             eval_result_payload[f"eval_forward_pass"] = eval_forward_pass
 
-        eval_result_payload["total_experiment_time"] = training_time + eval_time + check_time
+        eval_result_payload["epoch_time"] = training_time + eval_time + check_time
         return eval_result_payload
 
 if __name__ == '__main__':
+    exp_t0 = time.time()
     device_count = torch.cuda.device_count()
     CHECK_PATH = os.path.join(os.path.dirname(__file__), "checkpoints", f"rank_{device_count}.pth")
     log_path = os.path.join(os.path.dirname(__file__), "logs", f"rank_{device_count}.json")
@@ -263,5 +265,8 @@ if __name__ == '__main__':
                 world_size=None)
     
     log_stats = gpt2.run()
+    exp_time = time.time() - exp_t0
+    for logs in log_stats:
+        logs["total_experiment_time"] = exp_time
     with open(log_path, "w") as outfile:
         json.dump(log_stats, outfile)

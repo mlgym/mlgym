@@ -302,11 +302,13 @@ def main(rank, world_size, gpt_version, lr, epochs, batch_size, dataset_name, ch
     log_stats = gpt2.run()
     conn.send(log_stats)
 
-def log(logs, epochs: int, log_path: str):
+def log(logs, epochs: int, log_path: str, device_count:int, exp_t0:float):
     df = pd.DataFrame(logs)
+    exp_time = time.time() - exp_t0
     result = []
     for epoch_i in range(0,epochs):
         dict = {}
+        dict["experiment_key"] = f"rank_{device_count}"
         for col in df.columns:
             if col == 'epoch':
                 dict[col] = epoch_i
@@ -314,13 +316,15 @@ def log(logs, epochs: int, log_path: str):
                 dict[col] = df.loc[df['epoch'] == epoch_i, col].max()
             elif col != 'rank':
                 dict[col] = df.loc[df['epoch'] == epoch_i, col].mean()
-        dict["total_experiment_time"] = dict['training_time'] + dict['eval_time'] + dict['checkpointing']
+        dict["epoch_time"] = dict['training_time'] + dict['eval_time'] + dict['checkpointing']
+        dict["total_experiment_time"] = exp_time
         result.append(dict)
     
     with open(log_path, "w") as outfile:
         json.dump(result, outfile)
 
 if __name__ == '__main__':
+    exp_t0 = time.time()
     device_count = torch.cuda.device_count()
     check_path = os.path.join(os.path.dirname(__file__), "checkpoints", f"rank_ddp_{device_count}.pth")
     log_path = os.path.join(os.path.dirname(__file__), "logs", f"rank_ddp_{device_count}.json")
@@ -358,4 +362,4 @@ if __name__ == '__main__':
     while parent_conn.poll():
         for record in parent_conn.recv():
             log_stats.append(record)
-    log(logs=log_stats, epochs = EPOCHS, log_path=log_path)
+    log(logs=log_stats, epochs = EPOCHS, log_path=log_path, device_count=device_count, exp_t0=exp_t0)
