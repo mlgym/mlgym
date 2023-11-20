@@ -10,6 +10,7 @@ from datasets import load_from_disk
 from transformers import DataCollatorForLanguageModeling, GPT2TokenizerFast
 from torch.utils.data import DataLoader
 import numpy as np
+import pandas as pd
 import random
 import torch.distributed as dist
 from torch.utils.data.distributed import DistributedSampler
@@ -107,12 +108,12 @@ class GPT2():
         while flag_run:
             t0 = time.time()
             total_train_loss = 0.0
-            total_cl_loss = 0.0
+            # total_cl_loss = 0.0
             tfp = 0.0
             tpp = 0.0
             tos = 0.0
             tbp = 0.0
-            tag = 0.0
+            # tag = 0.0
             self.model.train()
             self.train_dataloader.sampler.set_epoch(epoch_i)
             for step, batch in enumerate(self.train_dataloader):
@@ -138,10 +139,10 @@ class GPT2():
                 batch_loss = loss.item()
                 total_train_loss += batch_loss
 
-                if step % 20 == 0 and not step == 0:
+                if step % (self.num_batches_epoch//2) == 0 and not step == 0:
                     if step >= self.num_batches_epoch:
-                        el_step = step - (math.floor(step/self.num_batches_epoch) * self.num_batches_epoch)
-                        if el_step == 0: el_step = 100
+                        el_step = step - ((step//self.num_batches_epoch) * self.num_batches_epoch)
+                        if el_step == 0: el_step = self.num_batches_epoch
                     else:
                         el_step = step
                     elapsed = self.format_time(time.time() - t0)
@@ -155,33 +156,46 @@ class GPT2():
                 self.optimizer.step()
                 tos += (time.time() - tos_t0)
 
-                tag_t0 = time.time()
-                cl_loss = self.gather_loss_across_gpus(logits, b_labels)
-                total_cl_loss += cl_loss.item()
-                tag += (time.time() - tag_t0)
+                # tag_t0 = time.time()
+                # cl_loss = self.gather_loss_across_gpus(logits, b_labels)
+                # total_cl_loss += cl_loss.item()
+                # tag += (time.time() - tag_t0)
 
                 if step % self.num_batches_epoch == 0 and not step == 0:     
 
+                    # Calculate the average loss over all of the batches.
+                    avg_train_loss = total_train_loss / self.num_batches_epoch  
+
                     # Measure how long this epoch took.
-                    training_time = time.time() - t0                                                                                  
+                    training_time = time.time() - t0                                                                                      
 
-                    if self.device == 0:
-                        checkpointing = self.save_checkpoint(epoch_i=epoch_i)
-                        training_time += checkpointing
-                        # Calculate the average loss over all of the batches in all gpus.
-                        avg_cl_train_loss = total_cl_loss / (self.num_batches_epoch * self.world_size)
-                        print("Epoch {:} / {:} Average training loss: {:.2f} Training epoch took: {:}".format(epoch_i + 1, self.epochs,
-                                                                                    avg_cl_train_loss, self.format_time(training_time)))
+                    # if self.device == 0:
+                    #     checkpointing = self.save_checkpoint(epoch_i=epoch_i)
+                        # # Calculate the average loss over all of the batches in all gpus.
+                        # avg_cl_train_loss = total_cl_loss / (self.num_batches_epoch * self.world_size)
+                        # print("Epoch {:} / {:} Average training loss: {:.2f} Training epoch took: {:}".format(epoch_i + 1, self.epochs,
+                        #                                                             avg_cl_train_loss, self.format_time(training_time)))
 
-                        run_stats.append(self.evaluate_and_log( epoch_i=epoch_i,
-                                                            avg_train_loss=avg_cl_train_loss,
+                        # run_stats.append(self.evaluate_and_log( epoch_i=epoch_i,
+                        #                                     avg_train_loss=avg_cl_train_loss,
+                        #                                     training_time=training_time,
+                        #                                     train_forward_pass=tfp,
+                        #                                     train_backward_pass=tbp,
+                        #                                     train_opt_step=tos,
+                        #                                     train_pp=tpp,
+                        #                                     aggregate_and_calc_loss= 0.0))
+                        
+                    print("GPU {:} Epoch {:} / {:} Average training loss: {:.2f} Training epoch took: {:}".format(self.device, epoch_i + 1,
+                                                                                   self.epochs, avg_train_loss, self.format_time(training_time)))
+
+                    run_stats.append(self.evaluate_and_log( epoch_i=epoch_i,
+                                                            avg_train_loss=avg_train_loss,
                                                             training_time=training_time,
                                                             train_forward_pass=tfp,
                                                             train_backward_pass=tbp,
                                                             train_opt_step=tos,
                                                             train_pp=tpp,
-                                                            check_time=checkpointing,
-                                                            aggregate_and_calc_loss= tag))
+                                                            aggregate_and_calc_loss= 0.0))
                     
                     epoch_i += 1
                     if epoch_i == self.epochs:
@@ -201,12 +215,10 @@ class GPT2():
 
     def eval(self, dataloader, eval_type:str):
         print("")
-        print(f"Running evaluation for {eval_type} split...")
         self.model.to(self.device)
         device = self.device
-
-        t0 = time.time()
         self.model.eval()
+        t0 = time.time()
         total_eval_loss = 0
         efp = 0.0
         epp = 0.0
@@ -223,12 +235,12 @@ class GPT2():
                             attention_mask = b_masks,
                             token_type_ids=None
                         )
-                efp = efp + (time.time() - efp_t0)
+                efp += (time.time() - efp_t0)
 
                 logits = outputs.logits
                 epp_t0 = time.time()
-                loss = self.gather_loss_across_gpus(logits, b_labels)
-                epp = epp + (time.time() - epp_t0)
+                loss = self.clm_loss(lm_logits=logits, labels=b_labels)
+                epp += (time.time() - epp_t0)
             
             batch_loss = loss.item()
             total_eval_loss += batch_loss
@@ -239,19 +251,20 @@ class GPT2():
         perplexity = math.exp(avg_eval_loss)
         epp = epp + (time.time() - epp_t0)
         eval_time = time.time() - t0
-        print("GPU {:} {:} Loss: {:.2f} Perplexity: {:.2f}, time taken: {:}".format(eval_type, 
+        print("GPU {:} {:} Loss: {:.2f} Perplexity: {:.2f}, time taken: {:}".format(self.device, eval_type, 
                                                                             avg_eval_loss, perplexity, 
                                                                             self.format_time(eval_time)))
         return avg_eval_loss, perplexity, eval_time, epp, efp
     
     def evaluate_and_log(self, epoch_i:int, avg_train_loss:float, training_time:float, train_forward_pass: float, 
-                         train_backward_pass: float, train_opt_step: float, train_pp: float, check_time: float,
+                         train_backward_pass: float, train_opt_step: float, train_pp: float,
                          aggregate_and_calc_loss: float):
         eval_result_payload = {}
 
         eval_prep = []
         eval_prep.append({"eval_type": "validation", "dataloader": self.validation_dataloader})
 
+        eval_result_payload["rank"] = self.device
         eval_result_payload["epoch"] = epoch_i
         eval_result_payload["training_loss"] = avg_train_loss
         eval_result_payload["training_time"] = training_time
@@ -259,8 +272,7 @@ class GPT2():
         eval_result_payload["train_backward_pass"] = train_backward_pass
         eval_result_payload["train_optimizer_step"] = train_opt_step
         eval_result_payload["train_post_processing"] = train_pp
-        eval_result_payload["checkpointing"] = check_time
-        eval_result_payload["train_aggregate_and_calc_loss"] = aggregate_and_calc_loss
+        # eval_result_payload["train_aggregate_and_calc_loss"] = aggregate_and_calc_loss
         for eval_t in eval_prep:
             avg_eval_loss, perplexity, eval_time, eval_pp, eval_forward_pass = self.eval(dataloader=eval_t["dataloader"], eval_type= eval_t["eval_type"])
             eval_result_payload[f"eval_{eval_t['eval_type']}_split_loss"] = avg_eval_loss
@@ -268,8 +280,13 @@ class GPT2():
             eval_result_payload[f"eval_time"] = eval_time
             eval_result_payload[f"eval_post_processing"] = eval_pp
             eval_result_payload[f"eval_forward_pass"] = eval_forward_pass
-
-        eval_result_payload["total_experiment_time"] = training_time + eval_time + check_time
+        
+        if self.device == 0:
+            check_time = self.save_checkpoint(epoch_i=epoch_i)
+        else:
+            check_time = 0.0
+        dist.barrier()
+        eval_result_payload["checkpointing"] = check_time
         return eval_result_payload
 
 def main(rank, world_size, gpt_version, lr, epochs, batch_size, dataset_name, check_path, num_batches_epoch, conn):
@@ -285,6 +302,24 @@ def main(rank, world_size, gpt_version, lr, epochs, batch_size, dataset_name, ch
     
     log_stats = gpt2.run()
     conn.send(log_stats)
+
+def log(logs, epochs: int, log_path: str):
+    df = pd.DataFrame(logs)
+    result = []
+    for epoch_i in range(0,epochs):
+        dict = {}
+        for col in df.columns:
+            if col == 'epoch':
+                dict[col] = epoch_i
+            elif col == 'checkpointing':
+                dict[col] = df.loc[df['epoch'] == epoch_i, col].max()
+            elif col != 'rank':
+                dict[col] = df.loc[df['epoch'] == epoch_i, col].mean()
+        dict["total_experiment_time"] = dict['training_time'] + dict['eval_time'] + dict['checkpointing']
+        result.append(dict)
+    
+    with open(log_path, "w") as outfile:
+        json.dump(result, outfile)
 
 if __name__ == '__main__':
     device_count = torch.cuda.device_count()
@@ -322,6 +357,6 @@ if __name__ == '__main__':
     )
     log_stats = []
     while parent_conn.poll():
-        log_stats.append(parent_conn.recv())
-    with open(log_path, "w") as outfile:
-        json.dump(log_stats, outfile)
+        for record in parent_conn.recv():
+            log_stats.append(record)
+    log(logs=log_stats, epochs = EPOCHS, log_path=log_path)
