@@ -1,19 +1,21 @@
-import { AnyKeyValuePairsInterface } from '../../experimentPage/ExperimentPage';
-import Tree from 'react-d3-tree';
+import Tree, { Orientation } from 'react-d3-tree';
 import { SyntheticEvent, useEffect, useState } from 'react';
 import { HierarchyPointNode } from 'd3';
 import { RawNodeDatum, TreeNodeDatum } from 'react-d3-tree';
 import { Grid } from '@mui/material';
 import styles from './PipelineDetails.module.css';
 import { JsonViewer } from '@textea/json-viewer';
+import { AnyKeyValuePairs } from '../../../app/interfaces';
 
-var treeDataObj: RawNodeDatum = {
-    name: ''
+interface PipelineDetailsProps {
+    pipelineDetails: AnyKeyValuePairs,
+    experiment_id: string,
+    treeOrientationProp: string
 }
 
-export default function PipelineDetails({pipelineDetails, experiment_id, treeOrientationProp} : {pipelineDetails: AnyKeyValuePairsInterface, experiment_id: string, treeOrientationProp: any}) {
+export default function PipelineDetails({ pipelineDetails, experiment_id, treeOrientationProp }: PipelineDetailsProps) {
 
-    const [treeData, setTreeData] = useState(treeDataObj);
+    const [treeData, setTreeData] = useState<RawNodeDatum>({name: ''});
     const [clickedNode, setNodeClick] = useState<any>(null);
 
     function tree_children_iterator(obj: any) {
@@ -122,7 +124,7 @@ export default function PipelineDetails({pipelineDetails, experiment_id, treeOri
                         data={treeData}
                         initialDepth={1}
                         pathFunc="diagonal"
-                        orientation={treeOrientationProp}
+                        orientation={treeOrientationProp as Orientation}
                         separation={{ siblings: 1, nonSiblings: 1.5 }}
                         enableLegacyTransitions={true}
                         translate={{ x: window.innerWidth/4, y: window.innerHeight/2 }}

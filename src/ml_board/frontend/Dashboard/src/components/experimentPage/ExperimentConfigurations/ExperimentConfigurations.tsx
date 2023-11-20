@@ -26,7 +26,7 @@ export default function ExperimentConfigurations({experimentIdProp} : {experimen
             setShowHideData(false);
             setIsLoading(true);
     
-            axios.get(rest_api_url + experiment_config_file).then((response) => {
+            axios.get("http://" +rest_api_url + experiment_config_file).then((response) => {
                 console.log("Got response from experiment_config API: ", response);
                 if (response.status === 200) {
                     setExperimentConfigFileObject(response.data);

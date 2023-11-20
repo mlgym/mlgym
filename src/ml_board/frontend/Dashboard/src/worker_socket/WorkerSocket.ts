@@ -61,7 +61,7 @@ const process_mlgym_event = (msg: JSON) => {
     msgCounterIncMainThreadCallback();
 };
 
-// ASK MAX: renaming to onPong or onPongReceived
+// onPong or onPongReceived
 const onPongReceivedfromWebsocketServer = () => {
     // on Pong , save time of receiving 
     lastPong = new Date().getTime();
@@ -71,7 +71,7 @@ const onPongReceivedfromWebsocketServer = () => {
 
 // ========================= helper methods ============================//
 
-// ASK MAX: sendPingToServer or sendPing or pingToServer or pingingServer or pinging
+// sendPingToServer or sendPing or pingToServer or pingingServer or pinging
 const send_ping_to_websocket_server = (socket: Socket) => {
     // if Pong was received after sending a Ping 
     // if no Ping was sent before

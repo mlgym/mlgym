@@ -5,10 +5,10 @@ import api from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
 import { getGridSearchId, getRestApiUrl, isConnected } from '../../../redux/globalConfig/globalConfigSlice';
 import styles from './EnvironmentDetails.module.css';
-import { AnyKeyValuePairsInterface } from '../../experimentPage/ExperimentPage';
 import { CardDetails } from '../../experimentPage/ExperimentDetails/CardDetails';
 import CudaList from './CudaList';
 import PythonPackagesList from './PythonPackagesList';
+import { AnyKeyValuePairs } from '../../../app/interfaces';
 
 export interface pythonPackagesListInterface {
     "name": string,
@@ -20,16 +20,25 @@ export interface cudaDeviceListInterface {
     "multi_proc_count": string,
     "total_memory": string
 }
-let sysInfoAnyKeyObj:AnyKeyValuePairsInterface = {};
 
-export default function EnvironmentDetails({fromPage, experiment_id, tableRows, sysInfoBasicDataProps, sysInfoCudaDevicesDataProps, sysInfoPythonPackagesProps, sysInfoArchitectureProps, sysInfoCarbonFootPrintDetailsProps, sysInfoEntryPointCmdDetailsProps} : {fromPage: string, experiment_id: string, tableRows?: number, sysInfoBasicDataProps?: AnyKeyValuePairsInterface, sysInfoCudaDevicesDataProps?: Array<cudaDeviceListInterface>, sysInfoPythonPackagesProps?: Array<pythonPackagesListInterface>, sysInfoArchitectureProps?: Array<"">, sysInfoCarbonFootPrintDetailsProps?: string, sysInfoEntryPointCmdDetailsProps?: string}) {
+interface EnvironmentDetailsProps {
+    fromPage: string,
+    experiment_id: string,
+    tableRows?: number, sysInfoBasicDataProps?: AnyKeyValuePairs,
+    sysInfoCudaDevicesDataProps?: Array<cudaDeviceListInterface>,
+    sysInfoPythonPackagesProps?: Array<pythonPackagesListInterface>,
+    sysInfoArchitectureProps?: Array<"">, sysInfoCarbonFootPrintDetailsProps?: string,
+    sysInfoEntryPointCmdDetailsProps?: string
+}
+
+export default function EnvironmentDetails({fromPage, experiment_id, tableRows, sysInfoBasicDataProps, sysInfoCudaDevicesDataProps, sysInfoPythonPackagesProps, sysInfoArchitectureProps, sysInfoCarbonFootPrintDetailsProps, sysInfoEntryPointCmdDetailsProps} : EnvironmentDetailsProps) {
 
     const isSocketConnected = useAppSelector(isConnected);
     const grid_search_id = useAppSelector(getGridSearchId);
     const rest_api_url = useAppSelector(getRestApiUrl);
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const[sysInfoBasicData, setSysInfoBasicData] = useState(sysInfoAnyKeyObj);
+    const[sysInfoBasicData, setSysInfoBasicData] = useState<AnyKeyValuePairs>({});
     const[sysInfoCudaDevicesData, setSysInfoCudaDevicesData] = useState(Array<cudaDeviceListInterface>);
     const [sysInfoPythonPackages, setSysInfoPythonPackages] = useState(Array<pythonPackagesListInterface>);
     const [sysInfoArchitecture, setSysInfoArchitecture] = useState(Array<"">);
@@ -57,7 +66,7 @@ export default function EnvironmentDetails({fromPage, experiment_id, tableRows, 
         setError("");
         setIsLoading(true);
 
-        axios.get(rest_api_url + model_card_sys_info).then((response) => {
+        axios.get("http://" + rest_api_url + model_card_sys_info).then((response) => {
             console.log("Got response from model_card_sys_info API: ", response);
             if (response.status === 200) {
                 let resp_data = response.data;

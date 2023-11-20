@@ -20,11 +20,8 @@ import MuiAccordionDetails from '@mui/material/AccordionDetails';
 import MuiAccordionSummary from '@mui/material/AccordionSummary';
 import styles_graphs from "../graphs/Graphs.module.css";
 import styles from './ExperimentPage.module.css';
+import { AnyKeyValuePairs } from '../../app/interfaces';
 
-export interface AnyKeyValuePairsInterface {
-    [key: string]: any
-}
-var anyObj: AnyKeyValuePairsInterface = {}
 
 const Accordion = styled((props: AccordionProps) => (
     <MuiAccordion disableGutters elevation={0} square {...props} />))(() => ({
@@ -61,7 +58,7 @@ function ExperimentPage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     let experiment_id = searchParams.get("experiment_id") as string;
-    const [selectedExperiment, setSelectedExperiment] = useState(anyObj)
+    const [selectedExperiment, setSelectedExperiment] = useState<AnyKeyValuePairs>({});
     const filteredExp = useAppSelector(state => selectRowById(state, experiment_id));
     const selectedExpGraphs = useAppSelector(state => selectChartsByExperimentId(state, experiment_id))
     const isSocketConnected = useAppSelector(isConnected);

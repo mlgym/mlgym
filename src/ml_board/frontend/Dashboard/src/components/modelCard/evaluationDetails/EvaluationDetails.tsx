@@ -1,9 +1,9 @@
 import { Grid } from '@mui/material';
-import { AnyKeyValuePairsInterface } from '../../experimentPage/ExperimentPage';
 import LossFunctionsList from './LossFunctionsList';
 import MetricsListAndDetails from './MetricsListAndDetails';
+import { AnyKeyValuePairs } from '../../../app/interfaces';
 
-export default function EvaluationDetails({evalDetails} : {evalDetails: AnyKeyValuePairsInterface}) {
+export default function EvaluationDetails({evalDetails} : {evalDetails: AnyKeyValuePairs}) {
 
     return(
         <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>

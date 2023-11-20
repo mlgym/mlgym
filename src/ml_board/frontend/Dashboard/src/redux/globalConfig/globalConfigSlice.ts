@@ -15,7 +15,7 @@ interface GlobalConfig {
 
 const initialState: GlobalConfig = {
   currentFilter: '.*',
-  idTab: "analysisboard", //ASK Vijul: do we need to store the current tab? is it useful?
+  idTab: "analysisboard",
   wsConnected: false,
   ping: -1,
   received_msg_count: 0,

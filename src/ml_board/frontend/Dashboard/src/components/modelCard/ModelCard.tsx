@@ -20,10 +20,10 @@ import { getGridSearchId, getRestApiUrl, isConnected } from '../../redux/globalC
 import html2canvas from 'html2canvas';
 import axios from 'axios';
 import api from '../../app/ApiMaster';
-import { AnyKeyValuePairsInterface } from '../experimentPage/ExperimentPage';
 import DownloadIcon from '@mui/icons-material/Download';
 import GraphComponent from "./pipelineDetails/GraphComponent";
 import PipelineDetails from "./pipelineDetails/PipelineDetails";
+import { AnyKeyValuePairs } from "../../app/interfaces";
 
 export interface pythonPackagesListInterface {
     "name": string,
@@ -35,7 +35,6 @@ export interface cudaDeviceListInterface {
     "multi_proc_count": string,
     "total_memory": string
 }
-let sysInfoAnyKeyObj:AnyKeyValuePairsInterface = {};
 
 const mainStyles = `
     background-color: #fff;
@@ -68,13 +67,13 @@ export default function ModelCard() {
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
-    const [datasetDetails, setDatasetDetails] = useState(sysInfoAnyKeyObj);
-    const [evalDetails, setEvalDetails] = useState(sysInfoAnyKeyObj);
-    const [modelDetails, setModelDetails] = useState(sysInfoAnyKeyObj);
-    const [trainingDetails, setTrainingDetails] = useState(sysInfoAnyKeyObj);
-    const [pipelineDetails, setPipelineDetails] = useState<AnyKeyValuePairsInterface>({});
+    const [datasetDetails, setDatasetDetails] = useState<AnyKeyValuePairs>({});
+    const [evalDetails, setEvalDetails] = useState<AnyKeyValuePairs>({});
+    const [modelDetails, setModelDetails] = useState<AnyKeyValuePairs>({});
+    const [trainingDetails, setTrainingDetails] = useState<AnyKeyValuePairs>({});
+    const [pipelineDetails, setPipelineDetails] = useState<AnyKeyValuePairs>({});
     const [treeOrientation, setTreeOrientation] = useState("horizontal");
-    const [sysInfoBasicData, setSysInfoBasicData] = useState(sysInfoAnyKeyObj);
+    const [sysInfoBasicData, setSysInfoBasicData] = useState<AnyKeyValuePairs>({});
     const [sysInfoCudaDevicesData, setSysInfoCudaDevicesData] = useState(Array<cudaDeviceListInterface>);
     const [sysInfoPythonPackages, setSysInfoPythonPackages] = useState(Array<pythonPackagesListInterface>);
     const [sysInfoArchitecture, setSysInfoArchitecture] = useState(Array<"">);
@@ -94,7 +93,7 @@ export default function ModelCard() {
         setError("");
         setIsLoading(true);
 
-        axios.get(rest_api_url + model_card_sys_info).then((response) => {
+        axios.get("http://" +rest_api_url + model_card_sys_info).then((response) => {
             console.log("Got response from model_card_sys_info API: ", response);
             if (response.status === 200) {
                 let resp_data = response.data;

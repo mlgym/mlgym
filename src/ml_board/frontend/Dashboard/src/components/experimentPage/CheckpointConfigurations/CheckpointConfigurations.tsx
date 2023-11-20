@@ -36,7 +36,7 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
         let all_checkpoints = api.checkpoint_list.replace("<grid_search_id>", grid_search_id);
         all_checkpoints = all_checkpoints.replace("<experiment_id>", experimentIdProp);
 
-        axios.get(rest_api_url + all_checkpoints).then((response) => {
+        axios.get("http://" +rest_api_url + all_checkpoints).then((response) => {
             console.log("Got response from checkpoint_list API: ", response);
             if (response.status === 200) {
                 let resp_data = response.data;
@@ -65,7 +65,7 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
         setErrorInGettingResource("");
         setIsLoadingResource(true);
 
-        axios.get(rest_api_url + checkpoint_resource).then((response) => {
+        axios.get("http://" +rest_api_url + checkpoint_resource).then((response) => {
             console.log("Got response from checkpoint_resource API: ", response);
             if (response.status === 200) {
                 downloadFile(resourceName, new Blob([response.data]));
@@ -98,29 +98,31 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
                 <Box className={styles.textfield_cardcontent_checkpoint_config}>
                     <FormControl fullWidth={true} error={error.length > 0}>
                         <InputLabel id="demo-simple-select-helper-label">Select Checkpoint Id</InputLabel>
-                        <Select
-                            labelId="demo-simple-select-helper-label"
-                            id="demo-simple-select-helper"
-                            value={selectedCheckpointIndex}
-                            label="Select Checkpoint Id"
-                            onChange={(e)=>{
-                                let index = Number(e.target.value);
-                                setSelectedCheckpointIndex(index);
-                                setCheckpointResourceNames(checkpointData[index].checkpoints);
-                            }}
-                            MenuProps={{ style: { maxHeight: "250px" } }} // have to keep style here. keeping it in css file is not working for this
-                        >
-                            {
-                                checkpointData.length > 0 ?
-                                checkpointData.map((chkpt_obj, index) => 
-                                    <MenuItem key={index} value={index.toString()}>
-                                        {chkpt_obj.epoch}
-                                    </MenuItem>
-                                )
+                        {
+                            checkpointData.length > 0 ?
+                                <Select
+                                    labelId="demo-simple-select-helper-label"
+                                    id="demo-simple-select-helper"
+                                    value={selectedCheckpointIndex}
+                                    label="Select Checkpoint Id"
+                                    onChange={(e) => {
+                                        let index = Number(e.target.value);
+                                        setSelectedCheckpointIndex(index);
+                                        setCheckpointResourceNames(checkpointData[index].checkpoints);
+                                    }}
+                                    MenuProps={{ style: { maxHeight: "250px" } }} // have to keep style here. keeping it in css file is not working for this
+                                >
+                                    {
+                                        checkpointData.map((chkpt_obj, index) =>
+                                            <MenuItem key={index} value={index.toString()}>
+                                                {chkpt_obj.epoch}
+                                            </MenuItem>
+                                        )
+                                    }
+                                </Select>
                                 :
                                 null
-                            }
-                        </Select>
+                        }
                         {
                             error.length > 0 ?
                             <FormHelperText>

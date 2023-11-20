@@ -1,15 +1,15 @@
-import { AnyKeyValuePairsInterface } from '../../experimentPage/ExperimentPage';
 import Tree from 'react-d3-tree';
 import { useEffect, useState } from 'react';
 import { RawNodeDatum } from 'react-d3-tree';
 import { Grid } from '@mui/material';
 import styles from './DatasetDetails.module.css';
+import { AnyKeyValuePairs } from '../../../app/interfaces';
 
 var treeDataObj: RawNodeDatum = {
     name: ''
 }
 
-export default function DatasetDetails({datasetDetails} : {datasetDetails: AnyKeyValuePairsInterface}) {
+export default function DatasetDetails({datasetDetails} : {datasetDetails: AnyKeyValuePairs}) {
 
     const [treeData, setTreeData] = useState(treeDataObj);
 
@@ -84,3 +84,5 @@ export default function DatasetDetails({datasetDetails} : {datasetDetails: AnyKe
       </Grid>
     )
 }
+
+// ASK: is this file deprecated?
