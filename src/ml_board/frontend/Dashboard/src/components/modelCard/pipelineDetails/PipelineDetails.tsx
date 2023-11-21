@@ -68,7 +68,7 @@ export default function PipelineDetails({ pipelineDetails, experiment_id, treeOr
                 },
                 children: tree_data
             }
-            // console.log("myTreeData: ",myTreeData)
+            console.log("myTreeData: ",myTreeData)
 
             setTreeData(myTreeData);
         }

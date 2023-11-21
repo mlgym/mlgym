@@ -16,6 +16,15 @@ import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer'
 import styles from './App.module.css';
 import { Toolbar } from '@mui/material';
 
+
+
+
+import file from "../components/modelCard/flowGraph/mock/data.js";
+import FlowGraph from '../components/modelCard/flowGraph/FlowGraph';
+import { createGraphWithoutRoot } from '../components/modelCard/flowGraph/api';
+import { ReactFlowProvider } from 'reactflow';
+
+
 export interface settingConfigsInterface {
     gridSearchId: string,
     socketConnectionUrl: string,
@@ -50,6 +59,17 @@ async function getUrlParamsOrLocalStorageData(searchParams: URLSearchParams, set
 }
 
 export default function App() {
+
+    const { nodes, edges } = createGraphWithoutRoot(file);
+
+    console.log(nodes.length);
+    console.log(edges.length);
+
+    return (
+        <ReactFlowProvider>
+            <FlowGraph initialNodes={nodes} initialEdges={edges} />
+        </ReactFlowProvider>
+    );
 
     const [isConfigValidated, setConfigValidation] = useState(false);
     const [socketConnectionRequest, setSocketConnectionRequest] = useState(false);
@@ -100,7 +120,6 @@ export default function App() {
 
             // close the worker on Dismount to stop any memory leaks
             return () => {
-                // ASK: not sure if this is useful, or if it gets handled before the termination???
                 workerSocket.postMessage("CLOSE_SOCKET");
                 workerSocket.terminate();
             }
