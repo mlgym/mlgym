@@ -5,13 +5,10 @@ import { Grid } from '@mui/material';
 import styles from './DatasetDetails.module.css';
 import { AnyKeyValuePairs } from '../../../app/interfaces';
 
-var treeDataObj: RawNodeDatum = {
-    name: ''
-}
 
 export default function DatasetDetails({datasetDetails} : {datasetDetails: AnyKeyValuePairs}) {
 
-    const [treeData, setTreeData] = useState(treeDataObj);
+    const [treeData, setTreeData] = useState<RawNodeDatum>({name: ''});
 
     useEffect(() => {
         if(datasetDetails.dataset_splits) {
@@ -19,6 +16,7 @@ export default function DatasetDetails({datasetDetails} : {datasetDetails: AnyKe
             const split_config = datasetDetails.dataset_splits.split_config;
             let split_children: { name: any, children: any } [] = [];
 
+            // for (const split_config_key in split_config) {
             Object.keys(split_config).map((split_config_key) => {
 
                 let splits_percentage = datasetDetails.dataset_splits.splits_percentage;
@@ -26,6 +24,7 @@ export default function DatasetDetails({datasetDetails} : {datasetDetails: AnyKe
 
                 if(splits_percentage[split_config[split_config_key].split]) {
                     const p = splits_percentage[split_config[split_config_key].split];
+                    // for (const k in p) {
                     Object.keys(p).map((k) => {
                         let split_child_child_obj = {
                             name: k,
@@ -34,6 +33,7 @@ export default function DatasetDetails({datasetDetails} : {datasetDetails: AnyKe
                             },
                         }
                         split_children_children.push(split_child_child_obj);
+                        // }                    
                         return null;
                     })                    
                 }
@@ -42,7 +42,8 @@ export default function DatasetDetails({datasetDetails} : {datasetDetails: AnyKe
                     children: split_children_children
                 }
                 split_children.push(split_child_obj);
-
+                
+                // }                    
                 return null;
             })
             

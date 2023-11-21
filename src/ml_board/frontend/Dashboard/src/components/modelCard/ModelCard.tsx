@@ -87,13 +87,14 @@ export default function ModelCard() {
     },[experiment_id, isSocketConnected]);
 
     function getModelCardData() {
-        let model_card_sys_info = api.model_card_sys_info.replace("<grid_search_id>", grid_search_id);
-        model_card_sys_info = model_card_sys_info.replace("<experiment_id>", experiment_id);
+        const model_card_sys_info = api.model_card_sys_info
+                                        .replace("<grid_search_id>", grid_search_id)
+                                        .replace("<experiment_id>", experiment_id);
 
         setError("");
         setIsLoading(true);
 
-        axios.get("http://" +rest_api_url + model_card_sys_info).then((response) => {
+        axios.get(rest_api_url + model_card_sys_info).then((response) => {
             console.log("Got response from model_card_sys_info API: ", response);
             if (response.status === 200) {
                 let resp_data = response.data;
@@ -102,6 +103,7 @@ export default function ModelCard() {
                 setEvalDetails(resp_data.eval_details);
                 setDatasetDetails(resp_data.dataset_details);
                 setPipelineDetails(resp_data.pipeline_details);
+                console.log(pipelineDetails);
                 setSysInfoCarbonFootPrintDetails(resp_data.experiment_environment.carbon_footprint);
                 setSysInfoEntryPointCmdDetails(resp_data.experiment_environment.entry_point_cmd);
                 Object.keys(resp_data.experiment_environment.system_env).map((sysInfoKeyName) => {

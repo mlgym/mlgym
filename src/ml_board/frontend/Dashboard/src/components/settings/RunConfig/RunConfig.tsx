@@ -26,7 +26,7 @@ export default function RunConfig() {
         setShowHideData(false);
         setIsLoading(true);
         
-        axios.get("http://" +rest_api_url+run_config_file).then((response) => {
+        axios.get(rest_api_url+run_config_file).then((response) => {
             console.log("Got response from run_config_file API: ", response);
             if(response.status === 200) {
                 setYamlString(response.data.trim());

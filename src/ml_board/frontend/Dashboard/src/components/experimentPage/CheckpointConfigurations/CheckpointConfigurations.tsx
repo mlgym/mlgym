@@ -36,7 +36,7 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
         let all_checkpoints = api.checkpoint_list.replace("<grid_search_id>", grid_search_id);
         all_checkpoints = all_checkpoints.replace("<experiment_id>", experimentIdProp);
 
-        axios.get("http://" +rest_api_url + all_checkpoints).then((response) => {
+        axios.get(rest_api_url + all_checkpoints).then((response) => {
             console.log("Got response from checkpoint_list API: ", response);
             if (response.status === 200) {
                 let resp_data = response.data;
@@ -65,7 +65,7 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
         setErrorInGettingResource("");
         setIsLoadingResource(true);
 
-        axios.get("http://" +rest_api_url + checkpoint_resource).then((response) => {
+        axios.get(rest_api_url + checkpoint_resource).then((response) => {
             console.log("Got response from checkpoint_resource API: ", response);
             if (response.status === 200) {
                 downloadFile(resourceName, new Blob([response.data]));

@@ -26,7 +26,7 @@ export default function GridSearchConfigurations() {
         setShowHideData(false);
         setIsLoading(true);
         
-        axios.get("http://" +rest_api_url+grid_search_config_url).then((response) => {
+        axios.get(rest_api_url+grid_search_config_url).then((response) => {
             console.log("Got response from grid_search_config_file API: ", response);
             if(response.status === 200) {
                 setYamlString(response.data.trim());
