@@ -22,6 +22,7 @@ from data_stack.dataset.iterator import InformedDatasetIteratorIF
 import platform
 import psutil
 import pkg_resources
+import gitinfo
 from dataclasses import dataclass
 
 @dataclass
@@ -187,8 +188,15 @@ class ModelCardFactory:
                 else:
                     pytorch_total_params = 0
                 train_date = datetime.now().strftime("%d-%m-%Y")
+                git_info = gitinfo.get_git_info()
                 model_info = gs_config["model_info"]
-                return ModelDetails(model_description = model_info["model_description"], model_version = model_info["model_version"], grid_search_id = grid_search_id, train_date = train_date, source_repo = model_info["source_repo"], train_params= pytorch_total_params)
+                if git_info == None:
+                    model_version = model_info["model_version"]
+                    source_repo = "No Git dir found"
+                else:
+                    model_version = f"{model_info['model_version']} - ({git_info['commit'][:7]})"
+                    source_repo = f"{git_info['gitdir'].split('/')[-2]} - ({git_info['refs']})"
+                return ModelDetails(model_description = model_info["model_description"], model_version = model_version, grid_search_id = grid_search_id, train_date = train_date, source_repo = source_repo, train_params= pytorch_total_params)
             except Exception as e:
                 raise ModelDetailsCreationError(f"Error while fetching Model Details for Model card") from e
         
