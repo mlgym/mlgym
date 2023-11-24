@@ -105,14 +105,14 @@ class GPT2():
                     self.optimizer.step()
                     tos += (time.time() - tos_t0)
                 
-                if step % (self.num_batches_epoch//2) == 0 and not step == 0:
-                    if step >= self.num_batches_epoch:
-                        el_step = step - ((step//self.num_batches_epoch) * self.num_batches_epoch)
-                        if el_step == 0: el_step = self.num_batches_epoch
-                    else:
-                        el_step = step
-                        elapsed = self.format_time(time.time() - t0)
-                        print('GPU {:} Batch {:>5,}  of  {:>5,}. Loss: {:>5,}. Elapsed: {:}.'.format(self.accelerator.device.index, el_step, self.num_batches_epoch, batch_loss, elapsed))
+                    if step % (self.num_batches_epoch//4) == 0 and not step == 0:
+                        if step >= self.num_batches_epoch:
+                            el_step = step - ((step//self.num_batches_epoch) * self.num_batches_epoch)
+                            if el_step == 0: el_step = self.num_batches_epoch
+                        else:
+                            el_step = step
+                            elapsed = self.format_time(time.time() - t0)
+                            print('GPU {:} Batch {:>5,}  of  {:>5,}. Loss: {:>5,}. Elapsed: {:}.'.format(self.accelerator.device.index, el_step, self.num_batches_epoch, batch_loss, elapsed))
 
                 if step % self.num_batches_epoch == 0 and not step == 0:     
 
@@ -125,15 +125,17 @@ class GPT2():
                     print("GPU {:} Epoch {:} / {:} Average training loss: {:.2f} Training epoch took: {:}".format(self.accelerator.device.index, epoch_i + 1, self.epochs, avg_train_loss, self.format_time(training_time)))
 
                     # self.accelerator.wait_for_everyone()
-                    eval_sats = self.evaluate()
-                    self.logger.info(self.log(epoch_i=epoch_i,
-                                                avg_train_loss=avg_train_loss,
-                                                training_time=training_time,
-                                                train_forward_pass=tfp,
-                                                train_backward_pass=tbp,
-                                                train_opt_step=tos,
-                                                train_pp=tpp,
-                                                eval_result_payload= eval_sats), main_process_only=False)
+                    # self.accelerator.end_training()
+                    eval_sats = self.log(epoch_i=epoch_i,
+                                    avg_train_loss=avg_train_loss,
+                                    training_time=training_time,
+                                    train_forward_pass=tfp,
+                                    train_backward_pass=tbp,
+                                    train_opt_step=tos,
+                                    train_pp=tpp)
+                    results = self.evaluate(eval_sats)
+                    # logger.info(json.dumps(results))
+                    logger.log(level=60, msg = json.dumps(results))
                     
                     epoch_i += 1
                     if epoch_i == self.epochs:
@@ -193,9 +195,8 @@ class GPT2():
                                                                             self.format_time(eval_time)))
         return avg_eval_loss, perplexity, eval_time, epp, efp, acl
     
-    def evaluate(self):
+    def evaluate(self, eval_result_payload):
         eval_prep = []
-        eval_result_payload = {}
         eval_prep.append({"eval_type": "validation", "dataloader": self.validation_dataloader})
         for eval_t in eval_prep:
             avg_eval_loss, perplexity, eval_time, eval_pp, eval_forward_pass, acl = self.eval(dataloader=eval_t["dataloader"], eval_type= eval_t["eval_type"])
@@ -210,13 +211,13 @@ class GPT2():
             check_time = self.save_checkpoint()
         else:
             check_time = 0.0
-        self.accelerator
+        self.accelerator.wait_for_everyone()
         eval_result_payload["checkpointing"] = check_time
         return eval_result_payload
     
     def log(self, epoch_i:int, avg_train_loss:float, training_time:float, train_forward_pass: float, 
-            train_backward_pass: float, train_opt_step: float, train_pp: float, eval_result_payload):
-
+            train_backward_pass: float, train_opt_step: float, train_pp: float):
+        eval_result_payload = {}
         eval_result_payload["rank"] = self.accelerator.device.index
         eval_result_payload["epoch"] = epoch_i
         eval_result_payload["training_loss"] = avg_train_loss
@@ -227,42 +228,26 @@ class GPT2():
         eval_result_payload["train_post_processing"] = train_pp
         return eval_result_payload
 
-def log(logs, epochs: int, log_path: str, device_count:int, exp_t0:float):
-    df = pd.DataFrame(logs)
-    exp_time = time.time() - exp_t0
-    result = []
-    for epoch_i in range(0,epochs):
-        dict = {}
-        # dict["experiment_key"] = f"rank_{device_count}"
-        for col in df.columns:
-            if col == 'epoch':
-                dict[col] = epoch_i
-            elif col == 'checkpointing':
-                dict[col] = df.loc[df['epoch'] == epoch_i, col].max()
-            elif col != 'rank':
-                dict[col] = df.loc[df['epoch'] == epoch_i, col].mean()
-        dict["epoch_time"] = dict['training_time'] + dict['eval_time'] + dict['checkpointing']
-        dict["total_experiment_time"] = exp_time
-        result.append(dict)
-    
-    with open(log_path, "w") as outfile:
-        json.dump(result, outfile)
-
 if __name__ == '__main__':
     exp_t0 = time.time()
     device_count = torch.cuda.device_count()
     check_path = os.path.join(os.path.dirname(__file__), "checkpoints", f"rank_acc_{device_count}.pth")
     log_path = os.path.join(os.path.dirname(__file__), "logs", f"rank_acc_{device_count}.log")
-    # Creating an object
-    logging.basicConfig(filename=log_path,
-                    filemode='a')
-    logger = logging.getLogger(__name__)
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     os.makedirs(os.path.dirname(check_path), exist_ok=True)
+        
+    logging.basicConfig(
+        filename= log_path,
+        format="%(message)s",
+        level=60
+    )
+    # Creating an object
+    logger = logging.getLogger("gpt2")
+    
     LR = 1e-4
     BATCH_SIZE = 8
-    NUM_BATCHES_EPOCH = 100
-    EPOCHS = 2
+    NUM_BATCHES_EPOCH = 1000
+    EPOCHS = 1
     # dataset_name = "wikitext-2-raw-v1"
     DATASET_NAME = "wikitext-103-raw-v1" 
     GPT_VERSION = "gpt2"
@@ -283,9 +268,5 @@ if __name__ == '__main__':
                 logger = logger)
     
     gpt2.run()
-    exp_time = time.time() - exp_t0
-    logger.info({"total_experiment_time": exp_time})
-    # for logs in log_stats:
-    #     logs["total_experiment_time"] = exp_time
-    # with open(log_path, "w") as outfile:
-    #     json.dump(log_stats, outfile)
+    logger.log(level=60, msg = json.dumps({"total_experiment_time": time.time() - exp_t0}))
+    # logger.critical(json.dumps({"total_experiment_time": time.time() - exp_t0}))

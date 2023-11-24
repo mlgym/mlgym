@@ -139,7 +139,7 @@ class GPT2():
                 batch_loss = loss.item()
                 total_train_loss += batch_loss
 
-                if step % (self.num_batches_epoch//2) == 0 and not step == 0:
+                if step % (self.num_batches_epoch//4) == 0 and not step == 0:
                     if step >= self.num_batches_epoch:
                         el_step = step - ((step//self.num_batches_epoch) * self.num_batches_epoch)
                         if el_step == 0: el_step = self.num_batches_epoch
@@ -187,7 +187,7 @@ class GPT2():
                         
                     print("GPU {:} Epoch {:} / {:} Average training loss: {:.2f} Training epoch took: {:}".format(self.device, epoch_i + 1,
                                                                                    self.epochs, avg_train_loss, self.format_time(training_time)))
-
+                    
                     run_stats.append(self.evaluate_and_log( epoch_i=epoch_i,
                                                             avg_train_loss=avg_train_loss,
                                                             training_time=training_time,
