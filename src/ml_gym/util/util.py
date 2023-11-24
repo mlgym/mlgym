@@ -24,6 +24,7 @@ import psutil
 import pkg_resources
 import gitinfo
 from dataclasses import dataclass
+import sys
 
 @dataclass
 class ModelDetails:
@@ -160,7 +161,7 @@ class ModelCard:
 class ModelCardFactory:
 
     @staticmethod
-    def create_model_card(grid_search_id: str, exp_config: dict, gs_config: dict, model: NNModel = None) -> Dict:
+    def create_model_card(grid_search_id: str, exp_config: dict, gs_config: dict, entry_point_cmd: str, model: NNModel = None) -> Dict:
         """
         Create Model card.
         :params:
@@ -292,7 +293,8 @@ class ModelCardFactory:
             model_card = ModelCard(
                 model_details = update_model_details(grid_search_id = grid_search_id, gs_config = gs_config, model=model),
                 dataset_details = update_dataset_details(exp_config = exp_config),
-                experiment_environment = ExperimentEnvironment(system_env = ExperimentEnvironment.create_system_info()),
+                experiment_environment = ExperimentEnvironment(system_env = ExperimentEnvironment.create_system_info(), 
+                                                               entry_point_cmd = entry_point_cmd),
                 training_details = update_training_details(exp_config = exp_config),
                 eval_details = update_evaluation_details(exp_config = exp_config),
                 pipeline_details = update_pipeline_details(exp_config = exp_config)

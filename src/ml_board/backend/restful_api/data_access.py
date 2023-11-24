@@ -73,7 +73,7 @@ class DataAccessIF(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def create_model_card(self, grid_search_id: str, experiment_id: str) -> Dict:
+    def create_model_card(self, grid_search_id: str, experiment_id: str, entrypoint: str) -> Dict:
         raise NotImplementedError
 
 
@@ -445,7 +445,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"Path {requested_full_path} is not safe.")
 
-    def create_model_card(self, grid_search_id: str, experiment_id: str) -> Dict:
+    def create_model_card(self, grid_search_id: str, experiment_id: str, entrypoint: str) -> Dict:
         """
         Fetch Model card info if available or else create & store model card info in event storage.
         :params:
@@ -484,7 +484,7 @@ class FileDataAccess(DataAccessIF):
                     gs_config = self.load_config(grid_search_id=grid_search_id, config_name="grid_search_config", file_type="yml")
 
                     model_card = ModelCardFactory.create_model_card(
-                        grid_search_id=grid_search_id, exp_config=exp_config, gs_config=gs_config, model=model
+                        grid_search_id=grid_search_id, exp_config=exp_config, gs_config=gs_config, entry_point_cmd=entrypoint, model=model
                     )
                     payload_dict = RawTextFile(file_format=FileFormat.JSON, content=json.dumps(model_card))
                     self.add_config_to_experiment(
