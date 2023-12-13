@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Fab, Grid, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import { Box, Card, CardContent, Fab, Grid, FormControl, InputLabel, MenuItem, Select, CardHeader } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
 import TrainingDetails from "./trainingDetails/TrainingDetails";
 import EvaluationDetails from "./evaluationDetails/EvaluationDetails";
@@ -9,7 +9,7 @@ import { useAppSelector } from "../../app/hooks";
 import { selectChartsByExperimentId } from "../../redux/charts/chartsSlice";
 import { CardDetails } from "../experimentPage/ExperimentDetails/CardDetails";
 import WorkspacesIcon from '@mui/icons-material/Workspaces';
-import StorageIcon from '@mui/icons-material/Storage';
+
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import InsightsIcon from '@mui/icons-material/Insights';
 import ModelTrainingIcon from '@mui/icons-material/ModelTraining';
@@ -23,7 +23,9 @@ import api from '../../app/ApiMaster';
 import DownloadIcon from '@mui/icons-material/Download';
 import GraphComponent from "./pipelineDetails/GraphComponent";
 import PipelineDetails from "./pipelineDetails/PipelineDetails";
+import PipelineCard from "./PipelineCard";
 import { AnyKeyValuePairs } from "../../app/interfaces";
+import { IPipeline } from "./PipelineCard/interface";
 
 export interface pythonPackagesListInterface {
     "name": string,
@@ -53,13 +55,13 @@ const card_feel = `
     border-radius: 5px;
     margin-bottom: 20px;
 `;
-    
+
 export default function ModelCard() {
-    
+
     const isSocketConnected = useAppSelector(isConnected);
     const grid_search_id = useAppSelector(getGridSearchId);
-    const rest_api_url = useAppSelector(getRestApiUrl);    
-    
+    const rest_api_url = useAppSelector(getRestApiUrl);
+
     const [searchParams, setSearchParams] = useSearchParams();
     const [tableRows, setTableRows] = useState(0);
     let experiment_id = searchParams.get("experiment_id") as string;
@@ -67,29 +69,28 @@ export default function ModelCard() {
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
-    const [datasetDetails, setDatasetDetails] = useState<AnyKeyValuePairs>({});
+    const [datasetDetails, setDatasetDetails] = useState<AnyKeyValuePairs>({}); // redundant?
     const [evalDetails, setEvalDetails] = useState<AnyKeyValuePairs>({});
     const [modelDetails, setModelDetails] = useState<AnyKeyValuePairs>({});
     const [trainingDetails, setTrainingDetails] = useState<AnyKeyValuePairs>({});
-    const [pipelineDetails, setPipelineDetails] = useState<AnyKeyValuePairs>({});
-    const [treeOrientation, setTreeOrientation] = useState("horizontal");
+    const [pipelineDetails, setPipelineDetails] = useState<IPipeline>({});
     const [sysInfoBasicData, setSysInfoBasicData] = useState<AnyKeyValuePairs>({});
     const [sysInfoCudaDevicesData, setSysInfoCudaDevicesData] = useState(Array<cudaDeviceListInterface>);
     const [sysInfoPythonPackages, setSysInfoPythonPackages] = useState(Array<pythonPackagesListInterface>);
     const [sysInfoArchitecture, setSysInfoArchitecture] = useState(Array<"">);
-    const [sysInfoCarbonFootPrintDetails,setSysInfoCarbonFootPrintDetails] = useState("");
-    const [sysInfoEntryPointCmdDetails,setSysInfoEntryPointCmdDetails] = useState("");
+    const [sysInfoCarbonFootPrintDetails, setSysInfoCarbonFootPrintDetails] = useState("");
+    const [sysInfoEntryPointCmdDetails, setSysInfoEntryPointCmdDetails] = useState("");
 
     useEffect(() => {
-        if(experiment_id && isSocketConnected) {
+        if (experiment_id && isSocketConnected) {
             getModelCardData();
         }
-    },[experiment_id, isSocketConnected]);
+    }, [experiment_id, isSocketConnected]);
 
     function getModelCardData() {
         const model_card_sys_info = api.model_card_sys_info
-                                        .replace("<grid_search_id>", grid_search_id)
-                                        .replace("<experiment_id>", experiment_id);
+            .replace("<grid_search_id>", grid_search_id)
+            .replace("<experiment_id>", experiment_id);
 
         setError("");
         setIsLoading(true);
@@ -103,15 +104,15 @@ export default function ModelCard() {
                 setEvalDetails(resp_data.eval_details);
                 setDatasetDetails(resp_data.dataset_details);
                 setPipelineDetails(resp_data.pipeline_details);
-                console.log(pipelineDetails);
+                console.log("pipelineDetails: ", resp_data.pipeline_details);
                 setSysInfoCarbonFootPrintDetails(resp_data.experiment_environment.carbon_footprint);
                 setSysInfoEntryPointCmdDetails(resp_data.experiment_environment.entry_point_cmd);
                 Object.keys(resp_data.experiment_environment.system_env).map((sysInfoKeyName) => {
                     let data = resp_data.experiment_environment.system_env[sysInfoKeyName];
-                    if(sysInfoKeyName === "cuda_device_list") {
+                    if (sysInfoKeyName === "cuda_device_list") {
                         setSysInfoCudaDevicesData(data);
                     }
-                    else if(sysInfoKeyName === "python-packages") {
+                    else if (sysInfoKeyName === "python-packages") {
                         setSysInfoPythonPackages(data)
                     }
                     else if (sysInfoKeyName === "architecture") {
@@ -128,11 +129,11 @@ export default function ModelCard() {
             }
             setIsLoading(false);
         })
-        .catch((error) => {
-            console.log("Error in model_card_sys_info: ", error);
-            setIsLoading(false);
-            setError("Error occured / No system info available");
-        });
+            .catch((error) => {
+                console.log("Error in model_card_sys_info: ", error);
+                setIsLoading(false);
+                setError("Error occured / No system info available");
+            });
     }
 
     const handleSaveAsHTML = async () => {
@@ -154,18 +155,18 @@ export default function ModelCard() {
         const tempContainer = document.createElement('div');
         tempContainer.innerHTML = newHTML;
         pipeline_graph_component.innerHTML = tempContainer.innerHTML;
-        
+
         // Collect the CSS styles from style elements and chart stylesheets
         const css_styles = Array.from(document.styleSheets)
-        .map((styleSheet) => {
-            if (styleSheet.cssRules) {
-                return Array.from(styleSheet.cssRules)
-                    .map((rule) => rule.cssText)
-                    .join('\n');
-            }
-            return '';
-        })
-        .join('\n');
+            .map((styleSheet) => {
+                if (styleSheet.cssRules) {
+                    return Array.from(styleSheet.cssRules)
+                        .map((rule) => rule.cssText)
+                        .join('\n');
+                }
+                return '';
+            })
+            .join('\n');
 
         const htmlContent = `
             <!DOCTYPE html>
@@ -197,16 +198,16 @@ export default function ModelCard() {
         const link = document.createElement('a');
         link.href = url;
         link.download = `Experiment_${experiment_id}_ModelCard`;
-        link.click();   
-        
+        link.click();
+
         // had to call this method again. Otherwise, the graph would remain converted to image and couldn't be interacted with again. So it's a hack. Might need to find a better solution later.
         getModelCardData();
     }
 
     const convertDivToPNG = async (divId: string, divToCaptureCustom?: HTMLElement) => {
         let divToCapture = null;
-        if(divId !== "") {
-            divToCapture = document.getElementById(divId!) as HTMLElement;            
+        if (divId !== "") {
+            divToCapture = document.getElementById(divId!) as HTMLElement;
         }
         else {
             divToCapture = divToCaptureCustom;
@@ -224,205 +225,167 @@ export default function ModelCard() {
             throw error;
         }
     }
-    
-    return(
+
+    return (
         <div>
             {
                 isSocketConnected ?
-                <div>
-                    {
-                        isLoading ?
-                        <Card className={styles.cardcontent_model_cards}>
-                            <CardContent>
-                                <div className={styles.loading_text}> 
-                                    Please wait, loading model cards...
-                                </div>
-                            </CardContent>
-                        </Card>
-                        :
-                        error.length > 0 ?
-                        <Card className={styles.cardcontent_model_cards}>
-                            <CardContent>
-                                <div className={styles.error_text}> 
-                                    {error}
-                                </div>
-                            </CardContent>
-                        </Card>
-                        :
-                        <>  
-                            <div className={styles.fab}>
-                                <Fab color="primary" onClick={()=>handleSaveAsHTML()}>
-                                    <DownloadIcon />
-                                </Fab>
-                            </div>
-                            
-                            <div id="modelcard" className={styles.main}>
-                                <Grid id="dataset_details" container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
-                                    
-                                    <Grid item={true} xs={12} sm={12} md={12} lg={12}>
-                                        <div className={styles.card_feel}>
-                                            <div className={styles.title_container}>
-                                                <div>
-                                                    <WorkspacesIcon/>
-                                                </div>
-                                                <div className={styles.title_container_text}>
-                                                    Model Details
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <CardDetails
-                                                    cardTitle=""
-                                                    contentObj={modelDetails}
-                                                />
-                                            </div>
+                    <div>
+                        {
+                            isLoading ?
+                                <Card className={styles.cardcontent_model_cards}>
+                                    <CardContent>
+                                        <div className={styles.loading_text}>
+                                            Please wait, loading model cards...
                                         </div>
-                                    </Grid>
-                                </Grid>
-                                <Grid 
-                                    id="training_evaluation"
-                                    container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}
-                                    className={styles.grid_contianer}
-                                >
-                                    <Grid item={true} xs={12} sm={12} md={6} lg={6}>
-                                        <div className={styles.card_feel}>
-                                            <div className={styles.title_container}>
-                                                <div>
-                                                    <ModelTrainingIcon />
-                                                </div>
-                                                <div className={styles.title_container_text}>
-                                                    Training
-                                                </div>
+                                    </CardContent>
+                                </Card>
+                                :
+                                error.length > 0 ?
+                                    <Card className={styles.cardcontent_model_cards}>
+                                        <CardContent>
+                                            <div className={styles.error_text}>
+                                                {error}
                                             </div>
-                                            <div>
-                                                <TrainingDetails
-                                                    trainingDetails={trainingDetails}
-                                                />
-                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    :
+                                    <>
+                                        <div className={styles.fab}>
+                                            <Fab color="primary" onClick={() => handleSaveAsHTML()}>
+                                                <DownloadIcon />
+                                            </Fab>
                                         </div>
-                                    </Grid>
-                                    <Grid item={true} xs={12} sm={12} md={6} lg={6}>
-                                        <div className={styles.card_feel}>
-                                            <div className={styles.title_container}>
-                                                <div>
-                                                    <QueryStatsIcon />
-                                                </div>
-                                                <div className={styles.title_container_text}>
-                                                    Evaluation
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <EvaluationDetails
-                                                    evalDetails={evalDetails}
-                                                />
-                                            </div>
-                                        </div>
-                                    </Grid>
-                                </Grid>
-                                <div id="pipeline_details" className={styles.card_feel}>
-                                    <div className={styles.title_container_w_select}>
-                                        <div className={styles.title_sub_container}>
-                                            <div className={styles.title_container_icon}>
-                                                <StorageIcon/>
-                                            </div>
-                                            <div className={styles.title_container_text}>
-                                                Pipeline Graph
-                                            </div>
-                                        </div>
-                                        {
-                                            pipelineDetails && pipelineDetails[Object.keys(pipelineDetails)[0]]?.hasOwnProperty('nodes') ?
-                                            <div>
-                                                <FormControl fullWidth>
-                                                    <InputLabel>Orientation</InputLabel>
-                                                    <Select
-                                                        value={treeOrientation}
-                                                        label="Orientation"
-                                                        onChange={(e) => setTreeOrientation(e.target.value)}
-                                                    >
-                                                        <MenuItem value={"vertical"}>vertical</MenuItem>
-                                                        <MenuItem value={"horizontal"}>horizontal</MenuItem>
-                                                    </Select>
-                                                </FormControl>
-                                            </div>
-                                            :
-                                            null
-                                        }
-                                    </div>
-                                    <div>
-                                        {
-                                            pipelineDetails && pipelineDetails[Object.keys(pipelineDetails)[0]]?.hasOwnProperty('nodes') ?
-                                            <PipelineDetails 
-                                                pipelineDetails={pipelineDetails}
-                                                experiment_id={experiment_id}
-                                                treeOrientationProp={treeOrientation}
-                                            />
-                                            :
-                                            <GraphComponent data={pipelineDetails}/>
-                                        }
-                                    </div>
-                                </div>
-                                <div id="results_visualization" className={styles.card_feel}>
-                                    <div className={styles.title_container}>
-                                        <div>
-                                            <InsightsIcon />
-                                        </div>
-                                        <div className={styles.title_container_text}>
-                                            Results Visualizations
-                                        </div>
-                                    </div>
-                                    <div style={{ marginTop: "5px"}}>
-                                        <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
-                                            {
-                                                Object.keys(selectedExpGraphs).length > 0 ?
-                                                <Grid container rowSpacing={1} spacing={{ xs: 2, md: 3 }} className={styles_graphs.grid_container}>
-                                                    {
-                                                        Object.keys(selectedExpGraphs).map((chart_id) => 
-                                                            <Graph 
-                                                                key={chart_id.toString()} 
-                                                                chart_id={chart_id.toString()} 
-                                                                exp_id={selectedExpGraphs[chart_id].exp_id.toString()}
-                                                                exp_data={selectedExpGraphs[chart_id].data}
-                                                            />
-                                                        )
-                                                    }
-                                                </Grid>
-                                                :
-                                                <Box className={styles_graphs.no_data_to_viz}>
-                                                    --- No Data To Visualize ---
-                                                </Box>
-                                            }
-                                        </Grid>
-                                    </div>
-                                </div>
 
-                                <div id="environment" className={styles.card_feel}>
-                                    <div className={styles.title_container}>
-                                        <div>
-                                            <TravelExploreIcon />
+                                        <div id="modelcard" className={styles.main}>
+                                            <Grid id="dataset_details" container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
+
+                                                <Grid item={true} xs={12} sm={12} md={12} lg={12}>
+                                                    <div className={styles.card_feel}>
+                                                        <div className={styles.title_container}>
+                                                            <div>
+                                                                <WorkspacesIcon />
+                                                            </div>
+                                                            <div className={styles.title_container_text}>
+                                                                Model Details
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <CardDetails
+                                                                cardTitle=""
+                                                                contentObj={modelDetails}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </Grid>
+                                            </Grid>
+                                            <Grid
+                                                id="training_evaluation"
+                                                container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}
+                                                className={styles.grid_contianer}
+                                            >
+                                                <Grid item={true} xs={12} sm={12} md={6} lg={6}>
+                                                    <div className={styles.card_feel}>
+                                                        <div className={styles.title_container}>
+                                                            <div>
+                                                                <ModelTrainingIcon />
+                                                            </div>
+                                                            <div className={styles.title_container_text}>
+                                                                Training
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <TrainingDetails
+                                                                trainingDetails={trainingDetails}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </Grid>
+                                                <Grid item={true} xs={12} sm={12} md={6} lg={6}>
+                                                    <div className={styles.card_feel}>
+                                                        <div className={styles.title_container}>
+                                                            <div>
+                                                                <QueryStatsIcon />
+                                                            </div>
+                                                            <div className={styles.title_container_text}>
+                                                                Evaluation
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <EvaluationDetails
+                                                                evalDetails={evalDetails}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </Grid>
+                                            </Grid>
+
+                                            {pipelineDetails && Object.keys(pipelineDetails).length > 0 && <PipelineCard details={pipelineDetails} />}
+
+
+                                            <div id="results_visualization" className={styles.card_feel}>
+                                                <div className={styles.title_container}>
+                                                    <div>
+                                                        <InsightsIcon />
+                                                    </div>
+                                                    <div className={styles.title_container_text}>
+                                                        Results Visualizations
+                                                    </div>
+                                                </div>
+                                                <div style={{ marginTop: "5px" }}>
+                                                    <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
+                                                        {
+                                                            Object.keys(selectedExpGraphs).length > 0 ?
+                                                                <Grid container rowSpacing={1} spacing={{ xs: 2, md: 3 }} className={styles_graphs.grid_container}>
+                                                                    {
+                                                                        Object.keys(selectedExpGraphs).map((chart_id) =>
+                                                                            <Graph
+                                                                                key={chart_id.toString()}
+                                                                                chart_id={chart_id.toString()}
+                                                                                exp_id={selectedExpGraphs[chart_id].exp_id.toString()}
+                                                                                exp_data={selectedExpGraphs[chart_id].data}
+                                                                            />
+                                                                        )
+                                                                    }
+                                                                </Grid>
+                                                                :
+                                                                <Box className={styles_graphs.no_data_to_viz}>
+                                                                    --- No Data To Visualize ---
+                                                                </Box>
+                                                        }
+                                                    </Grid>
+                                                </div>
+                                            </div>
+
+                                            <div id="environment" className={styles.card_feel}>
+                                                <div className={styles.title_container}>
+                                                    <div>
+                                                        <TravelExploreIcon />
+                                                    </div>
+                                                    <div className={styles.title_container_text}>
+                                                        Environment
+                                                    </div>
+                                                </div>
+                                                <div style={{ marginTop: "5px" }}>
+                                                    <EnvironmentDetails
+                                                        fromPage="ModelCard"
+                                                        experiment_id={experiment_id}
+                                                        tableRows={tableRows}
+                                                        sysInfoBasicDataProps={sysInfoBasicData}
+                                                        sysInfoCudaDevicesDataProps={sysInfoCudaDevicesData}
+                                                        sysInfoPythonPackagesProps={sysInfoPythonPackages}
+                                                        sysInfoArchitectureProps={sysInfoArchitecture}
+                                                        sysInfoCarbonFootPrintDetailsProps={sysInfoCarbonFootPrintDetails}
+                                                        sysInfoEntryPointCmdDetailsProps={sysInfoEntryPointCmdDetails}
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className={styles.title_container_text}>
-                                            Environment
-                                        </div>
-                                    </div>
-                                    <div style={{ marginTop: "5px"}}>
-                                        <EnvironmentDetails 
-                                            fromPage="ModelCard"
-                                            experiment_id={experiment_id} 
-                                            tableRows={tableRows}
-                                            sysInfoBasicDataProps={sysInfoBasicData}
-                                            sysInfoCudaDevicesDataProps={sysInfoCudaDevicesData}
-                                            sysInfoPythonPackagesProps={sysInfoPythonPackages}
-                                            sysInfoArchitectureProps={sysInfoArchitecture}
-                                            sysInfoCarbonFootPrintDetailsProps={sysInfoCarbonFootPrintDetails}
-                                            sysInfoEntryPointCmdDetailsProps={sysInfoEntryPointCmdDetails}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </>
-                    }
-                </div>
-                :
-                null
+                                    </>
+                        }
+                    </div>
+                    :
+                    null
             }
         </div>
     );
