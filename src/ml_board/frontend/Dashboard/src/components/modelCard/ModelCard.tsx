@@ -104,7 +104,6 @@ export default function ModelCard() {
                 setEvalDetails(resp_data.eval_details);
                 setDatasetDetails(resp_data.dataset_details);
                 setPipelineDetails(resp_data.pipeline_details);
-                console.log("pipelineDetails: ", resp_data.pipeline_details);
                 setSysInfoCarbonFootPrintDetails(resp_data.experiment_environment.carbon_footprint);
                 setSysInfoEntryPointCmdDetails(resp_data.experiment_environment.entry_point_cmd);
                 Object.keys(resp_data.experiment_environment.system_env).map((sysInfoKeyName) => {

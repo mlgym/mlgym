@@ -1,9 +1,21 @@
+import { Edge, Node } from "reactflow";
+
 export interface IPipeline {
-    [nodeName: string]: INode;
+    [nodeName: string]: IPipelineNode;
 }
 
-export interface INode {
+export interface IPipelineNode {
     config_str: string;
     requirements: Array<string>;
-    nodes: INode;
+    nodes: IPipelineNode;
+}
+
+export interface IReactFlowNodeData {
+    label: string;
+    config: JSON;
+}
+
+export interface IReactFlowPipeline {
+    nodes: Node<IReactFlowNodeData>[];
+    edges: Edge[];
 }

@@ -1,20 +1,20 @@
 import { Edge, MarkerType, Node } from "reactflow";
-import { INode } from "./interface";
+import { IReactFlowNodeData, IPipelineNode, IReactFlowPipeline } from "./interface";
 
 
-export function reactFlowGraph(nodeKey: string, node: INode): { nodes: Node[], edges: Edge[] } {
-    const nodes: Node[] = [];
+export function parseReactFlowPipeline(nodeKey: string, node: IPipelineNode): IReactFlowPipeline {
+    const nodes: Node<IReactFlowNodeData>[] = [];
     const edges: Edge[] = [];
     let shift = 0;
 
-    function traverse(currentNodeName: string, currentNode: INode) {
+    function traverse(currentNodeName: string, currentNode: IPipelineNode) {
         nodes.push({
             id: currentNodeName, // required
             position: { x: 0, y: 100 * shift++ }, // required
             data: {
                 label: currentNodeName,
+                config: JSON.parse(currentNode.config_str),
                 // TODO: custom node to handle if one node has multiple children that they don't overlap
-                // name: currentNodeName,
                 // in_count: nodeAsTarget[key],
                 // out_count: nodeAsSource[key],
                 // config: currentNode.config_str,
@@ -33,8 +33,7 @@ export function reactFlowGraph(nodeKey: string, node: INode): { nodes: Node[], e
                 // targetHandle: (nodeAsTarget[to] - 1).toString(),
                 // animated: true,
             });
-            if (nextNodeObj)
-                traverse(nextNodeName, nextNodeObj);
+            traverse(nextNodeName, nextNodeObj);
         }
     }
 

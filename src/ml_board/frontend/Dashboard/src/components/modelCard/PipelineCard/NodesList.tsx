@@ -4,18 +4,18 @@ import usePipelineCardContext from "./PipelineCardContext";
 
 
 export default function () {
-    const { activeNodeName, pipelineDetails, setActiveNodeName } = usePipelineCardContext();
+    const { activeNode, setActivePipelineKey, availablePipelineKeys } = usePipelineCardContext();
 
-    const listItems = Object.keys(pipelineDetails).map((thisNodesName) => (
-        <ListItem key={thisNodesName}>
+    const listItems = availablePipelineKeys.map((pipelineKey) => (
+        <ListItem key={pipelineKey}>
             <ListItemButton
-                selected={thisNodesName === activeNodeName}
-                onClick={(event) => setActiveNodeName(thisNodesName)}
+                selected={pipelineKey === activeNode}
+                onClick={(event) => setActivePipelineKey(pipelineKey)}
             >
                 <ListItemIcon>
                     <WidgetsIcon />
                 </ListItemIcon>
-                <ListItemText primary={thisNodesName} />
+                <ListItemText primary={pipelineKey} />
             </ListItemButton>
         </ListItem>
     ));
