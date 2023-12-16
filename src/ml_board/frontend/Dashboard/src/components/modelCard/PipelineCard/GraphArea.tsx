@@ -3,29 +3,23 @@ import ReactFlow, { Background, useNodesState, useEdgesState, useReactFlow, Mini
 import usePipelineCardContext from "./PipelineCardContext";
 import { useEffect } from "react";
 
-//NOTE: when the values of usePipelineCardContext change this causes the first render
-// but then a secound render happens as setNodes and setEdges are carried out after the first render
 
 export default function () {
     const { activePipeline, setActiveNode } = usePipelineCardContext();
+    const { nodes, edges } = activePipeline ?? { nodes: [], edges: [] };
 
-    const [nodes, setNodes, onNodesChange] = useNodesState(activePipeline?.nodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(activePipeline?.edges);
-
-    const { fitView } = useReactFlow();
+    const { fitView, setNodes, setEdges } = useReactFlow();
     const fitTheView = () => setTimeout(() => fitView({ duration: 1000 }), 100);
 
     useEffect(() => {
-        setNodes(activePipeline?.nodes);
-        setEdges(activePipeline?.edges);
+        setNodes(nodes);
+        setEdges(edges);
         fitTheView();
     }, [activePipeline]);
 
     return (<ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
+        defaultNodes={nodes}
+        defaultEdges={edges}
         onNodeClick={(event, node) => {
             setActiveNode(node.id);
             fitTheView();
