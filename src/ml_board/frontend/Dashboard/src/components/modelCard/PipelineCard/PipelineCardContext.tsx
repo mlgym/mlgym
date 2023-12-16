@@ -1,10 +1,9 @@
-import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState } from "react";
+import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useMemo, useState } from "react";
 import { IPipeline, IReactFlowPipeline } from "./interface";
-import { parseReactFlowPipeline } from "./utils";
 import { usePipeline } from "./hooks";
 
 interface IPipelineCardContext {
-    setActivePipelineKey(key: string): void;
+    activePipelineKey: string; setActivePipelineKey(key: string): void;
     activeNode: string; setActiveNode: Dispatch<SetStateAction<string>>;
     activePipeline: IReactFlowPipeline;
     availablePipelineKeys: string[];
@@ -31,7 +30,7 @@ export function PipelineCardContextProvider({
 
     return (
         <pipelineCardContext.Provider value={{
-            setActivePipelineKey,
+            activePipelineKey:activePlKey,setActivePipelineKey,
             activeNode, setActiveNode,
             activePipeline, availablePipelineKeys
         }}>

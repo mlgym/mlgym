@@ -1,23 +1,17 @@
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import WidgetsIcon from '@mui/icons-material/Widgets';
 import usePipelineCardContext from "./PipelineCardContext";
+import React from "react";
 
 
 export default function () {
-    const { activeNode, setActivePipelineKey, availablePipelineKeys } = usePipelineCardContext();
+    const { activePipelineKey, setActivePipelineKey, availablePipelineKeys } = usePipelineCardContext();
 
     const listItems = availablePipelineKeys.map((pipelineKey) => (
-        <ListItem key={pipelineKey}>
-            <ListItemButton
-                selected={pipelineKey === activeNode}
-                onClick={(event) => setActivePipelineKey(pipelineKey)}
-            >
-                <ListItemIcon>
-                    <WidgetsIcon />
-                </ListItemIcon>
-                <ListItemText primary={pipelineKey} />
-            </ListItemButton>
-        </ListItem>
+        <Item key={pipelineKey}
+            activePipelineKey={activePipelineKey}
+            setActivePipelineKey={setActivePipelineKey}
+            pipelineKey={pipelineKey} />
     ));
 
     return (
@@ -26,3 +20,23 @@ export default function () {
         </List>
     );
 }
+
+interface IItemProps {
+    activePipelineKey: string;
+    setActivePipelineKey(key: string): void;
+    pipelineKey: string;
+}
+
+const Item = React.memo(({ activePipelineKey, setActivePipelineKey, pipelineKey }: IItemProps) => (
+    <ListItem>
+        <ListItemButton
+            selected={pipelineKey === activePipelineKey}
+            onClick={(event) => setActivePipelineKey(pipelineKey)}
+        >
+            <ListItemIcon>
+                <WidgetsIcon />
+            </ListItemIcon>
+            <ListItemText primary={pipelineKey} />
+        </ListItemButton>
+    </ListItem>
+));
