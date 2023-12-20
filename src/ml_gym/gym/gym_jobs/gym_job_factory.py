@@ -9,12 +9,25 @@ from accelerate import Accelerator
 
 
 class GymJobFactory:
+    """
+    Class used to create GymJob to work on single or multiple CPU/GPU.
+    """
 
     @staticmethod
     def get_gym_job_from_blueprint(blueprint: BluePrint, device: torch.device, num_epochs: int,
                                    logger_collection_constructable: MLgymStatusLoggerCollectionConstructable,
                                    gs_restful_api_client_constructable: GridSearchAPIClientConstructable,
                                    num_batches_per_epoch: int = None) -> AbstractGymJob:
+        """
+        Create Gym Job to be used on single CPU or GPU.
+        :params:
+               blueprint (BluePrint): Blueprint class object having all the components for the GymJob.
+               device (torch.device): Torch device either CPUs or a specified GPU.
+               num_epochs(int): number of epochs to be trained to.
+               logger_collection_constructable (LoggerConstructableIF): Logging interface
+               gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
+               num_batches_per_epoch (int): Number of batches to be trained per epoch.
+        """ 
         components = blueprint.construct(device)
 
         logger_collection = logger_collection_constructable.construct()
@@ -39,6 +52,16 @@ class GymJobFactory:
                                              gs_restful_api_client_constructable: GridSearchAPIClientConstructable,
                                              accelerator: Accelerator,
                                              num_batches_per_epoch: int = None) -> AbstractGymJob:
+        """
+        Create Gym Job to be used on multiple GPUs using Accelerate.
+        :params:
+               blueprint (BluePrint): Blueprint class object having all the components for the GymJob.
+               num_epochs(int): number of epochs to be trained to.
+               logger_collection_constructable (LoggerConstructableIF): Logging interface
+               gs_restful_api_client_constructable (GridSearchAPIClientConstructableIF): Interface to initiate GridSearchAPIClient
+               accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
+               num_batches_per_epoch (int): Number of batches to be trained per epoch.
+        """ 
         components = blueprint.construct()
 
         logger_collection = logger_collection_constructable.construct()

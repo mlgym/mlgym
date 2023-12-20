@@ -1,0 +1,9 @@
+.main_contianer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.config_container {
+    padding-left: 10px
+}

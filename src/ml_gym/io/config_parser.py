@@ -3,6 +3,9 @@ from typing import Dict
 
 
 class YAMLConfigLoader:
+    """
+    Load Yaml files and unpack configuration.
+    """
 
     @staticmethod
     def load(path: str):
@@ -10,6 +13,8 @@ class YAMLConfigLoader:
             config: Dict = yaml.safe_load(f)
             if "global_config" in config:
                 config.pop("global_config")
+            if "model_info" in config:
+                config.pop("model_info")
         return config
 
     @staticmethod
@@ -17,4 +22,6 @@ class YAMLConfigLoader:
         config: Dict = yaml.safe_load(config_string)
         if "global_config" in config:
             config.pop("global_config")
+        if "model_info" in config:
+                config.pop("model_info")
         return config

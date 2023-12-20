@@ -1,63 +1,74 @@
-import { Toolbar } from '@mui/material';
-import { CellClickedEvent, RowClassParams, RowStyle } from 'ag-grid-community';
+import { ColDef, GetRowIdFunc, GetRowIdParams, GridColumnsChangedEvent, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
+import { AgGridReact } from "ag-grid-react";
+import { useCallback, useContext, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppSelector } from '../../../app/hooks';
+import { Row, selectAllRows, selectTableHeaders } from '../../../redux/table/tableSlice';
+
+// components & styles
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { IconButton, Tooltip } from '@mui/material';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
 import 'ag-grid-community/styles/ag-theme-alpine.css'; // Optional theme CSS
-import { AgGridReact } from "ag-grid-react";
-import { useCallback, useMemo } from 'react';
-// styles
 import styles from './Table.module.css';
 
-interface columnDefinition { field: string; }
-
 // TODO: Maybe merge Table and Dashboard?
-export default function Table({ colNames, rows }: { colNames: string[], rows: any[] }) {
+export default function Table() {
 
-  // change the array of strings to array of colum definitions
-  const colDefs: columnDefinition[] = colNames.map(
-    (colName: string) => ({
-      field: colName,
-    })
-  );
+  const navigate = useNavigate();
+
+  const rows = useAppSelector(selectAllRows);
+  const headers = useAppSelector(selectTableHeaders);
+
+  // map the visible columns obejct to an array, every element on the format { field: colName }, only taking the visible ones
+  const colDefs: ColDef<Row>[] = useMemo(() => {
+    const arr: ColDef<Row>[] = Object.entries(headers).reduce((keys: ColDef<Row>[], [colName, visible]) => {
+      if (visible === true) {
+        keys.push({ field: colName });
+      }
+      return keys;
+    }, [{
+      pinned: "right", minWidth: 50, maxWidth: 50,
+      resizable: false, sortable: false, filter: false,
+      cellRenderer: (params: ICellRendererParams) => (
+        <Tooltip title="Go to the Experiment Page" arrow placement='top-start'>
+          <IconButton
+            size="small"
+            onClick={() => {
+              navigate({
+                pathname: '/experiment',
+                search: '?experiment_id=' + (params.data as Row).experiment_id.toString(),
+              })
+            }}
+          >
+            <OpenInNewIcon />
+          </IconButton>
+        </Tooltip>)
+    }]);
+    return arr;
+  }, [headers]);
 
   const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), []);
 
-  const onCellClicked = useCallback((event: CellClickedEvent) => { console.log(event) }, []);
+  const onGridColumnsChanged: (params: GridColumnsChangedEvent<Row>) => void = useCallback(params => params.api.sizeColumnsToFit(), []);
+  const getRowId: GetRowIdFunc<Row> = useCallback((params: GetRowIdParams<Row>) => params.data.experiment_id.toString(), []);
 
   // set background colour for every row based on the rowIndex, as it is the same as experiment_id. BUT this looks bad, should be using CSS classes?
   const getRowStyle = ({ rowIndex }: RowClassParams): RowStyle => { return { background: `hsl(${rowIndex * 137.5},75%,50%)` }; };
 
   return (
     <div className="ag-theme-alpine" id={styles.ag_grid_container_table}>
-      <Toolbar />
       {/* NOTE: https://www.ag-grid.com/react-data-grid/row-styles/ */}
       <AgGridReact
         defaultColDef={defaultColDef}
-        // {/* provide column definitions */}
         columnDefs={colDefs}
-        // {/* specify auto group column definition */}
-        // autoGroupColumnDef={this.autoGroupColumnDef}
-        // {/* row data provided via props from the file store */}
         rowData={rows}
-        // // enable tree data
-        // treeData={true}
-        // // {/* return tree hierarchy from supplied data */}
-        // getDataPath={data => data.filePath}
-        // // {/* expand tree by default */}
-        // groupDefaultExpanded={-1}
-        // // {/* fit grid columns */}
-        onGridReady={params => params.api.sizeColumnsToFit()}
-        // // {/* provide context menu callback */}
-        // getContextMenuItems={this.getContextMenuItems}
-        // // {/* provide row drag end callback */}
-        // onRowDragEnd={this.onRowDragEnd}
-        // // {/* return id required for tree data and immutable data */}
-        getRowId={(params: any) => params.data.job_id}
-        // // {/* specify our FileCellRenderer component */}
-        // components={this.components}
+        onGridColumnsChanged={onGridColumnsChanged}
+        getRowId={getRowId}
+        rowSelection={"multiple"}
+        rowStyle={{ cursor: "pointer" }}
         animateRows={true} // Optional - set to 'true' to have rows animate when sorted
-        rowSelection="multiple"
-        onCellClicked={onCellClicked}
-        // getRowStyle={getRowStyle}
+        enableCellChangeFlash={true}
       >
       </AgGridReact>
     </div>

@@ -71,11 +71,37 @@ class EvalComponent(EvalComponentIF):
 
     def evaluate(self, model: NNModel, device: torch.device, epoch_result_callback_fun: Callable = None,
                  batch_processed_callback_fun: Callable = None) -> List[EvaluationBatchResult]:
+        """
+        Evaulate torch NN Model.
+
+        :params:
+               model (NNModel): Torch Neural Network module.
+               device (torch.device): Torch device either CPUs or a specified GPU.
+               epoch_result_callback_fun (Callable): numner of batches to be trained.
+               batch_processed_callback_fun (Callable): Batch number for which details to be logged.
+
+        :returns:
+            evaluation_result (List[EvaluationBatchResult]): Evaluation results of batches trained on.
+        """
         return [self.evaluate_dataset_split(model, device, split_name, loader, epoch_result_callback_fun, batch_processed_callback_fun) for split_name, loader in self.dataset_loaders.items()]
 
     def evaluate_dataset_split(self, model: NNModel, device: torch.device, split_name: str,
                                dataset_loader: DatasetLoader, epoch_result_callback_fun: Callable = None,
                                batch_processed_callback_fun: Callable = None) -> EvaluationBatchResult:
+        """
+        Evaulate torch NN Model on specific split of Data.
+
+        :params:
+               model (NNModel): Torch Neural Network module.
+               device (torch.device): Torch device either CPUs or a specified GPU.
+               split_name (str): Name of split of Dataset being evaluated.
+               dataset_loader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.
+               epoch_result_callback_fun (Callable): numner of batches to be trained.
+               batch_processed_callback_fun (Callable): Batch number for which details to be logged.
+
+        :returns:
+            evaluation_result (EvaluationBatchResult): Evaluation results of batches trained on.
+        """
         dataset_loader.device = device
         dataset_loader_iterator = tqdm.tqdm(dataset_loader, desc=f"Evaluating {dataset_loader.dataset_name} - {split_name}") if self.show_progress else dataset_loader
         post_processors = self.post_processors[split_name] + self.post_processors["default"]
@@ -137,15 +163,50 @@ class EvalComponent(EvalComponentIF):
 
     def _get_metric_fun(self, identifier: str, target_subscription: Enum, prediction_subscription: Enum,
                         metric_fun: Callable, params: Dict[str, Any]) -> Metric:
+        """
+        Creating Metric object to be used for calcualting Metrics for the model.
+
+        :params:
+               identifier (str): Torch Neural Network module.
+               target_subscription (Enum): Target Subscription key.
+               prediction_subscription (Enum): Prediction Subscription key.
+               metric_fun (Callable): Function to calculate Metric.
+               params (Dict[str, Any]): Parameters for metric calcualtion.
+
+        :returns:
+            Metric object (Metric)
+        """
         return Metric(identifier, target_subscription, prediction_subscription, metric_fun, params)
 
     def forward_batch(self, dataset_batch: DatasetBatch, model: NNModel, device: torch.device, postprocessors: List[PredictPostProcessingIF]) -> InferenceResultBatch:
+        """
+        NN Model predict on dataset batch.
+
+        :params:
+               dataset_batch (DatasetBatch): Train Dataset.
+               model (NNModel): Torch Neural Network module.
+               device (torch.device): Torch device either CPUs or a specified GPU.
+               postprocessors (List[PredictPostProcessingIF]): TODO
+
+        :returns:
+            inference_result_batch (InferenceResultBatch): Prediction performed on the model.
+        """
         model = model.to(device)
         dataset_batch.to(device)
         inference_result_batch = self.inference_component.predict(model, dataset_batch, postprocessors)
         return inference_result_batch
 
     def _calculate_metric_scores(self, inference_batch: InferenceResultBatch, split_metrics: List[Metric]) -> Dict[str, List[float]]:
+        """
+        Calcualtion of metric scores on the splits of data set.
+
+        :params:
+               inference_batch (InferenceResultBatch): Prediction performed on the model.
+               split_metrics (List[Metric]): Metrics for each split of data.
+
+        :returns:
+            metric_scores (Dict[str, List[float]]): Metric scores for splits.
+        """
         metric_scores = {}
         for metric in split_metrics:
             try:
@@ -155,6 +216,16 @@ class EvalComponent(EvalComponentIF):
         return metric_scores
 
     def _calculate_loss_scores(self, forward_batch: InferenceResultBatch, split_loss_funs: Dict[str, Loss]) -> Dict[str, List[float]]:
+        """
+        Calcualtion of loss scores on the splits of data set.
+
+        :params:
+               forward_batch (InferenceResultBatch): Prediction performed on the model.
+               split_loss_funs (Dict[str, Loss]): Loss functions for splits.
+
+        :returns:
+            loss_scores (Dict[str, Loss]): Loss scores for splits.
+        """
         loss_scores = {}
         for loss_key, loss_fun in split_loss_funs.items():
             try:
@@ -165,6 +236,16 @@ class EvalComponent(EvalComponentIF):
         return loss_scores
 
     def _get_batch_loss(self, loss_fun: Loss, forward_batch: InferenceResultBatch) -> List[float]:
+        """
+        Evaulate torch NN Model on specific split of Data.
+
+        :params:
+               loss_fun (Loss): Loss function.
+               forward_batch (InferenceResultBatch): Prediction performed on the model.
+           
+        :returns:
+            loss (List[torch.Tensor]): Loss list for batch.
+        """
         loss = loss_fun(forward_batch)
         loss = [loss.sum().detach().item()]
         return loss

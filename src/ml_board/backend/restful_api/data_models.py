@@ -21,8 +21,9 @@ class ExperimentStatus(BaseModel):
 
 # TODO Check if Enum is still needed
 class CheckpointResource(str, Enum):
-    model = "model"
-    optimizer = "optimizer"
-    lr_scheduler = "lr_scheduler"
-    stateful_components = "stateful_components"
-    accelerate = "accelerate_zip"
+    model = "model.pickle"
+    optimizer = "optimizer.pickle"
+    lr_scheduler = "lr_scheduler.pickle"
+    stateful_components = "stateful_components.pickle"
+    accelerate = "accelerate_zip.pickle"
+

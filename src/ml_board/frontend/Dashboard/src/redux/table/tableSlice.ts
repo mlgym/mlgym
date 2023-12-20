@@ -1,6 +1,13 @@
-import { createEntityAdapter, createSlice, EntityState } from "@reduxjs/toolkit";
+import { createEntityAdapter, createSlice, EntityState, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 
+export interface ColumnsFilter {
+    [columnName: string]: boolean
+}
+
+interface TableHeaders {
+    table_headers: ColumnsFilter
+}
 
 // NOTE: Row = JobStatusPayload + ExperimentStatusPayload + scores
 export interface Row {
@@ -38,26 +45,36 @@ const rowsAdapter = createEntityAdapter<Row>({
     sortComparer: ({ experiment_id: id1 }: Row, { experiment_id: id2 }: Row) => id1 - id2
 });
 
-// interface RowsState {
-//     // The unique IDs of each Row.
-//     ids: [];
-//     // A lookup table mapping Rows' IDs to the corresponding Row objects
-//     entities: {};
-// }
+const initialState: EntityState<Row> & TableHeaders = rowsAdapter.getInitialState({
+    table_headers: {},
+});
 
-const initialState: EntityState<Row> = rowsAdapter.getInitialState({});
-
-export const tableSlice = createSlice({
+const { actions, reducer } = createSlice({
     name: 'table',
     initialState,
     reducers: {
-        upsertOneRow: rowsAdapter.upsertOne,
+        // NOTE: when multiple updates targets the same ID, they will be merged into a single update, with later updates
+        // overwriting the earlier ones. (https://redux-toolkit.js.org/api/createEntityAdapter#applying-multiple-updates)
         upsertManyRows: rowsAdapter.upsertMany,
+        upsertTableHeaders: (state, { payload }: PayloadAction<string[]>) => {
+            payload.forEach((v, i) => { state.table_headers[v] = true; });
+        },
+        updateTableHeaderVisibility(state, { payload }: PayloadAction<ColumnsFilter>) {
+            for (const key in payload) {
+                if (key in state.table_headers) {
+                    state.table_headers[key] = payload[key];
+                }
+            }
+        },
+        resetTableState: () => {
+            return initialState
+        }
     }
 });
 
 
-export const { upsertOneRow, upsertManyRows } = tableSlice.actions;
+export const { upsertManyRows, upsertTableHeaders, updateTableHeaderVisibility, resetTableState } = actions;
+
 
 // create a set of memoized selectors
 export const {
@@ -65,4 +82,6 @@ export const {
     selectById: selectRowById
 } = rowsAdapter.getSelectors((state: RootState) => state.table)
 
-export default tableSlice.reducer;
+export const selectTableHeaders = (state: RootState) => state.table.table_headers;
+
+export default reducer;

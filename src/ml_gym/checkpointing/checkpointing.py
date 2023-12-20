@@ -7,11 +7,17 @@ from dataclasses import dataclass, field
 
 @dataclass
 class CheckpointingInstruction:
+    """
+    Instruction to save and delete checkpoints.
+    """
     save_current: bool = False
     checkpoints_to_delete: List[int] = field(default_factory=list)
 
 
 class CheckpointingIF(StatefulComponent):
+    """
+    Checkpoint Interface to get checkpoint instruction.
+    """
     @abstractmethod
     def get_model_checkpoint_instruction(self, current_epoch: int, num_epochs: int,
                                          evaluation_result: EvaluationBatchResult) -> CheckpointingInstruction:
@@ -19,6 +25,9 @@ class CheckpointingIF(StatefulComponent):
 
 
 class Checkpointing(CheckpointingIF):
+    """
+    Checkpoint class to get checkpoint instruction.
+    """
     def __init__(self, checkpointing_strategy: CheckpointingIF):
         self.checkpointing_strategy = checkpointing_strategy
 
@@ -29,21 +38,49 @@ class Checkpointing(CheckpointingIF):
 
 
 class SaveLastEpochOnlyCheckpointingStrategy(CheckpointingIF):
+    """
+    Class for Save Last Epoch only Checkpointing Stratergy.
+    """
     def __init__(self):
         pass
 
     def get_model_checkpoint_instruction(self, current_epoch: int, num_epochs: int,
                                          evaluation_result: EvaluationBatchResult) -> CheckpointingInstruction:
+        """
+        Fetch Checkpoint Instruction 
+
+        :params:
+               current_epoch (int): Current epoch number for cerating checkpoints.
+               num_epochs (int): Number of epochs to be trained.
+               evaluation_result (EvaluationBatchResult): Evaluation results of batches trained on.
+           
+        :returns:
+            CheckpointingInstruction: Instruction to save and delete checkpoints.
+        """
         checkpoints_to_delete = [current_epoch-1] if current_epoch > 0 else []
         return CheckpointingInstruction(save_current=True, checkpoints_to_delete=checkpoints_to_delete)
 
 
 class SaveAllCheckpointingStrategy(CheckpointingIF):
+    """
+    Class for Save All Checkpointing Stratergy.
+    """
     def __init__(self):
         pass
 
     def get_model_checkpoint_instruction(self, current_epoch: int, num_epochs: int,
                                          evaluation_result: EvaluationBatchResult) -> CheckpointingInstruction:
+        """
+        Fetch Checkpoint Instruction 
+
+        :params:
+               current_epoch (int): Current epoch number for cerating checkpoints.
+               num_epochs (int): Number of epochs to be trained.
+               evaluation_result (EvaluationBatchResult): Evaluation results of batches trained on.
+
+        :returns:
+            CheckpointingInstruction: Instruction to save and delete checkpoints.
+        """
         return CheckpointingInstruction(save_current=True, checkpoints_to_delete=[])
 
 # class RegularIntervalCheckpoint(Checkpointing):

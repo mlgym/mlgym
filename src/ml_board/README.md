@@ -72,28 +72,67 @@ payload:
 
 **Model Card**
 
-Fetch System details like CPU & GPU for model card.
+Fetch model card information for an experiment.
 
-_GET /system-info/<grid_search_id>/<experiment_id>_
+_GET /model-card/<grid_search_id>/<experiment_id>_
 
 ```json
 {
-    "platform": <Operating system>,
-    "platform-release": <OS version>,
-    "architecture": <system architecture ex: AMD64>,
-    "processor": <processor name>,
-    "ram": <ram in GB>,
-    "python-version": <version>,
-    "python-packages": <List of pip packages>,
-    "CUDNN_version":<cudnn version>,
-    "num_cuda_device": <number of cuda devices>,
-    "cuda_device_list": [
-        {
-            "name": <name of GPU>,
-            "multi_proc_count": <Processor count of GPU>,
-            "total_memory": <Total GPU memory in GB>
-        }
-    ]
+    "model_details": {
+        "model_description": < description of the model >,
+        "model_version": < model version number >,
+        "grid_search_id": < grid search id>,
+        "train_date": < Training Date >,
+        "source_repo": < Link to sorce code >,
+        "train_params": < model trainable parameters >
+    },
+    "dataset_details": {
+        "dataset_splits": {
+            "split_config": < split configuration in dataset > ,
+            "splits_percentage": < split percentage information >
+        },
+        "considered_dataset": < name of the dataset >,
+        "label_distribution": < label distribution >
+    },
+    "training_details": {
+        "hyperparams": < hyperparameters >,
+        "loss_func": < name of loss function >,
+        "optimizer": < name of the optimizer >
+    },
+    "eval_details": {
+        "loss_funcs": < list of loss functions >,
+        "metrics": [
+            {
+                "name": < metric name >,
+                "params": < metric params >
+            }
+        ]
+    },
+    "experiment_environment": {
+        "system_env": {
+            "system_info": < Operating system > ,
+            "architecture": < system architecture > ,
+            "machine_type": < machine type Ex:AMD64 >,
+            "processor": < processor name > ,
+            "num_processor_cores": < Number of processor cores > ,
+            "ram": < ram in GB > ,
+            "python-version": < version > ,
+            "python-packages": < List of pip packages > ,
+            "CUDNN_version": < cudnn version > ,
+            "num_cuda_device": < number of cuda devices > ,
+            "cuda_device_list": [{
+                "name": < name of GPU > ,
+                "total_memory": < Total GPU memory in GB > ,
+                "memory_allocated": < GPU memory allocated in GB > ,
+                "memory_reserved": < GPU memory reserved in GB > ,
+                "max_memory_reserved": < Max GPU memory reserved in GB >
+            }]
+        },
+        "carbon_footprint": < Carbon footprint >,
+        "entry_point_cmd": < Commands executed >
+    },
+    "pipeline_details": < description of the pipeline used for the experiment i.e., nested JSON>
+
 }
 ```
 

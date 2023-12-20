@@ -127,7 +127,7 @@ def terminate(text:str) -> None:
 
 # The accepted parameters:
 params = ["path", "line_count", "port", "delay", "cors_ports"]
-# sys.argv EXAMPLE: path=event_storage.log line_count=500 port=7000 delay=0.1 cors_ports=3000,7000,8080
+# sys.argv EXAMPLE: path=event_storage.log line_count=500 port=5002 delay=0.1 cors_ports=3000,7000,8080
 if __name__ == '__main__':
 
     try:
@@ -151,8 +151,8 @@ if __name__ == '__main__':
         # run the Server
         WebSocketWrapper(
             flask_app=create_flask_server(),
-            host="localhost",
-            port=args.get('port', 7000),
+            host="127.0.0.1",
+            port=args.get('port', 5002),
             async_mode=None,
             message_delay=float(args.get('delay', 0.1)),  # in seconds
             log_file_path=args['path'],

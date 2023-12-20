@@ -9,9 +9,22 @@ from data_stack.dataset.splitter import SplitterFactory
 
 
 class ModelGymInformedIteratorFactory(InformedDatasetFactory):
-
+    """
+    ModelGymInformedIteratorFactory contains all the methods to create iterators which
+    allows to loop through the dataset in multiple ways.
+    """
     @staticmethod
     def get_mapped_labels_iterator(identifier: str, iterator: DatasetIteratorIF, mappings: Dict) -> InformedDatasetIteratorIF:
+        """
+        Get the iterator that can iterate through mapped labels in the dataset.
+        :params:
+                identifier (str): Tag used as an identifier for the dataset.
+                iterator (DatasetIteratorIF): Dataset Iterator Interface object.
+                mappings (Dict): Mapping of labels to iterators.
+
+        :return:
+            InformedDatasetIteratorIF: Initialized Interface containing dataset iterators.
+        """
         label_mapper_post_processor = LabelMapperPostProcessor(mappings=mappings,
                                                                target_position=iterator.dataset_meta.target_pos,
                                                                tag_position=iterator.dataset_meta.tag_pos)
@@ -21,6 +34,16 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
     @staticmethod
     def get_filtered_labels_iterator(identifier: str, iterator: InformedDatasetIteratorIF,
                                      filtered_labels: List[Any]) -> InformedDatasetIteratorIF:
+        """
+        Get the iterator that can iterate through filtered labels in the dataset.
+        :params:
+                identifier (str): Tag used as an identifier for the dataset.
+                iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
+                filtered_labels (List[Any]): List of filtered labels in the dataset.
+
+        :return:
+            InformedDatasetIteratorIF: Initialized Interface containing dataset iterators.
+        """
         valid_indices = [i for i in range(len(iterator)) if iterator[i][iterator.dataset_meta.target_pos] in filtered_labels]
         meta = MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier)
         return InformedDatasetFactory.get_dataset_iterator_view(iterator, meta, valid_indices)
@@ -28,6 +51,17 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
     @staticmethod
     def get_iterator_view(identifier: str, iterator: InformedDatasetIteratorIF, selection_fun: Callable[[DatasetIteratorIF], List[int]],
                           view_tags: Dict[str, Any]) -> InformedDatasetIteratorIF:
+        """
+        Get the iterator used for accessing elements of a given split only.
+        :params:
+                identifier (str): Tag used as an identifier for the dataset.
+                iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
+                selection_fun (Callable[[DatasetIteratorIF]): Callable function
+                view_tags (Dict[str, Any]): View tags used as an identifier.
+
+        :return:
+            InformedDatasetIteratorIF: Initialized Interface containing dataset iterators.
+        """
         valid_indices = selection_fun(iterator)
         # valid_indices = list(np.argwhere(valid_mask).flatten())
         meta = MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier)
@@ -36,6 +70,16 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
     @staticmethod
     def get_feature_encoded_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF],
                                       feature_encoding_configs: Dict[str, List[Any]]) -> Dict[str, DatasetIteratorIF]:
+        """
+        Get the iterator which can iterate through encoded fetures of a dataset.
+        :params:
+                identifier (str): Tag used as an identifier for the dataset.
+                iterators (Dict[str, InformedDatasetIteratorIF]): Dictionary mapping from iterator_name -> split_name -> iterator
+                feature_encoding_configs (Dict[str, List[Any]]): Dictionary containing feature encoding configs.
+
+        :return:
+             Dict[str, DatasetIteratorIF]: Dictionary containing name of iterator and intialzied DatasetIteratorIF object.
+        """
         sample_position = list(iterators.items())[0][1].dataset_meta.sample_pos
         feature_encoder_post_processor = FeatureEncoderPostProcessor(
             sample_position=sample_position, feature_encoding_configs=feature_encoding_configs)
@@ -48,6 +92,16 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
     @staticmethod
     def get_one_hot_encoded_target_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF],
                                              target_vector_size: int) -> Dict[str, DatasetIteratorIF]:
+        """
+        Get the iterator which can iterate through one hot encoded target vector of a dataset.
+        :params:
+                identifier (str): Tag used as an identifier for the dataset.
+                iterators (Dict[str, InformedDatasetIteratorIF]): Dictionary mapping from iterator_name -> split_name -> iterator
+                target_vector_size (int): Size of target vector.
+
+        :return:
+             Dict[str, DatasetIteratorIF]: Dictionary containing name of iterator and intialzied DatasetIteratorIF object.
+        """
         target_position = list(iterators.items())[0][1].dataset_meta.target_pos
         postprocessor = OneHotEncodedTargetPostProcessor(target_vector_size=target_vector_size, target_position=target_position)
         return {name: InformedDatasetFactory.get_dataset_iterator(PostProcessedDatasetIterator(iterator, postprocessor), MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier))
@@ -55,15 +109,16 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
 
     @staticmethod
     def get_combined_iterators(identifier: str, iterators: Dict[str, Dict[str, InformedDatasetIteratorIF]], combine_configs: Dict) -> Dict[str, InformedDatasetIteratorIF]:
-        """Combines iterators.
+        """
+        Combines iterators.
 
-        Args:
-            identifier (str):
+        params:
+            identifier (str): Tag used as an identifier for the dataset.
             iterators (Dict[str, Dict[str, InformedDatasetIteratorIF]]): Dictionary mapping from iterator_name -> split_name -> iterator
-            combine_configs (Dict):
+            combine_configs (Dict): Configuration instructing combination of iterators.
 
-        Returns:
-            Dict[str, InformedDatasetIteratorIF]:
+        :return:
+            Dict[str, InformedDatasetIteratorIF]: Dictionary containing name of iterator and intialzied DatasetIteratorIF object.
         """
 
         def get_iterators_to_be_combined(iterators: Dict[str, Dict[str, InformedDatasetIteratorIF]], split_config: List):
@@ -81,6 +136,19 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
     @staticmethod
     def get_splitted_iterators(identifier: str, iterators: Dict[str, InformedDatasetIteratorIF], seed: int,
                                stratified: bool, split_config: Dict) -> Dict[str, InformedDatasetIteratorIF]:
+        """
+        Get Splits iterators.
+
+        params:
+               identifier (str): Tag used as an identifier for the dataset.
+               iterators (Dict[str, Dict[str, InformedDatasetIteratorIF]]): Dictionary mapping from iterator_name -> split_name -> iterator
+               seed (int): Seed for random generator.
+               stratified (bool): Whether splits should be stratified.
+               split_config (Dict): Configuration containing split of iterators.
+
+        :return:
+            Dict[str, InformedDatasetIteratorIF]: Dictionary containing name of iterator and intialzied DatasetIteratorIF object.
+        """
         def _split(iterator: InformedDatasetIteratorIF, seed: int, split_config: Dict) -> Dict[str, InformedDatasetIteratorIF]:
             names = list(split_config.keys())
             ratios = list(split_config.values())
@@ -107,10 +175,31 @@ class ModelGymInformedIteratorFactory(InformedDatasetFactory):
 
     @staticmethod
     def get_in_memory_iterator(identifier: str, iterator: InformedDatasetIteratorIF) -> InformedDatasetIteratorIF:
+        """
+        Get iterator in memory.
+
+        params:
+               identifier (str): Tag used as an identifier for the dataset.
+               iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
+
+        :return:
+            InformedDatasetIteratorIF:  intialzied InformedDatasetIteratorIF object in memory.
+        """
         meta = MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier)
         return InformedDatasetFactory.get_in_memory_dataset_iterator(iterator, meta)
 
     @staticmethod
     def get_shuffled_iterator(identifier: str, iterator: InformedDatasetIteratorIF, seed: int) -> InformedDatasetIteratorIF:
+        """
+        Get iterator shuffled.
+
+        params:
+               identifier (str): Tag used as an identifier for the dataset.
+               iterator (InformedDatasetIteratorIF): Dataset Iterator Interface object.
+               seed (int): Random seed.
+
+        :return:
+            InformedDatasetIteratorIF:  intialzied InformedDatasetIteratorIF object.
+        """
         meta = MetaFactory.get_dataset_meta_from_existing(iterator.dataset_meta, identifier=identifier)
         return InformedDatasetFactory.get_shuffled_dataset_iterator(iterator, meta, seed)
