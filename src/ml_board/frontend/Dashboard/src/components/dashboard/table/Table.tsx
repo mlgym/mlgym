@@ -53,6 +53,9 @@ export default function Table() {
   const onGridColumnsChanged: (params: GridColumnsChangedEvent<Row>) => void = useCallback(params => params.api.sizeColumnsToFit(), []);
   const getRowId: GetRowIdFunc<Row> = useCallback((params: GetRowIdParams<Row>) => params.data.experiment_id.toString(), []);
 
+  // set background colour for every row based on the rowIndex, as it is the same as experiment_id. BUT this looks bad, should be using CSS classes?
+  const getRowStyle = ({ rowIndex }: RowClassParams): RowStyle => { return { background: `hsl(${rowIndex * 137.5},75%,50%)` }; };
+
   return (
     <div className="ag-theme-alpine" id={styles.ag_grid_container_table}>
       {/* NOTE: https://www.ag-grid.com/react-data-grid/row-styles/ */}
