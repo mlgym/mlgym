@@ -1,4 +1,4 @@
-import { ColDef, GetRowIdFunc, GetRowIdParams, GridColumnsChangedEvent, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
+import { ColDef, GetRowIdFunc, GetRowIdParams, GridColumnsChangedEvent, GridReadyEvent, ICellRendererParams, RowClassParams, RowStyle } from 'ag-grid-community';
 import { AgGridReact } from "ag-grid-react";
 import { useCallback, useContext, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
