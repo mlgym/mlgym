@@ -2,6 +2,9 @@ from ml_gym.models.nn.net import NNModel
 import torch
 from transformers import GPT2LMHeadModel, GPT2Config
 from typing import Dict
+from datasets import load_from_disk
+from transformers import DataCollatorForLanguageModeling, GPT2TokenizerFast
+from torch.utils.data import DataLoader
 
 gpt_version: str = "gpt2"
 class GPT2LLM(NNModel):
@@ -22,16 +25,11 @@ class GPT2LLM(NNModel):
 
 
 if __name__ == '__main__':
-    from datasets import load_from_disk
-    from transformers import DataCollatorForLanguageModeling, GPT2TokenizerFast
-    from torch.utils.data import DataLoader
     tokenizer = GPT2TokenizerFast(tokenizer_file="/cluster/home/mlgym/example/gpt2/tokenizer.json")
     tokenizer.pad_token = tokenizer.eos_token
     chunked_tokenized_dataset = load_from_disk("/cluster/home/mlgym/example/gpt2/wikitext-2-raw-v1-tokenized/train")
-    batch_size = 30
-
+    batch_size = 8
     data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-
     train_dataloader = DataLoader(chunked_tokenized_dataset, shuffle=True, batch_size=batch_size, collate_fn=data_collator)
 
     sample = next(iter(train_dataloader))
