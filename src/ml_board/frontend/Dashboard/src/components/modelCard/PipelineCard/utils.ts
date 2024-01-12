@@ -1,37 +1,56 @@
 import { Edge, MarkerType, Node } from "reactflow";
-import { IReactFlowNodeData, IPipelineNode, IReactFlowPipeline } from "./interface";
+import { IPipelineNode, IReactFlowPipeline } from "./interface";
+import Dagre, { Label } from '@dagrejs/dagre';
 
+const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+
+export const getLayoutedNodes = (nodes: Node[], edges: Edge[], options: { direction: string } = { direction: "TB" }) => {
+    if (!(nodes.length > 0 && edges.length > 0))
+        return { nodes, edges }; // return imidiately if any is emtpy
+
+    g.setGraph({ rankdir: options.direction });
+    edges.forEach((edge) => g.setEdge(edge.source, edge.target));
+    nodes.forEach((node) => g.setNode(node.id, node as Label));
+    Dagre.layout(g);
+
+    return {
+        nodes: nodes.map((node) => {
+            const { x, y } = g.node(node.id);
+            return { ...node, position: { x, y } };
+        })
+    };
+};
+
+export const CUSTOM_NODE_TYPE = "CUSTOM_NODE_TYPE";
 
 export function parseReactFlowPipeline(nodeKey: string, node: IPipelineNode): IReactFlowPipeline {
-    const nodes: Node<IReactFlowNodeData>[] = [];
-    const edges: Edge[] = [];
+    const pipeline: IReactFlowPipeline = {
+        nodes: [], edges: []
+    };
     let shift = 0;
 
     function traverse(currentNodeName: string, currentNode: IPipelineNode) {
-        nodes.push({
+        pipeline.nodes.push({
             id: currentNodeName, // required
             position: { x: 0, y: 100 * shift++ }, // required
             data: {
                 label: currentNodeName,
                 config: JSON.parse(currentNode.config_str),
-                // TODO: custom node to handle if one node has multiple children that they don't overlap
-                // in_count: nodeAsTarget[key],
-                // out_count: nodeAsSource[key],
-                // config: currentNode.config_str,
+                child_count: Object.keys(currentNode.nodes).length,
             },
-            // type: CUSTOM_NODE_TYPE,
+            type: CUSTOM_NODE_TYPE,
         })
 
+        let count = 0;
         for (const [nextNodeName, nextNodeObj] of Object.entries(currentNode.nodes)) {
-            edges.push({
+            pipeline.edges.push({
                 id: `${currentNodeName}-${nextNodeName}`,
                 source: currentNodeName,
                 target: nextNodeName,
                 markerEnd: { type: MarkerType.Arrow, },
-                // type: "step",
-                // sourceHandle: idx.toString(),
-                // targetHandle: (nodeAsTarget[to] - 1).toString(),
-                // animated: true,
+                type: "step",
+                sourceHandle: (count++).toString(),
+                animated: true,
             });
             traverse(nextNodeName, nextNodeObj);
         }
@@ -39,5 +58,5 @@ export function parseReactFlowPipeline(nodeKey: string, node: IPipelineNode): IR
 
     traverse(nodeKey, node);
 
-    return { nodes, edges };
+    return pipeline;
 }

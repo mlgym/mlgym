@@ -10,12 +10,13 @@ export interface IPipelineNode {
     nodes: IPipelineNode;
 }
 
-export interface IReactFlowNodeData {
+export interface INodeData {
     label: string;
     config: JSON;
+    child_count: number;
 }
 
 export interface IReactFlowPipeline {
-    nodes: Node<IReactFlowNodeData>[];
+    nodes: Node<INodeData>[];
     edges: Edge[];
 }

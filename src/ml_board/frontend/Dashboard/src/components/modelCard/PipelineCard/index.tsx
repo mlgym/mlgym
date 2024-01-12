@@ -6,6 +6,7 @@ import { IPipeline } from "./interface";
 import { PipelineCardContextProvider } from "./PipelineCardContext";
 import { ReactFlowProvider } from "reactflow";
 import ConfigViewer from "./ConfigViewer";
+import RequirementsViewer from "./RequirementsViewer";
 
 
 export default function ({ details }: { details: IPipeline }) {
@@ -41,11 +42,15 @@ const Content = () => (
                     <GraphArea />
                 </ReactFlowProvider>
             </Grid>
-            <Grid item>
-                <ConfigViewer />
+            <Grid item container xs="auto" direction="column">
+                <Grid item>
+                    <ConfigViewer />
+                </Grid>
+                <Grid item>
+                    <RequirementsViewer />
+                </Grid>
             </Grid>
         </Grid>
     </CardContent>
 );
-
 
