@@ -121,15 +121,21 @@ class DatasetBatch(Batch, TorchDeviceMixin):
     def samples_require_grad(self, values: Dict[str, bool]):
         for key in values.keys():
             self._samples[key].requires_grad = values[key]
-        self._samples_require_grad = value
+        # self._samples_require_grad = value
 
     def detach(self):
         self._targets = {k: v.detach() for k, v in self._targets.items()}
         self._tags = self._tags.detach()
-        self._samples = {k: v.detach() for k, v in self._samples.items()}
+        if(self._samples_require_grad):
+            self._samples = {k: v.detach() for k, v in self._samples.items()}
+        else:
+            self._samples = self._samples.detach()
 
     def to(self, device: torch.device) -> "DatasetBatch":
-        self._samples = {k: v.to(device) for k, v in self._samples.items()}
+        if(self._samples_require_grad):
+            self._samples = {k: v.to(device) for k, v in self._samples.items()}
+        else:
+            self._samples = self._samples.to(device)
         self._targets = {k: v.to(device) for k, v in self._targets.items()}
         self._tags = self._tags.to(device)
         return self
@@ -140,13 +146,19 @@ class DatasetBatch(Batch, TorchDeviceMixin):
 
     @property
     def device(self) -> torch.device:
-        key = list(self._samples.keys())[0]
-        return self._samples[key].device
+        if(self._samples_require_grad):
+            key = list(self._samples.keys())[0]
+            return self._samples[key].device
+        else:
+            return self._samples.device
 
     @staticmethod
     def combine_impl(batches: List['DatasetBatch']) -> 'DatasetBatch':
         tags = torch.cat([batch.tags for batch in batches])
-        samples = Batch._combine_tensor_dicts([batch.samples for batch in batches])
+        try:
+            samples = Batch._combine_tensor_dicts([batch.samples for batch in batches])
+        except:
+            samples = torch.cat([batch.samples for batch in batches])
         targets = Batch._combine_tensor_dicts([batch.targets for batch in batches])
         return DatasetBatch(targets=targets, samples=samples, tags=tags)
 
@@ -154,7 +166,10 @@ class DatasetBatch(Batch, TorchDeviceMixin):
         return len(self._samples)
 
     def __deepcopy__(self, memo) -> 'DatasetBatch':
-        samples_ = self._copy_tensor_dict(self.samples)
+        if(self._samples_require_grad):
+            samples_ = self._copy_tensor_dict(self.samples)
+        else:
+            samples_ = self.samples.detach().clone()
         targets_ = self._copy_tensor_dict(self.targets)
         tags_ = self.tags.detach().clone()
         return DatasetBatch(samples=samples_, targets=targets_, tags=tags_)
@@ -164,7 +179,10 @@ class DatasetBatch(Batch, TorchDeviceMixin):
         b_1 = copy.deepcopy(b_1)
         b_2 = copy.deepcopy(b_2)
         tags = torch.cat([b_1.tags, b_2.tags])
-        samples = torch._combine_tensor_dicts([b_1.samples, b_2.samples])
+        try:
+            samples = Batch._combine_tensor_dicts([b_1.samples, b_2.samples])
+        except:
+            samples = torch.cat([b_1.samples, b_2.samples])
         targets = Batch._combine_tensor_dicts([b_1.targets, b_2.targets])
         return DatasetBatch(targets=targets, samples=samples, tags=tags)
 
