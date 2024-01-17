@@ -1,7 +1,6 @@
 from ml_gym.models.nn.net import NNModel
 from ml_gym.batching.batch import InferenceResultBatch, DatasetBatch
 from typing import List
-from ml_gym.util.timer import NSTimer, timeit_ns
 import torch
 from ml_gym.gym.predict_postprocessing_component import PredictPostprocessingComponent
 from ml_gym.gym.post_processing import PredictPostProcessingIF
@@ -28,15 +27,11 @@ class InferenceComponent:
         post_processors = post_processors if post_processors is not None else []
         if self.no_grad:
             with torch.no_grad():
-                with NSTimer(key="eval_forward_pass"):
-                    forward_result = model.forward(batch.samples)
-        else:
-            with NSTimer(key="train_forward_pass"):
                 forward_result = model.forward(batch.samples)
-        
-        with NSTimer(key="eval_post_processing" if self.no_grad else "train_post_processing"):
-            result_batch = InferenceResultBatch(targets=batch.targets, tags=batch.tags, predictions=forward_result)
-            irb = PredictPostprocessingComponent.post_process(result_batch, post_processors=post_processors)
+        else:
+            forward_result = model.forward(batch.samples)
+        result_batch = InferenceResultBatch(targets=batch.targets, tags=batch.tags, predictions=forward_result)
+        irb = PredictPostprocessingComponent.post_process(result_batch, post_processors=post_processors)
         return irb
 
     def predict_data_loader(self, model: NNModel, dataset_loader: DatasetLoader) -> InferenceResultBatch:

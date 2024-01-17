@@ -3,7 +3,6 @@ from typing import Iterable, List, Callable
 from ml_gym.loss_functions.loss_functions import Loss
 from ml_gym.models.nn.net import NNModel
 from ml_gym.data_handling.dataset_loader import DatasetLoader
-from ml_gym.util.timer import NSTimer
 import torch
 from ml_gym.batching.batch import DatasetBatch
 from ml_gym.gym.inference_component import InferenceComponent
@@ -42,11 +41,8 @@ class TrainComponent(StatefulComponent):
         batch.to(device)
         model.zero_grad()
         loss = self.calc_loss(model, batch)
-        
-        with NSTimer(key="train_backward_pass"):
-            loss.sum().backward()
-        with NSTimer(key="train_optimizer_step"):
-            optimizer.step()
+        loss.sum().backward()
+        optimizer.step()
         return model
 
     @staticmethod
@@ -95,10 +91,6 @@ class TrainComponent(StatefulComponent):
                                                                         num_batches_per_epoch=num_batches_per_epoch)
 
         # epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=-1, model=model)
-        
-        timer_train_epoch = NSTimer(key="train_epoch")
-
-        timer_train_epoch.start()
         for batch_id, batch in dataloader_iterable:
             current_epoch = initial_epoch + int(batch_id / num_batches_per_epoch)
             model = self._train_batch(batch=batch, model=model, optimizer=optimizer, device=device)
@@ -112,9 +104,7 @@ class TrainComponent(StatefulComponent):
                                     current_epoch=current_epoch)
 
             if (batch_id + 1) % num_batches_per_epoch == 0:  # when epoch done
-                timer_train_epoch.stop()
                 epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=current_epoch, model=model)
-                timer_train_epoch.start()
                 print(f"Eval done for epoch: {current_epoch}")
                 model.train()
 

@@ -18,7 +18,6 @@ from ml_gym.optimizers.lr_schedulers import LRSchedulerAdapter
 from ml_gym.optimizers.optimizer import OptimizerAdapter
 from ml_gym.persistency.io import GridSearchAPIClientIF
 from ml_gym.persistency.logging import ExperimentStatusLogger
-from ml_gym.util.timer import NSTimer
 import torch
 from accelerate import Accelerator
 import shutil
@@ -179,17 +178,15 @@ class AbstractGymJob(StatefulComponent):
                evaluation_step_routine (Callable): Epoch/Experiment number for cerating checkpoints.
                accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
         """
-        with NSTimer(key="eval_epoch"):
-            evaluation_results = evaluation_step_routine(current_epoch=current_epoch)
+        evaluation_results = evaluation_step_routine(current_epoch=current_epoch)
         if current_epoch > 0:
             self.lr_scheduler.step()
 
-        with NSTimer(key="checkpointing"):
-            checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=num_epochs,
+        checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=num_epochs,
                                                                                                      current_epoch=current_epoch,
                                                                                                      evaluation_result=evaluation_results)
 
-            self.run_checkpointing(checkpointing_instruction, current_epoch=current_epoch, accelerator=accelerator)
+        self.run_checkpointing(checkpointing_instruction, current_epoch=current_epoch, accelerator=accelerator)
 
         if self.early_stopping_strategy.is_stopping_criterion_fulfilled(current_epoch=current_epoch,
                                                                         evaluation_results=evaluation_results):

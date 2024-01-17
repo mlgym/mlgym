@@ -3,7 +3,6 @@ from typing import Any, Callable, Dict, List, Union
 from ml_gym.gym.evaluators.evaluator import AbstractEvaluator
 from ml_gym.gym.post_processing import PredictPostProcessingIF
 from ml_gym.persistency.logging import ExperimentStatusLogger
-from ml_gym.util.timer import NSTimer
 import torch
 from ml_gym.batching.batch import DatasetBatch, EvaluationBatchResult, InferenceResultBatch
 from ml_gym.data_handling.dataset_loader import DatasetLoader
@@ -115,32 +114,30 @@ class AccelerateEvalComponent:
         processed_batches = 0
         for batch in dataset_loader:
             inference_result_batch = self.forward_batch(dataset_batch=batch, model=model, postprocessors=post_processors)
-            with NSTimer(key="eval_aggregate_and_calc"):
+            # collecting the loss on each rank
+            batch_loss = self._calculate_loss_scores(inference_result_batch, split_loss_funs)
 
-                # collecting the loss on each rank
-                batch_loss = self._calculate_loss_scores(inference_result_batch, split_loss_funs)
+            batch_loss_gathered = accelerator.gather_for_metrics(batch_loss)
+            batch_losses.append(batch_loss_gathered)
 
-                batch_loss_gathered = accelerator.gather_for_metrics(batch_loss)
-                batch_losses.append(batch_loss_gathered)
+            # collecting the inference result batches on each rank
 
-                # collecting the inference result batches on each rank
+            # irb_filtered_dict = {"predictions": inference_result_batch.predictions, "targets": inference_result_batch.targets, "tags": inference_result_batch.tags}
 
-                # irb_filtered_dict = {"predictions": inference_result_batch.predictions, "targets": inference_result_batch.targets, "tags": inference_result_batch.tags}
+            # irb = InferenceResultBatch(predictions=irb_filtered_dict["predictions"],
+            #                            targets=irb_filtered_dict["targets"],
+            #                            tags=irb_filtered_dict["tags"])
 
-                # irb = InferenceResultBatch(predictions=irb_filtered_dict["predictions"],
-                #                            targets=irb_filtered_dict["targets"],
-                #                            tags=irb_filtered_dict["tags"])
+            irb_filtered = inference_result_batch.split_results(predictions_keys=self.cpu_prediction_subscription_keys,
+                                                                target_keys=self.cpu_target_subscription_keys,
+                                                                device=None)  # torch.device("cpu"))
 
-                irb_filtered = inference_result_batch.split_results(predictions_keys=self.cpu_prediction_subscription_keys,
-                                                                    target_keys=self.cpu_target_subscription_keys,
-                                                                    device=None)  # torch.device("cpu"))
+            irb_filtered_dict = {"predictions": irb_filtered.predictions,
+                                "targets": irb_filtered.targets, "tags": irb_filtered.tags}
 
-                irb_filtered_dict = {"predictions": irb_filtered.predictions,
-                                    "targets": irb_filtered.targets, "tags": irb_filtered.tags}
-
-                irb_filtered_gathered_dict = accelerator.gather_for_metrics(irb_filtered_dict)
-                irb_filtered_gathered_cpu = InferenceResultBatch(**irb_filtered_gathered_dict).to(torch.device("cpu"))
-                inference_result_batches_cpu.append(irb_filtered_gathered_cpu)
+            irb_filtered_gathered_dict = accelerator.gather_for_metrics(irb_filtered_dict)
+            irb_filtered_gathered_cpu = InferenceResultBatch(**irb_filtered_gathered_dict).to(torch.device("cpu"))
+            inference_result_batches_cpu.append(irb_filtered_gathered_cpu)
 
             # informing about epoch progress via the callbacks
             processed_batches += 1
@@ -151,33 +148,32 @@ class AccelerateEvalComponent:
                                              current_batch=processed_batches,
                                              splits=splits,
                                              current_split=split_name)
-        with NSTimer(key="eval_aggregate_and_calc"):
 
-            # calc metrics
-            try:
-                prediction_batch = InferenceResultBatch.combine(inference_result_batches_cpu)
-            except BatchStateError as e:
-                raise EvaluationError(f"Error combining inference result batch on split {split_name}.") from e
+        # calc metrics
+        try:
+            prediction_batch = InferenceResultBatch.combine(inference_result_batches_cpu)
+        except BatchStateError as e:
+            raise EvaluationError(f"Error combining inference result batch on split {split_name}.") from e
 
-            # select metrics for split
-            if self.metrics_computation_config is not None:
-                metric_tags = [metric_tag for metric_tag, applicable_splits in self.metrics_computation_config.items() if split_name in applicable_splits]
-                split_metrics = [metric for metric in self.metrics if metric.tag in metric_tags]
-            else:
-                split_metrics = self.metrics
-            metric_scores = self._calculate_metric_scores(prediction_batch, split_metrics)
+        # select metrics for split
+        if self.metrics_computation_config is not None:
+            metric_tags = [metric_tag for metric_tag, applicable_splits in self.metrics_computation_config.items() if split_name in applicable_splits]
+            split_metrics = [metric for metric in self.metrics if metric.tag in metric_tags]
+        else:
+            split_metrics = self.metrics
+        metric_scores = self._calculate_metric_scores(prediction_batch, split_metrics)
 
-            # aggregate losses
-            loss_keys = batch_losses[0].keys()
-            loss_scores = {}
-            for key in loss_keys:
-                batch_loss_tensor = torch.cat([loss_tensor for loss_list in batch_losses for loss_tensor in loss_list[key]])
-                loss_scores[key] = [torch.mean(batch_loss_tensor).item()]
+        # aggregate losses
+        loss_keys = batch_losses[0].keys()
+        loss_scores = {}
+        for key in loss_keys:
+            batch_loss_tensor = torch.cat([loss_tensor for loss_list in batch_losses for loss_tensor in loss_list[key]])
+            loss_scores[key] = [torch.mean(batch_loss_tensor).item()]
 
-            evaluation_result = EvaluationBatchResult(losses=loss_scores,
-                                                      metrics=metric_scores,
-                                                      dataset_name=dataset_loader.dataset_name,
-                                                      split_name=split_name)
+        evaluation_result = EvaluationBatchResult(losses=loss_scores,
+                                                    metrics=metric_scores,
+                                                    dataset_name=dataset_loader.dataset_name,
+                                                    split_name=split_name)
         if epoch_result_callback_fun is not None and accelerator.is_main_process:
             epoch_result_callback_fun(evaluation_result=evaluation_result)
         return evaluation_result
