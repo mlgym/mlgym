@@ -36,14 +36,9 @@ def run_ml_board(ml_board_host: str, ml_board_port: str, rest_endpoint: str, ws_
         'bind': f"{ml_board_host}:{ml_board_port}",
         'workers': 1
     }
-    # rest_endpoint_encoded = urllib.parse.quote(rest_endpoint)
-    # ws_endpoint_encoded = urllib.parse.quote(ws_endpoint)
-    # run_id_encoded = urllib.parse.quote(run_id)
-
-    # urllib.parse.quote => wierdly encoded ':' and so the generated URL was not correct.
-    rest_endpoint_encoded = rest_endpoint
-    ws_endpoint_encoded = ws_endpoint
-    run_id_encoded = run_id
+    rest_endpoint_encoded = urllib.parse.quote(rest_endpoint)
+    ws_endpoint_encoded = urllib.parse.quote(ws_endpoint)
+    run_id_encoded = urllib.parse.quote(run_id)
 
     url = f"http://{ml_board_host}:{ml_board_port}?rest_endpoint={rest_endpoint_encoded}&ws_endpoint={ws_endpoint_encoded}&run_id={run_id_encoded}"
     print(f"====> ACCESS MLBOARD VIA {url}")
