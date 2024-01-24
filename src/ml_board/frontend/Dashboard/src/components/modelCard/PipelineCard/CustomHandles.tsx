@@ -3,22 +3,22 @@ import { Handle, Position } from "reactflow";
 //TODO: so far only vertical layout is allowed!
 
 interface IHandleDataProps {
-    count: number, // how many handles
+    handleIDs?: Array<string>, // how many handles
     type: 'target' | 'source', // are they all ins or outs
     position: Position // are they at the Top or Bottom
 }
 
-export const CustomHandles = ({ count, type, position }: IHandleDataProps) => (
+export const CustomHandles = ({ handleIDs, type, position }: IHandleDataProps) => (
     <div style={{
         display: "flex",
         justifyContent: "space-evenly",
     }}>
-        {Array.from({ length: count }, (_, idx) => (
+        {handleIDs?.map((id, index) => (
             <Handle
-                key={idx}
+                key={index}
                 type={type}
                 position={position}
-                id={idx.toString()}
+                id={index.toString()}
                 isConnectable={false}
                 style={{
                     left: 0,

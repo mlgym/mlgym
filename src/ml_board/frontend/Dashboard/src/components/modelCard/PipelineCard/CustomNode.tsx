@@ -7,7 +7,7 @@ import { INodeData } from "./interface";
 export default function CustomNode({ data: { label, requirements, children } }: NodeProps<INodeData>) {
     return (
         <Box>
-            {requirements.length > 0 && <CustomHandles count={1} type={"target"} position={Position.Top} />}
+            {requirements.length > 0 && <CustomHandles handleIDs={["requirements"]} type={"target"} position={Position.Top} />}
 
             <Paper elevation={3} sx={{ padding: 2 }}>
                 <Typography variant="h4" p={1} sx={{
@@ -26,7 +26,7 @@ export default function CustomNode({ data: { label, requirements, children } }: 
                 </>}
             </Paper >
 
-            <CustomHandles count={children.length} type={"source"} position={Position.Bottom} />
+            <CustomHandles handleIDs={children} type={"source"} position={Position.Bottom} />
         </Box>
     );
 }

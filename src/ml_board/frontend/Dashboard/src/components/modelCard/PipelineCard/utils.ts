@@ -17,7 +17,8 @@ export const getLayoutedNodes = (nodes: Node[], edges: Edge[], options: { direct
         nodes: nodes.map((node) => {
             const { x, y } = g.node(node.id);
             return { ...node, position: { x, y } };
-        })
+        }),
+        edges: edges
     };
 };
 
@@ -27,16 +28,16 @@ export function parseReactFlowPipeline(nodeKey: string, node: IPipelineNode): IR
     const pipeline: IReactFlowPipeline = {
         nodes: [], edges: []
     };
-    let shift = 0;
 
-    function traverse(currentNodeName: string, currentNode: IPipelineNode) {
+    function traverse(currentNodeName: string, currentNode: IPipelineNode, row: number, col: number) {
         pipeline.nodes.push({
             id: currentNodeName, // required
-            position: { x: 0, y: 100 * shift++ }, // required
+            position: { x: 100 * col, y: 150 * row }, // required
             data: {
                 label: currentNodeName,
                 config: JSON.parse(currentNode.config_str),
-                child_count: Object.keys(currentNode.nodes).length,
+                requirements: currentNode.requirements,
+                children: Object.keys(currentNode.nodes),
             },
             type: CUSTOM_NODE_TYPE,
         })
@@ -50,13 +51,13 @@ export function parseReactFlowPipeline(nodeKey: string, node: IPipelineNode): IR
                 markerEnd: { type: MarkerType.Arrow, },
                 type: "step",
                 sourceHandle: (count++).toString(),
-                animated: true,
+                // animated: true,
             });
-            traverse(nextNodeName, nextNodeObj);
+            traverse(nextNodeName, nextNodeObj, row+1, count);
         }
     }
 
-    traverse(nodeKey, node);
+    traverse(nodeKey, node, 0, 0);
 
     return pipeline;
 }
