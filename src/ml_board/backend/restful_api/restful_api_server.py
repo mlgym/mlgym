@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from ml_board.backend.restful_api.data_access import DataAccessIF
 from ml_board.backend.restful_api.data_models import RawTextFile
-from ml_gym.error_handling.exception import (InvalidPathError,
-                                             SystemInfoFetchError)
+from ml_gym.error_handling.exception import InvalidPathError, SystemInfoFetchError
+from ml_board.backend.restful_api.data_models import FileFormat, RawTextFile
 
 # from fastapi.staticfiles import StaticFiles
 
@@ -20,18 +20,20 @@ class RestfulAPIServer:
         self.app = FastAPI(port=8080)
         origins = ["*"]
         self.app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
         )
         self.data_access = data_access
-        self.app.add_api_route(path="/grid_searches/{grid_search_id}/experiments", methods=["GET"], endpoint=self.get_experiment_statuses)
+        self.app.add_api_route(path="/grid_searches/{grid_search_id}/experiments", methods=[
+                               "GET"], endpoint=self.get_experiment_statuses)
         self.app.add_api_route(
             path="/grid_searches/{grid_search_id}/{experiment_id}/{config_name}", methods=["GET"], endpoint=self.get_experiment_config
         )
-        self.app.add_api_route(path="/grid_searches/{grid_search_id}/{config_name}", methods=["GET"], endpoint=self.get_grid_config)
+        self.app.add_api_route(
+            path="/grid_searches/{grid_search_id}/{config_name}", methods=["GET"], endpoint=self.get_grid_config)
         self.app.add_api_route(
             path="/grid_searches/{grid_search_id}/{config_name}", methods=["PUT"], endpoint=self.add_raw_config_to_grid_search
         )
@@ -71,6 +73,12 @@ class RestfulAPIServer:
             methods=["GET"],
             endpoint=self.get_model_card_info,
         )
+        self.app.add_api_route(
+
+            path="/system-info/{grid_search_id}/{experiment_id}",
+            methods=["GET"],
+            endpoint=self.get_system_info,
+        )
 
         # self.app.mount("/", StaticFiles(directory="/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_board/frontend/dashboard/build/", html=True), name="static")
 
@@ -82,10 +90,12 @@ class RestfulAPIServer:
         :returns: experiment_statuses(Dict): Satus of Experiments for the given Grid Search ID
         """
         try:
-            experiment_statuses = self.data_access.get_experiment_statuses(grid_search_id)
+            experiment_statuses = self.data_access.get_experiment_statuses(
+                grid_search_id)
             return experiment_statuses
         except InvalidPathError as e:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Provided invalid grid_search_id {grid_search_id}") from e
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Provided invalid grid_search_id {grid_search_id}") from e
 
     def get_experiment_config(self, grid_search_id: str, experiment_id: str, config_name: str):
         """
@@ -102,10 +112,12 @@ class RestfulAPIServer:
             file_generator = self.data_access.get_experiment_config(
                 grid_search_id=grid_search_id, experiment_id=experiment_id, config_name=config_name
             )
-            response = StreamingResponse(file_generator, media_type="application/json")
+            response = StreamingResponse(
+                file_generator, media_type="application/json")
             return response
         except InvalidPathError as e:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Provided invalid grid_search_id {grid_search_id}") from e
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Provided invalid grid_search_id {grid_search_id}") from e
 
     def get_grid_config(self, grid_search_id: str, config_name: str):
         """
@@ -117,11 +129,14 @@ class RestfulAPIServer:
         :returns: response(StreamingResponse): YML stream response
         """
         try:
-            file_generator = self.data_access.get_grid_config(grid_search_id=grid_search_id, config_name=config_name)
-            response = StreamingResponse(file_generator, media_type="application/yml")
+            file_generator = self.data_access.get_grid_config(
+                grid_search_id=grid_search_id, config_name=config_name)
+            response = StreamingResponse(
+                file_generator, media_type="application/yml")
             return response
         except InvalidPathError as e:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Provided invalid grid_search_id {grid_search_id}") from e
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Provided invalid grid_search_id {grid_search_id}") from e
 
     # @app.get('/grid_searches/{grid_search_id}/gs_config')
     # def get_grid_search_config(grid_search_id: str):
@@ -143,7 +158,8 @@ class RestfulAPIServer:
                 config_file (RawTextFile) : RawTextFile Object
         """
         try:
-            self.data_access.add_raw_config_to_grid_search(grid_search_id=grid_search_id, config_name=config_name, config_file=config_file)
+            self.data_access.add_raw_config_to_grid_search(
+                grid_search_id=grid_search_id, config_name=config_name, config_file=config_file)
         except InvalidPathError as e:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -201,9 +217,11 @@ class RestfulAPIServer:
                 experiment_id (str): Experiment ID
 
         :returns: checkpoint_list (List[Dict]): List of Checkpoints
+
         """
         try:
-            checkpoint_list = self.data_access.get_checkpoint_list(grid_search_id=grid_search_id, experiment_id=experiment_id)
+            checkpoint_list = self.data_access.get_checkpoint_list(
+                grid_search_id=grid_search_id, experiment_id=experiment_id)
             return checkpoint_list
         except InvalidPathError as e:
             raise HTTPException(
@@ -221,15 +239,18 @@ class RestfulAPIServer:
                 checkpoint_resource (CheckpointResource) : CheckpointResource type
 
         :returns: response(StreamingResponse): Byte/Pickle file Stream response 
+
         """
         try:
             file_generator = self.data_access.get_checkpoint_resource(
                 grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch, checkpoint_resource=checkpoint_resource
             )
-            response = StreamingResponse(file_generator, media_type="application/octet-stream")
+            response = StreamingResponse(
+                file_generator, media_type="application/octet-stream")
             return response
         except InvalidPathError as e:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Provided invalid parameters for checkpoint resource.") from e
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail="Provided invalid parameters for checkpoint resource.") from e
 
     def delete_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str):
         """
@@ -240,6 +261,7 @@ class RestfulAPIServer:
                 experiment_id (str): Experiment ID
                 epoch (str): Epoch number
                 checkpoint_resource (CheckpointResource) : CheckpointResource type
+
         """
         try:
             self.data_access.delete_checkpoint_resource(grid_search_id=grid_search_id, experiment_id=experiment_id,
@@ -259,9 +281,11 @@ class RestfulAPIServer:
                 grid_search_id (str): Grid Search ID
                 experiment_id (str): Experiment ID
                 epoch (str): Epoch number
+
         """
         try:
-            self.data_access.delete_checkpoints(grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch)
+            self.data_access.delete_checkpoints(
+                grid_search_id=grid_search_id, experiment_id=experiment_id, epoch=epoch)
         except FileNotFoundError as e:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail=f"Checkpoint resource {grid_search_id}/{experiment_id}/{epoch} not found.") from e
@@ -279,6 +303,7 @@ class RestfulAPIServer:
                 epoch (str): Epoch number
                 checkpoint_resource (CheckpointResource) : CheckpointResource type
                 checkpoint_file (UploadFile): Pickle file to be added
+
         """
         try:
             self.data_access.add_checkpoint_resource(grid_search_id=grid_search_id,
@@ -289,7 +314,7 @@ class RestfulAPIServer:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail=f"Provided invalid payload or grid_search_id {grid_search_id}, experiment_id {experiment_id} or epoch {epoch}.",
                                 ) from e
-    
+
     def get_model_card_info(self, grid_search_id: str, experiment_id: str):
         """
         ``HTTP GET`` Fetch Model card information.
@@ -300,11 +325,35 @@ class RestfulAPIServer:
         :returns: response (JSONResponse): Model card infomration for the experiment.
         """
         try:
-            model_card = self.data_access.create_model_card(grid_search_id = grid_search_id, experiment_id = experiment_id)
+            model_card = self.data_access.create_model_card(
+                grid_search_id=grid_search_id, experiment_id=experiment_id)
             response = JSONResponse(model_card, media_type="application/json")
             return response
         except SystemInfoFetchError as e:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Error while fetching server system information") from e
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Error while fetching server system information") from e
+
+    def get_system_info(self, grid_search_id: str, experiment_id: str):
+        """
+        ``HTTP GET`` Fetch System Information for model card.
+
+        :params:
+             grid_search_id (str): Grid Search ID
+             experiment_id (str): Experiment ID
+             config_name (str): Name of Configuration file
+
+        :returns: JSON object - System Information of host machine (CPU & GPU)
+        """
+        try:
+            file_generator = self.data_access.get_experiment_config(
+                grid_search_id=grid_search_id, experiment_id=experiment_id, config_name="system_info"
+            )
+            response = StreamingResponse(
+                file_generator, media_type="application/json")
+            return response
+        except SystemInfoFetchError as e:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Error while fetching server system information") from e
 
     def run_server(self, application_server_callable: Callable):
         application_server_callable(app=self.app)

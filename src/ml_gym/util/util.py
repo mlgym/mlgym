@@ -24,17 +24,18 @@ import psutil
 import pkg_resources
 from dataclasses import dataclass
 
+
 @dataclass
 class ModelDetails:
     model_description: str = ""
-    model_version: str = "" 
+    model_version: str = ""
     grid_search_id: str = ""
     train_date: str = ""
     source_repo: str = ""
     train_params: int = 0
 
     def toJSON(self) -> Dict:
-        model_card ={}
+        model_card = {}
         model_card["model_description"] = self.model_description
         model_card["model_version"] = self.model_version
         model_card["grid_search_id"] = self.grid_search_id
@@ -43,6 +44,7 @@ class ModelDetails:
         model_card["train_params"] = self.train_params
         return model_card
 
+
 @dataclass
 class DatasetDetails:
     dataset_splits: dict = None
@@ -50,11 +52,12 @@ class DatasetDetails:
     label_distribution: str = ""
 
     def toJSON(self) -> Dict:
-        model_card ={}
+        model_card = {}
         model_card["dataset_splits"] = self.dataset_splits
         model_card["considered_dataset"] = self.considered_dataset
         model_card["label_distribution"] = self.label_distribution
         return model_card
+
 
 @dataclass
 class PipelineDetails:
@@ -64,6 +67,7 @@ class PipelineDetails:
         model_card = self.pipeline_details
         return model_card
 
+
 @dataclass
 class ExperimentEnvironment:
     system_env: dict = None
@@ -71,7 +75,7 @@ class ExperimentEnvironment:
     entry_point_cmd: str = ""
 
     def toJSON(self) -> Dict:
-        model_card ={}
+        model_card = {}
         model_card["system_env"] = self.system_env
         model_card["carbon_footprint"] = self.carbon_footprint
         model_card["entry_point_cmd"] = self.entry_point_cmd
@@ -91,9 +95,11 @@ class ExperimentEnvironment:
             info["machine_type"] = platform.machine()
             info["processor"] = platform.processor()
             info["num_processor_cores"] = psutil.cpu_count()
-            info["ram"] = str(round(psutil.virtual_memory().total / (1024.0**3))) + " GB"
+            info["ram"] = str(
+                round(psutil.virtual_memory().total / (1024.0**3))) + " GB"
             info["python-version"] = platform.python_version()
-            info["python-packages"] = [{"name": p.project_name, "version": p.version} for p in pkg_resources.working_set]
+            info["python-packages"] = [{"name": p.project_name,
+                                        "version": p.version} for p in pkg_resources.working_set]
             if torch.cuda.is_available():
                 info["CUDNN_version"] = torch.backends.cudnn.version()
                 info["num_cuda_device"] = torch.cuda.device_count()
@@ -113,6 +119,7 @@ class ExperimentEnvironment:
         except Exception as e:
             raise SystemInfoFetchError(f"Unable to fetch System Info") from e
 
+
 @dataclass
 class TrainingDetails:
     hyperparams: dict = None
@@ -120,11 +127,12 @@ class TrainingDetails:
     optimizer: str = ""
 
     def toJSON(self) -> Dict:
-        model_card ={}
+        model_card = {}
         model_card["hyperparams"] = self.hyperparams
         model_card["loss_func"] = self.loss_func
         model_card["optimizer"] = self.optimizer
         return model_card
+
 
 @dataclass
 class EvalDetails:
@@ -132,10 +140,11 @@ class EvalDetails:
     metrics: list = None
 
     def toJSON(self) -> Dict:
-        model_card ={}
+        model_card = {}
         model_card["loss_funcs"] = self.loss_funcs
         model_card["metrics"] = self.metrics
         return model_card
+
 
 @dataclass
 class ModelCard:
@@ -156,6 +165,7 @@ class ModelCard:
         model_card["pipeline_details"] = self.pipeline_details.toJSON()
         return model_card
 
+
 class ModelCardFactory:
 
     @staticmethod
@@ -170,7 +180,7 @@ class ModelCardFactory:
         :returns:
                 model_card (ModelCard): Model card object to be converted into json file.
         """
-        
+
         def update_model_details(grid_search_id: str, gs_config: dict, model: NNModel = None) -> ModelDetails:
             """
             Function to initialize ModelDetails object.
@@ -183,15 +193,17 @@ class ModelCardFactory:
             """
             try:
                 if model is not None:
-                    pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+                    pytorch_total_params = sum(
+                        p.numel() for p in model.parameters() if p.requires_grad)
                 else:
                     pytorch_total_params = 0
                 train_date = datetime.now().strftime("%d-%m-%Y")
                 model_info = gs_config["model_info"]
-                return ModelDetails(model_description = model_info["model_description"], model_version = model_info["model_version"], grid_search_id = grid_search_id, train_date = train_date, source_repo = model_info["source_repo"], train_params= pytorch_total_params)
+                return ModelDetails(model_description=model_info["model_description"], model_version=model_info["model_version"], grid_search_id=grid_search_id, train_date=train_date, source_repo=model_info["source_repo"], train_params=pytorch_total_params)
             except Exception as e:
-                raise ModelDetailsCreationError(f"Error while fetching Model Details for Model card") from e
-        
+                raise ModelDetailsCreationError(
+                    f"Error while fetching Model Details for Model card") from e
+
         def update_dataset_details(exp_config: dict) -> DatasetDetails:
             """
             Function to initialize DatasetDetails object.
@@ -205,20 +217,23 @@ class ModelCardFactory:
                 split_subscription = set()
                 for key in exp_config:
                     if exp_config[key]["component_type_key"] == "SPLITTED_DATASET_ITERATORS":
-                        splits_percentage.append(exp_config[key]["config"]["split_configs"])
+                        splits_percentage.append(
+                            exp_config[key]["config"]["split_configs"])
                         for req in exp_config[key]["requirements"]:
                             split_subscription.update(req["subscription"])
                     elif exp_config[key]["component_type_key"] == "DATASET_ITERATORS":
-                        split_config = exp_config[key]["config"]["split_configs"] if "split_configs" in exp_config[key]["config"] else None
+                        split_config = exp_config[key]["config"][
+                            "split_configs"] if "split_configs" in exp_config[key]["config"] else None
 
                 dataset_splits = {"split_config": split_config,
-                                  "split_subscription": list(split_subscription), 
+                                  "split_subscription": list(split_subscription),
                                   "splits_percentage": splits_percentage}
-            
-                return DatasetDetails(considered_dataset = exp_config["dataset_iterators"]["config"]["dataset_identifier"], dataset_splits = dataset_splits)
+
+                return DatasetDetails(considered_dataset=exp_config["dataset_iterators"]["config"]["dataset_identifier"], dataset_splits=dataset_splits)
             except Exception as e:
-                raise DatasetDetailsCreationError(f"Error while fetching Dataset Details for Model card.") from e
-        
+                raise DatasetDetailsCreationError(
+                    f"Error while fetching Dataset Details for Model card.") from e
+
         def update_training_details(exp_config: dict) -> TrainingDetails:
             """
             Function to initialize TrainingDetails object.
@@ -230,10 +245,11 @@ class ModelCardFactory:
             try:
                 hyperparams = {}
                 hyperparams["optimizer"] = exp_config["optimizer"]["config"]["params"]
-                return TrainingDetails( hyperparams = hyperparams, loss_func = exp_config["train_component"]["config"]["loss_fun_config"]["tag"], optimizer = exp_config["optimizer"]["config"]["optimizer_key"])
+                return TrainingDetails(hyperparams=hyperparams, loss_func=exp_config["train_component"]["config"]["loss_fun_config"]["tag"], optimizer=exp_config["optimizer"]["config"]["optimizer_key"])
             except Exception as e:
-                raise TrainingDetailsCreationError(f"Error while fetching Training Details for Model card.") from e
-        
+                raise TrainingDetailsCreationError(
+                    f"Error while fetching Training Details for Model card.") from e
+
         def update_evaluation_details(exp_config: dict) -> EvalDetails:
             """
             Function to initialize EvalDetails object.
@@ -247,14 +263,16 @@ class ModelCardFactory:
             try:
                 for loss_func_config in exp_config["eval_component"]["config"]["loss_funs_config"]:
                     loss_funcs.append(loss_func_config["tag"])
-            
-                for metric_config in exp_config["eval_component"]["config"]["metrics_config"]:
-                    metrics.append({"name": metric_config["tag"], "params": metric_config["params"]})
 
-                return EvalDetails(loss_funcs = loss_funcs, metrics = metrics)
+                for metric_config in exp_config["eval_component"]["config"]["metrics_config"]:
+                    metrics.append(
+                        {"name": metric_config["tag"], "params": metric_config["params"]})
+
+                return EvalDetails(loss_funcs=loss_funcs, metrics=metrics)
             except Exception as e:
-                raise EvalDetailsCreationError(f"Error while fetching Eval Details for Model card.") from e
-        
+                raise EvalDetailsCreationError(
+                    f"Error while fetching Eval Details for Model card.") from e
+
         def update_pipeline_details(exp_config: dict) -> PipelineDetails:
             """
             Function to initialize PipelineDetails object.
@@ -263,40 +281,103 @@ class ModelCardFactory:
             :returns:
                     obj (PipelineDetails): initialized pipeline details object.
             """
-            try:
-                # pipeline_details = {}
-                # found_keys = set()
-                # all_keys = set(key for key in exp_config)
-                # find_key_arr = ["data", "model", "eval", "train", "early_stopping", "checkpointing"]
-                # for find_key in find_key_arr:
-                #     temp = {key : exp_config[key] for key in exp_config if find_key in key and find_key.upper() in exp_config[key]["component_type_key"]}
-                #     found_keys.update(key for key in temp)
-                #     pipeline_details[find_key] = temp
-                    
-                # for val in list(all_keys - found_keys):
-                #     pipeline_details[val] = exp_config[val]
+            def create_nodes(exp_config):
+                temp = {}
+                for key in exp_config:
+                    temp[key] = {
+                        "config_str": json.dumps(exp_config[key]["config"]) if "config" in exp_config[key] else None,
+                        "requirements": list(req["component_name"] for req in exp_config[key]["requirements"])
+                        if "requirements" in exp_config[key] else [],
+                        "nodes": {}}
+                return temp
 
-                return PipelineDetails(pipeline_details = exp_config)
+            def create_requirement_chain(all_keys):
+                root_nodes = {}
+                other_nodes = {}
+                for key in all_keys:
+                    if all_keys[key]["requirements"] == []:
+                        root_nodes[key] = all_keys[key]
+                    else:
+                        other_nodes[key] = all_keys[key]
+
+                for node in other_nodes:
+                    for req_node in other_nodes[node]["requirements"]:
+                        if req_node in other_nodes:
+                            other_nodes[req_node]["nodes"][node] = other_nodes[node]
+                for node in other_nodes:
+                    for req_node in other_nodes[node]["requirements"]:
+                        if req_node in root_nodes:
+                            root_nodes[req_node]["nodes"][node] = other_nodes[node]
+                return root_nodes
+
+            try:
+                all_keys = create_nodes(exp_config)
+                pipeline_details = create_requirement_chain(all_keys=all_keys)
+                # return PipelineDetails(pipeline_details = exp_config)
+                return PipelineDetails(pipeline_details=pipeline_details)
             except Exception as e:
-                raise PipelineDetailsCreationError(f"Error while fetching Pipeline Details for Model card.") from e
+                raise PipelineDetailsCreationError(
+                    f"Error while fetching Pipeline Details for Model card.") from e
 
         try:
             model_card = ModelCard(
-                model_details = update_model_details(grid_search_id = grid_search_id, gs_config = gs_config, model=model),
-                dataset_details = update_dataset_details(exp_config = exp_config),
-                experiment_environment = ExperimentEnvironment(system_env = ExperimentEnvironment.create_system_info()),
-                training_details = update_training_details(exp_config = exp_config),
-                eval_details = update_evaluation_details(exp_config = exp_config),
-                pipeline_details = update_pipeline_details(exp_config = exp_config)
+                model_details=update_model_details(
+                    grid_search_id=grid_search_id, gs_config=gs_config, model=model),
+                dataset_details=update_dataset_details(exp_config=exp_config),
+                experiment_environment=ExperimentEnvironment(
+                    system_env=ExperimentEnvironment.create_system_info()),
+                training_details=update_training_details(
+                    exp_config=exp_config),
+                eval_details=update_evaluation_details(exp_config=exp_config),
+                pipeline_details=update_pipeline_details(exp_config=exp_config)
             )
             return model_card.toJSON()
         except Exception as e:
             raise ModelCardCreationError(f"Unable to create Model Card") from e
 
+
+class SystemEnv:
+    @staticmethod
+    def create_system_info() -> Dict:
+        """
+        Fetch System Information for model card.
+
+        :returns: Dict- System Information of host machine (CPU & GPU)
+        """
+        try:
+            info = {}
+            info["platform"] = platform.system()
+            info["platform-release"] = platform.release()
+            info["architecture"] = platform.machine()
+            info["processor"] = platform.processor()
+            info["ram"] = str(
+                round(psutil.virtual_memory().total / (1024.0**3))) + " GB"
+            info["python-version"] = platform.python_version()
+            info["python-packages"] = [{"name": p.project_name,
+                                        "version": p.version} for p in pkg_resources.working_set]
+            if torch.cuda.is_available():
+                info["CUDNN_version"] = torch.backends.cudnn.version()
+                info["num_cuda_device"] = torch.cuda.device_count()
+                dev_list = []
+                for i in range(torch.cuda.device_count()):
+                    dev_list.append(
+                        {
+                            "name": torch.cuda.get_device_name(i),
+                            "multi_proc_count": torch.cuda.get_device_properties(i).multi_processor_count,
+                            "total_memory": f"{round(torch.cuda.get_device_properties(i).total_memory / 1e9, 2)} GB",
+                        }
+                    )
+                info["cuda_device_list"] = dev_list
+            return info
+        except Exception as e:
+            raise SystemInfoFetchError(f"Unable to fetch System Info") from e
+
+
 class ExportedModel:
     """
     ExportedModel Class cpontains functions to export model components.
     """
+
     def __init__(self, model: NNModel, post_processors: List[PredictPostProcessingIF], model_path: str = None, device: torch.device = None):
         self.model = model
         self.post_processors = post_processors
@@ -321,7 +402,7 @@ class ExportedModel:
                 targets (torch.Tensor): Target Data.
                 tags (torch.Tensor): Tags for Data.
                 no_grad (bool): Whether to return predictions in inference mode.
-        
+
         :returns:
             result_batch (InferenceResultBatch): Prediction performed on the model.
         """
@@ -331,8 +412,10 @@ class ExportedModel:
                 forward_result = self.model.forward(sample_tensor)
         else:
             forward_result = self.model.forward(sample_tensor)
-        result_batch = InferenceResultBatch(targets=targets, tags=tags, predictions=forward_result)
-        result_batch = PredictPostprocessingComponent.post_process(result_batch, post_processors=self.post_processors)
+        result_batch = InferenceResultBatch(
+            targets=targets, tags=tags, predictions=forward_result)
+        result_batch = PredictPostprocessingComponent.post_process(
+            result_batch, post_processors=self.post_processors)
         return result_batch
 
     def predict_dataset_batch(self, batch: DatasetBatch, no_grad: bool = True) -> InferenceResultBatch:
@@ -341,7 +424,7 @@ class ExportedModel:
         :params:
                 batch (DatasetBatch): A batch of samples and its targets and tags.
                 no_grad (bool): Whether to return predictions in inference mode.
-        
+
         :returns:
             result_batch (InferenceResultBatch): Prediction performed on the batch of dataset.
         """
@@ -352,8 +435,10 @@ class ExportedModel:
         else:
             forward_result = self.model.forward(batch.samples)
 
-        result_batch = InferenceResultBatch(targets=deepcopy(batch.targets), tags=deepcopy(batch.tags), predictions=forward_result)
-        result_batch = PredictPostprocessingComponent.post_process(result_batch, post_processors=self.post_processors)
+        result_batch = InferenceResultBatch(targets=deepcopy(
+            batch.targets), tags=deepcopy(batch.tags), predictions=forward_result)
+        result_batch = PredictPostprocessingComponent.post_process(
+            result_batch, post_processors=self.post_processors)
         result_batch.to_cpu()
         return result_batch
 
@@ -366,7 +451,7 @@ class ExportedModel:
                 batch_size (int): Batch size.
                 collate_fn (Callable): Collate function.
                 no_grad (bool): Whether to return predictions in inference mode.
-        
+
         :returns:
             irb (InferenceResultBatch): Prediction performed on Dataset iterators.
         """
@@ -375,7 +460,8 @@ class ExportedModel:
         dataset_loader = DatasetLoaderFactory.get_splitted_data_loaders({split_key: dataset_iterator}, batch_size=batch_size,
                                                                         sampling_strategies=sampling_strategies,
                                                                         collate_fn=collate_fn)[split_key]
-        irb = self.predict_data_loader(dataset_loader=dataset_loader, no_grad=no_grad)
+        irb = self.predict_data_loader(
+            dataset_loader=dataset_loader, no_grad=no_grad)
         return irb
 
     def predict_data_loader(self, dataset_loader: DatasetLoader, no_grad: bool = True) -> InferenceResultBatch:
@@ -384,12 +470,13 @@ class ExportedModel:
         :params:
                 dataset_loader (DatasetLoader): Obhect of DatasetLoader used to load Data to be trained on.
                 no_grad (bool): Whether to return predictions in inference mode.
-        
+
         :returns:
             InferenceResultBatch object: Has combined results from batches.
         """
         dataset_loader.device = self._device
-        result_batches = [self.predict_dataset_batch(batch, no_grad) for batch in tqdm.tqdm(dataset_loader, desc="Batches processed:")]
+        result_batches = [self.predict_dataset_batch(
+            batch, no_grad) for batch in tqdm.tqdm(dataset_loader, desc="Batches processed:")]
         return InferenceResultBatch.combine(result_batches)
 
     @staticmethod
@@ -402,7 +489,7 @@ class ExportedModel:
                 post_processors (List[PredictPostProcessingIF]): List of Post Processors.
                 model_path (str): Path to save exported model.
                 device (torch.device): Torch device.
-        
+
         :returns:
             ExportedModel object.
         """
@@ -425,14 +512,17 @@ class ComponentLoader:
                 model_id (int): Model id.
                 split_name (str): Split name.
                 device (torch.device): Torch device.
-        
+
         :returns:
             exported_model (ExportedModel): ExportedModel object.
         """
-        trained_model = ComponentLoader.get_trained_model(components, experiment_path, model_id, device)
+        trained_model = ComponentLoader.get_trained_model(
+            components, experiment_path, model_id, device)
         post_processors = components["eval_component"].post_processors[split_name]
-        model_path = os.path.join(experiment_path, f"checkpoints/model_{model_id}.pt")
-        exported_model = ExportedModel.from_model_and_preprocessors(trained_model, post_processors, model_path, device)
+        model_path = os.path.join(
+            experiment_path, f"checkpoints/model_{model_id}.pt")
+        exported_model = ExportedModel.from_model_and_preprocessors(
+            trained_model, post_processors, model_path, device)
         return exported_model
 
     @staticmethod
@@ -443,7 +533,7 @@ class ComponentLoader:
                 experiment_path (str): Path to experiment.
                 blueprint_type (Type[BluePrint]): BluePrint type.
                 component_names (List[str]): List of component names.
-        
+
         :returns:
             components (list[Any]): List of components constructed based on the blueprint_type.
         """
@@ -451,7 +541,8 @@ class ComponentLoader:
 
         with open(config_path, "r") as fd:
             config = json.load(fd)
-        components = blueprint_type.construct_components(config=config, component_names=component_names)
+        components = blueprint_type.construct_components(
+            config=config, component_names=component_names)
         return components
 
     @staticmethod
@@ -463,13 +554,15 @@ class ComponentLoader:
                 blueprint_type (Type[BluePrint]): BluePrint type.
                 component_names (List[str]): List of component names.
                 gs_id (int): Grid Search id.
-        
+
         :returns:
             components (list[Any]): List of components constructed based on the blueprint_type.
         """
-        run_id_to_config_dict = {str(run_id): config for run_id, config in enumerate(GridSearch.create_gs_configs_from_path(gs_path))}
+        run_id_to_config_dict = {str(run_id): config for run_id, config in enumerate(
+            GridSearch.create_gs_configs_from_path(gs_path))}
         experiment_config = run_id_to_config_dict[f"{gs_id}"]
-        components = blueprint_type.construct_components(config=experiment_config, component_names=component_names)
+        components = blueprint_type.construct_components(
+            config=experiment_config, component_names=component_names)
         return components
 
     @staticmethod
@@ -481,7 +574,7 @@ class ComponentLoader:
                 cv_path (str): path to cv config file.
                 blueprint_type (Type[BluePrint]): BluePrint type.
                 component_names (List[str]): List of component names.
-        
+
         :returns:
             components (list[Any]): List of components constructed based on the blueprint_type.
         """
@@ -490,7 +583,8 @@ class ComponentLoader:
         nested_cv = ValidatorFactory.get_nested_cv(gs_config=gs_config,
                                                    cv_config=cv_config,
                                                    blue_print_type=blueprint_type)
-        blue_print = nested_cv.create_blue_prints(blueprint_type, AbstractGymJob.Type.STANDARD, gs_config, 1, dashify_logging_path="")[0]
+        blue_print = nested_cv.create_blue_prints(
+            blueprint_type, AbstractGymJob.Type.STANDARD, gs_config, 1, dashify_logging_path="")[0]
         components = blueprint_type.construct_components(
             config=blue_print.config, component_names=component_names, external_injection=blue_print.external_injection)
         return components
@@ -504,11 +598,12 @@ class ComponentLoader:
                 experiment_path (str): path to experiment dir.
                 model_id (int): Model id.
                 device (torch.device): Device to be used.
-        
+
         :returns:
             model (NNModel): Torch Neural Network module.
         """
-        model_state_dict_path = os.path.join(experiment_path, f"checkpoints/model_{model_id}.pt")
+        model_state_dict_path = os.path.join(
+            experiment_path, f"checkpoints/model_{model_id}.pt")
         model = deepcopy(components["model"])
         # load model
         model_state = torch.load(model_state_dict_path, map_location=device)

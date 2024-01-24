@@ -164,7 +164,8 @@ class AbstractGymJob(StatefulComponent):
                evaluation_result (EvaluationBatchResult): Object storing entire epoch infotmation.
                current_epoch (int): Current epoch number.
         """
-        experiment_status_logger.log_evaluation_results(evaluation_result, current_epoch)
+        experiment_status_logger.log_evaluation_results(
+            evaluation_result, current_epoch)
 
     def train_epoch_done_callback(self, num_epochs: int, current_epoch: int, model: NNModel, evaluation_step_routine: Callable,
                                   accelerator: Accelerator = None):
@@ -178,13 +179,14 @@ class AbstractGymJob(StatefulComponent):
                evaluation_step_routine (Callable): Epoch/Experiment number for cerating checkpoints.
                accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
         """
-        evaluation_results = evaluation_step_routine(current_epoch=current_epoch)
+        evaluation_results = evaluation_step_routine(
+            current_epoch=current_epoch)
         if current_epoch > 0:
             self.lr_scheduler.step()
 
         checkpointing_instruction = self.checkpointing_strategy.get_model_checkpoint_instruction(num_epochs=num_epochs,
-                                                                                                     current_epoch=current_epoch,
-                                                                                                     evaluation_result=evaluation_results)
+                                                                                                 current_epoch=current_epoch,
+                                                                                                 evaluation_result=evaluation_results)
 
         self.run_checkpointing(checkpointing_instruction, current_epoch=current_epoch, accelerator=accelerator)
 

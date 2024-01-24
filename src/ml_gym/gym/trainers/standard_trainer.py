@@ -49,14 +49,19 @@ class TrainComponent(StatefulComponent):
     def _prepare_data_loader_stack(dataloader: DatasetLoader, num_epochs: int, initial_epoch: int,
                                    num_batches_per_epoch: int) -> Iterable:
 
-        current_batch_index = (initial_epoch * num_batches_per_epoch) % len(dataloader)
-        skip_num_dataloaders = int((initial_epoch * num_batches_per_epoch) / len(dataloader))
+        current_batch_index = (
+            initial_epoch * num_batches_per_epoch) % len(dataloader)
+        skip_num_dataloaders = int(
+            (initial_epoch * num_batches_per_epoch) / len(dataloader))
 
-        num_total_batches = num_batches_per_epoch*num_epochs  # number of total batches irrespective of the warm start
-        num_dataloaders = int(np.ceil(num_total_batches/len(dataloader))) - skip_num_dataloaders
+        # number of total batches irrespective of the warm start
+        num_total_batches = num_batches_per_epoch*num_epochs
+        num_dataloaders = int(
+            np.ceil(num_total_batches/len(dataloader))) - skip_num_dataloaders
 
         data_loaders = chain(*([dataloader]*num_dataloaders))
-        data_loader_iterable = iter(zip(range(num_total_batches), data_loaders))
+        data_loader_iterable = iter(
+            zip(range(num_total_batches), data_loaders))
 
         # fast forward to the batch index that we left off in case of a warm start
         for _ in range(current_batch_index):
@@ -84,7 +89,8 @@ class TrainComponent(StatefulComponent):
             model (NNModel): Torch Neural Network module.
         """
         model.train()
-        num_batches_per_epoch = num_batches_per_epoch if num_batches_per_epoch is not None else len(dataloader)
+        num_batches_per_epoch = num_batches_per_epoch if num_batches_per_epoch is not None else len(
+            dataloader)
         dataloader_iterable = TrainComponent._prepare_data_loader_stack(dataloader=dataloader,
                                                                         num_epochs=num_epochs,
                                                                         initial_epoch=initial_epoch,
@@ -92,8 +98,10 @@ class TrainComponent(StatefulComponent):
 
         # epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=-1, model=model)
         for batch_id, batch in dataloader_iterable:
-            current_epoch = initial_epoch + int(batch_id / num_batches_per_epoch)
-            model = self._train_batch(batch=batch, model=model, optimizer=optimizer, device=device)
+            current_epoch = initial_epoch + \
+                int(batch_id / num_batches_per_epoch)
+            model = self._train_batch(
+                batch=batch, model=model, optimizer=optimizer, device=device)
 
             batch_done_callback_fun(status="train",
                                     num_batches=num_batches_per_epoch,
@@ -121,7 +129,8 @@ class TrainComponent(StatefulComponent):
         :returns:
             loss (List[torch.Tensor]): Loss list for batch.
         """
-        forward_batch = self.inference_component.predict(batch=batch, model=model, post_processors=self.post_processors)
+        forward_batch = self.inference_component.predict(
+            batch=batch, model=model, post_processors=self.post_processors)
         loss = self.loss_fun(forward_batch)
         return loss
 

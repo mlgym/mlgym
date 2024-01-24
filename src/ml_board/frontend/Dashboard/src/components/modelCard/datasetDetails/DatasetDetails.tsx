@@ -34,13 +34,16 @@ export default function DatasetDetails({datasetDetails} : {datasetDetails: AnyKe
                             },
                         }
                         split_children_children.push(split_child_child_obj);
+                        return null;
                     })                    
                 }
                 let split_child_obj = {
                     name: split_config[split_config_key].split,
                     children: split_children_children
                 }
-                split_children.push(split_child_obj)
+                split_children.push(split_child_obj);
+
+                return null;
             })
             
             const myTreeData = {
@@ -75,7 +78,7 @@ export default function DatasetDetails({datasetDetails} : {datasetDetails: AnyKe
                     data={treeData}
                     pathFunc="diagonal"
                     enableLegacyTransitions={true}
-                    translate={{ x: 200, y: 180 }}
+                    translate={{ x: 200, y: 120 }}
                 />
             </Grid>
       </Grid>

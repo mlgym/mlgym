@@ -33,6 +33,7 @@ class AccelerateEvaluator(AbstractEvaluator):
         :returns:
             evaluation_batch_results (List[EvaluationBatchResult]): Evaluation results of batches trained on.
         """
+
         model.eval()
 
         # returns a EvaluationBatchResult for each split
@@ -98,13 +99,15 @@ class AccelerateEvalComponent:
         :returns:
             evaluation_result (EvaluationBatchResult): Evaluation results of batches trained on.
         """
-        post_processors = self.post_processors[split_name] + self.post_processors["default"]
+        post_processors = self.post_processors[split_name] + \
+            self.post_processors["default"]
 
         # calc losses
         if self.loss_computation_config is not None:
             loss_tags = [loss_tag for loss_tag, applicable_splits in self.loss_computation_config.items()
                          if split_name in applicable_splits]
-            split_loss_funs = {tag: loss_fun for tag, loss_fun in self.loss_funs.items() if tag in loss_tags}
+            split_loss_funs = {
+                tag: loss_fun for tag, loss_fun in self.loss_funs.items() if tag in loss_tags}
         else:
             split_loss_funs = self.loss_funs
 
@@ -151,9 +154,11 @@ class AccelerateEvalComponent:
 
         # calc metrics
         try:
-            prediction_batch = InferenceResultBatch.combine(inference_result_batches_cpu)
+            prediction_batch = InferenceResultBatch.combine(
+                inference_result_batches_cpu)
         except BatchStateError as e:
-            raise EvaluationError(f"Error combining inference result batch on split {split_name}.") from e
+            raise EvaluationError(
+                f"Error combining inference result batch on split {split_name}.") from e
 
         # select metrics for split
         if self.metrics_computation_config is not None:
@@ -161,7 +166,8 @@ class AccelerateEvalComponent:
             split_metrics = [metric for metric in self.metrics if metric.tag in metric_tags]
         else:
             split_metrics = self.metrics
-        metric_scores = self._calculate_metric_scores(prediction_batch, split_metrics)
+        metric_scores = self._calculate_metric_scores(
+            prediction_batch, split_metrics)
 
         # aggregate losses
         loss_keys = batch_losses[0].keys()
@@ -208,7 +214,8 @@ class AccelerateEvalComponent:
         :returns:
             inference_result_batch (InferenceResultBatch): Prediction performed on the model.
         """
-        inference_result_batch = self.inference_component.predict(model, dataset_batch, postprocessors)
+        inference_result_batch = self.inference_component.predict(
+            model, dataset_batch, postprocessors)
         return inference_result_batch
 
     def _calculate_metric_scores(self, inference_batch: InferenceResultBatch, split_metrics: List[Metric]) -> Dict[str, List[float]]:
@@ -226,7 +233,8 @@ class AccelerateEvalComponent:
             try:
                 metric_scores[metric.tag] = [metric(inference_batch)]
             except Exception as e:
-                raise MetricCalculationError(f"Error during calculation of metric {metric.tag}") from e
+                raise MetricCalculationError(
+                    f"Error during calculation of metric {metric.tag}") from e
         return metric_scores
 
     def _calculate_loss_scores(self, forward_batch: InferenceResultBatch, split_loss_funs: Dict[str, Loss]) -> Dict[str, List[float]]:
@@ -242,9 +250,11 @@ class AccelerateEvalComponent:
         loss_scores = {}
         for loss_key, loss_fun in split_loss_funs.items():
             try:
-                loss_scores[loss_key] = self._get_batch_loss(loss_fun, forward_batch)
+                loss_scores[loss_key] = self._get_batch_loss(
+                    loss_fun, forward_batch)
             except Exception as e:
-                raise LossCalculationError("Error during calculation of loss {loss_key}") from e
+                raise LossCalculationError(
+                    "Error during calculation of loss {loss_key}") from e
 
         return loss_scores
 
