@@ -36,7 +36,7 @@ const Item = React.memo(({ activePipelineKey, setActivePipelineKey, pipelineKey 
             <ListItemIcon>
                 <WidgetsIcon />
             </ListItemIcon>
-            <ListItemText primary={pipelineKey} />
+            <ListItemText primary={pipelineKey.replace(/_/g, " ")} />
         </ListItemButton>
     </ListItem>
 ));

@@ -18,8 +18,10 @@ export default function () {
     const fitTheView = () => setTimeout(() => fitView({ duration: 1000 }), 100);
 
     useEffect(() => {
-        const layout = getLayoutedNodes(nodes, edges, { direction: "TB" });
-        setNodes([...layout.nodes]);
+        // const layout = getLayoutedNodes(nodes, edges, { direction: "TB" });
+        // setNodes([...layout.nodes]);
+        // setEdges([...layout.edges]);
+        setNodes(nodes);
         setEdges(edges);
         fitTheView();
     }, [activePipeline]);
@@ -32,6 +34,9 @@ export default function () {
             fitTheView();
         }}
         nodeTypes={nodeTypes}
+        deleteKeyCode={null}
+        nodeOrigin={[0.5, 0.5]}
+        snapToGrid={true}
     >
         <Background />
         <MiniMap />

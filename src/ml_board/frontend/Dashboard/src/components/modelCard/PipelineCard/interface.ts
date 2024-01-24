@@ -13,7 +13,8 @@ export interface IPipelineNode {
 export interface INodeData {
     label: string;
     config: JSON;
-    child_count: number;
+    requirements:Array<string>;
+    children:Array<string>;
 }
 
 export interface IReactFlowPipeline {

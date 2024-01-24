@@ -1,13 +1,13 @@
 import { NodeProps, Position } from "reactflow";
 import Paper from '@mui/material/Paper';
 import { CustomHandles } from "./CustomHandles";
-import { Typography } from "@mui/material";
+import { Box, Divider, Typography } from "@mui/material";
 import { INodeData } from "./interface";
 
-export default function CustomNode({ data: { label, child_count } }: NodeProps<INodeData>) {
+export default function CustomNode({ data: { label, requirements, children } }: NodeProps<INodeData>) {
     return (
-        <div>
-            <CustomHandles count={1} type={"target"} position={Position.Top} />
+        <Box>
+            {requirements.length > 0 && <CustomHandles count={1} type={"target"} position={Position.Top} />}
 
             <Paper elevation={3} sx={{ padding: 2 }}>
                 <Typography variant="h4" p={1} sx={{
@@ -15,11 +15,18 @@ export default function CustomNode({ data: { label, child_count } }: NodeProps<I
                     fontSize: 24,
                     fontWeight: 'bold',
                 }}>
-                    {label}
+                    {label.replace(/_/g, " ")}
                 </Typography>
+
+                {requirements.length > 1 && <>
+                    <Divider />
+                    <Typography variant="caption">
+                        requires also: {requirements.length - 1} more components
+                    </Typography>
+                </>}
             </Paper >
 
-            <CustomHandles count={child_count} type={"source"} position={Position.Bottom} />
-        </div>
+            <CustomHandles count={children.length} type={"source"} position={Position.Bottom} />
+        </Box>
     );
 }

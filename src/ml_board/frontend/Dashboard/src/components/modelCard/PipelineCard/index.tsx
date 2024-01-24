@@ -44,10 +44,10 @@ const Content = () => (
             </Grid>
             <Grid item container xs="auto" direction="column">
                 <Grid item>
-                    <ConfigViewer />
+                    <RequirementsViewer />
                 </Grid>
                 <Grid item>
-                    <RequirementsViewer />
+                    <ConfigViewer />
                 </Grid>
             </Grid>
         </Grid>

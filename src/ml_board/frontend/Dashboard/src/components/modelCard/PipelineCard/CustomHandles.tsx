@@ -19,6 +19,7 @@ export const CustomHandles = ({ count, type, position }: IHandleDataProps) => (
                 type={type}
                 position={position}
                 id={idx.toString()}
+                isConnectable={false}
                 style={{
                     left: 0,
                     position: "relative"
