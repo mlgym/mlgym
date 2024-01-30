@@ -1,11 +1,11 @@
-import { ColDef, GetRowIdFunc, GetRowIdParams, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
+import { ColDef, GetRowIdFunc, GetRowIdParams, GridColumnsChangedEvent, GridReadyEvent, ICellRendererParams, RowClassParams, RowStyle } from 'ag-grid-community';
 import { AgGridReact } from "ag-grid-react";
 import { useCallback, useContext, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../../app/hooks';
-import { Row, selectAllRows } from '../../../redux/table/tableSlice';
-import { FilterContext } from '../context/FilterContextProvider';
-// styles
+import { Row, selectAllRows, selectTableHeaders } from '../../../redux/table/tableSlice';
+
+// components & styles
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { IconButton, Tooltip } from '@mui/material';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS, always needed
@@ -18,12 +18,11 @@ export default function Table() {
   const navigate = useNavigate();
 
   const rows = useAppSelector(selectAllRows);
-
-  const { visibleColumns } = useContext(FilterContext);
+  const headers = useAppSelector(selectTableHeaders);
 
   // map the visible columns obejct to an array, every element on the format { field: colName }, only taking the visible ones
   const colDefs: ColDef<Row>[] = useMemo(() => {
-    const arr: ColDef<Row>[] = Object.entries(visibleColumns).reduce((keys: ColDef<Row>[], [colName, visible]) => {
+    const arr: ColDef<Row>[] = Object.entries(headers).reduce((keys: ColDef<Row>[], [colName, visible]) => {
       if (visible === true) {
         keys.push({ field: colName });
       }
@@ -47,14 +46,15 @@ export default function Table() {
         </Tooltip>)
     }]);
     return arr;
-  }, [visibleColumns]);
+  }, [headers]);
 
   const defaultColDef = useMemo(() => ({ resizable: true, sortable: true, filter: true }), []);
 
-  // set background colour for every row based on the rowIndex, as it is the same as experiment_id. BUT this looks bad, should be using CSS classes?
-  // const getRowStyle = ({ rowIndex }: RowClassParams): RowStyle => { return { background: `hsl(${rowIndex * 137.5},75%,50%)` }; };
-  const onGridReady: (params: GridReadyEvent<Row>) => void = useCallback(params => params.api.sizeColumnsToFit(), []);
+  const onGridColumnsChanged: (params: GridColumnsChangedEvent<Row>) => void = useCallback(params => params.api.sizeColumnsToFit(), []);
   const getRowId: GetRowIdFunc<Row> = useCallback((params: GetRowIdParams<Row>) => params.data.experiment_id.toString(), []);
+
+  // set background colour for every row based on the rowIndex, as it is the same as experiment_id. BUT this looks bad, should be using CSS classes?
+  const getRowStyle = ({ rowIndex }: RowClassParams): RowStyle => { return { background: `hsl(${rowIndex * 137.5},75%,50%)` }; };
 
   return (
     <div className="ag-theme-alpine" id={styles.ag_grid_container_table}>
@@ -63,7 +63,7 @@ export default function Table() {
         defaultColDef={defaultColDef}
         columnDefs={colDefs}
         rowData={rows}
-        onGridReady={onGridReady}
+        onGridColumnsChanged={onGridColumnsChanged}
         getRowId={getRowId}
         rowSelection={"multiple"}
         rowStyle={{ cursor: "pointer" }}

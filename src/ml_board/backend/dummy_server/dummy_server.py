@@ -127,7 +127,7 @@ def terminate(text:str) -> None:
 
 # The accepted parameters:
 params = ["path", "line_count", "port", "delay", "cors_ports"]
-# sys.argv EXAMPLE: path=event_storage.log line_count=500 port=7000 delay=0.1 cors_ports=3000,7000,8080
+# sys.argv EXAMPLE: path=event_storage.log line_count=500 port=5002 delay=0.1 cors_ports=3000,7000,8080
 if __name__ == '__main__':
 
     try:

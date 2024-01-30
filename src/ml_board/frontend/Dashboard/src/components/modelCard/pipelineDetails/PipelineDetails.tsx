@@ -15,15 +15,15 @@ interface PipelineDetailsProps {
 
 export default function PipelineDetails({ pipelineDetails, experiment_id, treeOrientationProp }: PipelineDetailsProps) {
 
-    const [treeData, setTreeData] = useState<RawNodeDatum>({name: ''});
+    const [treeData, setTreeData] = useState<RawNodeDatum>({ name: '' });
     const [clickedNode, setNodeClick] = useState<any>(null);
 
     function tree_children_iterator(obj: any) {
-        let children: { name: any, attribute?: any, children?: any } [] = [];
+        let children: { name: any, attribute?: any, children?: any }[] = [];
         if (typeof obj === 'object' && obj !== null) {
-            for(const key in obj) {
-                if(key !== 'requirements') {
-                    if(typeof obj[key] === 'object' && obj[key] !== null) {
+            for (const key in obj) {
+                if (key !== 'requirements') {
+                    if (typeof obj[key] === 'object' && obj[key] !== null) {
                         let tree_children = tree_children_iterator(obj[key].nodes)
                         let child_obj = {
                             name: key,
@@ -54,49 +54,49 @@ export default function PipelineDetails({ pipelineDetails, experiment_id, treeOr
     }
 
     useEffect(() => {
-        if(pipelineDetails && Object.keys(pipelineDetails).length > 0) {
-            
-            console.log("pipelineDetails: ",pipelineDetails)
-            
+        if (pipelineDetails && Object.keys(pipelineDetails).length > 0) {
+
+            console.log("pipelineDetails: ", pipelineDetails)
+
             let tree_data = tree_children_iterator(pipelineDetails);
             // console.log("tree_data: ",tree_data)
 
             const myTreeData = {
                 name: "Experiment_Pipeline",
                 attributes: {
-                    name: "Experiment "+experiment_id.toString(),
+                    name: "Experiment " + experiment_id.toString(),
                 },
                 children: tree_data
             }
-            console.log("myTreeData: ",myTreeData)
+            // console.log("myTreeData: ",myTreeData)
 
             setTreeData(myTreeData);
         }
     }, [pipelineDetails])
-    
+
     function filterKeys(obj: any): any {
         if (typeof obj !== 'object' || obj === null) {
-          return obj;
+            return obj;
         }
-      
+
         if (Array.isArray(obj)) {
-          return obj.map(filterKeys);
+            return obj.map(filterKeys);
         }
-      
+
         const filteredObj: any = {};
-      
+
         for (const key in obj) {
-          if (key === 'config' || key === 'children' || key === 'name' || key === 'attributes') {
-            if(key === 'children') {
-                filteredObj[key] = filterKeys(obj[key]);
+            if (key === 'config' || key === 'children' || key === 'name' || key === 'attributes') {
+                if (key === 'children') {
+                    filteredObj[key] = filterKeys(obj[key]);
+                }
+                else {
+                    filteredObj[key] = obj[key]
+                }
             }
-            else {
-                filteredObj[key] = obj[key]
-            }
-          }
         }
         // console.log('Node filteredObj:', filteredObj);
-      
+
         return filteredObj;
     }
 
@@ -116,7 +116,7 @@ export default function PipelineDetails({ pipelineDetails, experiment_id, treeOr
         setNodeClick(selectedNodeData);
     }
 
-    return(
+    return (
         <Grid container>
             <Grid item={true} xs={12} sm={12} md={8} lg={8} >
                 <div id="pipeline_graph_component" className={styles.tree_container}>
@@ -127,8 +127,8 @@ export default function PipelineDetails({ pipelineDetails, experiment_id, treeOr
                         orientation={treeOrientationProp as Orientation}
                         separation={{ siblings: 1, nonSiblings: 1.5 }}
                         enableLegacyTransitions={true}
-                        translate={{ x: window.innerWidth/4, y: window.innerHeight/2 }}
-                        onNodeClick={(node: HierarchyPointNode<TreeNodeDatum>, e: SyntheticEvent)=>handleNodeClick(node, e)}
+                        translate={{ x: window.innerWidth / 4, y: window.innerHeight / 2 }}
+                        onNodeClick={(node: HierarchyPointNode<TreeNodeDatum>, e: SyntheticEvent) => handleNodeClick(node, e)}
                     />
                 </div>
             </Grid>
@@ -137,9 +137,9 @@ export default function PipelineDetails({ pipelineDetails, experiment_id, treeOr
                     <h4>Config: {clickedNode ? clickedNode.name : "no node selected"}</h4>
                 </div>
                 <div>
-                    {clickedNode && <JsonViewer value={clickedNode}/>}
+                    {clickedNode && <JsonViewer value={clickedNode} />}
                 </div>
             </Grid>
-      </Grid>
+        </Grid>
     )
 }

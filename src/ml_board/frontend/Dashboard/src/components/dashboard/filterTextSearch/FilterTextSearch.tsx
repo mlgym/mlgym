@@ -1,11 +1,17 @@
+import React, { useRef } from 'react';
+import { useAppDispatch, useAppSelector } from '../../../app/hooks';
+import { ColumnsFilter, selectTableHeaders, updateTableHeaderVisibility } from '../../../redux/table/tableSlice';
+
+// components & styles
 import CheckIcon from '@mui/icons-material/Check';
 import ClearIcon from '@mui/icons-material/Clear';
 import { Button } from '@mui/material';
 import Drawer from '@mui/material/Drawer';
 import TextField from '@mui/material/TextField';
-import React, { useContext, useRef } from 'react';
-import { ColumnsFilter, FilterContext } from '../context/FilterContextProvider';
 import styles from './FilterTextSearch.module.css';
+
+
+const TEXT_FILTER_SEPARATOR = ";";
 
 interface FilterTextSearchProps {
     filterDrawer: boolean;
@@ -14,20 +20,21 @@ interface FilterTextSearchProps {
 
 const FilterTextSearch: React.FC<FilterTextSearchProps> = (props) => {
 
-    const { visibleColumns, setVisibleColumns } = useContext(FilterContext);
+    const dispatch = useAppDispatch();
+    const headers = useAppSelector(selectTableHeaders);
 
     const text = useRef<{ value: string }>();
 
     function processFilter(input: string) {
         const temp: ColumnsFilter = {}
-        for (const inputChunk of input.split(";")) {
+        for (const inputChunk of input.split(TEXT_FILTER_SEPARATOR)) {
             const re = new RegExp(inputChunk);
-            for (const header in visibleColumns) {
+            for (const header in headers) {
                 if (!temp[header])
                     temp[header] = re.test(header)
             }
         }
-        setVisibleColumns(temp)
+        dispatch(updateTableHeaderVisibility(temp));
     }
 
     return (
@@ -47,6 +54,7 @@ const FilterTextSearch: React.FC<FilterTextSearchProps> = (props) => {
                     </div>
                     <div className={styles.textsearch_filter_textfield_container}>
                         <TextField
+                            autoFocus={true}
                             inputRef={text}
                             id="outlined-multiline-flexible"
                             label="Filter"

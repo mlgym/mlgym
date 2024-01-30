@@ -76,6 +76,13 @@ class DataAccessIF(ABC):
     def create_model_card(self, grid_search_id: str, experiment_id: str) -> Dict:
         raise NotImplementedError
 
+    @abstractmethod
+    def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: str) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str) -> List[Dict]:
+        raise NotImplementedError
 
 class FileDataAccess(DataAccessIF):
     """

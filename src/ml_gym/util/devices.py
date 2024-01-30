@@ -13,11 +13,14 @@ def get_devices(gpu_device_ids: List[int] = None) -> List[torch.device]:
     :returns:
         List[torch.device]: List of devices that can be sued by torch to work on model.
     """
+
     if gpu_device_ids is None or not gpu_device_ids:
-        print("WARNING: No cuda devices specified. Falling back to CPUs.")   # TODO Introduce proper logging...
+        # TODO Introduce proper logging...
+        print("WARNING: No cuda devices specified. Falling back to CPUs.")
         return [torch.device("cpu")]
     if torch.cuda.is_available():  # if we got some GPUs
         return [torch.device(f"cuda:{device_id}") for device_id in gpu_device_ids]
     else:
-        print("WARNING: No cuda devices available. Falling back to CPUs.")   # TODO Introduce proper logging...
+        # TODO Introduce proper logging...
+        print("WARNING: No cuda devices available. Falling back to CPUs.")
         return [torch.device("cpu")]

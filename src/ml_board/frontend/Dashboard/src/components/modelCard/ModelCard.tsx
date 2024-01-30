@@ -321,7 +321,6 @@ export default function ModelCard() {
 
                                             {pipelineDetails && Object.keys(pipelineDetails).length > 0 && <PipelineCard details={pipelineDetails} />}
 
-
                                             <div id="results_visualization" className={styles.card_feel}>
                                                 <div className={styles.title_container}>
                                                     <div>

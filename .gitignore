@@ -128,4 +128,11 @@ event_storage
 *.whl
 *.arrow
 transformer/
+
+icde_paper/
+example/gpt2/data/
+checkpoints/
+logs-ddp
+src/ml_gym/gym/trainers/repositories.code-workspace
+
 core.*
