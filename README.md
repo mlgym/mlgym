@@ -49,7 +49,7 @@ pip install src/
 
 ## Usage
 
-We provide an easy-to-use and a detailed walkthrough of an example that lets you run a MLgym [experiment setup](https://github.com/le1nux/mlgym/tree/master/example/grid_search_example). Follow the sequential execution commands to seamlessly initiate and monitor the experiment.
+We provide an easy-to-use and a detailed walkthrough of an example that lets you run a MLgym [experiment setup](https://github.com/le1nux/mlgym/tree/master/example/grid_search_example). Follow the execution commands to seamlessly initiate and monitor the experiment.
 
 For running the experiments we first need to setup the MLboard logging environment, i.e., the websocket service and the RESTful webservice. 
 
@@ -112,7 +112,7 @@ logging:
 
 </details>
 
-4. **Frontend Visualization:** To visualize the live updates, we run the [MLboard](https://github.com/mlgym/mlgym#mlboard) frontend. We specify the server host and port that delivers the frontend and the endpoints of the REST webservice and the websocket service. The parameter `run_id` refers to the experiment run that we want to analyze and differs in your case. Each experiment runs is stored in separate folders within the `event_storage` path. The folder names refer to the respective experiment run ids.
+4. **Frontend Visualization:** To visualize the live updates, we run the [MLboard](https://github.com/mlgym/src/ml_board) frontend. We specify the server host and port that delivers the frontend and the endpoints of the REST webservice and the websocket service. The parameter `run_id` refers to the experiment run that we want to analyze and differs in your case. Each experiment runs is stored in separate folders within the `event_storage` path. The folder names refer to the respective experiment run ids.
 ```sh
 ml_board --ml_board_host 127.0.0.1 --ml_board_port 8080 --rest_endpoint http://127.0.0.1:5001 --ws_endpoint http://127.0.0.1:5002 --run_id YOUR_RUN_ID
 ```
