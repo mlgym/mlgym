@@ -1,11 +1,33 @@
 ## MLBoard
 
-In the GIF images below, we present a detailed walkthrough of an example run using the above provided tutorial of `grid_search_example`. Follow the sequential execution commands to seamlessly initiate and monitor the experiment.
+In the GIF images below, we present a detailed walkthrough of an example run using the above provided tutorial of [`grid_search_example`](https://github.com/mlgym/mlgym/blob/project-for-UI-documentation/README.md#usage). Follow the sequential execution commands to seamlessly initiate and monitor the experiment.
 
 1. **WebSocket Connection:** Initiate the WebSocket connection.
+```sh
+ml_board_ws_endpoint --host 127.0.0.1 --port 5002 --event_storage_path event_storage --cors_allowed_origins http://127.0.0.1:8080 http://127.0.0.1:5002
+```
+
 2. **Restful APIs:** Start the Restful APIs.
+```sh
+ml_board_rest_endpoint --port 5001 --event_storage_path event_storage
+```
+
 3. **Pipeline Execution:** Run the Python file to execute the pipeline.
+```sh
+cd mlgym/example/grid_search_example
+
+python run.py  --config_path run_config.yml
+```
+
 4. **Frontend Visualization:** Launch the frontend (mlboard) to visualize metrics and loss for different experiments.
+```sh
+ml_board --ml_board_host 127.0.0.1 --ml_board_port 8080 --rest_endpoint http://127.0.0.1:5001 --ws_endpoint http://127.0.0.1:5002 --run_id YOUR_RUN_ID
+```
+
+The above script returns the parameterized URL pointing to the respective experiment run:
+```
+====> ACCESS MLBOARD VIA http://127.0.0.1:8080?rest_endpoint=http://127.0.0.1:5001&ws_endpoint=http://127.0.0.1:5002&run_id=run_id=YOUR_RUN_ID
+```
 
 <div align="center">
 <img src="mlboard_gifs/ML_Board_Start_Things.gif" width="100%" />
@@ -13,7 +35,7 @@ In the GIF images below, we present a detailed walkthrough of an example run usi
 
 ### Monitoring and Analysis
 
-After executing the example run, proceed to monitor and analyze the experiment using the `ml_board`. First execute the ml_board command with the example run ID, and copy the provided URL. Paste the URL in your browser to access the frontend.
+After executing the example run, proceed to monitor and analyze the experiment using the `ml_board`. First execute the ml_board [Frontend Visualization](ML_BOARD.md#mlboard) command with the example run ID, and copy the provided URL. Paste the URL in your browser to access the frontend.
 
 1. **Configuring Frontend:** Confirm the configurations in the auto-populated popup or customize them as needed. Enter the desired run ID for monitoring.
 2. **Popup Confirmation:** Confirm the values in the popup. Upon successful confirmation, a socket connection is established, listening to log messages from the specified run ID.
@@ -25,7 +47,7 @@ After executing the example run, proceed to monitor and analyze the experiment u
 
 ### Experiment Analysis
 
-Navigate to a specific experiment ID to analyze its configurations and observe live developments of metrics, loss, batches, and epochs. You can select and download a specific checkpoint and other picked files for further examination or external reference.. Here, you can also access information regarding the environment and hardware settings under which the experiment was executed.
+Navigate to a specific experiment ID to analyze its configurations and observe live developments of metrics, loss, batches, and epochs. You can select and download a specific checkpoint and other picked files for further examination or external reference. Here, you can also access information regarding the environment and hardware settings under which the experiment was executed.
 
 This comprehensive experiment analysis functionality within `ml_board` empowers users to extract valuable insights, inspect detailed configurations, and download pertinent files for a thorough examination and reproducibility of the experiment's outcomes.
 

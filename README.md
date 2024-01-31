@@ -113,7 +113,7 @@ ml_board --ml_board_host 127.0.0.1 --ml_board_port 8080 --rest_endpoint http://1
 The script returns the parameterized URL pointing to the respective experiment run:
 
 ```
-====> ACCESS MLBOARD VIA http://127.0.0.1:8080?rest_endpoint=http%3A//127.0.0.1%3A5001&ws_endpoint=http%3A//127.0.0.1%3A5002&run_id=2022-11-06--17-59-10
+====> ACCESS MLBOARD VIA http://127.0.0.1:8080?rest_endpoint=http://127.0.0.1:5001&ws_endpoint=http://127.0.0.1:5002&run_id=2022-11-06--17-59-10
 
 ```
 
