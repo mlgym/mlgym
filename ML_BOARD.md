@@ -1,6 +1,6 @@
 ## MLBoard
 
-In the GIF images below, we present a detailed walkthrough of an example run using the above provided tutorial of [`grid_search_example`](https://github.com/mlgym/mlgym/blob/project-for-UI-documentation/README.md#usage). Follow the sequential execution commands to seamlessly initiate and monitor the experiment.
+In the GIF images below, we present a detailed walkthrough of an example run using the above provided tutorial of [grid_search_example](./README.md#usage). Follow the sequential execution commands to seamlessly initiate and monitor the experiment.
 
 1. **WebSocket Connection:** Initiate the WebSocket connection.
 ```sh
