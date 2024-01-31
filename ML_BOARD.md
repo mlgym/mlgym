@@ -1,25 +1,55 @@
 ## MLBoard
 
-In the GIF images below, we present a detailed walkthrough of an example run using the above provided tutorial of [grid_search_example](./README.md#usage). Follow the sequential execution commands to seamlessly initiate and monitor the experiment.
+In the GIF images below, we provide an easy-to-use and a detailed walkthrough of an example that lets you run a MLgym [experiment setup](https://github.com/le1nux/mlgym/tree/master/example/grid_search_example). Follow the sequential execution commands to seamlessly initiate and monitor the experiment.
 
-1. **WebSocket Connection:** Initiate the WebSocket connection.
+For running the experiments we first need to setup the MLboard logging environment, i.e., the websocket service and the RESTful webservice. 
+
+1. **WebSocket Connection:** MLgym logs the training/evaluation progress and evaluation results via the websocket API, allowing the MLboard frontend to receive live updates. Initiate the WebSocket connection as follows:
 ```sh
 ml_board_ws_endpoint --host 127.0.0.1 --port 5002 --event_storage_path event_storage --cors_allowed_origins http://127.0.0.1:8080 http://127.0.0.1:5002
 ```
 
-2. **Restful APIs:** Start the Restful APIs.
+2. **Restful APIs:** The RESTful webservice provides endpoints to receive checkpoints and experiment setups. For a full specification of both APIs see [here](https://github.com/le1nux/mlgym/tree/master/src/ml_board/README.md).  Start the Restful APIs as follows:
 ```sh
 ml_board_rest_endpoint --port 5001 --event_storage_path event_storage
 ```
 
-3. **Pipeline Execution:** Run the Python file to execute the pipeline.
+We start the websocket service and the RESTful webservice on ports 5001 and 5002, respectively. Feel free to choose different ports if desired.
+Similarly, we specify the folder `event_storage` as the local event storage folder. Note, to access the websocket service from a different port, we need to specify the [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) allowed origins. In thise example, we only use the websocket service locally from 127.0.0.1:8080 via the MLboard frontend.
+
+3. **Pipeline Execution:** Next, we run the experiment setup. We `cd` into the example folder and run `run.py` with the respective run config whose path is passed via the parameter `config_path`.
+
+The `run_config.yml` file contains all the parameters which is required for the mlGym to configure it self to run.
+
+A preview of the yml file is given bellow: 
+```yaml
+run_configuration:
+  type: train # train, warmstart
+  config:
+    num_epochs: 50 # Number of epochs
+    num_batches_per_epoch: 100
+    gs_config_path: ./gs_config.yml
+
+environment:
+  type: multiprocessing # multiprocessing,  main_process, accelerate
+  config:
+    process_count: 3 # Max. number of processes running at a time.
+    computation_device_ids: [0] # Indices of GPUs to distribute the GS over
+
+logging:
+  websocket_logging_servers: # List of websocket logging servers, e.g., http://127.0.0.1:9090 http://127.0.0.1:8080
+    - http://127.0.0.1:5002
+  gs_rest_api_endpoint: http://127.0.0.1:5001 # Endpoint for the grid search API, e.g., http://127.0.0.1:8080
+```
+
+Run the following commands to execute the pipeline:
 ```sh
 cd mlgym/example/grid_search_example
 
 python run.py  --config_path run_config.yml
 ```
 
-4. **Frontend Visualization:** Launch the frontend (mlboard) to visualize metrics and loss for different experiments.
+4. **Frontend Visualization:** To visualize the live updates, we run the [MLboard](https://github.com/mlgym/mlgym#mlboard) frontend. We specify the server host and port that delivers the frontend and the endpoints of the REST webservice and the websocket service. The parameter `run_id` refers to the experiment run that we want to analyze and differs in your case. Each experiment runs is stored in separate folders within the `event_storage` path. The folder names refer to the respective experiment run ids.
 ```sh
 ml_board --ml_board_host 127.0.0.1 --ml_board_port 8080 --rest_endpoint http://127.0.0.1:5001 --ws_endpoint http://127.0.0.1:5002 --run_id YOUR_RUN_ID
 ```
@@ -29,9 +59,25 @@ The above script returns the parameterized URL pointing to the respective experi
 ====> ACCESS MLBOARD VIA http://127.0.0.1:8080?rest_endpoint=http://127.0.0.1:5001&ws_endpoint=http://127.0.0.1:5002&run_id=run_id=YOUR_RUN_ID
 ```
 
-<div align="center">
+Note, that the Flask webservice delivers the compiled react files statically, which is why any changes to the frontend code will not be automatically reflected. As a solution, you can start the MLboard react app directly via yarn or npm and call the URL with the respective URL search params in the browser
+```sh
+cd mlgym/src/ml_board/frontend/dashboard
+
+npm install 
+
+npm start
+```
+
+To see the messages live `cd` into the event storage directory and `tail` the `event_storage.log` file.
+
+```sh
+cd event_storage/YOUR_RUN_ID/
+tail -f event_storage.log
+```
+
+<!-- <div align="center">
 <img src="mlboard_gifs/ML_Board_Start_Things.gif" width="100%" />
-</div>
+</div> -->
 
 ### Monitoring and Analysis
 
