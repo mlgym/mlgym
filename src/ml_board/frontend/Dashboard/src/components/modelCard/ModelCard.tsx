@@ -21,8 +21,6 @@ import html2canvas from 'html2canvas';
 import axios from 'axios';
 import api from '../../app/ApiMaster';
 import DownloadIcon from '@mui/icons-material/Download';
-import GraphComponent from "./pipelineDetails/GraphComponent";
-import PipelineDetails from "./pipelineDetails/PipelineDetails";
 import PipelineCard from "./PipelineCard";
 import { AnyKeyValuePairs } from "../../app/interfaces";
 import { IPipeline } from "./PipelineCard/interface";
@@ -69,7 +67,6 @@ export default function ModelCard() {
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
-    const [datasetDetails, setDatasetDetails] = useState<AnyKeyValuePairs>({}); // redundant?
     const [evalDetails, setEvalDetails] = useState<AnyKeyValuePairs>({});
     const [modelDetails, setModelDetails] = useState<AnyKeyValuePairs>({});
     const [trainingDetails, setTrainingDetails] = useState<AnyKeyValuePairs>({});
@@ -98,29 +95,22 @@ export default function ModelCard() {
         axios.get(rest_api_url + model_card_sys_info).then((response) => {
             console.log("Got response from model_card_sys_info API: ", response);
             if (response.status === 200) {
-                let resp_data = response.data;
-                setModelDetails(resp_data.model_details);
-                setTrainingDetails(resp_data.training_details);
-                setEvalDetails(resp_data.eval_details);
-                setDatasetDetails(resp_data.dataset_details);
-                setPipelineDetails(resp_data.pipeline_details);
-                setSysInfoCarbonFootPrintDetails(resp_data.experiment_environment.carbon_footprint);
-                setSysInfoEntryPointCmdDetails(resp_data.experiment_environment.entry_point_cmd);
-                Object.keys(resp_data.experiment_environment.system_env).map((sysInfoKeyName) => {
-                    let data = resp_data.experiment_environment.system_env[sysInfoKeyName];
-                    if (sysInfoKeyName === "cuda_device_list") {
-                        setSysInfoCudaDevicesData(data);
+                const {
+                    model_details, training_details, eval_details, pipeline_details,
+                    experiment_environment: {
+                        carbon_footprint, entry_point_cmd, system_env
                     }
-                    else if (sysInfoKeyName === "python-packages") {
-                        setSysInfoPythonPackages(data)
-                    }
-                    else if (sysInfoKeyName === "architecture") {
-                        setSysInfoArchitecture(data)
-                    }
-                    else {
-                        sysInfoBasicData[sysInfoKeyName] = data;
-                    }
-                });
+                } = response.data;
+                setModelDetails(model_details);
+                setTrainingDetails(training_details);
+                setEvalDetails(eval_details);
+                setPipelineDetails(pipeline_details);
+                setSysInfoCarbonFootPrintDetails(carbon_footprint);
+                setSysInfoEntryPointCmdDetails(entry_point_cmd);
+                const { cuda_device_list, "python-packages": python_packages, architecture, ...sysInfoBasicData } = system_env;
+                setSysInfoCudaDevicesData(cuda_device_list ?? []);
+                setSysInfoPythonPackages(python_packages ?? []);
+                setSysInfoArchitecture(architecture ?? []);
                 setSysInfoBasicData(sysInfoBasicData);
             }
             else {
@@ -143,29 +133,10 @@ export default function ModelCard() {
         const img = await convertDivToPNG('results_visualization');
         const pipeline_details = document.getElementById('pipeline_details') as HTMLElement;
 
-        let pipeline_graph_component = document.getElementById('pipeline_graph_component') as HTMLElement;
-        let pipeline_graph_component_img = await convertDivToPNG("", pipeline_graph_component); // returns img string
-        // replace id = #pipeline_graph_component (div present in GraphComponent) with the generated image as the graph is unable to convert into HTML, so converting the graph to image in the above line and saving it as an image in a new div as below.
-        let newHTML = `
-            <div style="${card_feel}">
-                <img src="${pipeline_graph_component_img}" alt="Pipeline Graph" style="${imgStyles}"/>
-            </div>
-        `;
-        const tempContainer = document.createElement('div');
-        tempContainer.innerHTML = newHTML;
-        pipeline_graph_component.innerHTML = tempContainer.innerHTML;
-
         // Collect the CSS styles from style elements and chart stylesheets
-        const css_styles = Array.from(document.styleSheets)
-            .map((styleSheet) => {
-                if (styleSheet.cssRules) {
-                    return Array.from(styleSheet.cssRules)
-                        .map((rule) => rule.cssText)
-                        .join('\n');
-                }
-                return '';
-            })
-            .join('\n');
+        const css_styles = [...document.styleSheets].map((styleSheet) => styleSheet.cssRules ?
+            [...styleSheet.cssRules].map((rule) => rule.cssText).join('\n') : ''
+        ).join('\n');
 
         const htmlContent = `
             <!DOCTYPE html>
@@ -198,19 +169,10 @@ export default function ModelCard() {
         link.href = url;
         link.download = `Experiment_${experiment_id}_ModelCard`;
         link.click();
-
-        // had to call this method again. Otherwise, the graph would remain converted to image and couldn't be interacted with again. So it's a hack. Might need to find a better solution later.
-        getModelCardData();
     }
 
     const convertDivToPNG = async (divId: string, divToCaptureCustom?: HTMLElement) => {
-        let divToCapture = null;
-        if (divId !== "") {
-            divToCapture = document.getElementById(divId!) as HTMLElement;
-        }
-        else {
-            divToCapture = divToCaptureCustom;
-        }
+        const divToCapture = divId !== "" ? document.getElementById(divId!) as HTMLElement : divToCaptureCustom;
 
         try {
             const canvas = await html2canvas(divToCapture!, {
@@ -319,7 +281,7 @@ export default function ModelCard() {
                                                 </Grid>
                                             </Grid>
 
-                                            {pipelineDetails && Object.keys(pipelineDetails).length > 0 && <PipelineCard details={pipelineDetails} />}
+                                            {pipelineDetails && Object.keys(pipelineDetails).length > 0 && <div id="pipeline_details"> <PipelineCard details={pipelineDetails} /> </div>}
 
                                             <div id="results_visualization" className={styles.card_feel}>
                                                 <div className={styles.title_container}>
