@@ -1,0 +1,26 @@
+.textfield_cardcontent_checkpoint_config {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.checkpoint_data_resources {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.checkpoint_data_resources_main_card {
+    margin-bottom: 10px;
+    border-radius: 15px;
+}
+
+.error_text {
+    font-family: sans-serif;
+    color: red;
+    font-weight: bold;
+    text-align: center;
+    font-size: 15px;
+}

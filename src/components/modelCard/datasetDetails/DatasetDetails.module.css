@@ -1,0 +1,23 @@
+.label_dist_container {
+    display: flex;
+    flex-direction: row;
+    border-bottom: solid black 1px;
+}
+
+.label_dist_header {
+    font-weight: bold;
+    padding-left: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-right: 5px;
+}
+
+.label_dist_text {
+    padding-right: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.tree_container {
+    height: 250px;
+}

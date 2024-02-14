@@ -1,0 +1,12 @@
+[
+    {
+        "experiment_id": "2",
+        "epoch": "9",
+        "checkpoints": [
+            "stateful_components.pickle",
+            "optimizer.pickle",
+            "model.pickle",
+            "lr_scheduler.pickle"
+        ]
+    }
+]

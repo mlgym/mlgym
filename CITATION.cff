@@ -1,9 +1,0 @@
-cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
-authors:
-- family-names: "Lübbering"
-  given-names: "Max"
-title: "MLgym, a Deep Learning Framework for Reproducible Machine Learning Research"
-version: 0.0.51
-date-released: 2021-12-22
-url: "https://github.com/le1nux/mlgym"
