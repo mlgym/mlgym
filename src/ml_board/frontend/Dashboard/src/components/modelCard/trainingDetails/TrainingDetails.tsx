@@ -13,7 +13,7 @@ export default function TrainingDetails({trainingDetails} : {trainingDetails: An
         const filteredTrainingData = { ...trainingDetails };
         delete filteredTrainingData["hyperparams"];
         setFilteredTrainingData(filteredTrainingData);
-    },[])
+    },[trainingDetails])
 
     return(
         <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>

@@ -1,7 +1,7 @@
 import { Grid, Card, CardContent, IconButton, Switch, FormControlLabel, Box, LinearProgress } from '@mui/material';
 import { Download } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import mock_data from "./dummy_data.json";
 import api, { defaultRunConfigFileName } from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
 import { getGridSearchId, getRestApiUrl, getSocketConnectionUrl, isConnected } from '../../../redux/globalConfig/globalConfigSlice';
@@ -20,29 +20,9 @@ export default function RunConfig() {
     const [showHideData, setShowHideData] = useState(false);
     
     useEffect(() => {
-        let run_config_file = api.run_config_file.replace("<grid_search_id>", grid_search_id);
-
-        setError("");
-        setShowHideData(false);
-        setIsLoading(true);
-        
-        axios.get(rest_api_url+run_config_file).then((response) => {
-            console.log("Got response from run_config_file API: ", response);
-            if(response.status === 200) {
-                setYamlString(response.data.trim());
-                setShowHideData(true);
-            }
-            else {
-                setError("Oops! an error occurred");
-            }
-            setIsLoading(false);
-        })
-        .catch((error) => {
-            console.log("Error in run_config_file: ", error);
-            setIsLoading(false);
-            setError("Oops! an error occurred");
-        });
-
+        // let run_config_file = api.run_config_file.replace("<grid_search_id>", grid_search_id);
+        setYamlString(mock_data.data.trim());
+        setShowHideData(true);
     },[isSocketConnected && (grid_search_id || rest_api_url || socket_connection_url)]);
 
     function downloadFile() {

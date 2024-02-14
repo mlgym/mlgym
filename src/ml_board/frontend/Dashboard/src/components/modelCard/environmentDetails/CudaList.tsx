@@ -37,7 +37,7 @@ export default function CudaList({cardTitle, cudaDeviceList, tableRows} : {cardT
                 {cardTitle}
             </div>
             {
-                cudaDeviceList.length > 0 ?
+                cudaDeviceList && cudaDeviceList.length > 0 ?
                 <TableContainer component={Paper}>
                     <Table size="small" aria-label="a dense table">
                         <TableHead>

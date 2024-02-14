@@ -1,7 +1,7 @@
 import { Grid, Card, CardContent, IconButton, Box, LinearProgress, FormControl, FormHelperText, InputLabel, MenuItem, Select } from '@mui/material';
 import { Download } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import mock_data from "./dummy_data.json";
 import api from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
 import { getGridSearchId, getRestApiUrl } from '../../../redux/globalConfig/globalConfigSlice';
@@ -36,50 +36,17 @@ export default function CheckpointConfigurations({experimentIdProp} : {experimen
         let all_checkpoints = api.checkpoint_list.replace("<grid_search_id>", grid_search_id);
         all_checkpoints = all_checkpoints.replace("<experiment_id>", experimentIdProp);
 
-        axios.get(rest_api_url + all_checkpoints).then((response) => {
-            console.log("Got response from checkpoint_list API: ", response);
-            if (response.status === 200) {
-                let resp_data = response.data;
-                setCheckpointData(resp_data);
-                // selecting all the resource names to display for the first default index 
-                setCheckpointResourceNames(resp_data[0].checkpoints);
-            }
-            else {
-                setError("Error occured / No checkpoints available");
-            }
-            setIsLoading(false);
-        })
-        .catch((error) => {
-            console.log("Error in checkpoint_list: ", error);
-            setIsLoading(false);
-            setError("Error occured / No checkpoints available");
-        });
+        setCheckpointData(mock_data);
+        // selecting all the resource names to display for the first default index 
+        setCheckpointResourceNames(mock_data[0].checkpoints);
     }
 
     function getCheckpointResource(resourceName: string) {
-        let checkpoint_resource = api.checkpoint_resource.replace("<grid_search_id>", grid_search_id);
-        checkpoint_resource = checkpoint_resource.replace("<experiment_id>", experimentIdProp);
-        checkpoint_resource = checkpoint_resource.replace("<checkpoint_id>", checkpointData[selectedCheckpointIndex].epoch.toString());
-        checkpoint_resource = checkpoint_resource.replace("<checkpoint_resource>", resourceName);
-
-        setErrorInGettingResource("");
-        setIsLoadingResource(true);
-
-        axios.get(rest_api_url + checkpoint_resource).then((response) => {
-            console.log("Got response from checkpoint_resource API: ", response);
-            if (response.status === 200) {
-                downloadFile(resourceName, new Blob([response.data]));
-            }
-            else {
-                setErrorInGettingResource("Oops! an error occurred in getting & downloading checkpoint resource data")
-            }
-            setIsLoadingResource(false);
-        })
-        .catch((error) => {
-            console.log("Error in checkpoint_resource API: ", error);
-            setIsLoadingResource(false);
-            setErrorInGettingResource("Oops! an error occurred in getting & downloading checkpoint resource data")
-        });
+        // let checkpoint_resource = api.checkpoint_resource.replace("<grid_search_id>", grid_search_id);
+        // checkpoint_resource = checkpoint_resource.replace("<experiment_id>", experimentIdProp);
+        // checkpoint_resource = checkpoint_resource.replace("<checkpoint_id>", checkpointData[selectedCheckpointIndex].epoch.toString());
+        // checkpoint_resource = checkpoint_resource.replace("<checkpoint_resource>", resourceName);
+        setErrorInGettingResource("Oops! This is a simulation, downloading the checkpoint is disabled here!")
     }
 
     function downloadFile(resourceName: string, fileData: Blob) {

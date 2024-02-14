@@ -1,0 +1,3 @@
+{
+    "data": "run_configuration:\n  type: train # train, warmstart\n  config:\n    num_epochs: 10 # Number of epochs\n    num_batches_per_epoch: 50\n    gs_config_path: ./gs_config.yml\n\n\nenvironment:\n  type: multiprocessing # multiprocessing,  main_process, accelerate\n  config:\n    process_count: 3 # Max. number of processes running at a time.\n    computation_device_ids: [] # Indices of GPUs to distribute the GS over\n\nlogging:\n  websocket_logging_servers: # List of websocket logging servers, e.g., http://127.0.0.1:9090 http://127.0.0.1:8080\n    - http://127.0.0.1:5002\n  gs_rest_api_endpoint: http://127.0.0.1:5001 # Endpoint for the grid search API, e.g., http://127.0.0.1:8080"
+}

@@ -18,7 +18,7 @@ import styles from './ModelCard.module.css';
 import { useEffect, useState } from "react";
 import { getGridSearchId, getRestApiUrl, isConnected } from '../../redux/globalConfig/globalConfigSlice';
 import html2canvas from 'html2canvas';
-import axios from 'axios';
+import mock_data from "./dummy_data.json";
 import api from '../../app/ApiMaster';
 import DownloadIcon from '@mui/icons-material/Download';
 import PipelineCard from "./PipelineCard";
@@ -58,7 +58,6 @@ export default function ModelCard() {
 
     const isSocketConnected = useAppSelector(isConnected);
     const grid_search_id = useAppSelector(getGridSearchId);
-    const rest_api_url = useAppSelector(getRestApiUrl);
 
     const [searchParams, setSearchParams] = useSearchParams();
     const [tableRows, setTableRows] = useState(0);
@@ -85,44 +84,27 @@ export default function ModelCard() {
     }, [experiment_id, isSocketConnected]);
 
     function getModelCardData() {
-        const model_card_sys_info = api.model_card_sys_info
-            .replace("<grid_search_id>", grid_search_id)
-            .replace("<experiment_id>", experiment_id);
-
-        setError("");
-        setIsLoading(true);
-
-        axios.get(rest_api_url + model_card_sys_info).then((response) => {
-            console.log("Got response from model_card_sys_info API: ", response);
-            if (response.status === 200) {
-                const {
-                    model_details, training_details, eval_details, pipeline_details,
-                    experiment_environment: {
-                        carbon_footprint, entry_point_cmd, system_env
-                    }
-                } = response.data;
-                setModelDetails(model_details);
-                setTrainingDetails(training_details);
-                setEvalDetails(eval_details);
-                setPipelineDetails(pipeline_details);
-                setSysInfoCarbonFootPrintDetails(carbon_footprint);
-                setSysInfoEntryPointCmdDetails(entry_point_cmd);
-                const { cuda_device_list, "python-packages": python_packages, architecture, ...sysInfoBasicData } = system_env;
-                setSysInfoCudaDevicesData(cuda_device_list ?? []);
-                setSysInfoPythonPackages(python_packages ?? []);
-                setSysInfoArchitecture(architecture ?? []);
-                setSysInfoBasicData(sysInfoBasicData);
+        // const model_card_sys_info = api.model_card_sys_info
+        //     .replace("<grid_search_id>", grid_search_id)
+        //     .replace("<experiment_id>", experiment_id);
+        const {
+            model_details, training_details, eval_details, pipeline_details,
+            experiment_environment: { carbon_footprint, entry_point_cmd,
+                system_env: { cuda_device_list, architecture,
+                    "python-packages": python_packages, ...sysInfoBasicData }
             }
-            else {
-                setError("Error occured / No system info available");
-            }
-            setIsLoading(false);
-        })
-            .catch((error) => {
-                console.log("Error in model_card_sys_info: ", error);
-                setIsLoading(false);
-                setError("Error occured / No system info available");
-            });
+        } = mock_data as AnyKeyValuePairs;
+        setModelDetails(model_details);
+        setTrainingDetails(training_details);
+        setEvalDetails(eval_details);
+        setPipelineDetails(pipeline_details);
+        setSysInfoCarbonFootPrintDetails(carbon_footprint);
+        setSysInfoEntryPointCmdDetails(entry_point_cmd);
+        setSysInfoCudaDevicesData(cuda_device_list);
+
+        setSysInfoPythonPackages(python_packages);
+        setSysInfoArchitecture(architecture);
+        setSysInfoBasicData(sysInfoBasicData);
     }
 
     const handleSaveAsHTML = async () => {

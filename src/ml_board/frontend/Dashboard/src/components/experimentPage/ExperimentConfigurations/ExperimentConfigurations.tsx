@@ -2,7 +2,7 @@ import { Grid, Card, CardContent, TextField, IconButton, Switch, FormControlLabe
 import { Send, Download } from '@mui/icons-material';
 import { JsonViewer } from '@textea/json-viewer';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import mock_data from "./dummy_data.json";
 import api, { defaultExperimentConfigFileName } from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
 import { getGridSearchId, getRestApiUrl } from '../../../redux/globalConfig/globalConfigSlice';
@@ -18,30 +18,12 @@ export default function ExperimentConfigurations({experimentIdProp} : {experimen
     const rest_api_url = useAppSelector(getRestApiUrl);
 
     useEffect(() => {
-        if(experimentIdProp) {
-            let experiment_config_file = api.experiment_config_file.replace("<grid_search_id>", grid_search_id);
-            experiment_config_file = experiment_config_file.replace("<experiment_id>", experimentIdProp);
-            
-            setError("");
-            setShowHideData(false);
-            setIsLoading(true);
-    
-            axios.get(rest_api_url + experiment_config_file).then((response) => {
-                console.log("Got response from experiment_config API: ", response);
-                if (response.status === 200) {
-                    setExperimentConfigFileObject(response.data);
-                    setShowHideData(true);
-                }
-                else {
-                    setError("Oops! an error occurred");
-                }
-                setIsLoading(false);
-            })
-            .catch((error) => {
-                console.log("Error in experiment_config_file: ", error);
-                setIsLoading(false);
-                setError("Oops! an error occurred");
-            });
+        if (experimentIdProp) {
+            // let experiment_config_file = api.experiment_config_file.replace("<grid_search_id>", grid_search_id);
+            // experiment_config_file = experiment_config_file.replace("<experiment_id>", experimentIdProp);
+
+            setExperimentConfigFileObject(mock_data);
+            setShowHideData(true);
         }
     },[experimentIdProp]);
 

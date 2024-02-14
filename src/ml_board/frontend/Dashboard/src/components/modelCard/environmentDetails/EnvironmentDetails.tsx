@@ -1,6 +1,6 @@
 import { Grid, Card, CardContent } from '@mui/material';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import mock_data from "./dummy_data.json";
 import api from '../../../app/ApiMaster';
 import { useAppSelector } from "../../../app/hooks";
 import { getGridSearchId, getRestApiUrl, isConnected } from '../../../redux/globalConfig/globalConfigSlice';
@@ -45,7 +45,7 @@ export default function EnvironmentDetails({fromPage, experiment_id, tableRows, 
     const [sysInfoCarbonFootPrintDetails,setSysInfoCarbonFootPrintDetails] = useState("");
     const [sysInfoEntryPointCmdDetails,setSysInfoEntryPointCmdDetails] = useState("");
 
-    useEffect(() => {
+    useEffect(() => {        
         if(fromPage === "ModelCard") {
             setSysInfoBasicData(sysInfoBasicDataProps!);
             setSysInfoCudaDevicesData(sysInfoCudaDevicesDataProps!);
@@ -57,49 +57,25 @@ export default function EnvironmentDetails({fromPage, experiment_id, tableRows, 
         else {
             getSysInfo();
         }
-    },[]);
+    },[fromPage, experiment_id, tableRows, sysInfoBasicDataProps, sysInfoCudaDevicesDataProps, sysInfoPythonPackagesProps, sysInfoArchitectureProps, sysInfoCarbonFootPrintDetailsProps, sysInfoEntryPointCmdDetailsProps]);
 
     function getSysInfo() {
-        const model_card_sys_info = api.model_card_sys_info
-                                        .replace("<grid_search_id>", grid_search_id)
-                                        .replace("<experiment_id>", experiment_id);
-
-        setError("");
-        setIsLoading(true);
-
-        axios.get(rest_api_url + model_card_sys_info).then((response) => {
-            console.log("Got response from model_card_sys_info API: ", response);
-            if (response.status === 200) {
-                let resp_data = response.data;
-                setSysInfoCarbonFootPrintDetails(resp_data.experiment_environment.carbon_footprint);
-                setSysInfoEntryPointCmdDetails(resp_data.experiment_environment.entry_point_cmd);
-                Object.keys(resp_data.experiment_environment.system_env).map((sysInfoKeyName) => {
-                    let data = resp_data.experiment_environment.system_env[sysInfoKeyName];
-                    if(sysInfoKeyName === "cuda_device_list") {
-                        setSysInfoCudaDevicesData(data);
-                    }
-                    else if(sysInfoKeyName === "python-packages") {
-                        setSysInfoPythonPackages(data)
-                    }
-                    else if (sysInfoKeyName === "architecture") {
-                        setSysInfoArchitecture(data)
-                    }
-                    else {
-                        sysInfoBasicData[sysInfoKeyName] = data;
-                    }
-                });
-                setSysInfoBasicData(sysInfoBasicData);
+        // const model_card_sys_info = api.model_card_sys_info
+        //                                 .replace("<grid_search_id>", grid_search_id)
+        //                                 .replace("<experiment_id>", experiment_id);
+        const {
+            model_details, training_details, eval_details, pipeline_details,
+            experiment_environment: { carbon_footprint, entry_point_cmd,
+                system_env: { cuda_device_list, architecture,
+                    "python-packages": python_packages, ...sysInfoBasicData }
             }
-            else {
-                setError("Error occured / No system info available");
-            }
-            setIsLoading(false);
-        })
-        .catch((error) => {
-            console.log("Error in model_card_sys_info: ", error);
-            setIsLoading(false);
-            setError("Error occured / No system info available");
-        });
+        } = mock_data as AnyKeyValuePairs;
+        setSysInfoCarbonFootPrintDetails(carbon_footprint);
+        setSysInfoEntryPointCmdDetails(entry_point_cmd);
+        setSysInfoCudaDevicesData(cuda_device_list);
+        setSysInfoPythonPackages(python_packages);
+        setSysInfoArchitecture(architecture);
+        setSysInfoBasicData(sysInfoBasicData);
     }
 
     return(
@@ -132,7 +108,7 @@ export default function EnvironmentDetails({fromPage, experiment_id, tableRows, 
                         />
                     </Grid>
                     <Grid item={true} xs={12} sm={12} md={4}>
-                        <CudaList 
+                        <CudaList
                             cardTitle="Cuda Devices List" 
                             cudaDeviceList={sysInfoCudaDevicesData}
                             tableRows={
