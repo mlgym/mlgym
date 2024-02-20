@@ -164,6 +164,9 @@ export default function App() {
 
     return (
         <div className={styles.main_container}>
+        <h1>TEST</h1>
+        <h1>HELLO</h1>
+        <h1>I THINK THERE IS A PROBLEM WITH ROUTING?!</h1>
             {
                 // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
                 urls.includes(tab) && <TopBarWithDrawer />
