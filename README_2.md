@@ -188,16 +188,16 @@ Efficiently compare different experiments globally by utilizing the filtering op
 <br/>
 <div align="center">
   <div style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
-    <img src="mlboard_imgs/filters/Filter_Graphs.png" width="50%" style="margin-right: 20px;" />
+    <img src="mlboard_imgs/filters/Filter_Graphs.png" width="45%" style="margin-right: 10px;" />
     <div></div>
     <!-- <div style="display: flex; flex-direction: column; align-items: center;">
       <img src="mlboard_imgs/filters/Filters_Open.png" width="80%" style="margin-bottom: 20px;" />
       <img src="mlboard_imgs/filters/Filters_Close.png" width="80%" style="margin-top: 20px;" />
     </div> -->
-    <img src="mlboard_imgs/filters/Filter_Header.png" width="28%" style="margin-left: 20px;" />
+    <img src="mlboard_imgs/filters/Filter_Header.png" width="28%" style="margin-left: 10px;" />
 </div>
 <br/>
-<img src="mlboard_imgs/filters/Filter_Text.png" width="85%" />
+<img src="mlboard_imgs/filters/Filter_Text.png" width="80%" />
 </div>
 
 ## Training Analysis
@@ -205,7 +205,7 @@ Efficiently compare different experiments globally by utilizing the filtering op
 Over the course of the training, the line charts are populated with the respective scores for each epoch. The legend in the charts refers to the experiment ids. From an analysis point of view, as per below image, we see that experiments 1 and 5 fail to converge and are stopped after four epochs due to the early stopping criterion specified within the configuration file. In contrast, experiments 8, 13 and 14 learn the task, illustrating the significance of learning rate choice anecdotically.
 
 <div align="center">
-<img src="mlboard_imgs/ML_Board_Result_Analysis.jpg" width="80%" />
+<img src="mlboard_imgs/ML_Board_Result_Analysis.jpg" width="100%" />
 </div>
 
 ## Model Card
@@ -237,7 +237,7 @@ You can easily download both Grid Search Configurations and Run Configurations f
 The settings menu in `ml_board` serves as a centralized hub for configuration management, facilitating a quick, smooth and organized user experience in exploring, modifying, and downloading experiment settings.
 
 <div align="center">
-<img src="mlboard_imgs/ML_Board_Settings.png" width="80%" />
+<img src="mlboard_imgs/ML_Board_Settings.png" width="100%" />
 </div>
 
 ## Copyright
