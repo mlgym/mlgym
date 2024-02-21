@@ -24,29 +24,20 @@ export interface settingConfigsInterface {
 
 // function to get parameters from url or localstorage to show them populated on the popup or in the settings page.
 // function is made async as JSON parsing needs to be done asynchronously for fetching data from local storage and then set in `settingConfigs` key-values. Then if the url params are present, they will overwrite local storage values.
-async function getUrlParamsOrLocalStorageData(searchParams: URLSearchParams, settingConfigs: settingConfigsInterface) {
-    let gridSearchId = searchParams.get("run_id")
-    let socketConnectionUrl = searchParams.get("ws_endpoint")
-    let restApiUrl = searchParams.get("rest_endpoint")
+async function getUrlParamsOrLocalStorageData(searchParams: URLSearchParams) {
 
-    let settingConfigsInStorage = localStorage.getItem('SettingConfigs');
-    if (settingConfigsInStorage) {
-        settingConfigs = await JSON.parse(settingConfigsInStorage);
-    }
+    const settingConfigsInURL = {
+        gridSearchId: searchParams.get("run_id"),
+        socketConnectionUrl: searchParams.get("ws_endpoint"),
+        restApiUrl: searchParams.get("rest_endpoint"),
+    };
+    const settingConfigsInStorage = await JSON.parse(localStorage.getItem('SettingConfigs') as string); //null is also fine, passing as string to skip TS error
 
-    if (gridSearchId !== null) {
-        settingConfigs.gridSearchId = gridSearchId;
-    }
-
-    if (socketConnectionUrl !== null) {
-        settingConfigs.socketConnectionUrl = socketConnectionUrl;
-    }
-
-    if (restApiUrl !== null) {
-        settingConfigs.restApiUrl = restApiUrl;
-    }
-
-    return settingConfigs;
+    return {
+        gridSearchId: settingConfigsInURL.gridSearchId ?? settingConfigsInStorage.gridSearchId,
+        socketConnectionUrl: settingConfigsInURL.socketConnectionUrl ?? settingConfigsInStorage.socketConnectionUrl,
+        restApiUrl: settingConfigsInURL.restApiUrl ?? settingConfigsInStorage.restApiUrl
+    } satisfies settingConfigsInterface;
 }
 
 export default function App() {
@@ -66,14 +57,6 @@ export default function App() {
         restApiUrl: ""
     });
 
-    useEffect(() => {
-        // Await key used in this function - suspends execution of the code below it and assures that it does it's task and returns valaue -- this is called promise (from a function). So as the function is executed, it returns a promise with data which must be accessed like this:
-        getUrlParamsOrLocalStorageData(searchParams, settingConfigs).then((settingConfigs) => {
-            setSettingConfigs(settingConfigs);
-            localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
-        });
-    }, []);
-
     const urls: Array<string> = [];
     Object.keys(RoutesMapping).forEach((routeMapKey) => {
         if (routeMapKey !== "ErrorComponent") {
@@ -82,6 +65,12 @@ export default function App() {
     });
 
     useEffect(() => {
+        // Await key used in this function - suspends execution of the code below it and assures that it does it's task and returns value -- this is called promise (from a function). So as the function is executed, it returns a promise with data which must be accessed like this:
+        getUrlParamsOrLocalStorageData(searchParams).then((settingConfigs) => {
+            setSettingConfigs(settingConfigs);
+            localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
+        });
+
         if (socketConnectionRequest) {
             dispatch(resetChartState());
             dispatch(resetTableState());
@@ -104,7 +93,7 @@ export default function App() {
                 workerSocket.terminate();
             }
         }
-    }, [socketConnectionRequest, settingConfigs]);
+    }, [socketConnectionRequest, searchParams]);
     // recommended way: keeping the second condition blank, fires useEffect just once as there are no conditions to check to fire up useEffect again (just like componentDidMount of React Life cycle).
 
 
@@ -164,9 +153,8 @@ export default function App() {
 
     return (
         <div className={styles.main_container}>
-        <h1>TEST</h1>
-        <h1>HELLO</h1>
-        <h1>I THINK THERE IS A PROBLEM WITH ROUTING?!</h1>
+            <h1>Problem was this React Routes</h1>
+            <h1>removing the websocket now</h1>
             {
                 // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
                 urls.includes(tab) && <TopBarWithDrawer />

@@ -1,17 +1,17 @@
 {
   "files": {
-    "main.css": "/mlgym/static/css/main.8cbc12b4.css",
-    "main.js": "/mlgym/static/js/main.c58250b7.js",
-    "static/js/14.c44019c0.chunk.js": "/mlgym/static/js/14.c44019c0.chunk.js",
-    "static/js/131.bc1f8174.chunk.js": "/mlgym/static/js/131.bc1f8174.chunk.js",
+    "main.css": "/mlgym/static/css/main.97784ddc.css",
+    "main.js": "/mlgym/static/js/main.4065278a.js",
+    "static/js/14.597cc2bb.chunk.js": "/mlgym/static/js/14.597cc2bb.chunk.js",
+    "static/js/428.caa75c65.chunk.js": "/mlgym/static/js/428.caa75c65.chunk.js",
     "index.html": "/mlgym/index.html",
-    "main.8cbc12b4.css.map": "/mlgym/static/css/main.8cbc12b4.css.map",
-    "main.c58250b7.js.map": "/mlgym/static/js/main.c58250b7.js.map",
-    "14.c44019c0.chunk.js.map": "/mlgym/static/js/14.c44019c0.chunk.js.map",
-    "131.bc1f8174.chunk.js.map": "/mlgym/static/js/131.bc1f8174.chunk.js.map"
+    "main.97784ddc.css.map": "/mlgym/static/css/main.97784ddc.css.map",
+    "main.4065278a.js.map": "/mlgym/static/js/main.4065278a.js.map",
+    "14.597cc2bb.chunk.js.map": "/mlgym/static/js/14.597cc2bb.chunk.js.map",
+    "428.caa75c65.chunk.js.map": "/mlgym/static/js/428.caa75c65.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.8cbc12b4.css",
-    "static/js/main.c58250b7.js"
+    "static/css/main.97784ddc.css",
+    "static/js/main.4065278a.js"
   ]
 }
