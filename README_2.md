@@ -189,7 +189,6 @@ Efficiently compare different experiments globally by utilizing the filtering op
 <div align="center">
   <div style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
     <img src="mlboard_imgs/filters/Filter_Graphs.png" width="45%" style="margin-right: 10px;" />
-    <div></div>
     <!-- <div style="display: flex; flex-direction: column; align-items: center;">
       <img src="mlboard_imgs/filters/Filters_Open.png" width="80%" style="margin-bottom: 20px;" />
       <img src="mlboard_imgs/filters/Filters_Close.png" width="80%" style="margin-top: 20px;" />
