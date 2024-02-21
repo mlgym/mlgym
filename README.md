@@ -138,9 +138,9 @@ cd event_storage/YOUR_RUN_ID/
 tail -f event_storage.log
 ```
 
-The following GIF provides a detailed walkthrough of the above example with execution comands
+The following GIF showcases the development of experiments over time.
 <div align="center">
-<img src="mlboard_gifs/ML_Board_Start_Things.gif" width="100%" />
+<img src="mlboard_gifs/Experiments_Development.gif" width="100%" />
 </div>
 
 ### Monitoring and Analysis
@@ -152,9 +152,9 @@ After executing the example run, proceed to monitor and analyze the experiment u
 3. **Live Feed:** On successful socket connection, you automatically transition to the analysis board, where you receive live updates on metric and loss developments via line charts.
 
 <!-- Change this. Show popup confirmation & live feed in GIF -->
-<div align="center">
-<img src="mlboard_gifs/ML_Board_Graphs.gif" width="100%" />
-</div>
+<!-- <div align="center">
+<img src="mlboard_imgs/Enter_Configs_Popup.png" width="50%" />
+</div> -->
 
 ### Experiment Analysis
 
@@ -162,8 +162,13 @@ Navigate to a specific experiment ID to analyze its configurations and observe l
 
 This comprehensive experiment analysis functionality within `ml_board` empowers users to extract valuable insights, inspect detailed configurations, and download pertinent files for a thorough examination and reproducibility of the experiment's outcomes.
 
-<div align="center">
-<img src="mlboard_gifs/ML_Board_Single_Experiment.gif" width="100%" />
+<div style="display: flex; flex-wrap: wrap; justify-content: center;">
+  <img src="mlboard_imgs/Enter_Configs_Popup.png" style="width: 30%; margin: 2px;" />
+  <img src="mlboard_imgs/single_exp/Select_Experiment.png" style="width: 50%; margin: 2px;" />
+  <img src="mlboard_imgs/single_exp/Single_Exp_1.png" style="width: 40%; margin: 2px;" />
+  <img src="mlboard_imgs/single_exp/Single_Exp_2.png" style="width: 40%; margin: 2px;" />
+  <img src="mlboard_imgs/single_exp/Single_Exp_3.png" style="width: 40%; margin: 2px;" />
+  <img src="mlboard_imgs/single_exp/Single_Exp_4.png" style="width: 40%; margin: 2px;" />
 </div>
 
 ### Experiment Filtering
@@ -177,8 +182,21 @@ Efficiently compare different experiments globally by utilizing the filtering op
 - **Table Header Filtering**
     - Within the table headers, you have the flexibility to filter experiment data based on column values. This granular approach enables users to refine their analysis and focus on specific aspects of the experiments, facilitating a deeper understanding and comparision of the results.
 
+<!-- <div align="center" style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
+  <img src="mlboard_imgs/filters/Filter_Graphs.png" width="70%" />
+</div> -->
+<br/>
 <div align="center">
-<img src="mlboard_gifs/ML_Board_Filters.gif" width="100%" />
+  <div style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
+    <img src="mlboard_imgs/filters/Filter_Graphs.png" width="45%" style="margin-right: 10px;" />
+    <!-- <div style="display: flex; flex-direction: column; align-items: center;">
+      <img src="mlboard_imgs/filters/Filters_Open.png" width="80%" style="margin-bottom: 20px;" />
+      <img src="mlboard_imgs/filters/Filters_Close.png" width="80%" style="margin-top: 20px;" />
+    </div> -->
+    <img src="mlboard_imgs/filters/Filter_Header.png" width="28%" style="margin-left: 10px;" />
+</div>
+<br/>
+<img src="mlboard_imgs/filters/Filter_Text.png" width="80%" />
 </div>
 
 ## Training Analysis
@@ -186,13 +204,14 @@ Efficiently compare different experiments globally by utilizing the filtering op
 Over the course of the training, the line charts are populated with the respective scores for each epoch. The legend in the charts refers to the experiment ids. From an analysis point of view, as per below image, we see that experiments 1 and 5 fail to converge and are stopped after four epochs due to the early stopping criterion specified within the configuration file. In contrast, experiments 8, 13 and 14 learn the task, illustrating the significance of learning rate choice anecdotically.
 
 <div align="center">
-<img src="mlboard_gifs/ML_Board_Result_Analysis.jpg" width="100%" />
+<img src="mlboard_imgs/ML_Board_Result_Analysis.jpg" width="100%" />
 </div>
 
 ## Model Card
 `Will be added soon!!!`
 <!-- <div align="center">
-<img src="mlboard_gifs/ML_Board_ModelCard.gif" width="100%" />
+<img src="mlboard_imgs/model_card/Model_Card_1.png" width="100%" />
+<img src="mlboard_imgs/model_card/Model_Card_2.png" width="100%" />
 </div> -->
 
 ## Settings Menu
@@ -217,7 +236,7 @@ You can easily download both Grid Search Configurations and Run Configurations f
 The settings menu in `ml_board` serves as a centralized hub for configuration management, facilitating a quick, smooth and organized user experience in exploring, modifying, and downloading experiment settings.
 
 <div align="center">
-<img src="mlboard_gifs/ML_Board_Settings.gif" width="100%" />
+<img src="mlboard_imgs/ML_Board_Settings.png" width="100%" />
 </div>
 
 ## Copyright
