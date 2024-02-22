@@ -2,6 +2,8 @@
 
 # dependencies
 **/node_modules
+**/event_storage/*
+!**/event_storage/2024-02-14--22-15-46/
 /.pnp
 .pnp.js
 
