@@ -42,7 +42,7 @@ class Checkpointing(CheckpointingIF):
 
 class SaveMostRecentEpochOnlyCheckpointingStrategy(CheckpointingIF):
     """
-    Class for Save Last Epoch only Checkpointing Strategy.
+    Class for Save Most Recent Epoch only Checkpointing Strategy.
     """
     def __init__(self):
         pass

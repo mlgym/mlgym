@@ -775,11 +775,13 @@ class CheckpointingRegistryConstructable(ComponentConstructable):
 
     Strategies:
         SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY : Save checkpoint only for the last epoch.
+        SAVE_MOST_RECENT_EPOCH_ONLY_CHECKPOINTING_STRATEGY : Save checkpoint only for the most recent epoch.
         SAVE_ALL_CHECKPOINTING_STRATEGY : Save checkpoints for all epochs.
     """
     class StrategyKeys:
         SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY = "SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY"
         SAVE_ALL_CHECKPOINTING_STRATEGY = "SAVE_ALL_CHECKPOINTING_STRATEGY"
+        SAVE_MOST_RECENT_EPOCH_ONLY_CHECKPOINTING_STRATEGY = "SAVE_MOST_RECENT_EPOCH_ONLY_CHECKPOINTING_STRATEGY"
 
     def _construct_impl(self) -> ClassRegistry:
         strategy_registry = ClassRegistry()
@@ -787,7 +789,9 @@ class CheckpointingRegistryConstructable(ComponentConstructable):
             CheckpointingRegistryConstructable.StrategyKeys.SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY:
             CheckpointingStrategyFactory.get_save_last_epoch_only_checkpointing_strategy,
             CheckpointingRegistryConstructable.StrategyKeys.SAVE_ALL_CHECKPOINTING_STRATEGY:
-            CheckpointingStrategyFactory.get_save_all_checkpointing_strategy
+            CheckpointingStrategyFactory.get_save_all_checkpointing_strategy,
+            CheckpointingRegistryConstructable.StrategyKeys.SAVE_MOST_RECENT_EPOCH_ONLY_CHECKPOINTING_STRATEGY:
+            CheckpointingStrategyFactory.get_save_most_recent_epoch_only_checkpointing_strategy
         }
         for key, metric_type in default_mapping.items():
             strategy_registry.add_class(key, metric_type)

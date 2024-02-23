@@ -1,5 +1,4 @@
-from ml_gym.checkpointing.checkpointing import SaveLastEpochOnlyCheckpointingStrategy, SaveAllCheckpointingStrategy, Checkpointing,\
-    CheckpointingIF
+from ml_gym.checkpointing.checkpointing import SaveLastEpochOnlyCheckpointingStrategy, SaveAllCheckpointingStrategy, SaveMostRecentEpochOnlyCheckpointingStrategy, Checkpointing, CheckpointingIF
 
 
 class CheckpointingStrategyFactory:
@@ -10,6 +9,11 @@ class CheckpointingStrategyFactory:
     @staticmethod
     def get_save_last_epoch_only_checkpointing_strategy() -> CheckpointingIF:
         strategy = SaveLastEpochOnlyCheckpointingStrategy()
+        return Checkpointing(checkpointing_strategy=strategy)
+
+    @staticmethod
+    def get_save_most_recent_epoch_only_checkpointing_strategy() -> CheckpointingIF:
+        strategy = SaveMostRecentEpochOnlyCheckpointingStrategy()
         return Checkpointing(checkpointing_strategy=strategy)
 
     @staticmethod
