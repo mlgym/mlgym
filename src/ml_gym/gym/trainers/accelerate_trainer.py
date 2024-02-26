@@ -79,9 +79,6 @@ class AccelerateTrainComponent(StatefulComponent):
         :returns:
             model (NNModel): Torch Neural Network module.
         """
-
-        model.train()
-
         model.train()
 
         if num_batches_per_epoch is None:

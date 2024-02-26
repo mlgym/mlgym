@@ -81,21 +81,22 @@ class AbstractGymJob(StatefulComponent):
         if checkpoint_instruction.save_current:
 
             if accelerator is not None:
-                global_rank = accelerator.process_index
-                # TODO replace with an in-memory file system solution
-                with tempfile.TemporaryDirectory() as tmpdirname:
-                    root_dir = os.path.join(
-                        tmpdirname, f"epoch_{current_epoch}/rank_{global_rank}")
-                    checkpoint_file_name = f"checkpoint_rank_{global_rank}"
-                    checkpoint_path = os.path.join(
-                        root_dir, f"rank_{global_rank}/")
-                    accelerator.save_state(output_dir=checkpoint_path)
-                    shutil.make_archive(base_name=os.path.join(
-                        root_dir, checkpoint_file_name), format='zip', root_dir=checkpoint_path)
-                    with open(os.path.join(root_dir, f"{checkpoint_file_name}.zip"), 'rb') as fd:
-                        self.gs_api_client.add_checkpoint_resource(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id,
-                                                                   epoch=current_epoch, payload_stream=fd,
-                                                                   custom_file_name=f"{checkpoint_file_name}.zip")
+                if accelerator.is_main_process:
+                    global_rank = accelerator.process_index
+                    # TODO replace with an in-memory file system solution
+                    with tempfile.TemporaryDirectory() as tmpdirname:
+                        root_dir = os.path.join(
+                            tmpdirname, f"epoch_{current_epoch}/rank_{global_rank}")
+                        checkpoint_file_name = f"checkpoint"
+                        checkpoint_path = os.path.join(
+                            root_dir, f"rank_{global_rank}/")
+                        accelerator.save_state(output_dir=checkpoint_path)
+                        shutil.make_archive(base_name=os.path.join(
+                            root_dir, checkpoint_file_name), format='zip', root_dir=checkpoint_path)
+                        with open(os.path.join(root_dir, f"{checkpoint_file_name}.zip"), 'rb') as fd:
+                            self.gs_api_client.add_checkpoint_resource(grid_search_id=self.grid_search_id, experiment_id=self.experiment_id,
+                                                                       epoch=current_epoch, payload_stream=fd,
+                                                                       custom_file_name=f"{checkpoint_file_name}.zip")
 
             else:
                 model_buffer = io.BytesIO()

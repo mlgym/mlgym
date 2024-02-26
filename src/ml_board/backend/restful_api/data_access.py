@@ -108,7 +108,11 @@ class FileDataAccess(DataAccessIF):
 
     @staticmethod
     def get_checkpoint_files(path: str, base_path: str):
-        full_paths = glob.glob(os.path.join(path, "**", "*.pickle"), recursive=True)
+        full_paths = []
+        pickle_paths = glob.glob(os.path.join(path, "**", "*.pickle"), recursive=True)
+        full_paths.extend(pickle_paths)
+        zip_paths = glob.glob(os.path.join(path, "**", "*.zip"), recursive=True)
+        full_paths.extend(zip_paths)
         return sorted([os.path.relpath(full_path, base_path) for full_path in full_paths], reverse=True)
 
     @staticmethod
