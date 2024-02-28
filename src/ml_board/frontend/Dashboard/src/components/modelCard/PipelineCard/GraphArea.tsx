@@ -26,19 +26,21 @@ export default function () {
         fitTheView();
     }, [activePipeline]);
 
-    return (<ReactFlow
-        defaultNodes={nodes}
-        defaultEdges={edges}
-        onNodeClick={(event, node) => {
-            setActiveNode(node.id);
-            fitTheView();
-        }}
-        nodeTypes={nodeTypes}
-        deleteKeyCode={null}
-        nodeOrigin={[0.5, 0.5]}
-        snapToGrid={true}
-    >
-        <Background />
-        <MiniMap />
-    </ReactFlow>);
+    return (
+        <ReactFlow
+            defaultNodes={nodes}
+            defaultEdges={edges}
+            onNodeClick={(event, node) => {
+                setActiveNode(node.id);
+                fitTheView();
+            }}
+            nodeTypes={nodeTypes}
+            deleteKeyCode={null}
+            nodeOrigin={[0.5, 0.5]}
+            snapToGrid={true}
+        >
+            <Background />
+            {/* <MiniMap /> */}
+        </ReactFlow>
+    )
 }

@@ -22,6 +22,7 @@ import axios from 'axios';
 import api from '../../app/ApiMaster';
 import DownloadIcon from '@mui/icons-material/Download';
 import PipelineCard from "./PipelineCard";
+import PipelineDetails from "./pipelineDetails/PipelineDetails"
 import { AnyKeyValuePairs } from "../../app/interfaces";
 import { IPipeline } from "./PipelineCard/interface";
 
@@ -281,7 +282,12 @@ export default function ModelCard() {
                                                 </Grid>
                                             </Grid>
 
-                                            {pipelineDetails && Object.keys(pipelineDetails).length > 0 && <div id="pipeline_details"> <PipelineCard details={pipelineDetails} /> </div>}
+                                            {
+                                                pipelineDetails && Object.keys(pipelineDetails).length > 0 && <div id="pipeline_details"> 
+                                                    <PipelineDetails pipelineDetails={pipelineDetails} />
+                                                    {/* <PipelineCard details={pipelineDetails} /> */}
+                                                </div>
+                                            }
 
                                             <div id="results_visualization" className={styles.card_feel}>
                                                 <div className={styles.title_container}>
