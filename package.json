@@ -2,7 +2,7 @@
   "name": "front-end",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://mlgym.github.io/mlgym",
+  "homepage": "https://mlgym.github.io/mlgym/build",
   "dependencies": {
     "@dagrejs/dagre": "^1.0.4",
     "@emotion/react": "^11.10.5",
