@@ -5,7 +5,7 @@ import torch
 
 
 class BluePrint(ABC):
-    """ Abstract class that provides a blueprint for creating all the components for the GymJob`
+    """ Abstract class that provides a blueprint for creating all the components for the GymJob
     """
 
     def __init__(self, run_mode: RunMode, config: Dict[str, Any], grid_search_id: str,

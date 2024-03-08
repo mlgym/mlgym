@@ -133,7 +133,6 @@ class EvalComponent(EvalComponentIF):
                                          current_batch=processed_batches,
                                          splits=splits,
                                          current_split=dataset_loader.dataset_tag)
-
         # calc metrics
         try:
             prediction_batch = InferenceResultBatch.combine(inference_result_batches_cpu)
@@ -142,8 +141,7 @@ class EvalComponent(EvalComponentIF):
 
         # select metrics for split
         if self.metrics_computation_config is not None:
-            metric_tags = [metric_tag for metric_tag, applicable_splits in self.metrics_computation_config.items()
-                           if split_name in applicable_splits]
+            metric_tags = [metric_tag for metric_tag, applicable_splits in self.metrics_computation_config.items() if split_name in applicable_splits]
             split_metrics = [metric for metric in self.metrics if metric.tag in metric_tags]
         else:
             split_metrics = self.metrics
@@ -154,9 +152,9 @@ class EvalComponent(EvalComponentIF):
         loss_scores = {key: [np.mean([l[key] for l in batch_losses])] for key in loss_keys}
 
         evaluation_result = EvaluationBatchResult(losses=loss_scores,
-                                                  metrics=metric_scores,
-                                                  dataset_name=dataset_loader.dataset_name,
-                                                  split_name=split_name)
+                                                metrics=metric_scores,
+                                                dataset_name=dataset_loader.dataset_name,
+                                                split_name=split_name)
         if epoch_result_callback_fun is not None:
             epoch_result_callback_fun(evaluation_result=evaluation_result)
         return evaluation_result

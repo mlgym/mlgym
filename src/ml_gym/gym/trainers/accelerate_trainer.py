@@ -17,6 +17,7 @@ class AccelerateTrainComponent(StatefulComponent):
     """
     AccelerateTrainComponent class used when there are multiple GPUs to train model.
     """
+
     def __init__(self, inference_component: InferenceComponent, post_processors: List[PredictPostProcessingIF],
                  loss_fun: Loss):
         self.loss_fun = loss_fun
@@ -37,7 +38,7 @@ class AccelerateTrainComponent(StatefulComponent):
             model (NNModel): Torch Neural Network module.
         """
         model.zero_grad()
-        loss = self.calc_loss(model, batch).sum()
+        loss = self._calc_loss(model, batch).sum()
 
         # if accelerator.is_main_process:
         #     w = model.module.fc_layers[0].weight
@@ -54,7 +55,6 @@ class AccelerateTrainComponent(StatefulComponent):
         #     w = model.module.fc_layers[0].weight
         #     print(f"\n\nAfter 2nd thread: {w}")
         #     print("\n")
-
         accelerator.backward(loss)
         optimizer.step()
 
@@ -79,7 +79,6 @@ class AccelerateTrainComponent(StatefulComponent):
         :returns:
             model (NNModel): Torch Neural Network module.
         """
-
         model.train()
 
         if num_batches_per_epoch is None:
@@ -91,7 +90,8 @@ class AccelerateTrainComponent(StatefulComponent):
 
         for batch_id, batch in zip(range(num_total_batches), data_loaders):
             current_epoch = int(batch_id / num_batches_per_epoch)
-            model = self._train_batch(accelerator=accelerator, batch=batch, model=model, optimizer=optimizer)
+            model = self._train_batch(
+                accelerator=accelerator, batch=batch, model=model, optimizer=optimizer)
             if accelerator.is_main_process:
                 batch_done_callback_fun(status="train",
                                         num_batches=num_batches_per_epoch,
@@ -101,22 +101,25 @@ class AccelerateTrainComponent(StatefulComponent):
                                         num_epochs=num_epochs,
                                         current_epoch=current_epoch)
             if (batch_id + 1) % num_batches_per_epoch == 0:  # when epoch done
-                epoch_done_callback_fun(num_epochs=num_epochs, current_epoch=current_epoch, model=model, accelerator=accelerator)
+                epoch_done_callback_fun(
+                    num_epochs=num_epochs, current_epoch=current_epoch, model=model, accelerator=accelerator)
                 model.train()
+
         return model
 
-    def calc_loss(self, model: NNModel, batch: DatasetBatch) -> torch.Tensor:
+    def _calc_loss(self, model: NNModel, batch: DatasetBatch) -> torch.Tensor:
         """
         Valvulate loss given the loss function.
 
         :params:
                model (NNModel): Torch Neural Network module.
-               batch (DatasetBatch); Batch of data for which loss is to be calcualted.
+               batch (DatasetBatch); Batch of data for which loss is to be calculated.
 
         :returns:
             loss (List[torch.Tensor]): Loss list for batch.
         """
-        forward_batch = self.inference_component.predict(batch=batch, model=model, post_processors=self.post_processors)
+        forward_batch = self.inference_component.predict(
+            batch=batch, model=model, post_processors=self.post_processors)
         loss = self.loss_fun(forward_batch)
         return loss
 
@@ -125,6 +128,7 @@ class AccelerateTrainer:
     """
     Trainer class contains functions used to train the torch Neural Net model on GPU
     """
+
     def __init__(self, train_component: AccelerateTrainComponent, train_loader: DatasetLoader):
         self.train_component = train_component
         self.train_loader = train_loader
@@ -143,7 +147,7 @@ class AccelerateTrainer:
                epoch_done_callback (Callable): numner of batches to be trained.
                accelerator (Accelerator): Accelerator object used for distributed training over multiple GPUs.
                num_batches_per_epoch (int): number of batches to be trained per epoch.
-           
+
         :returns:
             model (NNModel): Torch Neural Network module.
         """

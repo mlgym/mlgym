@@ -26,3 +26,4 @@ class CheckpointResource(str, Enum):
     lr_scheduler = "lr_scheduler.pickle"
     stateful_components = "stateful_components.pickle"
     accelerate = "accelerate_zip.pickle"
+

@@ -81,6 +81,18 @@ class ComponentFactory:
     Each component type can have multiple variants. This relationship is captured by component_factory_registry and
     ComponentVariantsRegistry. The ComponentFactoryRegistry maps a component_key to a ComponentVariantsRegistry.
     The ComponentVariantsRegistry maps a variant key to the concrete ComponentConstructable.
+
+    All the  types of components that can be registered:
+        - MODEL_REGISTRY
+        - LOSS_FUNCTION_REGISTRY
+        - METRIC_REGISTRY
+        - PREDICTION_POSTPROCESSING_REGISTRY
+        - DATASET_REPOSITORY
+        - DATASET_ITERATORS
+        - DATA_COLLATOR
+        - DATA_LOADER
+        - OPTIMIZER
+        - LR_SCHEDULER
     """
 
     class ComponentVariantsRegistry:
