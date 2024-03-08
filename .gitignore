@@ -136,3 +136,5 @@ logs-ddp
 src/ml_gym/gym/trainers/repositories.code-workspace
 
 core.*
+example/gpt2/data/
+example/gpt2/huggingface_impl/checkpoints/

@@ -68,7 +68,11 @@ class Batch(ABC):
                 combined_tensor_dict[key] = Batch._combine_tensor_dicts(sub_tensor_dicts)
             else:
                 try:
-                    combined_tensor_dict[key] = torch.cat([d[key] for d in tensor_dicts])
+                    dim = len(tensor_dicts[0][key].size())
+                    if dim == 0:
+                        combined_tensor_dict[key] = torch.cat([d[key].reshape(1) for d in tensor_dicts], dim=0)
+                    else:
+                        combined_tensor_dict[key] = torch.cat([d[key] for d in tensor_dicts])
                 except Exception as e:
                     raise BatchStateError(f"Error concatenating list of tensors for key {key}.") from e
 
@@ -88,15 +92,17 @@ class Batch(ABC):
 class DatasetBatch(Batch, TorchDeviceMixin):
     """A batch of samples and its targets and tags. Used to batch train a model."""
 
-    def __init__(self, samples: Union[torch.Tensor, Dict], targets: Dict[str, torch.Tensor], tags: torch.Tensor = None,
-                 samples_require_grad: bool = False):
+    def __init__(self, samples: Dict[str, torch.Tensor], targets: Dict[str, torch.Tensor], tags: torch.Tensor = None,
+                 samples_require_grad: Dict[str, bool] = {}):
         self._samples = samples
-        self._samples.requires_grad = samples_require_grad
+        self._samples_require_grad = samples_require_grad
+        for key in samples_require_grad.keys():
+            self._samples[key].requires_grad = samples_require_grad[key]
         self._targets = targets
         self._tags = tags if tags is not None else torch.Tensor()
 
     @property
-    def samples(self) -> Union[torch.Tensor, Dict]:
+    def samples(self) -> Dict:
         return self._samples
 
     @property
@@ -108,20 +114,28 @@ class DatasetBatch(Batch, TorchDeviceMixin):
         return self._tags
 
     @property
-    def samples_require_grad(self) -> bool:
-        return self._samples.requires_grad
+    def samples_require_grad(self) -> Dict[str, bool]:
+        return self._samples_require_grad
 
     @samples_require_grad.setter
-    def samples_require_grad(self, value: bool):
-        self._samples.requires_grad = value
+    def samples_require_grad(self, values: Dict[str, bool]):
+        for key in values.keys():
+            self._samples[key].requires_grad = values[key]
+        # self._samples_require_grad = value
 
     def detach(self):
         self._targets = {k: v.detach() for k, v in self._targets.items()}
         self._tags = self._tags.detach()
-        self._samples = self._samples.detach()
+        if(self._samples_require_grad):
+            self._samples = {k: v.detach() for k, v in self._samples.items()}
+        else:
+            self._samples = self._samples.detach()
 
     def to(self, device: torch.device) -> "DatasetBatch":
-        self._samples = self._samples.to(device)
+        if(self._samples_require_grad):
+            self._samples = {k: v.to(device) for k, v in self._samples.items()}
+        else:
+            self._samples = self._samples.to(device)
         self._targets = {k: v.to(device) for k, v in self._targets.items()}
         self._tags = self._tags.to(device)
         return self
@@ -132,12 +146,19 @@ class DatasetBatch(Batch, TorchDeviceMixin):
 
     @property
     def device(self) -> torch.device:
-        return self._samples.device
+        if(self._samples_require_grad):
+            key = list(self._samples.keys())[0]
+            return self._samples[key].device
+        else:
+            return self._samples.device
 
     @staticmethod
     def combine_impl(batches: List['DatasetBatch']) -> 'DatasetBatch':
         tags = torch.cat([batch.tags for batch in batches])
-        samples = torch.cat([batch.samples for batch in batches])
+        try:
+            samples = Batch._combine_tensor_dicts([batch.samples for batch in batches])
+        except:
+            samples = torch.cat([batch.samples for batch in batches])
         targets = Batch._combine_tensor_dicts([batch.targets for batch in batches])
         return DatasetBatch(targets=targets, samples=samples, tags=tags)
 
@@ -145,7 +166,10 @@ class DatasetBatch(Batch, TorchDeviceMixin):
         return len(self._samples)
 
     def __deepcopy__(self, memo) -> 'DatasetBatch':
-        samples_ = self.samples.detach().clone()
+        if(self._samples_require_grad):
+            samples_ = self._copy_tensor_dict(self.samples)
+        else:
+            samples_ = self.samples.detach().clone()
         targets_ = self._copy_tensor_dict(self.targets)
         tags_ = self.tags.detach().clone()
         return DatasetBatch(samples=samples_, targets=targets_, tags=tags_)
@@ -155,7 +179,10 @@ class DatasetBatch(Batch, TorchDeviceMixin):
         b_1 = copy.deepcopy(b_1)
         b_2 = copy.deepcopy(b_2)
         tags = torch.cat([b_1.tags, b_2.tags])
-        samples = torch.cat([b_1.samples, b_2.samples])
+        try:
+            samples = Batch._combine_tensor_dicts([b_1.samples, b_2.samples])
+        except:
+            samples = torch.cat([b_1.samples, b_2.samples])
         targets = Batch._combine_tensor_dicts([b_1.targets, b_2.targets])
         return DatasetBatch(targets=targets, samples=samples, tags=tags)
 
@@ -234,7 +261,7 @@ class InferenceResultBatch(Batch, TorchDeviceMixin):
         tags_ = self.tags.detach().clone()
         return InferenceResultBatch(predictions=predictions_, targets=targets_, tags=tags_)
 
-    def split_results(self, target_keys: List[str], predictions_keys: List[Union[str, List]], device: torch.device):
+    def split_results(self, target_keys: List[str], predictions_keys: List[Union[str, List]], device: torch.device = None):
         def _filter_predictions(predictions_keys: List[str], predictions: Dict, filtered_predictions: Dict):
             p_key = predictions_keys[0]
             if p_key == "*":

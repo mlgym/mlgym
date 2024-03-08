@@ -1,9 +1,9 @@
 from ml_gym.data_handling.dataset_loader import DatasetLoaderFactory
 from ml_gym.early_stopping.early_stopping_strategies import EarlyStoppingIF
+from ml_gym.gym.evaluators.accelerate_evaluator import AccelerateEvaluator
 from ml_gym.gym.gym_jobs.gym_job import AbstractGymJob
 from ml_gym.gym.trainers.accelerate_trainer import AccelerateTrainer
 from ml_gym.models.nn.net import NNModel
-from ml_gym.gym.evaluators.evaluator import Evaluator
 from ml_gym.modes import RunMode
 from ml_gym.optimizers.lr_schedulers import LRSchedulerAdapter
 from ml_gym.optimizers.optimizer import OptimizerAdapter
@@ -24,7 +24,7 @@ class AccelerateGymJob(AbstractGymJob):
 
     def __init__(self, experiment_status_logger: ExperimentStatusLogger, gs_api_client: GridSearchAPIClientIF,
                  grid_search_id: str, experiment_id: int, run_mode: RunMode, num_epochs: int,
-                 model: NNModel, optimizer: OptimizerAdapter, trainer: AccelerateTrainer, evaluator: Evaluator,
+                 model: NNModel, optimizer: OptimizerAdapter, trainer: AccelerateTrainer, evaluator: AccelerateEvaluator,
                  checkpointing_strategy: CheckpointingIF, accelerator: Accelerator, early_stopping_strategy: EarlyStoppingIF = None,
                  warm_start_epoch: int = 0, lr_scheduler: LRSchedulerAdapter = None, num_batches_per_epoch: int = None):
         super().__init__(experiment_status_logger=experiment_status_logger, gs_api_client=gs_api_client, grid_search_id=grid_search_id,
@@ -43,7 +43,7 @@ class AccelerateGymJob(AbstractGymJob):
         self._experiment_status_logger.disconnect()
 
     def _evaluation_step(self, current_epoch: int) -> List[EvaluationBatchResult]:
-        """ 
+        """
         Evaluating the model.
 
         :params:
@@ -97,7 +97,8 @@ class AccelerateGymJob(AbstractGymJob):
 
         model = self.trainer.train(num_epochs=self.num_epochs, model=self.model, optimizer=self.optimizer,
                                    batch_done_callback_fun=partial_batch_done_callback,
-                                   epoch_done_callback=partial_train_epoch_done_callback, accelerator=self.accelerator,
+                                   epoch_done_callback=partial_train_epoch_done_callback, 
+                                   accelerator=self.accelerator,
                                    num_batches_per_epoch=self.num_batches_per_epoch)
         self.accelerator.free_memory()
 

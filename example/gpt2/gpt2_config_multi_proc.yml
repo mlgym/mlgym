@@ -3,46 +3,57 @@ global_config:
   seed: &seed_value 2
   target_key: &target_key_anchor target_key
   model_prediction_key: &model_prediction_key_anchor model_prediction_key
-  postprocessing_argmax_key: &postprocessing_argmax_key_anchor postprocessing_argmax_key
+  postprocessing_perpex_key: &postprocessing_perpex_key_anchor postprocessing_perpex_key
 
 model_info:  
-  model_description: "Testing 1 2 3 Hopefully it works."
+  model_description: "GPT 2 Model"
   model_version: 1.0.0
   source_repo: "Github repo link Ex: https://github.com/mlgym/mlgym/tree/dev"
 
-dataset_repository:
-  component_type_key: DATASET_REPOSITORY
-  variant_key: DEFAULT
-  config:
-    storage_connector_path: *storage_path_anchor
-
 dataset_iterators:
   component_type_key: DATASET_ITERATORS
-  variant_key: DEFAULT
-  requirements:
-    - name: repository
-      component_name: dataset_repository
+  variant_key: LMWikiBookCorpusDataset
   config:
-    dataset_identifier: mnist
-    split_configs:
-      - split: train
-      - split: test
+    dataset_identifier: LMWikiBookCorpus
+    # dataset_folder_path: /scratch/repositories/mlgym/example/gpt2/data/wikitext-2-raw-v1-tokenized
+    dataset_folder_path: /scratch/repositories/mlgym/example/gpt2/data/wikitext-103-raw-v1-tokenized
 
-splitted_dataset_iterators:
-  component_type_key: SPLITTED_DATASET_ITERATORS
-  variant_key: RANDOM
-  requirements:
-    - name: iterators
-      component_name: dataset_iterators
-      subscription:
-        - train
-        - test
-  config:
-    split_configs:
-      train:
-        train: 0.7
-        val: 0.3
-    seed: 2
+# split_dataset_iterators:
+#   component_type_key: SPLITTED_DATASET_ITERATORS
+#   variant_key: RANDOM
+#   requirements:
+#     - name: iterators
+#       component_name: dataset_iterators
+#       subscription:
+#         - train
+#         - test
+#         - validation
+#   config:
+#     split_configs:
+#       validation:
+#         val: 1
+#     seed: 2
+
+
+# split_dataset_iterator_2:
+#   component_type_key: SPLITTED_DATASET_ITERATORS
+#   variant_key: RANDOM
+#   requirements:
+#     - name: iterators
+#       component_name: dataset_iterators
+#       subscription: [train, validation, test]
+#   config:
+#     split_configs:
+#       train:
+#         rest: 0.99
+#         train: 0.01
+#       validation:
+#         rest: 0.99
+#         validation: 0.01
+#       test:
+#         rest: 0.99
+#         test: 0.01
+#     seed: 3
 
 data_collator:
   component_type_key: DATA_COLLATOR
@@ -50,25 +61,30 @@ data_collator:
   config:
     collator_type:
       injectable:
-        id: id_conv_mnist_standard_collator
+        id: id_gpt2_llm_collator
     collator_params:
       target_publication_key: *target_key_anchor
+      tokenizer_file_path: /scratch/repositories/mlgym/example/gpt2/tokenizer.json
+      pad_to_multiple_of: 8
 
 data_loaders:
   component_type_key: DATA_LOADER
-  variant_key: DEFAULT
+  variant_key: FUTURE
   requirements:
     - name: iterators
-      component_name: splitted_dataset_iterators
-      subscription: [train, val, test]
+      component_name: dataset_iterators
+      subscription: [train, validation, test]
     - name: data_collator
       component_name: data_collator
   config:
-    batch_size:
-      sweep: absolute
-      values: [10, 50, 100]
-    weigthed_sampling_split_name: train
-    seeds: [0, 1, 2]
+    batch_size: 8
+    sampling_strategies:
+      train: 
+        strategy: IN_ORDER
+      validation: 
+        strategy: IN_ORDER
+      test: 
+        strategy: IN_ORDER
 
 model_registry:
   component_type_key: MODEL_REGISTRY
@@ -80,61 +96,42 @@ model:
   requirements:
     - name: model_registry
       component_name: model_registry
-      subscription: conv_net
+      subscription: llm_gpt2
   config:
-    model_definition:
-      layer_config:
-        - params:
-            in_channels: 1
-            kernel_size: 3
-            out_channels: 32
-            stride: 1
-          type: conv
-        - params:
-            in_channels: 32
-            kernel_size: 3
-            out_channels: 64
-            stride: 1
-          type: conv
-        - params:
-            in_features: 9216
-            out_features: 128
-          type: fc
-        - params:
-            in_features: 128
-            out_features: 10
-          type: fc
     prediction_publication_keys:
       prediction_publication_key: *model_prediction_key_anchor
-    seed: *seed_value
 
 optimizer:
   component_type_key: OPTIMIZER
   variant_key: DEFAULT
   config:
-    optimizer_key: ADAM
+    optimizer_key: ADAMW
     params:
       lr:
         sweep: absolute
-        values: [1, 0.1, 0.01, 0.001, 0.0001]
+        values: [1.e-4]
 
 lr_scheduler:
   component_type_key: LR_SCHEDULER
   variant_key: DEFAULT
   config:
-    lr_scheduler_key: dummy
+    lr_scheduler_key: hugging_face_scheduler
+    params:
+      name: linear
+      num_warmup_steps: 0
+      num_training_steps: 1000
 
 loss_function_registry:
   component_type_key: LOSS_FUNCTION_REGISTRY
-  variant_key: DEFAULT
+  variant_key: LM
 
 metric_registry:
   component_type_key: METRIC_REGISTRY
-  variant_key: DEFAULT
+  variant_key: LM
 
 prediction_postprocessing_registry:
   component_type_key: PREDICTION_POSTPROCESSING_REGISTRY
-  variant_key: DEFAULT
+  variant_key: LM
 
 train_component:
   component_type_key: TRAIN_COMPONENT
@@ -145,12 +142,11 @@ train_component:
     - name: prediction_postprocessing_registry
       component_name: prediction_postprocessing_registry
   config:
-    show_progress: true
     loss_fun_config:
       prediction_subscription_key: *model_prediction_key_anchor
       target_subscription_key: *target_key_anchor
-      key: CrossEntropyLoss
-      tag: cross_entropy_loss
+      key: CLMCrossEntropyLoss
+      tag: clm_entropy_loss
 
 trainer:
   component_type_key: TRAINER
@@ -164,6 +160,7 @@ trainer:
     - name: data_loaders
       component_name: data_loaders
       subscription: train
+  config: {}
 
 eval_component:
   component_type_key: EVAL_COMPONENT
@@ -174,7 +171,7 @@ eval_component:
       subscription: null
     - name: data_loaders
       component_name: data_loaders
-      subscription: [train, val, test]
+      subscription: [train, validation, test]
     - name: loss_function_registry
       component_name: loss_function_registry
     - name: metric_registry
@@ -185,37 +182,22 @@ eval_component:
     cpu_target_subscription_keys:
       - *target_key_anchor
     cpu_prediction_subscription_keys:
-      - *postprocessing_argmax_key_anchor
-      - *model_prediction_key_anchor
+      - *postprocessing_perpex_key_anchor
     post_processors_config:
-      - key: "ARG_MAX"
+      - key: "PerplexityPostProcessing"
+        target_subscription_key: *target_key_anchor
         prediction_subscription_key: *model_prediction_key_anchor
-        prediction_publication_key: *postprocessing_argmax_key_anchor
+        prediction_publication_key: *postprocessing_perpex_key_anchor
     metrics_config:
-      - key: F1_SCORE
-        params:
-          average: macro
-        prediction_subscription_key: *postprocessing_argmax_key_anchor
-        target_subscription_key: *target_key_anchor
-        tag: F1_SCORE_macro
-      - key: PRECISION
-        params:
-          average: macro
-        prediction_subscription_key: *postprocessing_argmax_key_anchor
-        target_subscription_key: *target_key_anchor
-        tag: PRECISION_macro
-      - key: RECALL
-        params:
-          average: macro
-        prediction_subscription_key: *postprocessing_argmax_key_anchor
-        target_subscription_key: *target_key_anchor
-        tag: RECALL_macro
+      - key: PerplexityMetric
+        prediction_subscription_key: *postprocessing_perpex_key_anchor
+        tag: perplexity_metric
+        identifier: PERPLEXITY_METRIC
     loss_funs_config:
       - prediction_subscription_key: *model_prediction_key_anchor
         target_subscription_key: *target_key_anchor
-        key: CrossEntropyLoss
-        tag: cross_entropy_loss
-    show_progress: false
+        key: CLMCrossEntropyLoss
+        tag: clm_entropy_loss
 
 evaluator:
   component_type_key: EVALUATOR
@@ -237,11 +219,11 @@ early_stopping_strategy:
   config:
     early_stopping_key: LAST_K_EPOCHS_IMPROVEMENT_STRATEGY
     early_stopping_config:
-      min_relative_improvement: 0.00001
-      epochs_window: 5
-      split_name: val
-      monitoring_key: "F1_SCORE_macro"
-      is_increase_task: true
+      min_relative_improvement: -10
+      epochs_window: 3
+      split_name: validation
+      monitoring_key: "clm_entropy_loss"
+      is_increase_task: false
 
 checkpointing_strategy_registry:
   component_type_key: CHECKPOINTING_STRATEGY_REGISTRY
@@ -254,4 +236,4 @@ checkpointing_strategy:
     - name: checkpointing_strategy_registry
       component_name: checkpointing_strategy_registry
   config:
-    checkpointing_key: SAVE_MOST_RECENT_EPOCH_ONLY_CHECKPOINTING_STRATEGY
+    checkpointing_key: SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY
