@@ -55,7 +55,7 @@ function processBuffer(bufferedSocketData: Array<JSON>, updatesHolder: UpdatesOb
             // so it's safe to say that this recursion is 1-level-deep only!
         }
         // parse data from socket then extract event_type and payload
-        const { data: { event_type, payload } } = data as DataFromSocket;
+        const { event_type, payload } = data as any;
         // process the payload and load it into the UpdatesObject Object to be later processed into DataToRedux object
         MapEventToProcess[event_type as keyof typeof MapEventToProcess](payload, updatesHolder);
     }

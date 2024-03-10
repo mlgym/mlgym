@@ -10,7 +10,6 @@ import { useAppDispatch, useAppSelector } from './hooks';
 // components & styles
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
-import ConfigPopup from '../components/configPopup/ConfigPopup';
 import Settings from '../components/settings/Settings';
 import TopBarWithDrawer from '../components/topbar-with-drawer/TopBarWithDrawer';
 import styles from './App.module.css';
@@ -22,35 +21,15 @@ export interface settingConfigsInterface {
     restApiUrl: string
 }
 
-// function to get parameters from url or localstorage to show them populated on the popup or in the settings page.
-// function is made async as JSON parsing needs to be done asynchronously for fetching data from local storage and then set in `settingConfigs` key-values. Then if the url params are present, they will overwrite local storage values.
-async function getUrlParamsOrLocalStorageData(searchParams: URLSearchParams) {
-
-    const settingConfigsInURL = {
-        gridSearchId: searchParams.get("run_id"),
-        socketConnectionUrl: searchParams.get("ws_endpoint"),
-        restApiUrl: searchParams.get("rest_endpoint"),
-    };
-    const settingConfigsInStorage = await JSON.parse(localStorage.getItem('SettingConfigs') as string); //null is also fine, passing as string to skip TS error
-
-    return {
-        gridSearchId: settingConfigsInURL.gridSearchId ?? settingConfigsInStorage.gridSearchId,
-        socketConnectionUrl: settingConfigsInURL.socketConnectionUrl ?? settingConfigsInStorage.socketConnectionUrl,
-        restApiUrl: settingConfigsInURL.restApiUrl ?? settingConfigsInStorage.restApiUrl
-    } satisfies settingConfigsInterface;
-}
-
 export default function App() {
 
     const [isConfigValidated, setConfigValidation] = useState(false);
-    const [socketConnectionRequest, setSocketConnectionRequest] = useState(false);
     const [connectionSnackBar, setConnectionSnackBar] = useState({
         isOpen: false,
         connection: false
     });
     const tab = useAppSelector(selectTab);
     const dispatch = useAppDispatch();
-    const [searchParams, setSearchParams] = useSearchParams();
     const [settingConfigs, setSettingConfigs] = useState({
         gridSearchId: "",
         socketConnectionUrl: "",
@@ -65,35 +44,33 @@ export default function App() {
     });
 
     useEffect(() => {
-        // Await key used in this function - suspends execution of the code below it and assures that it does it's task and returns value -- this is called promise (from a function). So as the function is executed, it returns a promise with data which must be accessed like this:
-        getUrlParamsOrLocalStorageData(searchParams).then((settingConfigs) => {
-            setSettingConfigs(settingConfigs);
-            localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
-        });
+        // // Await key used in this function - suspends execution of the code below it and assures that it does it's task and returns value -- this is called promise (from a function). So as the function is executed, it returns a promise with data which must be accessed like this:
+        // getUrlParamsOrLocalStorageData(searchParams).then((settingConfigs) => {
+        //     setSettingConfigs(settingConfigs);
+        //     localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
+        // });
 
-        if (socketConnectionRequest) {
-            dispatch(resetChartState());
-            dispatch(resetTableState());
-            // save to local storage only after user clicks on submit button - either in popup or in settings page.
-            // after the used submits the values & after it is saved, then only we will connect to the socket with the values given by user.
-            // TODO:: after Vijul and Osama's code is merged, handle error message from the socket and show to user - so if the socket connection was not successful, user can update the values and try again.
-            localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
+        dispatch(resetChartState());
+        dispatch(resetTableState());
+        // save to local storage only after user clicks on submit button - either in popup or in settings page.
+        // after the used submits the values & after it is saved, then only we will connect to the socket with the values given by user.
+        // TODO:: after Vijul and Osama's code is merged, handle error message from the socket and show to user - so if the socket connection was not successful, user can update the values and try again.
+        // localStorage.setItem('SettingConfigs', JSON.stringify(settingConfigs));
 
-            // creating WebWorker
-            // NOTE:using URL because create-react-app throws error since it has not found the worker file during load/bundling
-            const workerSocket = new Worker(new URL('../worker_socket/WorkerSocket.ts', import.meta.url));
-            // setting the redux update methods on the incoming data from the worker thread
-            workerSocket.onmessage = ({ data }: MessageEvent) => workerOnMessageHandler(data as DataToRedux, workerSocket);
-            // starting the worker
-            workerSocket.postMessage(settingConfigs);
+        // creating WebWorker
+        // NOTE:using URL because create-react-app throws error since it has not found the worker file during load/bundling
+        const workerSocket = new Worker(new URL('../worker_socket/WorkerSocket.ts', import.meta.url));
+        // setting the redux update methods on the incoming data from the worker thread
+        workerSocket.onmessage = ({ data }: MessageEvent) => workerOnMessageHandler(data as DataToRedux, workerSocket);
+        // starting the worker
+        workerSocket.postMessage(settingConfigs);
 
-            // close the worker on Dismount to stop any memory leaks
-            return () => {
-                workerSocket.postMessage("CLOSE_SOCKET");
-                workerSocket.terminate();
-            }
+        // close the worker on Dismount to stop any memory leaks
+        return () => {
+            workerSocket.postMessage("CLOSE_SOCKET");
+            workerSocket.terminate();
         }
-    }, [socketConnectionRequest, searchParams]);
+    }, []);
     // recommended way: keeping the second condition blank, fires useEffect just once as there are no conditions to check to fire up useEffect again (just like componentDidMount of React Life cycle).
 
 
@@ -123,7 +100,7 @@ export default function App() {
 
                 dispatch(setSocketConnection(data.status.isSocketConnected));
                 dispatch(setGridSearchId(data.status.gridSearchId));
-                dispatch(setRestApiUrl(data.status.restApiUrl));
+                // dispatch(setRestApiUrl(data.status.restApiUrl));
                 dispatch(setSocketConnectionUrl(settingConfigs.socketConnectionUrl));
                 // dispatch(setSocketConnectionUrl(data.status["restApiUrl"]));
 
@@ -153,8 +130,6 @@ export default function App() {
 
     return (
         <div className={styles.main_container}>
-            <h1>Problem was this React Routes</h1>
-            <h1>removing the websocket now</h1>
             {
                 // Show TopBar only if valid url is there. For example, if we get unregistered url (i.e 404 error) then don't show the TopBar
                 urls.includes(tab) && <TopBarWithDrawer />
@@ -176,7 +151,7 @@ export default function App() {
                                     path={RoutesMapping[routeMapKey].url}
                                     element={
                                         <Settings
-                                            setSocketConnectionRequest={() => setSocketConnectionRequest(true)}
+                                            setSocketConnectionRequest={() => {}}
                                             setConfigData={(settingConfigs: settingConfigsInterface) => setSettingConfigs(settingConfigs)}
                                         />
                                     }
@@ -195,17 +170,6 @@ export default function App() {
                     })
                 }
             </Routes>
-            {
-                // here also, it is same as done above for Setting Component. We need to pass functions as props to the popup - so that when user submits the configured values, we can connect to websocket with the changed parameters.
-                urls.includes(tab) && tab !== RoutesMapping["Settings"].url && isConfigValidated === false ?
-                    <ConfigPopup
-                        isConfigValidated={isConfigValidated}
-                        setSocketConnectionRequest={() => setSocketConnectionRequest(true)}
-                        setConfigData={(settingConfigs: settingConfigsInterface) => setSettingConfigs(settingConfigs)}
-                    />
-                    :
-                    null
-            }
             {/* Socket connection success / fail message temperory popup which will disappeaer in 4secs or when closed manually by user */}
             <Snackbar
                 anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
