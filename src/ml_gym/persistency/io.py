@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 from enum import Enum
+import json
 from typing import Dict, List
 import requests
 from http import HTTPStatus
@@ -41,6 +42,9 @@ class GridSearchAPIClientIF(ABC):
         raise NotImplementedError
 
     def get_experiment_statuses(self, grid_search_id: str) -> List[ExperimentStatus]:
+        raise NotImplementedError
+    
+    def add_model_card_info(self, grid_search_id: str, entrypoint: str) -> Dict:
         raise NotImplementedError
 
 class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
@@ -140,9 +144,10 @@ class GridSearchRestfulAPIClient(GridSearchAPIClientIF):
         url = f"{self.endpoint}/{grid_search_id}/{config_name}"
         return GridSearchRestfulAPIClient._get_json_resource(url)
 
-    # def add_grid_search_config(self, grid_search_id: str, grid_search_config: Dict) -> Dict:
-    #     url = f"{self.endpoint}/grid_searches/{grid_search_id}/gs_config"
-    #     return GridSearchRestfulAPIClient._put_raw_text_file_resource(url, grid_search_config)
+    def add_model_card_info(self, grid_search_id: str, entrypoint: str) -> Dict:
+        payload_dict = RawTextFile(file_format=FileFormat.JSON, content=json.dumps({"payload": entrypoint})).dict()
+        url = f"{self.endpoint}/model-card-save-entrypoint/{grid_search_id}"
+        return GridSearchRestfulAPIClient._put_raw_text_file_resource(url, payload_dict)
 
     def add_config_string(self, grid_search_id: str, config_name: str, config: str, file_format: FileFormat,
                           experiment_id: int = None) -> Dict:

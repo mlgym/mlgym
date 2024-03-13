@@ -8,7 +8,6 @@ global_config:
 model_info:  
   model_description: "Testing 1 2 3 Hopefully it works."
   model_version: 1.0.0
-  source_repo: "Github repo link Ex: https://github.com/mlgym/mlgym/tree/dev"
 
 dataset_repository:
   component_type_key: DATASET_REPOSITORY
