@@ -1,4 +1,3 @@
-import json
 from typing import Callable
 from fastapi import FastAPI, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,7 +6,6 @@ from ml_board.backend.restful_api.data_access import DataAccessIF
 from ml_board.backend.restful_api.data_models import RawTextFile
 from ml_gym.error_handling.exception import InvalidPathError, SystemInfoFetchError
 from ml_board.backend.restful_api.data_models import FileFormat, RawTextFile
-model_card_entrypoint_entries = []
 
 # from fastapi.staticfiles import StaticFiles
 
@@ -76,16 +74,13 @@ class RestfulAPIServer:
             endpoint=self.get_model_card_info,
         )
         self.app.add_api_route(
+
             path="/system-info/{grid_search_id}/{experiment_id}",
             methods=["GET"],
             endpoint=self.get_system_info,
         )
-        self.app.add_api_route(
-            path="/model-card-save-entrypoint/{grid_search_id}",
-            methods=["PUT"],
-            endpoint=self.save_entrypoint_info,
-        )
 
+        # self.app.mount("/", StaticFiles(directory="/home/mluebberin/repositories/github/private_workspace/mlgym/src/ml_board/frontend/dashboard/build/", html=True), name="static")
 
     def get_experiment_statuses(self, grid_search_id: str):
         """
@@ -330,13 +325,8 @@ class RestfulAPIServer:
         :returns: response (JSONResponse): Model card infomration for the experiment.
         """
         try:
-            entrypoint = ""
-            for entry in model_card_entrypoint_entries:
-                if entry["grid_search_id"] == grid_search_id:
-                    entrypoint = entry["entrypoint_cmd"]
-
-            model_card = self.data_access.create_model_card(grid_search_id = grid_search_id, experiment_id = experiment_id,
-                                                            entrypoint=entrypoint)
+            model_card = self.data_access.create_model_card(
+                grid_search_id=grid_search_id, experiment_id=experiment_id)
             response = JSONResponse(model_card, media_type="application/json")
             return response
         except SystemInfoFetchError as e:
@@ -364,20 +354,6 @@ class RestfulAPIServer:
         except SystemInfoFetchError as e:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail=f"Error while fetching server system information") from e
-
-    def save_entrypoint_info(self, grid_search_id: str, entrypoint_cmd: RawTextFile):
-        """
-        ``HTTP POST``Save entrypoint details for the model card.
-        :params:
-                grid_search_id (str): Grid Search ID
-                entrypoint_cmd (str): Entrypoint Arguments
-        """
-        try:
-            payload = json.loads(entrypoint_cmd.content)
-            model_card_entrypoint_entries.append({"grid_search_id": grid_search_id, 
-                                                  "entrypoint_cmd": payload["payload"]})
-        except SystemInfoFetchError as e:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Error while fetching server system information") from e
 
     def run_server(self, application_server_callable: Callable):
         application_server_callable(app=self.app)
