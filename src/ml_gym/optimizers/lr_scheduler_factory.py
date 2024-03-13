@@ -30,4 +30,8 @@ class LRSchedulerFactory:
         """
         params = params if params is not None else {}
         lr_scheduler_class = cls.lr_scheduler_map[lr_scheduler_key]
+        if lr_scheduler_key == "hugging_face_scheduler":
+            if "num_warmup_steps" in params and params["num_warmup_steps"] > 0:
+                raise Exception(
+                    "The Huggingface learning rate schedulers define the warmup steps in terms of batch steps not epoch steps. This is not compliant to the MLgym implementation and causes issues during training!")
         return LRSchedulerAdapter(lr_scheduler_class=lr_scheduler_class, lr_scheduler_params=params)

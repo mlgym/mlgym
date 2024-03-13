@@ -38,7 +38,7 @@ class AccelerateTrainComponent(StatefulComponent):
             model (NNModel): Torch Neural Network module.
         """
         model.zero_grad()
-        loss = self.calc_loss(model, batch).sum()
+        loss = self._calc_loss(model, batch).sum()
 
         # if accelerator.is_main_process:
         #     w = model.module.fc_layers[0].weight
@@ -55,7 +55,6 @@ class AccelerateTrainComponent(StatefulComponent):
         #     w = model.module.fc_layers[0].weight
         #     print(f"\n\nAfter 2nd thread: {w}")
         #     print("\n")
-
         accelerator.backward(loss)
         optimizer.step()
 
@@ -80,9 +79,6 @@ class AccelerateTrainComponent(StatefulComponent):
         :returns:
             model (NNModel): Torch Neural Network module.
         """
-
-        model.train()
-
         model.train()
 
         if num_batches_per_epoch is None:
@@ -108,15 +104,16 @@ class AccelerateTrainComponent(StatefulComponent):
                 epoch_done_callback_fun(
                     num_epochs=num_epochs, current_epoch=current_epoch, model=model, accelerator=accelerator)
                 model.train()
+
         return model
 
-    def calc_loss(self, model: NNModel, batch: DatasetBatch) -> torch.Tensor:
+    def _calc_loss(self, model: NNModel, batch: DatasetBatch) -> torch.Tensor:
         """
         Valvulate loss given the loss function.
 
         :params:
                model (NNModel): Torch Neural Network module.
-               batch (DatasetBatch); Batch of data for which loss is to be calcualted.
+               batch (DatasetBatch); Batch of data for which loss is to be calculated.
 
         :returns:
             loss (List[torch.Tensor]): Loss list for batch.
