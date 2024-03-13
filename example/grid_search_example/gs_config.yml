@@ -253,4 +253,4 @@ checkpointing_strategy:
     - name: checkpointing_strategy_registry
       component_name: checkpointing_strategy_registry
   config:
-    checkpointing_key: SAVE_LAST_EPOCH_ONLY_CHECKPOINTING_STRATEGY
+    checkpointing_key: SAVE_MOST_RECENT_EPOCH_ONLY_CHECKPOINTING_STRATEGY

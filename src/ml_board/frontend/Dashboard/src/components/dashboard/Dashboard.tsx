@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { RoutesMapping } from '../../app/RoutesMapping';
-import FilterProvider from './context/FilterContextProvider';
 import FilterTableHeaders from './filterTableHeaders/FilterTableHeaders';
 import FilterTextSearch from './filterTextSearch/FilterTextSearch';
 import Table from "./table/Table";
@@ -37,7 +36,7 @@ export default function Dashboard() {
     // Table should consist of these columns for minimized view. To get detailed view, user can click on the row and see the job + experiment details:
     // const colNames = ["experiment_id", "job_status", "starting_time", "finishing_time", "model_status", "epoch_progress", "batch_progress"];
     return (
-        <FilterProvider>
+        <>
             <Table />
             {
                 // Floating Action Button (FAB) added for filter popup
@@ -102,6 +101,6 @@ export default function Dashboard() {
                     setFilterTextSearchDrawer(filterDrawer);
                 }}
             />
-        </FilterProvider>
+        </>
     );
 }

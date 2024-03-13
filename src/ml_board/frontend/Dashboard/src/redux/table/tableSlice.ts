@@ -1,9 +1,12 @@
 import { createEntityAdapter, createSlice, EntityState, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 
+export interface ColumnsFilter {
+    [columnName: string]: boolean
+}
 
 interface TableHeaders {
-    table_headers: Array<string>
+    table_headers: ColumnsFilter
 }
 
 // NOTE: Row = JobStatusPayload + ExperimentStatusPayload + scores
@@ -43,7 +46,7 @@ const rowsAdapter = createEntityAdapter<Row>({
 });
 
 const initialState: EntityState<Row> & TableHeaders = rowsAdapter.getInitialState({
-    table_headers: [],
+    table_headers: {},
 });
 
 const { actions, reducer } = createSlice({
@@ -54,7 +57,14 @@ const { actions, reducer } = createSlice({
         // overwriting the earlier ones. (https://redux-toolkit.js.org/api/createEntityAdapter#applying-multiple-updates)
         upsertManyRows: rowsAdapter.upsertMany,
         upsertTableHeaders: (state, { payload }: PayloadAction<string[]>) => {
-            state.table_headers = [...new Set([...state.table_headers, ...payload])];
+            payload.forEach((v, i) => { state.table_headers[v] = true; });
+        },
+        updateTableHeaderVisibility(state, { payload }: PayloadAction<ColumnsFilter>) {
+            for (const key in payload) {
+                if (key in state.table_headers) {
+                    state.table_headers[key] = payload[key];
+                }
+            }
         },
         resetTableState: () => {
             return initialState
@@ -63,7 +73,7 @@ const { actions, reducer } = createSlice({
 });
 
 
-export const { upsertManyRows, upsertTableHeaders, resetTableState } = actions;
+export const { upsertManyRows, upsertTableHeaders, updateTableHeaderVisibility, resetTableState } = actions;
 
 
 // create a set of memoized selectors

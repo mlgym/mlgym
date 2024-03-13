@@ -11,11 +11,10 @@ import json
 from ml_board.backend.restful_api.data_models import FileFormat, RawTextFile, CheckpointResource, ExperimentStatus
 from ml_gym.models.nn.net import NNModel
 from ml_gym.util.util import ModelCardFactory
-from pyparsing import Generator
+from typing import Generator, Union
 import torch
 import yaml
 from pathlib import Path
-import json
 
 
 class DataAccessIF(ABC):
@@ -53,7 +52,7 @@ class DataAccessIF(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_checkpoint_resource(self, grid_search_id: str, epoch: str, checkpoint_resource: str, experiment_id: str = None, apiCall: bool = True) -> BytesIO | Generator:
+    def get_checkpoint_resource(self, grid_search_id: str, epoch: str, checkpoint_resource: str, experiment_id: str = None, apiCall: bool = True) -> Union[BytesIO, Generator]:
         raise NotImplementedError
 
     @abstractmethod
@@ -76,6 +75,13 @@ class DataAccessIF(ABC):
     def create_model_card(self, grid_search_id: str, experiment_id: str, entrypoint: str) -> Dict:
         raise NotImplementedError
 
+    @abstractmethod
+    def delete_checkpoints(self, grid_search_id: str, experiment_id: str, epoch: str) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_checkpoint_dict_epoch(self, grid_search_id: str, experiment_id: str, epoch: str) -> List[Dict]:
+        raise NotImplementedError
 
 class FileDataAccess(DataAccessIF):
     """
@@ -102,7 +108,11 @@ class FileDataAccess(DataAccessIF):
 
     @staticmethod
     def get_checkpoint_files(path: str, base_path: str):
-        full_paths = glob.glob(os.path.join(path, "**", "*.pickle"), recursive=True)
+        full_paths = []
+        pickle_paths = glob.glob(os.path.join(path, "**", "*.pickle"), recursive=True)
+        full_paths.extend(pickle_paths)
+        zip_paths = glob.glob(os.path.join(path, "**", "*.zip"), recursive=True)
+        full_paths.extend(zip_paths)
         return sorted([os.path.relpath(full_path, base_path) for full_path in full_paths], reverse=True)
 
     @staticmethod
@@ -351,7 +361,7 @@ class FileDataAccess(DataAccessIF):
         else:
             raise InvalidPathError(f"File path {requested_full_path} is not safe.")
 
-    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str, apiCall: bool = True) -> BytesIO | Generator:
+    def get_checkpoint_resource(self, grid_search_id: str, experiment_id: str, epoch: str, checkpoint_resource: str, apiCall: bool = True) -> Union[BytesIO, Generator]:
         """
         Fetch checkpoint resource pickle file given the experiment ID & grid search ID from event storage.
 

@@ -22,14 +22,14 @@ class StandaloneApplication(BaseApplication):
 
 
 def run_ml_board(ml_board_host: str, ml_board_port: str, rest_endpoint: str, ws_endpoint: str, run_id: str):
-    static_folder_path = os.path.abspath(os.path.join(__file__, "../../../frontend/dashboard/build"))
+    static_folder_path = os.path.abspath(os.path.join(__file__, "../../../frontend/Dashboard/build"))
     print(f"Delivering static react files from {static_folder_path}")
     app = Flask(__name__, static_folder=static_folder_path, static_url_path='/')
-
+    
     @app.route('/')
     def index():
         return app.send_static_file('index.html')
-
+        
     # app.run(host=f"{ml_board_host}", port=ml_board_port)
 
     options = {
@@ -39,6 +39,7 @@ def run_ml_board(ml_board_host: str, ml_board_port: str, rest_endpoint: str, ws_
     rest_endpoint_encoded = urllib.parse.quote(rest_endpoint)
     ws_endpoint_encoded = urllib.parse.quote(ws_endpoint)
     run_id_encoded = urllib.parse.quote(run_id)
+
     url = f"http://{ml_board_host}:{ml_board_port}?rest_endpoint={rest_endpoint_encoded}&ws_endpoint={ws_endpoint_encoded}&run_id={run_id_encoded}"
     print(f"====> ACCESS MLBOARD VIA {url}")
     StandaloneApplication(app, options).run()

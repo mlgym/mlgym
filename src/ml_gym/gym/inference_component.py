@@ -31,7 +31,8 @@ class InferenceComponent:
         else:
             forward_result = model.forward(batch.samples)
         result_batch = InferenceResultBatch(targets=batch.targets, tags=batch.tags, predictions=forward_result)
-        return PredictPostprocessingComponent.post_process(result_batch, post_processors=post_processors)
+        irb = PredictPostprocessingComponent.post_process(result_batch, post_processors=post_processors)
+        return irb
 
     def predict_data_loader(self, model: NNModel, dataset_loader: DatasetLoader) -> InferenceResultBatch:
         """

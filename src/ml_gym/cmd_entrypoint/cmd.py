@@ -9,6 +9,7 @@ from ml_gym.gym.gym import Gym, GymFactory
 from ml_gym.persistency.logging import MLgymStatusLoggerCollectionConstructable, LoggerConstructableIF, MLgymStatusLoggerConfig, \
     MLgymStatusLoggerTypes
 from ml_gym.modes import RunMode, ValidationMode
+from ml_gym.util.util import SystemEnv
 from ml_gym.validation.validator_factory import get_validator
 from ml_gym.io.config_parser import YAMLConfigLoader
 from typing import Callable, List, Tuple, Type, Dict, Union
@@ -135,7 +136,8 @@ def get_logger_constructable(websocket_logging_servers: List) -> LoggerConstruct
 
     logging_configs = [MLgymStatusLoggerConfig(logger_type=MLgymStatusLoggerTypes.STREAMED_LOGGER, logger_config={"host": ip, "port": port})
                        for ip, port in websocket_logging_servers]
-    logger_collection_constructable = MLgymStatusLoggerCollectionConstructable(logging_configs)
+    logger_collection_constructable = MLgymStatusLoggerCollectionConstructable(
+        logging_configs)
     return logger_collection_constructable
 
 
@@ -185,9 +187,11 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
                                             file_format=FileFormat.YAML,
                                             config_name="grid_search_config.yml",
                                             config=gs_config_string)
+
             gs_api_client.add_config_string(grid_search_id=gridsearch_id,
                                             file_format=FileFormat.YAML,
                                             config_name="run_config.yml",
+
                                             config=run_config_string)
             gs_api_client.add_model_card_info(grid_search_id=gridsearch_id,
                                               entrypoint=str(sys.argv))
@@ -201,27 +205,35 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
                 gs_api_client.add_config_string(grid_search_id=blueprint.grid_search_id, config_name="experiment_config.json",
                                                 config=json.dumps(blueprint.config), experiment_id=blueprint.experiment_id,
                                                 file_format=FileFormat.JSON)
+                gs_api_client.add_config_string(grid_search_id=blueprint.grid_search_id, config_name="system_info.json",
+                                                config=json.dumps(SystemEnv.create_system_info()), experiment_id=blueprint.experiment_id,
+                                                file_format=FileFormat.JSON)
 
     gs_config_string = Path(gs_config_path).read_text()
     gs_config = YAMLConfigLoader.load_string(gs_config_string)
     run_config_string = Path(run_config_path).read_text()
 
     if validation_strategy_config_path is not None:
-        validation_strategy_config_string = Path(validation_strategy_config_path).read_text()
-        validation_strategy_config = YAMLConfigLoader.load(validation_strategy_config_string)
-        validation_mode = ValidationMode[list(validation_strategy_config.keys())[0]]
+        validation_strategy_config_string = Path(
+            validation_strategy_config_path).read_text()
+        validation_strategy_config = YAMLConfigLoader.load(
+            validation_strategy_config_string)
+        validation_mode = ValidationMode[list(
+            validation_strategy_config.keys())[0]]
     else:
         validation_strategy_config_string = None
         validation_strategy_config = None
         validation_mode = ValidationMode.GRID_SEARCH
 
-    validator = get_validator(validation_mode, blueprint_class, RunMode.TRAIN, validation_strategy_config, gs_config)
+    validator = get_validator(validation_mode, blueprint_class,
+                              RunMode.TRAIN, validation_strategy_config, gs_config)
 
     blueprints = validator.create_blueprints(grid_search_id=gridsearch_id,
                                              blue_print_type=blueprint_class,
                                              gs_config=gs_config)
 
-    log_configs(gs_config_string=gs_config_string, run_config_string=run_config_string,      validation_strategy_config_raw_string=validation_strategy_config_string,
+    log_configs(gs_config_string=gs_config_string, run_config_string=run_config_string,
+                validation_strategy_config_raw_string=validation_strategy_config_string,
                 gs_restful_api_client_constructable=gs_restful_api_client_constructable, accelerator=accelerator)
 
     gym.run(blueprints)
@@ -259,9 +271,11 @@ def get_args() -> Tuple[Callable, Dict]:
     Fetch run_config given as an argument while running run.py
     :returns:  args (Tuple[Callable, Dict]): run_config passes with --config_path.
     """
-    parser = argparse.ArgumentParser(description='Run a grid search on CPUs or distributed over multiple GPUs')
+    parser = argparse.ArgumentParser(
+        description='Run a grid search on CPUs or distributed over multiple GPUs')
 
-    parser.add_argument('--config_path', type=str, required=True, help='Path to the run configuration file')
+    parser.add_argument('--config_path', type=str, required=True,
+                        help='Path to the run configuration file')
 
     args = parser.parse_args()
     return args.config_path
@@ -294,11 +308,13 @@ def parse_run_configuration(run_configuration_file_path: str) -> Tuple[Union[Tra
         run_config = WarmStartRunConfiguration(**run_dict["config"])
 
     if environment_dict["type"] == "multiprocessing":
-        environment_config = MultiProcessingEnvironmentConfig(**environment_dict["config"])
+        environment_config = MultiProcessingEnvironmentConfig(
+            **environment_dict["config"])
     elif environment_dict["type"] == "accelerate":
         environment_config = AccelerateEnvironmentConfig()
     else:
-        environment_config = MainProcessEnvironmentConfig(**environment_dict["config"])
+        environment_config = MainProcessEnvironmentConfig(
+            **environment_dict["config"])
 
     logging_config = LoggingConfiguration(**logging_dict)
 
@@ -316,8 +332,10 @@ def get_logging_constructables(logging_config: LoggingConfiguration) -> Tuple[Lo
          (LoggerConstructableIF): Initiated Logging interface]
     """
     # get logger constructables
-    logger_collection_constructable = get_logger_constructable(logging_config.websocket_logging_servers)
-    gs_restful_api_client_constructable = get_grid_search_restful_api_client_constructable(endpoint=logging_config.gs_rest_api_endpoint)
+    logger_collection_constructable = get_logger_constructable(
+        logging_config.websocket_logging_servers)
+    gs_restful_api_client_constructable = get_grid_search_restful_api_client_constructable(
+        endpoint=logging_config.gs_rest_api_endpoint)
     return logger_collection_constructable, gs_restful_api_client_constructable
 
 
@@ -328,11 +346,14 @@ def run(blueprint_class: BluePrint, run_configuration_file_path: Union[TrainRunC
            blueprint_class (BluePrint): Object of blueprint Class used for creating all the components for the GymJob.
            run_configuration_file_path (str): Path to the run_config file.
     """
-    run_config, env_config, logging_config = parse_run_configuration(run_configuration_file_path=run_configuration_file_path)
+    run_config, env_config, logging_config = parse_run_configuration(
+        run_configuration_file_path=run_configuration_file_path)
 
-    logger_collection_constructable, gs_restful_api_client_constructable = get_logging_constructables(logging_config)
+    logger_collection_constructable, gs_restful_api_client_constructable = get_logging_constructables(
+        logging_config)
 
-    accelerator: Accelerator = Accelerator() if isinstance(env_config, AccelerateEnvironmentConfig) else None
+    accelerator: Accelerator = Accelerator() if isinstance(
+        env_config, AccelerateEnvironmentConfig) else None
 
     gym = get_gym_from_environment_config(env_config, logger_collection_constructable, gs_restful_api_client_constructable,
                                           run_config.num_epochs, run_config.num_batches_per_epoch, accelerator)

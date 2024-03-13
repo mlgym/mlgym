@@ -28,6 +28,7 @@ class Gym(ABC):
         """
         self.job_status_logger = JobStatusLogger(logger_collection_constructable.construct())
 
+
     @abstractmethod
     def run(self, blueprints: List[BluePrint]):
         """
@@ -116,7 +117,7 @@ class GymType(Enum):
 
 class GymFactory:
     """
-    GymFactory is a class which contains all of the methods which initialzie what type of job to run for the mlgym model.
+    GymFactory is a class which contains all of the methods which initialize what type of job to run for the mlgym model.
     """
 
     @staticmethod
