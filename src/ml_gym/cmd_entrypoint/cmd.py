@@ -1,4 +1,5 @@
 import argparse
+import sys
 from dataclasses import dataclass
 from datetime import datetime
 from ml_board.backend.restful_api.data_models import FileFormat
@@ -192,6 +193,8 @@ def entry_train(gridsearch_id: str, blueprint_class: Type[BluePrint], gym: Gym, 
                                             config_name="run_config.yml",
 
                                             config=run_config_string)
+            gs_api_client.add_model_card_info(grid_search_id=gridsearch_id,
+                                              entrypoint=str(sys.argv))
 
             if validation_strategy_config_raw_string is not None:
                 gs_api_client.add_config_string(grid_search_id=gridsearch_id,
