@@ -30,10 +30,10 @@ export function parseReactFlowPipeline(nodeKey: string, node: IPipelineNode): IR
     };
 
     function traverse(currentNodeName: string, currentNode: IPipelineNode, row: number, col: number) {
-        console.log("currentNodeName = ",currentNodeName)
-        console.log("currentNode = ",currentNode)
-        console.log("row = ",row)
-        console.log("col = ",col)
+        // console.log("currentNodeName = ",currentNodeName)
+        // console.log("currentNode = ",currentNode)
+        // console.log("row = ",row)
+        // console.log("col = ",col)
         pipeline.nodes.push({
             id: currentNodeName, // required
             position: { x: 100 * col, y: 150 * row }, // required

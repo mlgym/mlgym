@@ -68,7 +68,7 @@ export default function EnvironmentDetails({fromPage, experiment_id, tableRows, 
         setIsLoading(true);
 
         axios.get(rest_api_url + model_card_sys_info).then((response) => {
-            console.log("Got response from model_card_sys_info API: ", response);
+            // console.log("Got response from model_card_sys_info API: ", response);
             if (response.status === 200) {
                 let resp_data = response.data;
                 setSysInfoCarbonFootPrintDetails(resp_data.experiment_environment.carbon_footprint);
@@ -96,7 +96,7 @@ export default function EnvironmentDetails({fromPage, experiment_id, tableRows, 
             setIsLoading(false);
         })
         .catch((error) => {
-            console.log("Error in model_card_sys_info: ", error);
+            // console.log("Error in model_card_sys_info: ", error);
             setIsLoading(false);
             setError("Error occured / No system info available");
         });

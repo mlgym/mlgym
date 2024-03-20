@@ -27,7 +27,7 @@ export default function RunConfig() {
         setIsLoading(true);
         
         axios.get(rest_api_url+run_config_file).then((response) => {
-            console.log("Got response from run_config_file API: ", response);
+            // console.log("Got response from run_config_file API: ", response);
             if(response.status === 200) {
                 setYamlString(response.data.trim());
                 setShowHideData(true);
@@ -38,7 +38,7 @@ export default function RunConfig() {
             setIsLoading(false);
         })
         .catch((error) => {
-            console.log("Error in run_config_file: ", error);
+            // console.log("Error in run_config_file: ", error);
             setIsLoading(false);
             setError("Oops! an error occurred");
         });

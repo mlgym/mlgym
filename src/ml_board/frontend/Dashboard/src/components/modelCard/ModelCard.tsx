@@ -94,7 +94,7 @@ export default function ModelCard() {
         setIsLoading(true);
 
         axios.get(rest_api_url + model_card_sys_info).then((response) => {
-            console.log("Got response from model_card_sys_info API: ", response);
+            // console.log("Got response from model_card_sys_info API: ", response);
             if (response.status === 200) {
                 const {
                     model_details, training_details, eval_details, pipeline_details,
@@ -120,7 +120,7 @@ export default function ModelCard() {
             setIsLoading(false);
         })
             .catch((error) => {
-                console.log("Error in model_card_sys_info: ", error);
+                // console.log("Error in model_card_sys_info: ", error);
                 setIsLoading(false);
                 setError("Error occured / No system info available");
             });

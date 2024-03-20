@@ -4,74 +4,10 @@ import StorageIcon from '@mui/icons-material/Storage';
 import WidgetsIcon from '@mui/icons-material/Widgets';
 import { AnyKeyValuePairs } from '../../../app/interfaces';
 import { Chip, Container, Typography } from "@mui/material";
-import ReactFlow, { Background, ReactFlowProvider, MarkerType } from "reactflow";
+import ReactFlow, { Background, ReactFlowProvider } from "reactflow";
+import { add_nodes_and_edges, getObjectByKey, getParentObjects } from "./PipelineDetailsHelpers";
 import { Card, CardHeader, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import "./pipelineDetails.css"
-
-function add_nodes_and_edges(parentKey: string, selectedModule: any, selectedModuleNodes: any, selectedModuleEdges: any, x:number, y:number) {
-
-    y = y+100
-
-    Object.keys(selectedModule.nodes).map((new_node: any, indx: any) => {
-        if (indx !== 0) {
-            x = x + 150*(indx+1) // Note: if you change width in css at line 234, then change `150` to desired number to shift the nodes at same level
-        }
-        selectedModuleNodes.push({
-            id: new_node,
-            position: { x: x, y: y }, 
-            data: { 
-                label: new_node
-            }
-        })
-        selectedModuleEdges.push({
-            id: `edge-${parentKey}-${new_node}`, 
-            source: parentKey, 
-            target: new_node,
-            markerEnd: { type: MarkerType.Arrow }
-        })
-        if(selectedModule.nodes[new_node].nodes){
-            let arr = add_nodes_and_edges(new_node, selectedModule.nodes[new_node], selectedModuleNodes, selectedModuleEdges, x, y)
-            selectedModuleNodes = arr[0]
-            selectedModuleEdges = arr[1]
-        }
-    })
-
-    return [selectedModuleNodes, selectedModuleEdges]
-}
-
-function getObjectByKey(obj:any, key:any) {
-    let result:any = [];
-  
-    function search(obj:any) {
-      for (let prop in obj) {
-        if (obj.hasOwnProperty(prop)) {
-          if (prop === key) {
-            result.push(obj[prop]);
-          } else if (typeof obj[prop] === 'object') {
-            search(obj[prop]);
-          }
-        }
-      }
-    }
-  
-    search(obj);
-    return result[0];
-}
-
-function getParentObjects(jsonObj: any, targetKeyName: string, parentObjects: string[] = [], currentPath: string = ''): string[] {
-    for (const key in jsonObj) {
-        if (jsonObj.hasOwnProperty(key)) {
-            let newPath = currentPath ? `${currentPath}.${key}` : key;
-            if (key === targetKeyName) {
-                let names = newPath.split(".").filter(name => name !== "nodes")
-                parentObjects.push(...names);
-            } else if (typeof jsonObj[key] === 'object') {
-                getParentObjects(jsonObj[key], targetKeyName, parentObjects, newPath);
-            }
-        }
-    }
-    return parentObjects;
-}
+import styles from "./pipelineDetails.module.css";
 
 export default function PipelineDetails({pipelineDetails} : {pipelineDetails: AnyKeyValuePairs}) {
 
@@ -84,18 +20,15 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
     const [listVisibility, setListVisibility] = useState(true)
     
     useEffect(()=>{
-        console.log("pipelineDetails = ",pipelineDetails)
         let selectedKey = ""
         if(selectedPipelineKey !== ""){
             selectedKey = selectedPipelineKey
         }else{
             selectedKey = Object.keys(pipelineDetails)[0]
         }
-        console.log("selectedKey = ",selectedKey)
         setSelectedPipelineKey(selectedKey)
 
         let selectedModule = pipelineDetails[selectedKey]
-        console.log("selectedModule = ",selectedModule)
 
         let x = 100 // can start with any position. sub-nodes will adapt accordingly
         let y = 20 // can start with any position. sub-nodes will adapt accordingly
@@ -114,15 +47,13 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
         selectedModuleNodes = arr[0]
         selectedModuleEdges = arr[1]
 
-        console.log("selectedModuleNodes = ",selectedModuleNodes)
         setNodes(selectedModuleNodes)
 
-        console.log("selectedModuleEdges = ",selectedModuleEdges)
         setEdges(selectedModuleEdges)
 
     },[pipelineDetails, selectedPipelineKey])
 
-    const handlePipelineKeyChange = (pipelineKey: any) => {
+    const handlePipelineKeyChange = (pipelineKey: string) => {
         setSelectedPipelineKey(pipelineKey)
         setSelectedNode(undefined)
         setSelectedNodeConfig(undefined)
@@ -133,13 +64,11 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
         setListVisibility(!listVisibility)
     }
 
-    const setSelectedNodeData = (node: any) => {
+    const setSelectedNodeData = (node: AnyKeyValuePairs) => {
 
-        console.log("node = ",node.id)
         setSelectedNode(node.id)
 
         let selectedNodeData = getObjectByKey(pipelineDetails, node.id)
-        console.log("selectedNodeData = ",selectedNodeData)
 
         if(selectedNodeData.hasOwnProperty('config_str')) {
             setSelectedNodeConfig(JSON.parse(selectedNodeData.config_str))
@@ -148,36 +77,28 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
             setSelectedNodeConfig(undefined)
         }
 
-        let selectedNodeRequiredData:any = getParentObjects(pipelineDetails, node.id)
-        selectedNodeRequiredData = selectedNodeRequiredData.filter((name:any) => name !== node.id)
-        let a: any = [... new Set(selectedNodeRequiredData)]
-        console.log("a = ",a)
+        let selectedNodeRequiredData: string[] = getParentObjects(pipelineDetails, node.id)
+        selectedNodeRequiredData = selectedNodeRequiredData.filter((name: string) => name !== node.id)
+        let a:any = [...new Set(selectedNodeRequiredData)]
         setSelectedNodeRequirements(a)
     }
 
     return(
         <Card raised sx={{ mb: 2, borderRadius: 2 }}>
             <CardHeader
-                avatar={<StorageIcon onClick={()=>toggleList()} style={{ cursor: "pointer" }}/>}
+                avatar={<StorageIcon onClick={()=>toggleList()} style={styles.storage_icon_hover}/>}
                 title={<strong>Pipeline Graph</strong>}
                 sx={{
                     px: 3, py: 2,
                     borderBottom: "1px solid black",
                 }}
             />
-            <div style={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between",
-                gap: "2px"
-            }}>
+            <div style={styles.main_container}>
                 {
                     listVisibility ?
-                    <List style={{
-                        width: "400px"
-                    }}>
+                    <List style={styles.list}>
                         {
-                            Object.keys(pipelineDetails).map((pipelineKey: any) => (
+                            Object.keys(pipelineDetails).map((pipelineKey: string) => (
                                 <ListItem key={pipelineKey}>
                                     <ListItemButton
                                         selected={pipelineKey === selectedPipelineKey}
@@ -195,16 +116,14 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
                     :
                     null
                 }
-                <div style={{
-                    flex: "1"
-                }}>
+                <div style={styles.pipeline_graph_area}>
                     <ReactFlowProvider>
                         <ReactFlow
                             nodes={nodes}
                             edges={edges}
                             deleteKeyCode={null}
                             snapToGrid={true}
-                            onNodeClick={(event:React.MouseEvent, node:any)=>setSelectedNodeData(node)}
+                            onNodeClick={(event:React.MouseEvent, node:AnyKeyValuePairs)=>setSelectedNodeData(node)}
                         >
                             <Background />
                         </ReactFlow>
@@ -212,11 +131,7 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
                 </div>
                 {
                     selectedNode ?
-                    <div style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            width: "400px"
-                        }}
+                    <div style={styles.node_data_configs}
                     >
                         <div>
                             <Container fixed sx={{ marginTop: 1 }}>
@@ -227,7 +142,7 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
                                     selectedNodeRequirements.length > 0 ?    
                                     <div>
                                         {
-                                            selectedNodeRequirements.map((item:any) => {
+                                            selectedNodeRequirements.map((item:string) => {
                                                 return(
                                                     <Chip 
                                                         key={item} 

@@ -27,7 +27,7 @@ export default function GridSearchConfigurations() {
         setIsLoading(true);
         
         axios.get(rest_api_url+grid_search_config_url).then((response) => {
-            console.log("Got response from grid_search_config_file API: ", response);
+            // console.log("Got response from grid_search_config_file API: ", response);
             if(response.status === 200) {
                 setYamlString(response.data.trim());
                 setShowHideData(true);
@@ -38,7 +38,7 @@ export default function GridSearchConfigurations() {
             setIsLoading(false);
         })
         .catch((error) => {
-            console.log("Error in grid_search_config_file: ", error);
+            // console.log("Error in grid_search_config_file: ", error);
             setIsLoading(false);
             setError("Oops! an error occurred");
         });
