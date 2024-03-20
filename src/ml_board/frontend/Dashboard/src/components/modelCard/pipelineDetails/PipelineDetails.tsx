@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { JsonViewer } from "@textea/json-viewer";
 import StorageIcon from '@mui/icons-material/Storage';
 import WidgetsIcon from '@mui/icons-material/Widgets';
 import { AnyKeyValuePairs } from '../../../app/interfaces';
+import { Box, Chip, Container, Typography } from "@mui/material";
 import ReactFlow, { Background, ReactFlowProvider, MarkerType } from "reactflow";
 import { Card, CardHeader, Grid, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 // import 'reactflow/dist/style.css'; // original css from react flow => found in node_modules
@@ -37,10 +39,48 @@ function add_nodes_and_edges(parentKey: string, selectedModule: any, selectedMod
 
     return [selectedModuleNodes, selectedModuleEdges]
 }
+
+function getObjectByKey(obj:any, key:any) {
+    let result:any = [];
+  
+    function search(obj:any) {
+      for (let prop in obj) {
+        if (obj.hasOwnProperty(prop)) {
+          if (prop === key) {
+            result.push(obj[prop]);
+          } else if (typeof obj[prop] === 'object') {
+            search(obj[prop]);
+          }
+        }
+      }
+    }
+  
+    search(obj);
+    return result[0];
+}
+
+function getParentObjects(jsonObj: any, targetKeyName: string, parentObjects: string[] = [], currentPath: string = ''): string[] {
+    for (const key in jsonObj) {
+        if (jsonObj.hasOwnProperty(key)) {
+            let newPath = currentPath ? `${currentPath}.${key}` : key;
+            if (key === targetKeyName) {
+                let names = newPath.split(".").filter(name => name !== "nodes")
+                parentObjects.push(...names);
+            } else if (typeof jsonObj[key] === 'object') {
+                getParentObjects(jsonObj[key], targetKeyName, parentObjects, newPath);
+            }
+        }
+    }
+    return parentObjects;
+}
+
 export default function PipelineDetails({pipelineDetails} : {pipelineDetails: AnyKeyValuePairs}) {
 
     const [nodes, setNodes] = useState([]);
     const [edges, setEdges] = useState([]);
+    const [selectedNode, setSelectedNode] = useState(undefined);
+    const [selectedNodeConfig, setSelectedNodeConfig] = useState(undefined);
+    const [selectedNodeRequirements, setSelectedNodeRequirements] = useState([]);
     const [selectedPipelineKey, setSelectedPipelineKey] = useState("");
     
     useEffect(()=>{
@@ -84,7 +124,29 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
 
     const handlePipelineKeyChange = (pipelineKey: any) => {
         setSelectedPipelineKey(pipelineKey)
+        setSelectedNode(undefined)
+        setSelectedNodeConfig(undefined)
+        setSelectedNodeRequirements([])
     };
+
+    const setSelectedNodeData = (node: any) => {
+
+        setSelectedNode(node.id)
+
+        let selectedNodeData = getObjectByKey(pipelineDetails, node.id)
+        if(selectedNodeData.hasOwnProperty('config_str')) {
+            setSelectedNodeConfig(JSON.parse(selectedNodeData.config_str))
+        }
+        else {
+            setSelectedNodeConfig(undefined)
+        }
+
+        let selectedNodeRequiredData:any = getParentObjects(pipelineDetails, node.id)
+        selectedNodeRequiredData = selectedNodeRequiredData.filter((name:any) => name !== node.id)
+        console.log("----> selectedNodeRequiredData = ",selectedNodeRequiredData)
+        // TODO: remove duplicate names from the list before setting them in the state.
+        setSelectedNodeRequirements(selectedNodeRequiredData)
+    }
 
     return(
         <Card raised sx={{ mb: 2, borderRadius: 2 }}>
@@ -123,19 +185,45 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
                             edges={edges}
                             deleteKeyCode={null}
                             snapToGrid={true}
+                            onNodeClick={(event:React.MouseEvent, node:any)=>setSelectedNodeData(node)}
                         >
                             <Background />
                         </ReactFlow>
                     </ReactFlowProvider>
                 </Grid>
-                <Grid item container xs="auto" direction="column">
-                    <Grid item>
-                        {/* TODO: add requirements chips */}
+                {
+                    selectedNode ?
+                    <Grid item container xs="auto" direction="column">
+                        <Grid item>
+                            <Container fixed>
+                                <Typography variant="subtitle2" display="inline">
+                                    <strong>{selectedNode}</strong> <i>requires : </i>
+                                </Typography>
+                                {
+                                    selectedNodeRequirements.length > 0 ?    
+                                    <Box display="flex" flexWrap={"wrap"}>
+                                        {selectedNodeRequirements.map((item:any) => <Chip key={item} label={item} variant="outlined" sx={{ marginX: 0.2 }} />)}
+                                    </Box>
+                                    :
+                                    <Typography variant="subtitle2" display="inline">
+                                        None
+                                    </Typography>
+                                }
+                            </Container>
+                        </Grid>
+                        <hr/>
+                        <Grid item>
+                            <Container fixed>
+                                <Typography variant="subtitle2" display="inline">
+                                    <strong>{selectedNode}</strong> <i>config : </i>
+                                </Typography>
+                                <JsonViewer value={selectedNodeConfig} rootName={selectedNode} />
+                            </Container>
+                        </Grid>
                     </Grid>
-                    <Grid item>
-                        {/* TODO: add json config viewer */}
-                    </Grid>
-                </Grid>
+                    :
+                    null
+                }
             </Grid>
         </Card>
     )
