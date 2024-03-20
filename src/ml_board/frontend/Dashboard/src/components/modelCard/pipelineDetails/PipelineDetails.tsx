@@ -3,11 +3,10 @@ import { JsonViewer } from "@textea/json-viewer";
 import StorageIcon from '@mui/icons-material/Storage';
 import WidgetsIcon from '@mui/icons-material/Widgets';
 import { AnyKeyValuePairs } from '../../../app/interfaces';
-import { Box, Chip, Container, Typography } from "@mui/material";
+import { Chip, Container, Typography } from "@mui/material";
 import ReactFlow, { Background, ReactFlowProvider, MarkerType } from "reactflow";
-import { Card, CardHeader, Grid, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-// import 'reactflow/dist/style.css'; // original css from react flow => found in node_modules
-import "./pipelineDetails.css" // copied the original css and made changes in it. See line 233, 234 & 242
+import { Card, CardHeader, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import "./pipelineDetails.css"
 
 function add_nodes_and_edges(parentKey: string, selectedModule: any, selectedModuleNodes: any, selectedModuleEdges: any, x:number, y:number) {
 
@@ -82,6 +81,7 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
     const [selectedNodeConfig, setSelectedNodeConfig] = useState(undefined);
     const [selectedNodeRequirements, setSelectedNodeRequirements] = useState([]);
     const [selectedPipelineKey, setSelectedPipelineKey] = useState("");
+    const [listVisibility, setListVisibility] = useState(true)
     
     useEffect(()=>{
         console.log("pipelineDetails = ",pipelineDetails)
@@ -129,11 +129,18 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
         setSelectedNodeRequirements([])
     };
 
+    const toggleList = () => {
+        setListVisibility(!listVisibility)
+    }
+
     const setSelectedNodeData = (node: any) => {
 
+        console.log("node = ",node.id)
         setSelectedNode(node.id)
 
         let selectedNodeData = getObjectByKey(pipelineDetails, node.id)
+        console.log("selectedNodeData = ",selectedNodeData)
+
         if(selectedNodeData.hasOwnProperty('config_str')) {
             setSelectedNodeConfig(JSON.parse(selectedNodeData.config_str))
         }
@@ -143,24 +150,32 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
 
         let selectedNodeRequiredData:any = getParentObjects(pipelineDetails, node.id)
         selectedNodeRequiredData = selectedNodeRequiredData.filter((name:any) => name !== node.id)
-        console.log("----> selectedNodeRequiredData = ",selectedNodeRequiredData)
-        // TODO: remove duplicate names from the list before setting them in the state.
-        setSelectedNodeRequirements(selectedNodeRequiredData)
+        let a: any = [... new Set(selectedNodeRequiredData)]
+        console.log("a = ",a)
+        setSelectedNodeRequirements(a)
     }
 
     return(
         <Card raised sx={{ mb: 2, borderRadius: 2 }}>
             <CardHeader
-                avatar={<StorageIcon style={{ cursor: "pointer" }}/>}
+                avatar={<StorageIcon onClick={()=>toggleList()} style={{ cursor: "pointer" }}/>}
                 title={<strong>Pipeline Graph</strong>}
                 sx={{
                     px: 3, py: 2,
                     borderBottom: "1px solid black",
                 }}
             />
-            <Grid container>
-                <Grid item>
-                    <List>
+            <div style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                gap: "2px"
+            }}>
+                {
+                    listVisibility ?
+                    <List style={{
+                        width: "400px"
+                    }}>
                         {
                             Object.keys(pipelineDetails).map((pipelineKey: any) => (
                                 <ListItem key={pipelineKey}>
@@ -177,8 +192,12 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
                             ))
                         }
                     </List>
-                </Grid>
-                <Grid item flexGrow={1}>
+                    :
+                    null
+                }
+                <div style={{
+                    flex: "1"
+                }}>
                     <ReactFlowProvider>
                         <ReactFlow
                             nodes={nodes}
@@ -190,41 +209,55 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
                             <Background />
                         </ReactFlow>
                     </ReactFlowProvider>
-                </Grid>
+                </div>
                 {
                     selectedNode ?
-                    <Grid item container xs="auto" direction="column">
-                        <Grid item>
-                            <Container fixed>
+                    <div style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            width: "400px"
+                        }}
+                    >
+                        <div>
+                            <Container fixed sx={{ marginTop: 1 }}>
                                 <Typography variant="subtitle2" display="inline">
                                     <strong>{selectedNode}</strong> <i>requires : </i>
                                 </Typography>
                                 {
                                     selectedNodeRequirements.length > 0 ?    
-                                    <Box display="flex" flexWrap={"wrap"}>
-                                        {selectedNodeRequirements.map((item:any) => <Chip key={item} label={item} variant="outlined" sx={{ marginX: 0.2 }} />)}
-                                    </Box>
+                                    <div>
+                                        {
+                                            selectedNodeRequirements.map((item:any) => {
+                                                return(
+                                                    <Chip 
+                                                        key={item} 
+                                                        label={item} 
+                                                        variant="outlined" 
+                                                        sx={{ marginX: 0.2, marginY: 0.5 }} 
+                                                    />
+                                                )
+                                            })}
+                                    </div>
                                     :
                                     <Typography variant="subtitle2" display="inline">
                                         None
                                     </Typography>
                                 }
                             </Container>
-                        </Grid>
-                        <hr/>
-                        <Grid item>
-                            <Container fixed>
+                        </div>
+                        <div>
+                            <Container fixed sx={{ marginTop: 0.5 }}>
                                 <Typography variant="subtitle2" display="inline">
                                     <strong>{selectedNode}</strong> <i>config : </i>
                                 </Typography>
                                 <JsonViewer value={selectedNodeConfig} rootName={selectedNode} />
                             </Container>
-                        </Grid>
-                    </Grid>
+                        </div>
+                    </div>
                     :
                     null
                 }
-            </Grid>
+            </div>
         </Card>
     )
 }
