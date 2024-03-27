@@ -19,7 +19,7 @@ let buffering_interval: NodeJS.Timer;
 
 // =~=~=~=~=~=~=~=~=~=~=~=~=~= ~WebSocket~ =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=//
 const initSocket = (settingConfigs: settingConfigsInterface) => {
-    console.log("WebSocket initializing...");
+    // console.log("WebSocket initializing...");
     socket = socketIO(settingConfigs.socketConnectionUrl, { autoConnect: true });
     socket.on('connect', () => onConnect(socket, settingConfigs.gridSearchId, settingConfigs.restApiUrl));
     socket.on('disconnect', onDisconnect);
@@ -61,7 +61,7 @@ const process_mlgym_event = (msg: JSON) => {
     msgCounterIncMainThreadCallback();
 };
 
-// ASK MAX: renaming to onPong or onPongReceived
+// onPong or onPongReceived
 const onPongReceivedfromWebsocketServer = () => {
     // on Pong , save time of receiving 
     lastPong = new Date().getTime();
@@ -71,7 +71,7 @@ const onPongReceivedfromWebsocketServer = () => {
 
 // ========================= helper methods ============================//
 
-// ASK MAX: sendPingToServer or sendPing or pingToServer or pingingServer or pinging
+// sendPingToServer or sendPing or pingToServer or pingingServer or pinging
 const send_ping_to_websocket_server = (socket: Socket) => {
     // if Pong was received after sending a Ping 
     // if no Ping was sent before
@@ -88,7 +88,7 @@ const send_ping_to_websocket_server = (socket: Socket) => {
 };
 
 const stop = (why: Error | Socket.DisconnectReason) => {
-    console.log(`${why instanceof Error ? "connection" /* error */ : "disconnected"} : ${why}`);
+    // console.log(`${why instanceof Error ? "connection" /* error */ : "disconnected"} : ${why}`);
     // halt periodic server pining
     clearInterval(pinging_interval);
     // halt periodic buffering
@@ -122,6 +122,6 @@ onmessage = ({ data }: MessageEvent) => {
         // data is settingConfigs
         initSocket(data);
     // Debugging purposes 
-    else
-        console.log(data);
+    // else
+        // console.log(data);
 };

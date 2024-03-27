@@ -1,9 +1,9 @@
 import styles from '../ExperimentPage.module.css';
 import { Card, CardContent, Grid } from '@mui/material';
 import HalfDonoughtGraph from '../HalfDonoughtGraph/HalfDonoughtGraph';
-import { AnyKeyValuePairsInterface } from '../ExperimentPage';
+import { AnyKeyValuePairs } from '../../../app/interfaces';
 
-export function ExperimentProgress({selectedExperiment} : {selectedExperiment: AnyKeyValuePairsInterface }) {
+export function ExperimentProgress({selectedExperiment} : {selectedExperiment: AnyKeyValuePairs }) {
 
     return (
         <Grid container rowSpacing={1} spacing={{ xs: 1, md: 2 }}>

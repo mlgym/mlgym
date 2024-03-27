@@ -6,10 +6,10 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { Box, Card, CardContent } from '@mui/material';
 import styles from '../environmentDetails/EnvironmentDetails.module.css';
-import { AnyKeyValuePairsInterface } from '../../experimentPage/ExperimentPage';
 import { StyledTableCell, StyledTableRow } from '../environmentDetails/PythonPackagesList';
+import { AnyKeyValuePairs } from '../../../app/interfaces';
 
-export default function TrainingDataExceptHyperparams({filteredTrainingData} : {filteredTrainingData: AnyKeyValuePairsInterface}) {
+export default function TrainingDataExceptHyperparams({filteredTrainingData} : {filteredTrainingData: AnyKeyValuePairs}) {
     
     return(
         <Box>

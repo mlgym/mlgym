@@ -91,9 +91,10 @@ export default function App() {
         if (eventType in eventTypeToActionCreator) {    
           const actionCreator = eventTypeToActionCreator[eventType]
           appDispatch(actionCreator(msgRep))
-        } else {
-          console.log("WARNING: eventy type " + eventType + " not supported!")
-      }
+        } 
+        // else {
+          // console.log("WARNING: eventy type " + eventType + " not supported!")
+      // }
     });
 
     socket.on('pong', () => {

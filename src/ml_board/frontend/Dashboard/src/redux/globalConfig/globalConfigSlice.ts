@@ -15,7 +15,7 @@ interface GlobalConfig {
 
 const initialState: GlobalConfig = {
   currentFilter: '.*',
-  idTab: "analysisboard", //ASK Vijul: do we need to store the current tab? is it useful?
+  idTab: "analysisboard",
   wsConnected: false,
   ping: -1,
   received_msg_count: 0,
@@ -51,7 +51,12 @@ const { actions, reducer } = createSlice({
       state.grid_search_id = action.payload;
     },
     setRestApiUrl: (state, action: PayloadAction<string>) => {
-      state.rest_api_url = action.payload;
+      //Fixing the problem of concatinating to the local url with axios
+      if (!action.payload.startsWith("http://") && !action.payload.startsWith("https://")) {
+        console.error(`rest_api_url= ${action.payload} doesn't start with http://`);
+        state.rest_api_url = "http://" + action.payload;
+      } else { state.rest_api_url = action.payload; }
+
     },
     setSocketConnectionUrl: (state, action: PayloadAction<string>) => {
       state.socket_connection_url = action.payload;

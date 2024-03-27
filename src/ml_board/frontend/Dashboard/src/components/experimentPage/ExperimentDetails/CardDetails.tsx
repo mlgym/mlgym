@@ -1,8 +1,13 @@
+import { AnyKeyValuePairs } from '../../../app/interfaces';
 import styles from '../ExperimentPage.module.css';
 import { Card, CardContent } from '@mui/material';
-import { AnyKeyValuePairsInterface } from '../ExperimentPage';
 
-export function CardDetails({cardTitle, contentObj} : {cardTitle:string, contentObj: AnyKeyValuePairsInterface}) {
+interface CardDetailsProps {
+    cardTitle: string,
+    contentObj: AnyKeyValuePairs
+};
+
+export function CardDetails({ cardTitle, contentObj }: CardDetailsProps) {
 
     return(
         <Card className={styles.card}>

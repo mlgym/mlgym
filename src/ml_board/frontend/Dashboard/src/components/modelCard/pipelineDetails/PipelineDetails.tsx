@@ -1,143 +1,178 @@
-import { AnyKeyValuePairsInterface } from '../../experimentPage/ExperimentPage';
-import Tree from 'react-d3-tree';
-import { SyntheticEvent, useEffect, useState } from 'react';
-import { HierarchyPointNode } from 'd3';
-import { RawNodeDatum, TreeNodeDatum } from 'react-d3-tree';
-import { Grid } from '@mui/material';
-import styles from './PipelineDetails.module.css';
-import { JsonViewer } from '@textea/json-viewer';
+import { useEffect, useState } from 'react';
+import { JsonViewer } from "@textea/json-viewer";
+import StorageIcon from '@mui/icons-material/Storage';
+import WidgetsIcon from '@mui/icons-material/Widgets';
+import { AnyKeyValuePairs } from '../../../app/interfaces';
+import { Chip, Container, Typography } from "@mui/material";
+import ReactFlow, { Background, ReactFlowProvider } from "reactflow";
+import { add_nodes_and_edges, getObjectByKey, getParentObjects } from "./PipelineDetailsHelpers";
+import { Card, CardHeader, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import "./reactflow_styles.css";
+import styles from "./pipelineDetails.module.css";
 
-var treeDataObj: RawNodeDatum = {
-    name: ''
-}
+export default function PipelineDetails({pipelineDetails} : {pipelineDetails: AnyKeyValuePairs}) {
 
-export default function PipelineDetails({pipelineDetails, experiment_id, treeOrientationProp} : {pipelineDetails: AnyKeyValuePairsInterface, experiment_id: string, treeOrientationProp: any}) {
+    const [nodes, setNodes] = useState([]);
+    const [edges, setEdges] = useState([]);
+    const [selectedNode, setSelectedNode] = useState(undefined);
+    const [selectedNodeConfig, setSelectedNodeConfig] = useState(undefined);
+    const [selectedNodeRequirements, setSelectedNodeRequirements] = useState([]);
+    const [selectedPipelineKey, setSelectedPipelineKey] = useState("");
+    const [listVisibility, setListVisibility] = useState(true)
+    
+    useEffect(()=>{
+        let selectedKey = ""
+        if(selectedPipelineKey !== ""){
+            selectedKey = selectedPipelineKey
+        }else{
+            selectedKey = Object.keys(pipelineDetails)[0]
+        }
+        setSelectedPipelineKey(selectedKey)
 
-    const [treeData, setTreeData] = useState(treeDataObj);
-    const [clickedNode, setNodeClick] = useState<any>(null);
+        let selectedModule = pipelineDetails[selectedKey]
 
-    function tree_children_iterator(obj: any) {
-        let children: { name: any, attribute?: any, children?: any } [] = [];
-        if (typeof obj === 'object' && obj !== null) {
-            for(const key in obj) {
-                if(key !== 'requirements') {
-                    if(typeof obj[key] === 'object' && obj[key] !== null) {
-                        let tree_children = tree_children_iterator(obj[key].nodes)
-                        let child_obj = {
-                            name: key,
-                            children: tree_children,
-                            config: JSON.parse(obj[key].config_str)
-                        }
-                        children.push(child_obj);
-                    }
-                    else {
-                        let child_obj = {
-                            name: key,
-                            attributes: {
-                                value: obj[key]
-                            }
-                        }
-                        children.push(child_obj);
-                    }
-                }
+        let x = 100 // can start with any position. sub-nodes will adapt accordingly
+        let y = 20 // can start with any position. sub-nodes will adapt accordingly
+        let selectedModuleNodes: any = []
+        let selectedModuleEdges: any = []
+
+        selectedModuleNodes.push({
+            id: selectedKey,
+            position: { x: x, y: y }, 
+            data: { 
+                label: selectedKey
             }
-            return children
+        });
+
+        let arr = add_nodes_and_edges(selectedKey, selectedModule, selectedModuleNodes, selectedModuleEdges, x, y)
+        selectedModuleNodes = arr[0]
+        selectedModuleEdges = arr[1]
+
+        setNodes(selectedModuleNodes)
+
+        setEdges(selectedModuleEdges)
+
+    },[pipelineDetails, selectedPipelineKey])
+
+    const handlePipelineKeyChange = (pipelineKey: string) => {
+        setSelectedPipelineKey(pipelineKey)
+        setSelectedNode(undefined)
+        setSelectedNodeConfig(undefined)
+        setSelectedNodeRequirements([])
+    };
+
+    const toggleList = () => {
+        setListVisibility(!listVisibility)
+    }
+
+    const setSelectedNodeData = (node: AnyKeyValuePairs) => {
+
+        setSelectedNode(node.id)
+
+        let selectedNodeData = getObjectByKey(pipelineDetails, node.id)
+
+        if(selectedNodeData.hasOwnProperty('config_str')) {
+            setSelectedNodeConfig(JSON.parse(selectedNodeData.config_str))
         }
         else {
-            let child_non_obj = {
-                name: obj
-            }
-            children.push(child_non_obj);
+            setSelectedNodeConfig(undefined)
         }
-    }
 
-    useEffect(() => {
-        if(pipelineDetails && Object.keys(pipelineDetails).length > 0) {
-            
-            console.log("pipelineDetails: ",pipelineDetails)
-            
-            let tree_data = tree_children_iterator(pipelineDetails);
-            // console.log("tree_data: ",tree_data)
-
-            const myTreeData = {
-                name: "Experiment_Pipeline",
-                attributes: {
-                    name: "Experiment "+experiment_id.toString(),
-                },
-                children: tree_data
-            }
-            // console.log("myTreeData: ",myTreeData)
-
-            setTreeData(myTreeData);
-        }
-    }, [pipelineDetails])
-    
-    function filterKeys(obj: any): any {
-        if (typeof obj !== 'object' || obj === null) {
-          return obj;
-        }
-      
-        if (Array.isArray(obj)) {
-          return obj.map(filterKeys);
-        }
-      
-        const filteredObj: any = {};
-      
-        for (const key in obj) {
-          if (key === 'config' || key === 'children' || key === 'name' || key === 'attributes') {
-            if(key === 'children') {
-                filteredObj[key] = filterKeys(obj[key]);
-            }
-            else {
-                filteredObj[key] = obj[key]
-            }
-          }
-        }
-        // console.log('Node filteredObj:', filteredObj);
-      
-        return filteredObj;
-    }
-
-    function handleNodeClick(nodeData: HierarchyPointNode<TreeNodeDatum>, e: SyntheticEvent) {
-        // Perform your custom actions here based on the clicked nodeData
-        // console.log('Node clicked:', nodeData);
-        let filteredData = filterKeys(nodeData.data);
-        let selectedNodeData = {
-            children: filteredData.children,
-            config: filteredData.config,
-            name: filteredData.name,
-            depth: nodeData.depth,
-            height: nodeData.height,
-            parent: nodeData.parent ? filterKeys(nodeData.parent.data) : null
-        }
-        // console.log('Selected Node Data:', selectedNodeData);
-        setNodeClick(selectedNodeData);
+        let selectedNodeRequiredData: string[] = getParentObjects(pipelineDetails, node.id)
+        selectedNodeRequiredData = selectedNodeRequiredData.filter((name: string) => name !== node.id)
+        let a:any = [...new Set(selectedNodeRequiredData)]
+        setSelectedNodeRequirements(a)
     }
 
     return(
-        <Grid container>
-            <Grid item={true} xs={12} sm={12} md={8} lg={8} >
-                <div id="pipeline_graph_component" className={styles.tree_container}>
-                    <Tree
-                        data={treeData}
-                        initialDepth={1}
-                        pathFunc="diagonal"
-                        orientation={treeOrientationProp}
-                        separation={{ siblings: 1, nonSiblings: 1.5 }}
-                        enableLegacyTransitions={true}
-                        translate={{ x: window.innerWidth/4, y: window.innerHeight/2 }}
-                        onNodeClick={(node: HierarchyPointNode<TreeNodeDatum>, e: SyntheticEvent)=>handleNodeClick(node, e)}
-                    />
+        <Card raised sx={{ mb: 2, borderRadius: 2 }}>
+            <CardHeader
+                avatar={<StorageIcon onClick={()=>toggleList()} className={styles.storage_icon_hover}/>}
+                title={<strong>Pipeline Graph</strong>}
+                sx={{
+                    px: 3, py: 2,
+                    borderBottom: "1px solid black",
+                }}
+            />
+            <div className={styles.main_container}>
+                {
+                    listVisibility ?
+                    <List className={styles.list}>
+                        {
+                            Object.keys(pipelineDetails).map((pipelineKey: string) => (
+                                <ListItem key={pipelineKey}>
+                                    <ListItemButton
+                                        selected={pipelineKey === selectedPipelineKey}
+                                        onClick={()=>handlePipelineKeyChange(pipelineKey)}
+                                    >
+                                        <ListItemIcon>
+                                            <WidgetsIcon />
+                                        </ListItemIcon>
+                                        <ListItemText primary={pipelineKey} />
+                                    </ListItemButton>
+                                </ListItem>
+                            ))
+                        }
+                    </List>
+                    :
+                    null
+                }
+                <div className={styles.pipeline_graph_area}>
+                    <ReactFlowProvider>
+                        <ReactFlow
+                            nodes={nodes}
+                            edges={edges}
+                            deleteKeyCode={null}
+                            snapToGrid={true}
+                            onNodeClick={(event:React.MouseEvent, node:AnyKeyValuePairs)=>setSelectedNodeData(node)}
+                        >
+                            <Background />
+                        </ReactFlow>
+                    </ReactFlowProvider>
                 </div>
-            </Grid>
-            <Grid item={true} xs={12} sm={12} md={4} lg={4}>
-                <div className={styles.config_container}>
-                    <h4>Config: {clickedNode ? clickedNode.name : "no node selected"}</h4>
-                </div>
-                <div>
-                    {clickedNode && <JsonViewer value={clickedNode}/>}
-                </div>
-            </Grid>
-      </Grid>
+                {
+                    selectedNode ?
+                    <div className={styles.node_data_configs}>
+                        <div>
+                            <Container fixed sx={{ marginTop: 1 }}>
+                                <Typography variant="subtitle2" display="inline">
+                                    <strong>{selectedNode}</strong> <i>requires : </i>
+                                </Typography>
+                                {
+                                    selectedNodeRequirements.length > 0 ?    
+                                    <div>
+                                        {
+                                            selectedNodeRequirements.map((item:string) => {
+                                                return(
+                                                    <Chip 
+                                                        key={item} 
+                                                        label={item} 
+                                                        variant="outlined" 
+                                                        sx={{ marginX: 0.2, marginY: 0.5 }} 
+                                                    />
+                                                )
+                                            })}
+                                    </div>
+                                    :
+                                    <Typography variant="subtitle2" display="inline">
+                                        None
+                                    </Typography>
+                                }
+                            </Container>
+                        </div>
+                        <div>
+                            <Container fixed sx={{ marginTop: 0.5 }}>
+                                <Typography variant="subtitle2" display="inline">
+                                    <strong>{selectedNode}</strong> <i>config : </i>
+                                </Typography>
+                                <JsonViewer value={selectedNodeConfig} rootName={selectedNode} />
+                            </Container>
+                        </div>
+                    </div>
+                    :
+                    null
+                }
+            </div>
+        </Card>
     )
 }

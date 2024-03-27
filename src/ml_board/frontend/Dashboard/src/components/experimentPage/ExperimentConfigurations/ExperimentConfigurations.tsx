@@ -27,7 +27,7 @@ export default function ExperimentConfigurations({experimentIdProp} : {experimen
             setIsLoading(true);
     
             axios.get(rest_api_url + experiment_config_file).then((response) => {
-                console.log("Got response from experiment_config API: ", response);
+                // console.log("Got response from experiment_config API: ", response);
                 if (response.status === 200) {
                     setExperimentConfigFileObject(response.data);
                     setShowHideData(true);
@@ -38,7 +38,7 @@ export default function ExperimentConfigurations({experimentIdProp} : {experimen
                 setIsLoading(false);
             })
             .catch((error) => {
-                console.log("Error in experiment_config_file: ", error);
+                // console.log("Error in experiment_config_file: ", error);
                 setIsLoading(false);
                 setError("Oops! an error occurred");
             });

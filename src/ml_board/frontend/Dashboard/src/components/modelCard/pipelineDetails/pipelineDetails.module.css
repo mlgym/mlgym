@@ -1,0 +1,28 @@
+.storage_icon_hover { 
+  cursor: pointer 
+}
+
+.main_container {
+  display: flex;
+  flex-direction: row;
+  justify-content: "space-between";
+  gap: "2px";
+  /* background-color: #3367d9; */
+}
+
+.list {
+  width: 400px;
+  /* background-color: crimson; */
+}
+
+.pipeline_graph_area {
+  flex: 1;
+  /* width: 400px; */
+  /* background-color: #1a192b; */
+}
+
+.node_data_configs {
+  display: flex;
+  flex-direction: column;
+  width: 400px;
+}

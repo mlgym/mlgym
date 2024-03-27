@@ -100,7 +100,6 @@ export default function App() {
 
             // close the worker on Dismount to stop any memory leaks
             return () => {
-                // ASK: not sure if this is useful, or if it gets handled before the termination???
                 workerSocket.postMessage("CLOSE_SOCKET");
                 workerSocket.terminate();
             }

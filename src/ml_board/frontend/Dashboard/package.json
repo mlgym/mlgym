@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@dagrejs/dagre": "^1.0.4",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@mui/icons-material": "^5.11.0",
@@ -32,6 +33,7 @@
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
+    "reactflow": "^11.9.4",
     "socket.io-client": "^4.5.3",
     "typescript": "^4.8.4",
     "url-loader": "^4.1.1",

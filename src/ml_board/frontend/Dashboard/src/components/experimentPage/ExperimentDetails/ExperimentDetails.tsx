@@ -1,15 +1,12 @@
 import { Card, CardContent, Grid } from '@mui/material';
 import moment from 'moment';
 import { useState } from 'react';
-import { AnyKeyValuePairsInterface } from '../ExperimentPage';
 import styles from '../ExperimentPage.module.css';
 import { CardDetails } from './CardDetails';
+import { AnyKeyValuePairs } from '../../../app/interfaces';
 
-interface return_obj_interface {
-    [key: string]: string
-}
 
-export function ExperimentDetails({ selectedExperiment }: { selectedExperiment: AnyKeyValuePairsInterface }) {
+export function ExperimentDetails({ selectedExperiment }: { selectedExperiment: AnyKeyValuePairs }) {
 
     const [showMore, setShowMore] = useState(false);
 
@@ -20,7 +17,7 @@ export function ExperimentDetails({ selectedExperiment }: { selectedExperiment: 
     });
 
     function conditional_render_exp_state() {
-        const return_obj: return_obj_interface = {};
+        const return_obj: AnyKeyValuePairs = {};
 
         if(selectedExperiment.hasOwnProperty("error") && selectedExperiment.error !== null) {
             return_obj["Job Status"] = "FAILED";
@@ -44,7 +41,7 @@ export function ExperimentDetails({ selectedExperiment }: { selectedExperiment: 
     }
 
     function conditional_render_exp_date_time() {
-        const return_obj: return_obj_interface = {};
+        const return_obj: AnyKeyValuePairs = {};
 
         if(selectedExperiment.starting_time && selectedExperiment.starting_time !== -1) {
             return_obj["Start"] = moment(new Date(selectedExperiment.starting_time * 1000)).format("YYYY-MM-DD hh:MM:SS");

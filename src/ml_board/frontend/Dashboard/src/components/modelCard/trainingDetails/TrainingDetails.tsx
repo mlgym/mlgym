@@ -1,14 +1,13 @@
 import { Grid } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { AnyKeyValuePairsInterface } from '../../experimentPage/ExperimentPage';
 import HyperParameterListAndDetails from './HyperParameterListAndDetails';
 import TrainingDataExceptHyperparams from './TrainingDataExceptHyperparams';
+import { AnyKeyValuePairs } from '../../../app/interfaces';
 
-var anyObj: AnyKeyValuePairsInterface = {}
 
-export default function TrainingDetails({trainingDetails} : {trainingDetails: AnyKeyValuePairsInterface}) {
+export default function TrainingDetails({trainingDetails} : {trainingDetails: AnyKeyValuePairs}) {
 
-    const [filteredTrainingData, setFilteredTrainingData] = useState(anyObj);
+    const [filteredTrainingData, setFilteredTrainingData] = useState<AnyKeyValuePairs>({});
 
     useEffect(()=>{
         const filteredTrainingData = { ...trainingDetails };
