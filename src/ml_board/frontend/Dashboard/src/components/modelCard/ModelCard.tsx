@@ -332,7 +332,7 @@ export default function ModelCard() {
                                                         Environment
                                                     </div>
                                                 </div>
-                                                <div style={{ marginTop: "5px" }}>
+                                                <div className={styles.envDetails}>
                                                     <EnvironmentDetails
                                                         fromPage="ModelCard"
                                                         experiment_id={experiment_id}

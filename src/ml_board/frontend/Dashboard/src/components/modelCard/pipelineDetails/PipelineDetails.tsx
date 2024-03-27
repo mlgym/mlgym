@@ -7,6 +7,7 @@ import { Chip, Container, Typography } from "@mui/material";
 import ReactFlow, { Background, ReactFlowProvider } from "reactflow";
 import { add_nodes_and_edges, getObjectByKey, getParentObjects } from "./PipelineDetailsHelpers";
 import { Card, CardHeader, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import "./reactflow_styles.css";
 import styles from "./pipelineDetails.module.css";
 
 export default function PipelineDetails({pipelineDetails} : {pipelineDetails: AnyKeyValuePairs}) {
@@ -86,17 +87,17 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
     return(
         <Card raised sx={{ mb: 2, borderRadius: 2 }}>
             <CardHeader
-                avatar={<StorageIcon onClick={()=>toggleList()} style={styles.storage_icon_hover}/>}
+                avatar={<StorageIcon onClick={()=>toggleList()} className={styles.storage_icon_hover}/>}
                 title={<strong>Pipeline Graph</strong>}
                 sx={{
                     px: 3, py: 2,
                     borderBottom: "1px solid black",
                 }}
             />
-            <div style={styles.main_container}>
+            <div className={styles.main_container}>
                 {
                     listVisibility ?
-                    <List style={styles.list}>
+                    <List className={styles.list}>
                         {
                             Object.keys(pipelineDetails).map((pipelineKey: string) => (
                                 <ListItem key={pipelineKey}>
@@ -116,7 +117,7 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
                     :
                     null
                 }
-                <div style={styles.pipeline_graph_area}>
+                <div className={styles.pipeline_graph_area}>
                     <ReactFlowProvider>
                         <ReactFlow
                             nodes={nodes}
@@ -131,8 +132,7 @@ export default function PipelineDetails({pipelineDetails} : {pipelineDetails: An
                 </div>
                 {
                     selectedNode ?
-                    <div style={styles.node_data_configs}
-                    >
+                    <div className={styles.node_data_configs}>
                         <div>
                             <Container fixed sx={{ marginTop: 1 }}>
                                 <Typography variant="subtitle2" display="inline">
