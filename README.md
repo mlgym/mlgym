@@ -33,7 +33,7 @@ Additionally, MLgym provides the following key features:
 
 **Please note, that at the moment this code should be treated as experimental and is not production ready.**
 
-## Install
+## Install 🚀
 
 There are two options to install MLgym, the easiest way is to install the framework from the pip repository:
 
@@ -46,6 +46,11 @@ For the latest version, one can directly install it from source by `cd` into the
 ```bash
 pip install src/
 ```
+
+## Experience MLGym in Action 🎬💪
+Experience it firsthand by exploring our live demo. Interact with the metric graphs, model-card, experiment with different filters, and see the capabilities of our framework in action. Discover how MLGym can help in maintaining and monitoring your experiments.
+### [👉 Checkout Our Live Demo 👈](https://mlgym.github.io/mlgym/build/)
+
 
 ## Usage
 
@@ -143,7 +148,7 @@ The following GIF showcases the development of experiments over time.
 <img src="mlboard_gifs/Experiments_Development.gif" width="100%" />
 </div>
 
-### Monitoring and Analysis
+### 📈 Monitoring and Analysis 📉
 
 After executing the example run, proceed to monitor and analyze the experiment using the `ml_board`. First execute the `ml_board` command [Frontend Visualization : Step 4](#usage) with the example run ID, and copy the provided URL. Paste the URL in your browser to access the frontend.
 
@@ -156,7 +161,7 @@ After executing the example run, proceed to monitor and analyze the experiment u
 <img src="mlboard_imgs/Enter_Configs_Popup.png" width="50%" />
 </div> -->
 
-### Experiment Analysis
+### Experiment Analysis 🔎
 
 Navigate to a specific experiment ID to analyze its configurations and observe live developments of metrics, loss, batches, and epochs. You can select and download a specific checkpoint and other picked files for further examination or external reference. Here, you can also access information regarding the environment and hardware settings under which the experiment was executed.
 
@@ -172,7 +177,7 @@ This comprehensive experiment analysis functionality within `ml_board` empowers 
   <img src="mlboard_imgs/single_exp/Single_Exp_4.png" style="width: 40%; margin: 2px;" />
 </div>
 
-### Experiment Filtering
+### Experiment Filtering ⚡
 
 Efficiently compare different experiments globally by utilizing the filtering options available in the analysis board and dashboard. Here's a breakdown of the filter options in dashboard:
 
@@ -190,17 +195,13 @@ Efficiently compare different experiments globally by utilizing the filtering op
 <div align="center">
   <div style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
     <img src="mlboard_imgs/filters/Filter_Graphs.png" width="45%" style="margin-right: 10px;" />
-    <!-- <div style="display: flex; flex-direction: column; align-items: center;">
-      <img src="mlboard_imgs/filters/Filters_Open.png" width="80%" style="margin-bottom: 20px;" />
-      <img src="mlboard_imgs/filters/Filters_Close.png" width="80%" style="margin-top: 20px;" />
-    </div> -->
     <img src="mlboard_imgs/filters/Filter_Header.png" width="28%" style="margin-left: 10px;" />
 </div>
 <br/>
 <img src="mlboard_imgs/filters/Filter_Text.png" width="80%" />
 </div>
 
-## Training Analysis
+## 📈 Training Analysis 📉
 
 Over the course of the training, the line charts are populated with the respective scores for each epoch. The legend in the charts refers to the experiment ids. From an analysis point of view, as per below image, we see that experiments 1 and 5 fail to converge and are stopped after four epochs due to the early stopping criterion specified within the configuration file. In contrast, experiments 8, 13 and 14 learn the task, illustrating the significance of learning rate choice anecdotically.
 
@@ -208,14 +209,45 @@ Over the course of the training, the line charts are populated with the respecti
 <img src="mlboard_imgs/ML_Board_Result_Analysis.jpg" width="100%" />
 </div>
 
-## Model Card
-`Will be added soon!!!`
-<!-- <div align="center">
-<img src="mlboard_imgs/model_card/Model_Card_1.png" width="100%" />
-<img src="mlboard_imgs/model_card/Model_Card_2.png" width="100%" />
-</div> -->
+## Model Card 📃
 
-## Settings Menu
+Model cards are documents that provide essential information about the model training, evaluation, performance & the utilized environment. They play a vital role in understanding experiments and ensuring reproducibility. 
+
+The different sections of a typical Model Card shown in MLGym are as follows:
+<div align="center">
+  <img src="mlboard_imgs/model_card/Model_Card_1.png" width="100%" />
+</div>
+   
+1. **Model Details**: Provides insights into the specifics of the trained model for a particular experiment, including version, parameters, experiment date, and GitHub project source.
+
+2. **Training Details**: Provides details about the training process, encompassing optimizer, loss function, learning rate, and other such hyper parameters.
+
+3. **Evaluation Details**: Explains how model performance was assessed, including loss function used, metrics measured, and any validation strategies.
+
+<div align="center">
+  <img src="mlboard_imgs/model_card/Model_Card_2.png" width="100%" />
+</div>
+
+4. **Pipeline Graph**: Visualizes how components are connected, their configuration and how they relate or interact, helping to understand the experiment or project setup.
+
+<div align="center">
+  <img src="mlboard_imgs/model_card/Model_Card_3.png" width="100%" />
+</div>
+
+5. **Metrics Graphs Visualizations**: Shows performance metrics using graphs or charts similar to those on the Analysis Board, but specifically for the chosen experiment.
+
+<div align="center">
+  <img src="mlboard_imgs/model_card/Model_Card_4.png" width="100%" />
+</div>
+
+6. **Environment Used**: Describes the computational setup utilized for the experiment, detailing hardware specifications (e.g., CPU, GPU) and software dependencies (e.g., frameworks, libraries). Understanding the environment can be important for reproducibility of the experiments.
+
+Lastly, you can also download the Model Card in HTML format for the selected experiment. This makes it easy to share and presents the project setup and performance results in one document. 
+
+You can preview an example Model Card here:
+### [👉 Example Model Card 👈](mlboard_imgs/model_card/Experiment_ModelCard.html)
+
+## Settings Menu ⚙️
 
 Explore and customize configurations effortlessly through the settings menu on the `ml_board` frontend. 
 
@@ -240,7 +272,7 @@ The settings menu in `ml_board` serves as a centralized hub for configuration ma
 <img src="mlboard_imgs/ML_Board_Settings.png" width="100%" />
 </div>
 
-## Copyright
+## Copyright 
 
 Copyright (c) 2023
 
